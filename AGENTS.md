@@ -138,3 +138,6 @@ change and explain why**.
 - **Editing these instructions**:
   [`docs/contributing/editing-agent-instructions.md`](docs/contributing/editing-agent-instructions.md)
   — Rules for modifying AGENTS.md or any domain-specific guide it references.
+- **Research workspace**:
+  [`research/AGENTS.md`](research/AGENTS.md)
+  — Rules for numbered research phases, documents, and phase-local assets.

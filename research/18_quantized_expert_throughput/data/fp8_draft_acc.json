@@ -1,0 +1,19 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "M": 64,
+  "results": {
+    "bf16_local": {
+      "sampled": 0.8245,
+      "top1": 0.75
+    },
+    "fp8_full": {
+      "sampled": 0.9539,
+      "top1": 0.875
+    },
+    "fp8_local": {
+      "sampled": 0.823,
+      "top1": 0.8125
+    }
+  }
+}

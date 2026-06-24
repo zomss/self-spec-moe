@@ -1,0 +1,88 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "model_type": "gpt_oss",
+  "num_experts": 32,
+  "default_top_k": 4,
+  "num_layers": 24,
+  "num_prompts": 16,
+  "rows": [
+    {
+      "budget_M": 4,
+      "M_over_E": 0.125,
+      "gamma": 0.2089,
+      "topk_overlap": 0.277,
+      "expected_acceptance": 0.352,
+      "sampled_acceptance": 0.3623,
+      "top1_match": 0.3125,
+      "acc_general": 0.4536,
+      "acc_chat": 0.4014,
+      "acc_code": 0.2856,
+      "acc_math": 0.3086
+    },
+    {
+      "budget_M": 8,
+      "M_over_E": 0.25,
+      "gamma": 0.3532,
+      "topk_overlap": 0.4392,
+      "expected_acceptance": 0.5352,
+      "sampled_acceptance": 0.5369,
+      "top1_match": 0.5,
+      "acc_general": 0.5337,
+      "acc_chat": 0.5488,
+      "acc_code": 0.5195,
+      "acc_math": 0.5454
+    },
+    {
+      "budget_M": 12,
+      "M_over_E": 0.375,
+      "gamma": 0.4869,
+      "topk_overlap": 0.564,
+      "expected_acceptance": 0.5683,
+      "sampled_acceptance": 0.5579,
+      "top1_match": 0.4375,
+      "acc_general": 0.5708,
+      "acc_chat": 0.5767,
+      "acc_code": 0.5449,
+      "acc_math": 0.5391
+    },
+    {
+      "budget_M": 16,
+      "M_over_E": 0.5,
+      "gamma": 0.6107,
+      "topk_overlap": 0.6632,
+      "expected_acceptance": 0.6245,
+      "sampled_acceptance": 0.6246,
+      "top1_match": 0.4375,
+      "acc_general": 0.6265,
+      "acc_chat": 0.6543,
+      "acc_code": 0.5952,
+      "acc_math": 0.6226
+    },
+    {
+      "budget_M": 24,
+      "M_over_E": 0.75,
+      "gamma": 0.8304,
+      "topk_overlap": 0.859,
+      "expected_acceptance": 0.7624,
+      "sampled_acceptance": 0.7577,
+      "top1_match": 0.75,
+      "acc_general": 0.8091,
+      "acc_chat": 0.7168,
+      "acc_code": 0.7134,
+      "acc_math": 0.7915
+    },
+    {
+      "budget_M": 32,
+      "M_over_E": 1.0,
+      "gamma": 1.0,
+      "topk_overlap": 1.0,
+      "expected_acceptance": 1.0,
+      "sampled_acceptance": 1.0,
+      "top1_match": 1.0,
+      "acc_general": 1.0,
+      "acc_chat": 1.0,
+      "acc_code": 1.0,
+      "acc_math": 1.0
+    }
+  ]
+}

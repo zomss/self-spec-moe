@@ -1,0 +1,81 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "model_type": "gpt_oss",
+  "num_experts": 32,
+  "default_top_k": 4,
+  "num_layers": 24,
+  "gen_tokens": 192,
+  "num_sequences": 16,
+  "coverage_rows": [
+    {
+      "cache_size_C": 4,
+      "C_over_E": 0.125,
+      "dyn_coverage": 0.437,
+      "dyn_all_local": 0.0524,
+      "dyn_cache_fill": 4.0,
+      "static_coverage": 0.3944,
+      "static_all_local": 0.0192
+    },
+    {
+      "cache_size_C": 6,
+      "C_over_E": 0.188,
+      "dyn_coverage": 0.5401,
+      "dyn_all_local": 0.1265,
+      "dyn_cache_fill": 6.0,
+      "static_coverage": 0.5021,
+      "static_all_local": 0.077
+    },
+    {
+      "cache_size_C": 8,
+      "C_over_E": 0.25,
+      "dyn_coverage": 0.6369,
+      "dyn_all_local": 0.2228,
+      "dyn_cache_fill": 8.0,
+      "static_coverage": 0.5825,
+      "static_all_local": 0.1473
+    },
+    {
+      "cache_size_C": 12,
+      "C_over_E": 0.375,
+      "dyn_coverage": 0.7809,
+      "dyn_all_local": 0.4336,
+      "dyn_cache_fill": 11.99,
+      "static_coverage": 0.6945,
+      "static_all_local": 0.2836
+    },
+    {
+      "cache_size_C": 16,
+      "C_over_E": 0.5,
+      "dyn_coverage": 0.8786,
+      "dyn_all_local": 0.6386,
+      "dyn_cache_fill": 15.93,
+      "static_coverage": 0.777,
+      "static_all_local": 0.4159
+    },
+    {
+      "cache_size_C": 24,
+      "C_over_E": 0.75,
+      "dyn_coverage": 0.9686,
+      "dyn_all_local": 0.8868,
+      "dyn_cache_fill": 22.63,
+      "static_coverage": 0.9151,
+      "static_all_local": 0.7295
+    }
+  ],
+  "acceptance_validation": [
+    {
+      "cache_size_C": 8,
+      "n": 30,
+      "sampled_acceptance": 0.6368,
+      "expected_acceptance": 0.6371,
+      "top1_match": 0.6
+    },
+    {
+      "cache_size_C": 16,
+      "n": 30,
+      "sampled_acceptance": 0.8327,
+      "expected_acceptance": 0.8353,
+      "top1_match": 0.7667
+    }
+  ]
+}

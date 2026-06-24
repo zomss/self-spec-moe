@@ -1,0 +1,40 @@
+{
+  "label": "ep4dp1",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tensor_parallel_size": 4,
+  "enable_expert_parallel": true,
+  "input_len": 4,
+  "output_len": 64,
+  "rows": [
+    {
+      "batch": 1,
+      "total_ms_median": 296.669,
+      "ms_per_token": 4.6355
+    },
+    {
+      "batch": 2,
+      "total_ms_median": 342.395,
+      "ms_per_token": 5.3499
+    },
+    {
+      "batch": 4,
+      "total_ms_median": 385.876,
+      "ms_per_token": 6.0293
+    },
+    {
+      "batch": 8,
+      "total_ms_median": 458.155,
+      "ms_per_token": 7.1587
+    },
+    {
+      "batch": 16,
+      "total_ms_median": 546.217,
+      "ms_per_token": 8.5346
+    },
+    {
+      "batch": 32,
+      "total_ms_median": 631.99,
+      "ms_per_token": 9.8748
+    }
+  ]
+}

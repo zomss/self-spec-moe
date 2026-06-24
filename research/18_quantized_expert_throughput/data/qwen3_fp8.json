@@ -1,0 +1,14 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "quantization": "fp8",
+  "rows": [
+    {
+      "batch": 64,
+      "ms_per_token": 7.3104
+    },
+    {
+      "batch": 256,
+      "ms_per_token": 13.9513
+    }
+  ]
+}

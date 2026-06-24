@@ -1,0 +1,90 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "model_type": "qwen3_moe",
+  "num_experts": 128,
+  "default_top_k": 8,
+  "num_layers": 48,
+  "gen_tokens": 192,
+  "num_sequences": 16,
+  "coverage_rows": [
+    {
+      "cache_size_C": 8,
+      "C_over_E": 0.062,
+      "dyn_coverage": 0.4227,
+      "dyn_all_local": 0.0042,
+      "dyn_cache_fill": 8.0,
+      "static_coverage": 0.3656,
+      "static_all_local": 0.0006
+    },
+    {
+      "cache_size_C": 12,
+      "C_over_E": 0.094,
+      "dyn_coverage": 0.5045,
+      "dyn_all_local": 0.0221,
+      "dyn_cache_fill": 12.0,
+      "static_coverage": 0.4603,
+      "static_all_local": 0.0091
+    },
+    {
+      "cache_size_C": 16,
+      "C_over_E": 0.125,
+      "dyn_coverage": 0.5763,
+      "dyn_all_local": 0.0502,
+      "dyn_cache_fill": 16.0,
+      "static_coverage": 0.5356,
+      "static_all_local": 0.0288
+    },
+    {
+      "cache_size_C": 24,
+      "C_over_E": 0.188,
+      "dyn_coverage": 0.6955,
+      "dyn_all_local": 0.1395,
+      "dyn_cache_fill": 24.0,
+      "static_coverage": 0.6509,
+      "static_all_local": 0.0959
+    },
+    {
+      "cache_size_C": 32,
+      "C_over_E": 0.25,
+      "dyn_coverage": 0.7828,
+      "dyn_all_local": 0.2609,
+      "dyn_cache_fill": 31.99,
+      "static_coverage": 0.7362,
+      "static_all_local": 0.1955
+    },
+    {
+      "cache_size_C": 48,
+      "C_over_E": 0.375,
+      "dyn_coverage": 0.895,
+      "dyn_all_local": 0.526,
+      "dyn_cache_fill": 47.64,
+      "static_coverage": 0.8474,
+      "static_all_local": 0.4207
+    },
+    {
+      "cache_size_C": 64,
+      "C_over_E": 0.5,
+      "dyn_coverage": 0.9455,
+      "dyn_all_local": 0.703,
+      "dyn_cache_fill": 60.97,
+      "static_coverage": 0.9135,
+      "static_all_local": 0.6086
+    }
+  ],
+  "acceptance_validation": [
+    {
+      "cache_size_C": 16,
+      "n": 30,
+      "sampled_acceptance": 0.382,
+      "expected_acceptance": 0.381,
+      "top1_match": 0.4667
+    },
+    {
+      "cache_size_C": 32,
+      "n": 30,
+      "sampled_acceptance": 0.7407,
+      "expected_acceptance": 0.7399,
+      "top1_match": 0.7667
+    }
+  ]
+}

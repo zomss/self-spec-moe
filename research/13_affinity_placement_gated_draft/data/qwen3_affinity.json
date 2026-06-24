@@ -1,0 +1,57 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "num_experts": 128,
+  "top_k": 8,
+  "by_config": {
+    "affinity_G2": {
+      "placement": "affinity",
+      "num_groups": 2,
+      "LAR_mean": 0.8272,
+      "cov_p50": 0.8724,
+      "cov_p90": 0.9453,
+      "draftable_frac_ge_thr": 0.3608,
+      "fully_local_frac": 0.0,
+      "acceptance": {
+        "all_steps_mean_sampled": 0.858,
+        "all_steps_n": 96,
+        "draftable_mean_sampled": 0.8691,
+        "draftable_n": 37,
+        "draftable_mean_cov": 0.9333
+      }
+    },
+    "affinity_G4": {
+      "placement": "affinity",
+      "num_groups": 4,
+      "LAR_mean": 0.4677,
+      "cov_p50": 0.4844,
+      "cov_p90": 0.6042,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0,
+      "acceptance": {
+        "all_steps_mean_sampled": 0.4535,
+        "all_steps_n": 96,
+        "draftable_mean_sampled": null,
+        "draftable_n": 0,
+        "draftable_mean_cov": null
+      }
+    },
+    "contiguous_G2": {
+      "placement": "contiguous",
+      "num_groups": 2,
+      "LAR_mean": 0.5113,
+      "cov_p50": 0.513,
+      "cov_p90": 0.5495,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0
+    },
+    "contiguous_G4": {
+      "placement": "contiguous",
+      "num_groups": 4,
+      "LAR_mean": 0.2687,
+      "cov_p50": 0.2682,
+      "cov_p90": 0.3047,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0
+    }
+  }
+}

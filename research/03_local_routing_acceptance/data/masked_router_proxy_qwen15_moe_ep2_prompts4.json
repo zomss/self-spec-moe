@@ -1,0 +1,77 @@
+{
+  "model": "Qwen/Qwen1.5-MoE-A2.7B",
+  "num_prompts": 4,
+  "ep_size": 2,
+  "hot_experts": [
+    16,
+    40,
+    51,
+    21,
+    58,
+    37,
+    45,
+    11
+  ],
+  "rows": [
+    {
+      "placement": "contiguous",
+      "rank": 0,
+      "local_experts": 30,
+      "acceptance_overlap_mean": 0.08677943050861359,
+      "acceptance_overlap_min": 0.028176158666610718,
+      "kl_pq_mean": 5.1482720375061035,
+      "top1_match_rate": 0.25,
+      "target_prob_draft_top1_mean": 0.008475005626678467
+    },
+    {
+      "placement": "contiguous",
+      "rank": 1,
+      "local_experts": 30,
+      "acceptance_overlap_mean": 0.3049083948135376,
+      "acceptance_overlap_min": 0.11518287658691406,
+      "kl_pq_mean": 2.487591028213501,
+      "top1_match_rate": 0.25,
+      "target_prob_draft_top1_mean": 0.10277597606182098
+    },
+    {
+      "placement": "random",
+      "rank": 0,
+      "local_experts": 30,
+      "acceptance_overlap_mean": 0.36941206455230713,
+      "acceptance_overlap_min": 0.0019242725102230906,
+      "kl_pq_mean": 5.595975875854492,
+      "top1_match_rate": 0.25,
+      "target_prob_draft_top1_mean": 0.06673821806907654
+    },
+    {
+      "placement": "random",
+      "rank": 1,
+      "local_experts": 30,
+      "acceptance_overlap_mean": 0.05182404816150665,
+      "acceptance_overlap_min": 0.013277163729071617,
+      "kl_pq_mean": 6.19160795211792,
+      "top1_match_rate": 0.25,
+      "target_prob_draft_top1_mean": 0.009020459838211536
+    },
+    {
+      "placement": "contiguous_hot_replicated",
+      "rank": 0,
+      "local_experts": 35,
+      "acceptance_overlap_mean": 0.20598238706588745,
+      "acceptance_overlap_min": 0.002012692391872406,
+      "kl_pq_mean": 7.025235176086426,
+      "top1_match_rate": 0.25,
+      "target_prob_draft_top1_mean": 0.00926823541522026
+    },
+    {
+      "placement": "contiguous_hot_replicated",
+      "rank": 1,
+      "local_experts": 33,
+      "acceptance_overlap_mean": 0.34673696756362915,
+      "acceptance_overlap_min": 0.003408936783671379,
+      "kl_pq_mean": 4.677084922790527,
+      "top1_match_rate": 0.0,
+      "target_prob_draft_top1_mean": 0.013428304344415665
+    }
+  ]
+}

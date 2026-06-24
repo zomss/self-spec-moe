@@ -1,0 +1,30 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "quantization": "none",
+  "rows": [
+    {
+      "batch": 1,
+      "ms_per_token": 5.2807
+    },
+    {
+      "batch": 4,
+      "ms_per_token": 9.2321
+    },
+    {
+      "batch": 16,
+      "ms_per_token": 16.9953
+    },
+    {
+      "batch": 64,
+      "ms_per_token": 24.9606
+    },
+    {
+      "batch": 256,
+      "ms_per_token": 30.6897
+    },
+    {
+      "batch": 1024,
+      "ms_per_token": 69.0471
+    }
+  ]
+}

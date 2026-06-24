@@ -1,0 +1,7 @@
+[gptoss] H=2880 I=2880 E=32 K=4  M=[4, 8, 16, 24, 32]
+WARNING 06-24 17:41:31 [fused_moe.py:1071] Using default MoE config. Performance might be sub-optimal! Config file not found at /data/smcho/self-spec-moe/vllm/model_executor/layers/fused_moe/configs/E=32,N=2880,device_name=NVIDIA_H100_80GB_HBM3.json
+B=   16: M4=0.214  M8=0.211  M16=0.300  M24=0.433  M32=0.464  | half/full=0.647
+B=   64: M4=0.211  M8=0.210  M16=0.320  M24=0.457  M32=0.589  | half/full=0.544
+B=  256: M4=0.282  M8=0.274  M16=0.350  M24=0.478  M32=0.614  | half/full=0.57
+B= 1024: M4=0.444  M8=0.511  M16=0.553  M24=0.718  M32=0.785  | half/full=0.705
+B= 4096: M4=1.742  M8=1.810  M16=1.912  M24=1.942  M32=1.958  | half/full=0.976

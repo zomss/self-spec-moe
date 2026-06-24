@@ -1,0 +1,57 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "num_experts": 32,
+  "top_k": 4,
+  "by_config": {
+    "affinity_G2": {
+      "placement": "affinity",
+      "num_groups": 2,
+      "LAR_mean": 0.7547,
+      "cov_p50": 0.8021,
+      "cov_p90": 0.9271,
+      "draftable_frac_ge_thr": 0.1987,
+      "fully_local_frac": 0.0,
+      "acceptance": {
+        "all_steps_mean_sampled": 0.8396,
+        "all_steps_n": 96,
+        "draftable_mean_sampled": 0.8879,
+        "draftable_n": 21,
+        "draftable_mean_cov": 0.9266
+      }
+    },
+    "affinity_G4": {
+      "placement": "affinity",
+      "num_groups": 4,
+      "LAR_mean": 0.4169,
+      "cov_p50": 0.4375,
+      "cov_p90": 0.5625,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0,
+      "acceptance": {
+        "all_steps_mean_sampled": 0.5898,
+        "all_steps_n": 96,
+        "draftable_mean_sampled": null,
+        "draftable_n": 0,
+        "draftable_mean_cov": null
+      }
+    },
+    "contiguous_G2": {
+      "placement": "contiguous",
+      "num_groups": 2,
+      "LAR_mean": 0.5121,
+      "cov_p50": 0.5104,
+      "cov_p90": 0.5625,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0
+    },
+    "contiguous_G4": {
+      "placement": "contiguous",
+      "num_groups": 4,
+      "LAR_mean": 0.2672,
+      "cov_p50": 0.2708,
+      "cov_p90": 0.3125,
+      "draftable_frac_ge_thr": 0.0,
+      "fully_local_frac": 0.0
+    }
+  }
+}

@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 import threading
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -47,6 +49,17 @@ class AgRsAll2AllManager(All2AllManagerBase):
 
     def __init__(self, cpu_group, tcp_store_group=None):
         super().__init__(cpu_group, tcp_store_group)
+        self._emulated_a2a_count = 0
+        self._active_emulated_a2a_count = 0
+
+    def _emulate_exposed_a2a_delay(self) -> None:
+        self._emulated_a2a_count += 1
+        active_file = envs.VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE
+        if not active_file or Path(active_file).exists():
+            self._active_emulated_a2a_count += 1
+        delay_ms = envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_MS
+        if delay_ms > 0:
+            time.sleep(delay_ms / 1000.0)
 
     def dispatch_router_logits(
         self,
@@ -77,6 +90,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
             dim=0,
             sizes=sizes,
         )
+        self._emulate_exposed_a2a_delay()
 
         if extra_tensors is not None:
             return (gathered_tensors[0], gathered_tensors[1], gathered_tensors[2:])
@@ -112,6 +126,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
             dim=0,
             sizes=sizes,
         )
+        self._emulate_exposed_a2a_delay()
 
         hidden_states = gathered_tensors[0]
         topk_weights = gathered_tensors[1]
@@ -135,10 +150,16 @@ class AgRsAll2AllManager(All2AllManagerBase):
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
         hidden_states = dist_group.reduce_scatterv(hidden_states, dim=0, sizes=sizes)
+        self._emulate_exposed_a2a_delay()
         return hidden_states
 
     def destroy(self):
-        pass
+        if envs.VLLM_SELF_SPEC_LOG_A2A_COUNTS:
+            logger.info(
+                "Self-spec AgRs all2all count: total=%d active=%d",
+                self._emulated_a2a_count,
+                self._active_emulated_a2a_count,
+            )
 
 
 class DeepEPAll2AllManagerBase(All2AllManagerBase):
