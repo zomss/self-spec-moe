@@ -1,0 +1,29 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "top_k": 8,
+  "n_positions": 122,
+  "sample_count": 512,
+  "results": {
+    "fp8_pertensor": {
+      "expected": 0.9673,
+      "sampled": 0.9671,
+      "top1": 0.9672
+    },
+    "mxfp4_g32": {
+      "expected": 0.9051,
+      "sampled": 0.9054,
+      "top1": 0.8852
+    },
+    "nvfp4_g16": {
+      "expected": 0.9216,
+      "sampled": 0.9209,
+      "top1": 0.918
+    },
+    "int4_g128": {
+      "expected": 0.9011,
+      "sampled": 0.9014,
+      "top1": 0.877
+    }
+  }
+}

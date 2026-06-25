@@ -1,0 +1,49 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "n_positions": 122,
+  "sample_count": 512,
+  "results": {
+    "w16a8": {
+      "weight": "bf16",
+      "act": "a8",
+      "expected": 0.9588,
+      "sampled": 0.959,
+      "top1": 0.918
+    },
+    "w16a4": {
+      "weight": "bf16",
+      "act": "a4nv",
+      "expected": 0.9137,
+      "sampled": 0.912,
+      "top1": 0.8361
+    },
+    "w4a16": {
+      "weight": "nvfp4",
+      "act": "none",
+      "expected": 0.9132,
+      "sampled": 0.9126,
+      "top1": 0.8852
+    },
+    "w4a8": {
+      "weight": "nvfp4",
+      "act": "a8",
+      "expected": 0.9163,
+      "sampled": 0.9152,
+      "top1": 0.8852
+    },
+    "w4a4nv": {
+      "weight": "nvfp4",
+      "act": "a4nv",
+      "expected": 0.8974,
+      "sampled": 0.8987,
+      "top1": 0.9016
+    },
+    "w4a4mx": {
+      "weight": "nvfp4",
+      "act": "a4mx",
+      "expected": 0.8653,
+      "sampled": 0.8661,
+      "top1": 0.8525
+    }
+  }
+}
