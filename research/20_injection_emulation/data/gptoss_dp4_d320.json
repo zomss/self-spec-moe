@@ -1,0 +1,30 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "data_parallel_size": 4,
+  "tensor_parallel_size": 1,
+  "delay_us": 320.0,
+  "input_len": 4,
+  "output_len": 64,
+  "rows": [
+    {
+      "batch_per_rank": 1,
+      "batch_global": 4,
+      "step_ms": 30.3725
+    },
+    {
+      "batch_per_rank": 8,
+      "batch_global": 32,
+      "step_ms": 30.1452
+    },
+    {
+      "batch_per_rank": 32,
+      "batch_global": 128,
+      "step_ms": 30.931
+    },
+    {
+      "batch_per_rank": 64,
+      "batch_global": 256,
+      "step_ms": 31.9125
+    }
+  ]
+}

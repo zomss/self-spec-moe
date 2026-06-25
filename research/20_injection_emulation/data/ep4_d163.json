@@ -1,0 +1,30 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tensor_parallel_size": 4,
+  "enable_expert_parallel": true,
+  "delay_us": 163.0,
+  "input_len": 4,
+  "output_len": 64,
+  "rows": [
+    {
+      "batch": 1,
+      "step_ms": 4.6115,
+      "throughput_tok_s": 216.9
+    },
+    {
+      "batch": 8,
+      "step_ms": 7.1772,
+      "throughput_tok_s": 1114.6
+    },
+    {
+      "batch": 32,
+      "step_ms": 9.8563,
+      "throughput_tok_s": 3246.6
+    },
+    {
+      "batch": 64,
+      "step_ms": 10.9413,
+      "throughput_tok_s": 5849.4
+    }
+  ]
+}

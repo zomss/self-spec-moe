@@ -51,12 +51,46 @@ class AgRsAll2AllManager(All2AllManagerBase):
         super().__init__(cpu_group, tcp_store_group)
         self._emulated_a2a_count = 0
         self._active_emulated_a2a_count = 0
+        # GPU-clock cycles per microsecond for torch.cuda._sleep injection.
+        # Calibrated once here (eager, before any CUDA-graph capture) so the
+        # delay can be enqueued on the stream and captured into the graph.
+        self._cycles_per_us = 0.0
+        if envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US > 0 and torch.cuda.is_available():
+            try:
+                self._cycles_per_us = self._calibrate_cycles_per_us()
+                logger.info(
+                    "Self-spec A2A delay: %.1f us/collective on GPU stream "
+                    "(%.1f cycles/us)",
+                    envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US,
+                    self._cycles_per_us,
+                )
+            except Exception as e:  # pragma: no cover - research hook
+                logger.warning("Self-spec A2A delay calibration failed: %s", e)
+
+    @staticmethod
+    def _calibrate_cycles_per_us() -> float:
+        torch.cuda._sleep(1_000_000)  # warmup
+        torch.cuda.synchronize()
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+        n = 200_000_000
+        start.record()
+        torch.cuda._sleep(n)
+        end.record()
+        torch.cuda.synchronize()
+        ms = start.elapsed_time(end)
+        return n / (ms * 1000.0) if ms > 0 else 0.0
 
     def _emulate_exposed_a2a_delay(self) -> None:
         self._emulated_a2a_count += 1
         active_file = envs.VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE
         if not active_file or Path(active_file).exists():
             self._active_emulated_a2a_count += 1
+        delay_us = envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US
+        if delay_us > 0 and self._cycles_per_us > 0:
+            # Enqueue on the current stream; captured into the CUDA graph so it
+            # replays every decode step (host time.sleep would not).
+            torch.cuda._sleep(int(delay_us * self._cycles_per_us))
         delay_ms = envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_MS
         if delay_ms > 0:
             time.sleep(delay_ms / 1000.0)

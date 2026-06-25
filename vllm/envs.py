@@ -245,6 +245,7 @@ if TYPE_CHECKING:
     VLLM_DEEPEP_V2_PREFER_OVERLAP: bool = False
     VLLM_DEEPEP_V2_ALLOW_MULTIPLE_REDUCTION: bool = False
     VLLM_SELF_SPEC_EMULATE_A2A_DELAY_MS: float = 0.0
+    VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US: float = 0.0
     VLLM_SELF_SPEC_LOG_A2A_COUNTS: bool = False
     VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE: str = ""
     VLLM_DBO_COMM_SMS: int = 20
@@ -1771,6 +1772,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # to emulate exposed multi-node communication.
     "VLLM_SELF_SPEC_EMULATE_A2A_DELAY_MS": lambda: float(
         os.getenv("VLLM_SELF_SPEC_EMULATE_A2A_DELAY_MS", "0")
+    ),
+    # Research-only: per-collective exposed-A2A delay in microseconds, injected
+    # on the GPU stream (torch.cuda._sleep) so it is captured into CUDA graphs
+    # and replays every decode step. Use this (not the MS host-sleep) to emulate
+    # inter-node all-to-all latency under graph mode. MS and US are additive.
+    "VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US": lambda: float(
+        os.getenv("VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US", "0")
     ),
     # Research-only: log AgRs MoE EP allgather/reducescatter call counts.
     "VLLM_SELF_SPEC_LOG_A2A_COUNTS": lambda: bool(
