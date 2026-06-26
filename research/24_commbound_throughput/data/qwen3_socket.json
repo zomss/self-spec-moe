@@ -1,0 +1,27 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "socket",
+  "nccl_p2p_disable": "1",
+  "nccl_shm_disable": "1",
+  "data_parallel_size": 8,
+  "tensor_parallel_size": 1,
+  "input_len": 4,
+  "output_len": 32,
+  "rows": [
+    {
+      "batch_per_rank": 1,
+      "batch_global": 8,
+      "step_ms": 92.6188
+    },
+    {
+      "batch_per_rank": 4,
+      "batch_global": 32,
+      "step_ms": 117.559
+    },
+    {
+      "batch_per_rank": 16,
+      "batch_global": 128,
+      "step_ms": 138.5248
+    }
+  ]
+}

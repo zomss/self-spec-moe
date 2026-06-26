@@ -1,23 +1,26 @@
 # Self-MoE-Spec Research Status
 
-Date: 2026-06-24
+Date: 2026-06-25
 
 ## Executive Summary
 
-The original naive Self-MoE-spec idea is now **high-risk**:
+**The project pivoted at Phase 18.** The original naive design --
 
 ```text
-local top-k expert draft
-+ exact full-MoE verification
+local top-k expert draft + exact full-MoE verification
 ```
 
-The timing side still says multi-node EP could provide enough communication
-savings, but the model side currently looks weak. Real local-only routing on the
-tested MoE checkpoints does not preserve the target model's next-token
-distribution well enough.
+-- is a **scoped negative result** (Phases 00-17): device-local routing never clears
+`beta >= 0.8` on real models and is *anti-correlated* with the high-EP regime that
+supplies the communication advantage. Single-node NVLink experiments were weak
+because NVLink makes EP **compute-bound** (machine-balance argument below) -- a
+fabric artifact, not a fundamental limit.
 
-Do **not** proceed directly to runtime implementation of naive local-top-k
-drafting. The best next direction is to pivot to cheaper/hybrid drafts.
+From Phase 18 the draft mechanism is **quantization, not lossy local routing**, and
+the framing is **communication-bound MoE serving**. The current thesis, design
+ladder, and open gap are in "Current Positioning" below; the phase table records the
+full path. The detailed narrative under "Historical Record" documents the pre-pivot
+(Phases 00-17) investigation and is superseded by the positioning section.
 
 ## Phase Summary
 
@@ -47,6 +50,77 @@ drafting. The best next direction is to pivot to cheaper/hybrid drafts.
 | `21_streaming_locality` | Complete | DRAM-offloaded expert draft (keep GPU at ~bf16 verify shard, stream quantized experts) is PCIe-viable at low batch. Real-weight routing is skewed (Qwen3 top-25% experts = 60% of traffic) and temporally local (B=1, k=4 cycle touches only ~20/128 experts/layer; reuse 1.6-3.1x). With a 12.5-25% verify-warmed cache, per-cycle streamed bytes fall BELOW the 50 GB/s hideable budget k*T_step*BW (Qwen3 C=16,k=4: fit 0.52; C=32: 0.27), holding extra HBM to ~2-5 GB vs +14.5 GB to replicate. Mid/high batch needs larger cache or skip-cold (verify corrects, no stall). beta near 0.95 where fully hidden, graceful to ~0.78 floor otherwise. Confirmed on GPT-OSS-20B too. Overlap-can't-hide-PCIe holds only for full-set swaps, not this reuse-amortized partial stream. |
 | `22_fp4_acceptance` | Complete | FP4 expert-draft acceptance holds (the bit-width the per-node-replication memory math requires). Real Qwen3-30B, weight-only W4A16 expert quant, rejection-sampling acc vs bf16 target (Phase 18 method; FP8 anchor 0.967 ~ Phase 18's 0.954). NVFP4 (E2M1+E4M3/16 scale) = 0.921 (best FP4), MXFP4 (E8M0/32) = 0.905, INT4-g128 = 0.901 -- all ~0.05 below FP8, far above the local floor (~0.78). Maps to ~2.0-2.1x lossless at the Phase 20 high-exposure point (vs FP8 2.3x). So FP4 is simultaneously small enough to replicate per node AND accurate enough to draft -- acceptance side of the intra-node-EP direction validated. NVFP4 = Blackwell-native target; MXFP4 = ~1.5pt-lower Hopper fallback. Caveat: one-step W4A16 proxy, one model. |
 | `23_activation_quant_acceptance` | Complete | Activation quant (the COMMUNICATION axis -- the EP all-to-all moves activations) buys comm reduction almost for free. Real Qwen3-30B, per-token fake-quant of dispatch input + combine output in Qwen3MoeExperts, rejection-sampling acc vs bf16 (w4a16 anchor 0.913 ~ Phase 22, validates patched forward). FP8 activations FREE (W4A8 0.915 = W4A16 0.913 within +-0.01 noise -> 2x comm at ~0 cost); NVFP4 activations cost ~0.014 (W4A4 0.899 -> 4x comm); both memory-free. MXFP4 activations worse (0.866) -> use NVFP4 on the wire. Weight+activation FP4 errors barely compound. Design ladder: FP8 act (free, 2x) -> NVFP4 act (~0.014, 4x) -> local routing (eliminate, +HBM). Quantization unified across compute (weights) AND communication (activations), lossless via verify. Cost side of all levers now measured; remaining gap = comm-bound f-vs-batch BENEFIT (PCIe/inter-node). |
+| `24_commbound_throughput` | **Stage A complete (GO)** | The make-or-break BENEFIT side, now measured on real transports (not injection). `NCCL_P2P_DISABLE=1` (the PCIe-exact knob) HANGS this NVSwitch box -- proven on a trivial 2-GPU all-gather (same wall as Phase 02/20 forced transports). Forced sockets work as a real comm-heavy endpoint. Result (Qwen3-30B, attention-DP8+EP): NVLink step ~15 ms flat (compute, comm ~free); off NVLink (sockets) the step is **84-89% communication** (f=0.84 at global B=8 -> 0.89 at B=128, growing with batch -- machine balance confirmed). Composed lossless speedup of a comm-free local-routing draft + exact verify (S_draft~=S_nvlink, S_verify=comm-bound, measured beta): **>=1.3x across the whole plausible PCIe range** (socket comm deflated 4x, beta=0.82) up to **2-3.5x** at the measured socket point; 1.6-1.9x at beta=0.92; win grows with batch. GO -> Stage B (integrated lockstep scheduler, real tokens/s + losslessness). Open: PCIe-exact point (needs a real PCIe box; socket is pessimistic) and DBO-overlap baseline (needs DeepEP). See `24_commbound_throughput/results_commbound_throughput.md`. |
+
+## Current Positioning (Phases 18-23)
+
+**Thesis -- lossless low-precision speculative decoding for communication-bound MoE
+serving.** Without NVLink/NVSwitch or across nodes, MoE inference is communication-
+bound: the expert all-to-all (which moves *activations*) dominates the step. Make the
+speculative **draft** a fully low-precision MoE forward -- quantized weights AND
+activations, optionally local-routed -- cheap in compute, weight bandwidth, and
+communication, while a bf16 full-EP **verify** keeps output exact (rejection
+sampling). Because every draft step is verified, the draft may use precisions too
+lossy to serve directly.
+
+**Why communication-bound (machine-balance argument).** Expert-FFN arithmetic
+intensity is ~1150 FLOP/byte (per token-expert route: ~9.4 MFLOP vs ~8 KB dispatch+
+combine). Interconnect machine balance = compute_rate / link_BW (H100 ~500 TFLOP/s):
+
+| fabric | balance (FLOP/byte) | vs FFN 1150 | regime |
+| --- | ---: | --- | --- |
+| NVLink/NVSwitch (~900 GB/s) | ~560 | below -> **compute-bound** | A2A not the bottleneck |
+| PCIe (~50 GB/s) | ~10000 | >> -> **comm-bound ~9x** | A2A dominates |
+| inter-node IB | worse | >> -> comm-bound | A2A dominates |
+
+This **explains the single-node negatives (Phases 12/16) as an NVLink artifact**:
+skipping the A2A only helps where the A2A is the bottleneck (PCIe / inter-node), not
+on NVLink.
+
+**The design ladder (measured acceptance vs bf16, Qwen3-30B; attack comm memory-free
+first, then eliminate).**
+
+| lever | attacks | comm | extra HBM | beta |
+| --- | --- | ---: | ---: | ---: |
+| FP8 activations | communication | x0.5 | 0 | **0.915 (free)** |
+| NVFP4 activations | communication | x0.25 | 0 | 0.899 |
+| NVFP4 weights | compute + enables replica | -- | replica | 0.921 |
+| local routing (FP4 full replica) | communication | ->0 | ~14.5 GB/dev | ~0.92 |
+
+FP8 anchor 0.967 (Phase 22). Errors barely compound (full W4A4 = 0.899). Use **NVFP4,
+not MXFP4**, on the wire (0.899 vs 0.866). Quantization is a unified instrument:
+weight quant for compute/coverage, activation quant for cheap comm shrink, local
+routing for full comm elimination -- all kept lossless by the verify.
+
+**Applicability.** Earns its keep when **bf16 does not fit per device (forced into
+comm-bound EP) but FP4 does (draft can be a comm-free / comm-light local replica)** --
+large MoE on memory-constrained, NVLink-less or multi-node systems. The win is a
+**throughput** claim (comm-bound at serving batch); at B=1 latency on a single box the
+intra-server A2A is too small (~break-even).
+
+**Distinct from prior art (Phase 19).** QuantSpec (quantized KV self-draft) and SS-MoE
+(on-device expert subset) do not cover lossless low-precision (weight + activation)
+drafting that guts the EP all-to-all on comm-bound MoE serving.
+
+**Measured vs open.**
+- *Measured:* acceptance cost of every lever (Phases 18, 22, 23); inter-node exposed-
+  A2A fraction and lossless 1.1-3.3x speedup envelope via GPU-stream injection
+  (Phase 20); PCIe streaming/locality viability (Phase 21).
+- *Open (the one remaining gap):* the **benefit** side on a real comm-bound link --
+  `f` vs batch on the PCIe (`NCCL_P2P_DISABLE`) or inter-node IB all-to-all, and the
+  end-to-end speedup of the low-precision (+ optionally local-routed) draft. Plus the
+  Phase 20 DBO overlap residual (needs a 2-node IB testbed).
+
+**Decision.** Pursue the communication-bound low-precision-draft direction. Next
+phase: measure the comm-bound `f`-vs-batch benefit and end-to-end speedup.
+
+---
+
+## Historical Record (Phases 00-17, pre-pivot)
+
+The sections below document the original local-top-k negative-result investigation
+that motivated the Phase 18 pivot. Retained for provenance; superseded by "Current
+Positioning" above.
 
 ## Timing Conclusion
 
@@ -146,7 +220,7 @@ It measures next-token distribution similarity after local router masking, but
 it does not generate local draft sequences and verify them with the full model.
 Actual acceptance rate `beta` remains unmeasured.
 
-## Current Decision
+## Decision (pre-pivot, superseded by Phase 18+)
 
 Do **not** implement naive local-top-k drafting in vLLM yet.
 
@@ -321,7 +395,7 @@ large single-node end-to-end vLLM speedup is unlikely because Phase 12 measured
 NVLink EP communication as too cheap relative to decode compute. See
 `14_intranode_semantic_pattern/results_intranode_semantic_pattern.md`.
 
-## Final State
+## Final State (pre-pivot negative result, superseded by Phase 18+)
 
 Pure single-GPU local-only MoE drafting is not viable in the high-EP target
 regime. The chain of evidence:
