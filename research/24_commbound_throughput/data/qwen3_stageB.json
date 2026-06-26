@@ -1,0 +1,26 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "k": 4,
+  "n_tokens": 96,
+  "results": {
+    "C=32": {
+      "cache_frac": 0.25,
+      "C": 32,
+      "lossless": false,
+      "mean_accepted": 1.483,
+      "tokens_per_cycle": 2.483,
+      "implied_beta": 0.641,
+      "n_cycles": 236
+    },
+    "C=64": {
+      "cache_frac": 0.5,
+      "C": 64,
+      "lossless": true,
+      "mean_accepted": 2.374,
+      "tokens_per_cycle": 3.374,
+      "implied_beta": 0.802,
+      "n_cycles": 174
+    }
+  }
+}
