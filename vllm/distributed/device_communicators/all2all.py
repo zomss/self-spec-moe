@@ -95,6 +95,33 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if delay_ms > 0:
             time.sleep(delay_ms / 1000.0)
 
+    @staticmethod
+    def _skip_gatherv(tensors, sizes, rank):
+        """Shape-preserving local stand-in for all_gatherv (no cross-rank comm).
+
+        Research-only, TIMING ONLY (dummy weights): tiles this rank's local chunk
+        to fill the gathered shape, so values are valid (no out-of-range expert
+        ids -> no OOB in the MoE kernel) and the routing spread is realistic, but
+        the data is not the true cross-rank gather -- outputs are wrong by design.
+        """
+        total = sum(sizes)
+        out = []
+        for t in tensors:
+            n = t.shape[0]
+            if n == 0:
+                out.append(t.new_zeros((total, *t.shape[1:])))
+                continue
+            reps = (total + n - 1) // n
+            g = t.repeat((reps,) + (1,) * (t.dim() - 1))[:total]
+            out.append(g.contiguous())
+        return out
+
+    @staticmethod
+    def _skip_reduce_scatterv(t, sizes, rank):
+        """Shape-preserving local stand-in for reduce_scatterv (no comm)."""
+        off = sum(sizes[:rank])
+        return t[off : off + sizes[rank]].contiguous()
+
     def dispatch_router_logits(
         self,
         hidden_states: torch.Tensor,
@@ -119,11 +146,16 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        gathered_tensors = dist_group.all_gatherv(
-            tensors_to_gather,
-            dim=0,
-            sizes=sizes,
-        )
+        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+            gathered_tensors = self._skip_gatherv(
+                tensors_to_gather, sizes, dist_group.rank_in_group
+            )
+        else:
+            gathered_tensors = dist_group.all_gatherv(
+                tensors_to_gather,
+                dim=0,
+                sizes=sizes,
+            )
         self._emulate_exposed_a2a_delay()
 
         if extra_tensors is not None:
@@ -155,11 +187,16 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        gathered_tensors = dist_group.all_gatherv(
-            tensors_to_gather,
-            dim=0,
-            sizes=sizes,
-        )
+        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+            gathered_tensors = self._skip_gatherv(
+                tensors_to_gather, sizes, dist_group.rank_in_group
+            )
+        else:
+            gathered_tensors = dist_group.all_gatherv(
+                tensors_to_gather,
+                dim=0,
+                sizes=sizes,
+            )
         self._emulate_exposed_a2a_delay()
 
         hidden_states = gathered_tensors[0]
@@ -183,7 +220,14 @@ class AgRsAll2AllManager(All2AllManagerBase):
         assert sizes is not None
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
-        hidden_states = dist_group.reduce_scatterv(hidden_states, dim=0, sizes=sizes)
+        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+            hidden_states = self._skip_reduce_scatterv(
+                hidden_states, sizes, dist_group.rank_in_group
+            )
+        else:
+            hidden_states = dist_group.reduce_scatterv(
+                hidden_states, dim=0, sizes=sizes
+            )
         self._emulate_exposed_a2a_delay()
         return hidden_states
 

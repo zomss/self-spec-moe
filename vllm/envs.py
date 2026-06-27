@@ -248,6 +248,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US: float = 0.0
     VLLM_SELF_SPEC_LOG_A2A_COUNTS: bool = False
     VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE: str = ""
+    VLLM_SELF_SPEC_SKIP_A2A: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1786,6 +1787,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     ),
     "VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE": lambda: os.getenv(
         "VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE", ""
+    ),
+    # Research-only: skip the AgRs MoE EP allgather/reducescatter collective and
+    # replace it with a shape-preserving local op (no cross-rank comm). For the
+    # comm-free local-routing DRAFT step -- TIMING ONLY (dummy weights); produces
+    # incorrect values, so do not use for correctness. Default off.
+    "VLLM_SELF_SPEC_SKIP_A2A": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_SKIP_A2A", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.

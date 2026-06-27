@@ -68,6 +68,22 @@ def main():
           "socket comm deflated Nx as a PCIe-P2P estimate. Real PCIe point is between "
           "NVLink (1x, no win) and socket.")
 
+    # --- Stage B2a: use the MEASURED comm-free draft step (skip-A2A) ---
+    skip_path = HERE / "data" / "qwen3_socket_skip.json"
+    if skip_path.exists():
+        skip = {r["batch_global"]: r["step_ms"]
+                for r in json.loads(skip_path.read_text())["rows"]}
+        print("\n=== B2a: speedup with MEASURED comm-free draft (socket-skip) ===")
+        print("S_draft = measured skip-A2A step on the comm-bound engine; "
+              "S_verify = measured socket full-EP step")
+        for B in sorted(set(skip) & set(soc)):
+            sd, sv = skip[B], soc[B]
+            print(f"\n-- global batch {B} (S_draft_skip={sd:.1f}ms = "
+                  f"{sd / nvl[B]:.2f}x NVLink; S_verify={sv:.1f}ms) --")
+            for label, beta in BETAS.items():
+                sp, k = best_speedup(sd, sv, beta)
+                print(f"  beta {label:<24}: {sp:.2f}x (k={k})")
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

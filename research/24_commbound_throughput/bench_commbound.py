@@ -87,6 +87,8 @@ def worker(rank, dp, tp, master_ip, master_port, a):
         a.output_json.write_text(json.dumps({
             "model": a.model,
             "tag": a.tag,
+            "config": a.config,
+            "skip_a2a": os.environ.get("VLLM_SELF_SPEC_SKIP_A2A", "0"),
             "nccl_p2p_disable": os.environ.get("NCCL_P2P_DISABLE", "0"),
             "nccl_shm_disable": os.environ.get("NCCL_SHM_DISABLE", "0"),
             "data_parallel_size": dp,
@@ -102,6 +104,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen3-30B-A3B")
     ap.add_argument("--tag", required=True)
+    ap.add_argument("--config", choices=["verify", "skip"], default="verify",
+                    help="verify=full EP all-to-all; skip=comm-free draft step")
     ap.add_argument("--data-parallel-size", type=int, default=8)
     ap.add_argument("--tensor-parallel-size", type=int, default=1)
     ap.add_argument("--batch-sizes", type=parse_int_list, default=[1, 4, 16, 64])
@@ -115,6 +119,8 @@ def main() -> int:
     # research hooks off; we measure the real fabric, not an injected delay
     os.environ["VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US"] = "0"
     os.environ["VLLM_SELF_SPEC_LOG_A2A_COUNTS"] = "1"
+    # comm-free draft step: skip the MoE EP all-to-all (shape-preserving, timing only)
+    os.environ["VLLM_SELF_SPEC_SKIP_A2A"] = "1" if a.config == "skip" else "0"
 
     from vllm.utils.network_utils import get_open_port
 

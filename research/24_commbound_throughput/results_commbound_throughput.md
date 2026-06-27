@@ -75,6 +75,37 @@ batch (the throughput regime). Proceed to Stage B (integrated scheduler).
 - Dummy weights (timing only); FP4 *compute* speedup not on H100 (the win measured
   here is the *communication* axis, which is the point).
 
+## 3b. Stage B2a: speedup with the MEASURED comm-free draft step
+
+Stage A used `S_draft ~= S_nvlink` (a proxy). B2a measures the real comm-free draft
+step directly: a `VLLM_SELF_SPEC_SKIP_A2A` flag replaces the MoE EP collective with a
+shape-preserving local op (tiled local chunk -> valid expert ids, no cross-rank comm;
+timing only, dummy weights). Measured on the **socket (comm-bound) engine**:
+
+| global B | S_verify (full A2A) | S_draft (skip-A2A) | skip / NVLink | skip removes |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 | 92.6 ms | **18.6 ms** | 1.27x | 80% of step |
+| 32 | 117.6 ms | **19.7 ms** | 1.30x | 83% |
+| 128 | 138.5 ms | **19.2 ms** | 1.25x | 86% |
+
+The comm-free draft step is **~1.25-1.30x the NVLink compute floor** -- i.e. skipping
+the all-to-all really does collapse the step back to ~compute-only on the comm-bound
+engine (the ~0.27x residual is the local tiling op + router + leftover sync). GO gate
+(`S_draft_skip <= ~1.3x S_nvlink`) **passed** -> Stage A's draft proxy is validated
+on the real engine.
+
+Speedup recomposed with the **measured** draft step (best k):
+
+| global B | beta=0.82 | beta=0.92 |
+| ---: | ---: | ---: |
+| 8 | 1.94x (k4) | 2.53x (k8) |
+| 32 | 2.09x (k4) | 2.82x (k8) |
+| 128 | 2.28x (k6) | **3.13x (k8)** |
+
+Marginally below the NVLink-proxy estimates in 2 (since the real draft is 1.25-1.30x,
+not 1.0x, of compute) -- the honest correction. Still 1.9-3.1x lossless at the socket
+point, growing with batch.
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a
