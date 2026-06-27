@@ -1,0 +1,84 @@
+{
+  "model": "Qwen/Qwen1.5-MoE-A2.7B",
+  "routed_E": 60,
+  "top_k": 4,
+  "shared_mass_fraction": 0.4469,
+  "results": {
+    "with_shared": [
+      {
+        "frac": 0.0667,
+        "C": 4,
+        "sampled": 0.3759,
+        "expected": 0.3774
+      },
+      {
+        "frac": 0.133,
+        "C": 8,
+        "sampled": 0.4452,
+        "expected": 0.4468
+      },
+      {
+        "frac": 0.25,
+        "C": 15,
+        "sampled": 0.6106,
+        "expected": 0.6114
+      },
+      {
+        "frac": 0.5,
+        "C": 30,
+        "sampled": 0.7372,
+        "expected": 0.7389
+      },
+      {
+        "frac": 0.75,
+        "C": 45,
+        "sampled": 0.8425,
+        "expected": 0.8424
+      },
+      {
+        "frac": 1.0,
+        "C": 60,
+        "sampled": 1.0,
+        "expected": 1.0
+      }
+    ],
+    "without_shared": [
+      {
+        "frac": 0.0667,
+        "C": 4,
+        "sampled": 0.1503,
+        "expected": 0.1484
+      },
+      {
+        "frac": 0.133,
+        "C": 8,
+        "sampled": 0.4107,
+        "expected": 0.4106
+      },
+      {
+        "frac": 0.25,
+        "C": 15,
+        "sampled": 0.5204,
+        "expected": 0.5199
+      },
+      {
+        "frac": 0.5,
+        "C": 30,
+        "sampled": 0.6056,
+        "expected": 0.605
+      },
+      {
+        "frac": 0.75,
+        "C": 45,
+        "sampled": 0.7323,
+        "expected": 0.7313
+      },
+      {
+        "frac": 1.0,
+        "C": 60,
+        "sampled": 1.0,
+        "expected": 1.0
+      }
+    ]
+  }
+}

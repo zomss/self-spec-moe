@@ -1,0 +1,83 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "top_k": 8,
+  "results": {
+    "bf16": [
+      {
+        "frac": 0.0625,
+        "C": 8,
+        "sampled": 0.2208,
+        "expected": 0.222
+      },
+      {
+        "frac": 0.125,
+        "C": 16,
+        "sampled": 0.3984,
+        "expected": 0.3997
+      },
+      {
+        "frac": 0.25,
+        "C": 32,
+        "sampled": 0.619,
+        "expected": 0.6186
+      },
+      {
+        "frac": 0.5,
+        "C": 64,
+        "sampled": 0.8458,
+        "expected": 0.8474
+      },
+      {
+        "frac": 0.75,
+        "C": 96,
+        "sampled": 0.9343,
+        "expected": 0.9324
+      },
+      {
+        "frac": 1.0,
+        "C": 128,
+        "sampled": 1.0,
+        "expected": 1.0
+      }
+    ],
+    "nvfp4": [
+      {
+        "frac": 0.0625,
+        "C": 8,
+        "sampled": 0.2419,
+        "expected": 0.2421
+      },
+      {
+        "frac": 0.125,
+        "C": 16,
+        "sampled": 0.4002,
+        "expected": 0.3991
+      },
+      {
+        "frac": 0.25,
+        "C": 32,
+        "sampled": 0.5979,
+        "expected": 0.5976
+      },
+      {
+        "frac": 0.5,
+        "C": 64,
+        "sampled": 0.8403,
+        "expected": 0.8395
+      },
+      {
+        "frac": 0.75,
+        "C": 96,
+        "sampled": 0.9004,
+        "expected": 0.9007
+      },
+      {
+        "frac": 1.0,
+        "C": 128,
+        "sampled": 0.9204,
+        "expected": 0.9216
+      }
+    ]
+  }
+}
