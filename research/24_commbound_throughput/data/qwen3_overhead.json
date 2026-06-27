@@ -1,0 +1,49 @@
+{
+  "vocab": 151936,
+  "layers": 48,
+  "k": 4,
+  "rows": [
+    {
+      "batch_per_rank": 1,
+      "t_reject_ms": 0.2519,
+      "t_cache_ms": 4.0998,
+      "overhead_ms": 4.3517,
+      "S_draft": 18.62,
+      "S_verify": 92.62,
+      "speedup_b0.82_no_oh": 1.938,
+      "speedup_b0.82_with_oh": 1.889,
+      "overhead_frac_b0.82": 0.02538,
+      "speedup_b0.92_no_oh": 2.53,
+      "speedup_b0.92_with_oh": 2.485,
+      "overhead_frac_b0.92": 0.01769
+    },
+    {
+      "batch_per_rank": 4,
+      "t_reject_ms": 0.2642,
+      "t_cache_ms": 4.0866,
+      "overhead_ms": 4.3508,
+      "S_draft": 19.75,
+      "S_verify": 117.56,
+      "speedup_b0.82_no_oh": 2.091,
+      "speedup_b0.82_with_oh": 2.046,
+      "overhead_frac_b0.82": 0.02166,
+      "speedup_b0.92_no_oh": 2.815,
+      "speedup_b0.92_with_oh": 2.771,
+      "overhead_frac_b0.92": 0.01554
+    },
+    {
+      "batch_per_rank": 16,
+      "t_reject_ms": 0.5123,
+      "t_cache_ms": 4.0731,
+      "overhead_ms": 4.5854,
+      "S_draft": 19.2,
+      "S_verify": 138.52,
+      "speedup_b0.82_no_oh": 2.277,
+      "speedup_b0.82_with_oh": 2.237,
+      "overhead_frac_b0.82": 0.01775,
+      "speedup_b0.92_no_oh": 3.129,
+      "speedup_b0.92_with_oh": 3.08,
+      "overhead_frac_b0.92": 0.01545
+    }
+  ]
+}

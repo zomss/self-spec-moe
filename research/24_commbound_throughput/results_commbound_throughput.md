@@ -106,6 +106,39 @@ Marginally below the NVLink-proxy estimates in 2 (since the real draft is 1.25-1
 not 1.0x, of compute) -- the honest correction. Still 1.9-3.1x lossless at the socket
 point, growing with batch.
 
+## 3c. Stage B2b-pragmatic: overhead-accounted integrated tokens/s
+
+The integrated lockstep tokens/s = composed from measured parts (B2a comm-free draft
+step + Stage A comm-bound verify step + B1 acceptance) plus the per-cycle in-loop
+overhead the composition ignores: rank-local rejection sampling + verify-warmed cache
+update. Measured at realistic sizes (vocab 151936, 48 layers, top_k 8, C=64, k=4;
+upper-bounded -- full softmax over vocab + naive per-layer cache loop):
+
+| B/rank | t_reject | t_cache | overhead | cycle (~k*Sd+Sv) | overhead frac |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.25 ms | 4.10 ms | 4.35 ms | ~167 ms | 1.77% |
+| 4 | 0.26 ms | 4.09 ms | 4.35 ms | ~197 ms | 1.55% |
+| 16 | 0.51 ms | 4.07 ms | 4.59 ms | ~215 ms | 1.55% |
+
+Rejection sampling is negligible (0.25-0.5 ms); the ~4 ms is the **naive** 48-layer
+Python cache-update loop (kernel-launch bound; a single batched bincount/topk over
+`[L,B,top_k]` cuts it to <1 ms). So the in-loop overhead is **~1.5-1.8% of the cycle**
+(real overhead <1% once vectorized).
+
+Speedup, overhead-accounted (socket operating point, best k):
+
+| B/rank | beta=0.82 | beta=0.92 |
+| ---: | ---: | ---: |
+| 1 | 1.91x (was 1.94) | 2.49x (was 2.53) |
+| 4 | 2.06x (was 2.09) | 2.77x (was 2.82) |
+| 16 | 2.24x (was 2.28) | **3.08x (was 3.13)** |
+
+**The in-loop overhead does not materially erode the win** (~0.04-0.05x). Integrated
+lossless speedup is **~1.9-2.2x (beta 0.82) / 2.5-3.1x (beta 0.92)** at the socket
+point, overhead-accounted. Combined with B1 (algorithm correct + lossless) and B2a
+(real comm-free draft step), this is the integrated estimate without the week-scale
+distributed step-driver (deferred to B2-full / a real-PCIe rental).
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a

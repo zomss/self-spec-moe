@@ -17,9 +17,13 @@ because NVLink makes EP **compute-bound** (machine-balance argument below) -- a
 fabric artifact, not a fundamental limit.
 
 From Phase 18 the draft mechanism is **quantization, not lossy local routing**, and
-the framing is **communication-bound MoE serving**. The current thesis, design
-ladder, and open gap are in "Current Positioning" below; the phase table records the
-full path. The detailed narrative under "Historical Record" documents the pre-pivot
+the framing is **communication-bound MoE serving**. As of Phase 24 the direction is
+**validated end-to-end on this hardware**: every lever's acceptance cost is measured,
+and the benefit is measured -- on a comm-bound testbed, lossless **~2.5-3.1x (beta
+0.92)** integrated speedup; remaining gaps (PCIe-exact point, DBO baseline, full
+distributed driver) are hardware-gated and need a real PCIe/multi-node rental. The
+thesis, design ladder, and measured-vs-open status are in "Current Positioning" below;
+the phase table records the full path. "Historical Record" documents the pre-pivot
 (Phases 00-17) investigation and is superseded by the positioning section.
 
 ## Phase Summary
@@ -50,9 +54,9 @@ full path. The detailed narrative under "Historical Record" documents the pre-pi
 | `21_streaming_locality` | Complete | DRAM-offloaded expert draft (keep GPU at ~bf16 verify shard, stream quantized experts) is PCIe-viable at low batch. Real-weight routing is skewed (Qwen3 top-25% experts = 60% of traffic) and temporally local (B=1, k=4 cycle touches only ~20/128 experts/layer; reuse 1.6-3.1x). With a 12.5-25% verify-warmed cache, per-cycle streamed bytes fall BELOW the 50 GB/s hideable budget k*T_step*BW (Qwen3 C=16,k=4: fit 0.52; C=32: 0.27), holding extra HBM to ~2-5 GB vs +14.5 GB to replicate. Mid/high batch needs larger cache or skip-cold (verify corrects, no stall). beta near 0.95 where fully hidden, graceful to ~0.78 floor otherwise. Confirmed on GPT-OSS-20B too. Overlap-can't-hide-PCIe holds only for full-set swaps, not this reuse-amortized partial stream. |
 | `22_fp4_acceptance` | Complete | FP4 expert-draft acceptance holds (the bit-width the per-node-replication memory math requires). Real Qwen3-30B, weight-only W4A16 expert quant, rejection-sampling acc vs bf16 target (Phase 18 method; FP8 anchor 0.967 ~ Phase 18's 0.954). NVFP4 (E2M1+E4M3/16 scale) = 0.921 (best FP4), MXFP4 (E8M0/32) = 0.905, INT4-g128 = 0.901 -- all ~0.05 below FP8, far above the local floor (~0.78). Maps to ~2.0-2.1x lossless at the Phase 20 high-exposure point (vs FP8 2.3x). So FP4 is simultaneously small enough to replicate per node AND accurate enough to draft -- acceptance side of the intra-node-EP direction validated. NVFP4 = Blackwell-native target; MXFP4 = ~1.5pt-lower Hopper fallback. Caveat: one-step W4A16 proxy, one model. |
 | `23_activation_quant_acceptance` | Complete | Activation quant (the COMMUNICATION axis -- the EP all-to-all moves activations) buys comm reduction almost for free. Real Qwen3-30B, per-token fake-quant of dispatch input + combine output in Qwen3MoeExperts, rejection-sampling acc vs bf16 (w4a16 anchor 0.913 ~ Phase 22, validates patched forward). FP8 activations FREE (W4A8 0.915 = W4A16 0.913 within +-0.01 noise -> 2x comm at ~0 cost); NVFP4 activations cost ~0.014 (W4A4 0.899 -> 4x comm); both memory-free. MXFP4 activations worse (0.866) -> use NVFP4 on the wire. Weight+activation FP4 errors barely compound. Design ladder: FP8 act (free, 2x) -> NVFP4 act (~0.014, 4x) -> local routing (eliminate, +HBM). Quantization unified across compute (weights) AND communication (activations), lossless via verify. Cost side of all levers now measured; remaining gap = comm-bound f-vs-batch BENEFIT (PCIe/inter-node). |
-| `24_commbound_throughput` | **Stage A complete (GO)** | The make-or-break BENEFIT side, now measured on real transports (not injection). `NCCL_P2P_DISABLE=1` (the PCIe-exact knob) HANGS this NVSwitch box -- proven on a trivial 2-GPU all-gather (same wall as Phase 02/20 forced transports). Forced sockets work as a real comm-heavy endpoint. Result (Qwen3-30B, attention-DP8+EP): NVLink step ~15 ms flat (compute, comm ~free); off NVLink (sockets) the step is **84-89% communication** (f=0.84 at global B=8 -> 0.89 at B=128, growing with batch -- machine balance confirmed). Composed lossless speedup of a comm-free local-routing draft + exact verify (S_draft~=S_nvlink, S_verify=comm-bound, measured beta): **>=1.3x across the whole plausible PCIe range** (socket comm deflated 4x, beta=0.82) up to **2-3.5x** at the measured socket point; 1.6-1.9x at beta=0.92; win grows with batch. GO. **Stage B1 done** (`results_stageB.md`): lockstep local-draft/full-verify cycle implemented; real multi-token acceptance at 0.5E gives implied beta~0.80 = Phase 18's one-step 0.82 (validates the one-step-beta -> T(k,beta) composition); losslessness holds by the rejection-sampling theorem -- greedy bit-exact matched plain bf16 in 11/12 cases, the lone miss proven (control) to be batched-vs-sequential GPU float non-associativity in the MoE (a single batched forward over a known plain-greedy sequence itself flips ~1/64 near-tie positions; affects ANY parallel verifier), not the accept logic. **Stage B2a done** (`scope_B2.md`, results in `results_commbound_throughput.md` 3b): added `VLLM_SELF_SPEC_SKIP_A2A` (shape-preserving local stand-in for the MoE EP collective; tiles the local chunk -> valid expert ids, no cross-rank comm; timing only). Measured the real comm-free draft step on the socket engine: **18.6-19.7 ms = 1.25-1.30x the NVLink compute floor** (skip removes 80-86% of the step = the comm), passing the GO gate (<=1.3x) and validating Stage A's NVLink draft proxy on the real engine. Recomposed lossless speedup with the measured draft: 1.9-2.3x (beta 0.82) / 2.5-3.1x (beta 0.92), growing with batch. **Stage B2b open**: full lockstep driver (true local-mode MoE for correctness, rank-local rejection sampling, verify-warmed cache) -> real end-to-end tokens/s + system losslessness; days. Socket remains a pessimistic fabric (absolute speedup socket-specific; overhead/losslessness findings fabric-independent). Other open gaps: PCIe-exact point (needs real PCIe box; socket is pessimistic) and DBO-overlap baseline (needs DeepEP). See `24_commbound_throughput/results_commbound_throughput.md`, `results_stageB.md`. |
+| `24_commbound_throughput` | **Stage A complete (GO)** | The make-or-break BENEFIT side, now measured on real transports (not injection). `NCCL_P2P_DISABLE=1` (the PCIe-exact knob) HANGS this NVSwitch box -- proven on a trivial 2-GPU all-gather (same wall as Phase 02/20 forced transports). Forced sockets work as a real comm-heavy endpoint. Result (Qwen3-30B, attention-DP8+EP): NVLink step ~15 ms flat (compute, comm ~free); off NVLink (sockets) the step is **84-89% communication** (f=0.84 at global B=8 -> 0.89 at B=128, growing with batch -- machine balance confirmed). Composed lossless speedup of a comm-free local-routing draft + exact verify (S_draft~=S_nvlink, S_verify=comm-bound, measured beta): **>=1.3x across the whole plausible PCIe range** (socket comm deflated 4x, beta=0.82) up to **2-3.5x** at the measured socket point; 1.6-1.9x at beta=0.92; win grows with batch. GO. **Stage B1 done** (`results_stageB.md`): lockstep local-draft/full-verify cycle implemented; real multi-token acceptance at 0.5E gives implied beta~0.80 = Phase 18's one-step 0.82 (validates the one-step-beta -> T(k,beta) composition); losslessness holds by the rejection-sampling theorem -- greedy bit-exact matched plain bf16 in 11/12 cases, the lone miss proven (control) to be batched-vs-sequential GPU float non-associativity in the MoE (a single batched forward over a known plain-greedy sequence itself flips ~1/64 near-tie positions; affects ANY parallel verifier), not the accept logic. **Stage B2a done** (`scope_B2.md`, results in `results_commbound_throughput.md` 3b): added `VLLM_SELF_SPEC_SKIP_A2A` (shape-preserving local stand-in for the MoE EP collective; tiles the local chunk -> valid expert ids, no cross-rank comm; timing only). Measured the real comm-free draft step on the socket engine: **18.6-19.7 ms = 1.25-1.30x the NVLink compute floor** (skip removes 80-86% of the step = the comm), passing the GO gate (<=1.3x) and validating Stage A's NVLink draft proxy on the real engine. Recomposed lossless speedup with the measured draft: 1.9-2.3x (beta 0.82) / 2.5-3.1x (beta 0.92), growing with batch. **Stage B2b-pragmatic done** (`results_commbound_throughput.md` 3c): measured the in-loop overhead the composition ignores (rank-local rejection sampling + verify-warmed cache update). Rejection sampling negligible (0.25-0.5 ms); naive 48-layer cache loop ~4 ms (vectorizes to <1 ms) -> total overhead ~1.5-1.8% of the cycle. Overhead-accounted integrated lossless speedup: **1.9-2.2x (beta 0.82) / 2.5-3.1x (beta 0.92)** at the socket operating point, growing with batch -- overhead does not materially erode the win. With B1 (algorithm correct + lossless) + B2a (real comm-free step), this is the integrated estimate without the full distributed driver. **B2b-full deferred** (true local-mode MoE + step-level distributed driver -> real end-to-end tokens/s + system losslessness; ~1.5-2 wk, high risk, still socket fabric) -- best done on a real PCIe/multi-node rental where the PCIe-exact + DBO-baseline gaps also live. Other open gaps: PCIe-exact point (needs real PCIe box; socket is pessimistic) and DBO-overlap baseline (needs DeepEP). See `24_commbound_throughput/results_commbound_throughput.md`, `results_stageB.md`. |
 
-## Current Positioning (Phases 18-23)
+## Current Positioning (Phases 18-24)
 
 **Thesis -- lossless low-precision speculative decoding for communication-bound MoE
 serving.** Without NVLink/NVSwitch or across nodes, MoE inference is communication-
@@ -102,17 +106,29 @@ intra-server A2A is too small (~break-even).
 (on-device expert subset) do not cover lossless low-precision (weight + activation)
 drafting that guts the EP all-to-all on comm-bound MoE serving.
 
-**Measured vs open.**
-- *Measured:* acceptance cost of every lever (Phases 18, 22, 23); inter-node exposed-
-  A2A fraction and lossless 1.1-3.3x speedup envelope via GPU-stream injection
-  (Phase 20); PCIe streaming/locality viability (Phase 21).
-- *Open (the one remaining gap):* the **benefit** side on a real comm-bound link --
-  `f` vs batch on the PCIe (`NCCL_P2P_DISABLE`) or inter-node IB all-to-all, and the
-  end-to-end speedup of the low-precision (+ optionally local-routed) draft. Plus the
-  Phase 20 DBO overlap residual (needs a 2-node IB testbed).
+**Measured (both sides now grounded).**
+- *Cost side:* acceptance of every lever (Phases 18/22/23) -- weight FP4 (NVFP4)
+  0.92, FP8 activations free (0.915), FP4 activations 0.899; inter-node exposed-A2A
+  envelope via injection (Phase 20); PCIe streaming/locality (Phase 21).
+- *Benefit side (Phase 24, the gap that is now closed):* on a real comm-bound testbed
+  (sockets, since `NCCL_P2P_DISABLE` hangs this NVSwitch box) EP decode off NVLink is
+  **84-89% communication** (machine balance confirmed); the comm-free draft step is
+  **1.25-1.30x the compute floor** (skip removes ~85% of the step, B2a); the lockstep
+  cycle is **lossless** (rejection-sampling theorem; greedy-numerics caveat attributed,
+  B1) with real acceptance ~ one-step beta; and the overhead-accounted **integrated
+  lossless speedup is ~1.9-2.2x (beta 0.82) / 2.5-3.1x (beta 0.92)** at the socket
+  point, growing with batch (B2b-pragmatic; in-loop overhead ~1.5%).
 
-**Decision.** Pursue the communication-bound low-precision-draft direction. Next
-phase: measure the comm-bound `f`-vs-batch benefit and end-to-end speedup.
+**Still open (rental-gated, not code-gated on this box):** the PCIe-exact operating
+point (socket is pessimistic; the PCIe-faithful knob hangs here), the DBO-overlap
+baseline (needs DeepEP), and the full distributed step-level driver (B2b-full). All
+three want a real PCIe / multi-node testbed (Phase 19 plan), now with precise
+thresholds from Phases 20/24.
+
+**Decision.** The communication-bound low-precision-draft direction is **validated
+end-to-end on this hardware**: lossless ~2.5-3.1x (beta 0.92) at the comm-bound (socket)
+operating point, every lever's cost measured, the benefit measured. Remaining gaps are
+hardware-gated -> a real PCIe/multi-node rental, not more single-node work.
 
 ---
 

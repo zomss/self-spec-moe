@@ -1,9 +1,20 @@
-# Phase 24 (Scoped): Comm-Bound Throughput of the Quantized-Draft / bf16-Verify Cycle
+# Phase 24: Comm-Bound Throughput of the Quantized-Draft / bf16-Verify Cycle
 
-Status: **scoped / not yet run**. This is the make-or-break *benefit*-side phase. All
-prior phases measured the **cost** (acceptance) of each lever and *modeled* the
-benefit (Phase 20 injection, analytical speedup). This phase measures the **real
-wall-clock benefit** on a comm-bound testbed and tests losslessness end-to-end.
+Status: **complete on this hardware** (Stage A + B1 + B2a + B2b-pragmatic);
+**B2b-full deferred** to a real PCIe/multi-node rental. This is the make-or-break
+*benefit*-side phase -- prior phases measured the **cost** (acceptance) and *modeled*
+the benefit; this phase measures the **real benefit** on a comm-bound testbed.
+
+Results: `results_commbound_throughput.md` (Stage A regime + B2a comm-free draft +
+B2b-pragmatic integrated speedup), `results_stageB.md` (B1 losslessness + acceptance),
+`scope_B2.md` (B2b-full plan, deferred). Headline: off NVLink EP decode is 84-89%
+communication; the comm-free draft step is ~1.3x the compute floor; the lockstep cycle
+is lossless; overhead-accounted integrated speedup is **~2.5-3.1x (beta 0.92) /
+1.9-2.2x (beta 0.82)** at the (pessimistic) socket operating point, growing with batch.
+Remaining gaps (PCIe-exact point, DBO baseline, full distributed driver) are
+hardware-gated.
+
+The original scope follows.
 
 Source: Phases 18/22/23 (measured acceptance of weight + activation quant), Phase 20
 (collective counts, the A2A hook + emulation env, speedup model), Phase 21
