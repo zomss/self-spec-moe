@@ -65,6 +65,38 @@ beta-limited; both experiments give it a lever:
 Combined (a shared-expert model + FP4 local cache) is the strongest comm-free draft:
 shared anchor lifts the curve, FP4 makes a large routed cache cheap.
 
+## Follow-up: cross-architecture confirmation (DeepSeek-V2-Lite) + alpha-proxy (failed)
+
+**DeepSeek-V2-Lite** (64 routed top_k 6 + 2 shared, norm_topk_prob=False, native
+transformers impl) -- a *different architecture*. Shared mass fraction **~48%**
+(similar to Qwen1.5-MoE's 45%, not smaller as expected: 2 shared experts are large).
+
+| routed C/E | with shared | without shared | lift |
+| ---: | ---: | ---: | ---: |
+| 0.0625 (4) | 0.261 | 0.006 | **+0.255 (43x)** |
+| 0.125 (8) | 0.388 | 0.014 | +0.374 |
+| 0.25 (16) | 0.627 | 0.051 | **+0.576 (12x)** |
+| 0.5 (32) | 0.822 | 0.237 | +0.585 |
+| 0.75 (48) | 0.903 | 0.397 | +0.506 |
+| 1.0 (64) | 1.000 | 1.000 | 0 (sanity) |
+
+The shared anchor generalizes across architectures and is **even larger** here: it is
+the difference between local routing being **useless** (0.006-0.05 at small cache,
+much lower than Qwen's 0.15 -- DeepSeek's routed experts are more specialized) and
+**usable** (0.26-0.63). Confirms the mechanism on a second architecture.
+
+**alpha-proxy (invalid).** Scaling Qwen1.5-MoE's shared output by alpha in [0,1] to
+emulate a smaller native shared fraction *failed*: the endpoints alpha=0/alpha=1
+reproduce Exp 1 exactly, but intermediate alpha pushes the model out-of-distribution
+(alpha=0.5 -> beta=0.27, a *negative* lift; phi non-monotonic). Lesson: you cannot
+emulate a smaller shared fraction by scaling a 45%-mass component -- the residual
+balance breaks. The small-fraction regime needs a natively-trained model.
+
+**What remains untested:** both confirmed models have a *high* shared fraction
+(~45-48%). The DeepSeek-V3-class **small** fraction (~10-15%, 1 shared : 8 routed)
+is still untested -- the lift there should be proportionally smaller (V2-Lite is not
+that model). Confirming it needs a V3-class checkpoint.
+
 ## Caveats
 
 - **Shared lift is model-specific.** Qwen1.5-MoE's shared expert is unusually large

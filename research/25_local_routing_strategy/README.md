@@ -43,8 +43,16 @@ local routing interpolates coverage-limited -> quant floor; **NVFP4 -> 0.92 at f
 coverage**, bf16 -> 1.0. The strongest comm-free draft combines both (shared anchor +
 FP4 routed cache).
 
+## Follow-up (done)
+
+`deepseek_shared_anchor.py` confirms the shared anchor on a second architecture
+(DeepSeek-V2-Lite, native impl): +0.25 to +0.58 lift (even larger than Qwen).
+`alpha_shared_curve.py` (emulate a smaller fraction by scaling the shared output)
+*failed* -- intermediate scaling is out-of-distribution; only endpoints are valid.
+Both confirmed models are high-shared (~45-48%).
+
 ## Next artifact
 
-Confirm the shared-anchor lift on a DeepSeek/GLM/Llama-4-class shared-expert model
-(smaller shared fraction than Qwen1.5-MoE's 45% -> proportionally smaller lift), and
-fold the comm-free-draft beta (now raised) back into the Phase 24 speedup.
+The DeepSeek-V3-class **small** shared fraction (~10-15%, 1 shared : 8 routed) is
+still untested -> needs a V3-class checkpoint to measure the proportionally-smaller
+lift. Then fold the raised comm-free-draft beta back into the Phase 24 speedup.
