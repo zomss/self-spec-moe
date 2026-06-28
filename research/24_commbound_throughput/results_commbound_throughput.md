@@ -245,6 +245,28 @@ stopwatch of the running loop (B2b-full: engine-internal step driver with in-loo
 switch + distributed rejection sampler + correct local-mode MoE) -- it would only add
 any residual interaction beyond the measured 1.5% overhead.
 
+## 3g. Batch scaling: the win SATURATES (does not keep growing)
+
+Measured forced-PCIe verify + comm-free draft at higher batch:
+
+| global B | verify (ms) | draft (ms) | f | speedup (beta~0.85, real T) |
+| ---: | ---: | ---: | ---: | ---: |
+| 512 | 50.0 | 23.1 | 0.54 | 1.32x |
+| 1024 | 71.4 | 26.9 | **0.62** | **1.47x** |
+| 2048 | 124.0 | 46.5 | **0.62** | **1.47x** |
+
+**f plateaus at ~0.62 and the speedup at ~1.47x by B=1024** -- more batch does NOT give
+much more win. Reason: at high batch *both* comm and compute scale with batch (draft
+23->27->47 ms, verify 50->71->124 ms), so f = comm/(comm+compute) converges to the
+structural ratio (~0.62 here: verify is ~2.7x the comm-free draft) rather than rising
+toward 1. So the comm-amortization lever has a ceiling set by the PCIe comm:compute
+ratio, not the batch.
+
+Saturated single-server-PCIe win: **~1.47x (beta~0.85)** / **~1.7x (beta~0.92,
+geometric)** at high batch. Increasing batch helps up to ~B=1024, then flat. (The 3d
+machine-balance hand-estimate of f->0.9 was too high -- the measured asymptote is
+~0.62 because the MoE compute at high batch is larger than that estimate assumed.)
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a

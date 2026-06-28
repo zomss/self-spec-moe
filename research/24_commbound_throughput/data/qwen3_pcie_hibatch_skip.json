@@ -1,0 +1,29 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "pcie_hibatch_skip",
+  "config": "skip",
+  "skip_a2a": "1",
+  "nccl_p2p_disable": "1",
+  "nccl_shm_disable": "0",
+  "data_parallel_size": 8,
+  "tensor_parallel_size": 1,
+  "input_len": 4,
+  "output_len": 16,
+  "rows": [
+    {
+      "batch_per_rank": 64,
+      "batch_global": 512,
+      "step_ms": 23.0959
+    },
+    {
+      "batch_per_rank": 128,
+      "batch_global": 1024,
+      "step_ms": 26.8794
+    },
+    {
+      "batch_per_rank": 256,
+      "batch_global": 2048,
+      "step_ms": 46.54
+    }
+  ]
+}
