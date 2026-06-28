@@ -43,16 +43,21 @@ local routing interpolates coverage-limited -> quant floor; **NVFP4 -> 0.92 at f
 coverage**, bf16 -> 1.0. The strongest comm-free draft combines both (shared anchor +
 FP4 routed cache).
 
-## Follow-up (done)
+## Follow-up (done) -- anchor confirmed on 3 architectures
 
-`deepseek_shared_anchor.py` confirms the shared anchor on a second architecture
-(DeepSeek-V2-Lite, native impl): +0.25 to +0.58 lift (even larger than Qwen).
-`alpha_shared_curve.py` (emulate a smaller fraction by scaling the shared output)
-*failed* -- intermediate scaling is out-of-distribution; only endpoints are valid.
-Both confirmed models are high-shared (~45-48%).
+- `deepseek_shared_anchor.py`: DeepSeek-V2-Lite (softmax gating, ~48% shared) ->
+  +0.25 to +0.58 lift.
+- `deepseek_v3_shared_anchor.py`: Moonlight-16B-A3B (DeepSeek-V3 sigmoid+noaux_tc
+  gating, ~65% shared) -> +0.13 to +0.54 lift.
+- `alpha_shared_curve.py`: emulating a smaller fraction by scaling the shared output
+  *failed* (intermediate scaling is OOD; only endpoints valid).
 
-## Next artifact
+Anchor is robust across Qwen2-MoE / DeepSeek-V2 / DeepSeek-V3 and 2 gating types.
 
-The DeepSeek-V3-class **small** shared fraction (~10-15%, 1 shared : 8 routed) is
-still untested -> needs a V3-class checkpoint to measure the proportionally-smaller
-lift. Then fold the raised comm-free-draft beta back into the Phase 24 speedup.
+## Next artifact (hardware-gated)
+
+All 3 runnable shared-expert MoEs are high-fraction (45-65%). The **small-fraction**
+regime (DeepSeek-V3 1-shared ~11%, GLM-4.5) is frontier-scale only -> needs a
+multi-GPU / rental testbed to confirm "small shared -> smaller lift" (a
+mechanism-backed prediction). Then fold the raised comm-free-draft beta back into the
+Phase 24 speedup.

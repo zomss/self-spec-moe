@@ -1,0 +1,73 @@
+{
+  "model": "moonshotai/Moonlight-16B-A3B-Instruct",
+  "routed_E": 64,
+  "n_shared": 2,
+  "routed_scaling_factor": 2.446,
+  "shared_mass_fraction": 0.6535,
+  "results": {
+    "with_shared": [
+      {
+        "frac": 0.0625,
+        "C": 4,
+        "sampled": 0.228
+      },
+      {
+        "frac": 0.125,
+        "C": 8,
+        "sampled": 0.3677
+      },
+      {
+        "frac": 0.25,
+        "C": 16,
+        "sampled": 0.5887
+      },
+      {
+        "frac": 0.5,
+        "C": 32,
+        "sampled": 0.8366
+      },
+      {
+        "frac": 0.75,
+        "C": 48,
+        "sampled": 0.9425
+      },
+      {
+        "frac": 1.0,
+        "C": 64,
+        "sampled": 1.0
+      }
+    ],
+    "without_shared": [
+      {
+        "frac": 0.0625,
+        "C": 4,
+        "sampled": 0.1019
+      },
+      {
+        "frac": 0.125,
+        "C": 8,
+        "sampled": 0.1353
+      },
+      {
+        "frac": 0.25,
+        "C": 16,
+        "sampled": 0.2073
+      },
+      {
+        "frac": 0.5,
+        "C": 32,
+        "sampled": 0.2973
+      },
+      {
+        "frac": 0.75,
+        "C": 48,
+        "sampled": 0.459
+      },
+      {
+        "frac": 1.0,
+        "C": 64,
+        "sampled": 1.0
+      }
+    ]
+  }
+}

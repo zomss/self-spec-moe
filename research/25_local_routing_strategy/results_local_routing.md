@@ -92,10 +92,32 @@ reproduce Exp 1 exactly, but intermediate alpha pushes the model out-of-distribu
 emulate a smaller shared fraction by scaling a 45%-mass component -- the residual
 balance breaks. The small-fraction regime needs a natively-trained model.
 
-**What remains untested:** both confirmed models have a *high* shared fraction
-(~45-48%). The DeepSeek-V3-class **small** fraction (~10-15%, 1 shared : 8 routed)
-is still untested -- the lift there should be proportionally smaller (V2-Lite is not
-that model). Confirming it needs a V3-class checkpoint.
+**Third architecture (Moonlight-16B-A3B, DeepSeek-V3 sigmoid + noaux_tc gating,
+native impl).** Shared mass fraction **~65%** (even higher: the
+routed_scaling_factor=2.446 hypothesis was wrong -- sigmoid routing weights are small
+[0,1], so the large shared MLP dominates the norm even more, not less).
+
+| routed C/E | with shared | without shared | lift |
+| ---: | ---: | ---: | ---: |
+| 0.0625 (4) | 0.228 | 0.102 | +0.126 |
+| 0.125 (8) | 0.368 | 0.135 | +0.233 |
+| 0.25 (16) | 0.589 | 0.207 | **+0.382** |
+| 0.5 (32) | 0.837 | 0.297 | **+0.540** |
+| 0.75 (48) | 0.943 | 0.459 | +0.484 |
+| 1.0 (64) | 1.000 | 1.000 | 0 (sanity) |
+
+Confirms the anchor on a **third architecture** (V3 sigmoid gating), +0.13 to +0.54.
+Cross-model, the lift tracks BOTH the shared fraction AND routed specialization: the
+DeepSeek family (V2-Lite, Moonlight) has specialized routed experts whose
+without-shared local routing collapses to ~0 at small cache -> huge lift; Qwen's
+routed experts are less specialized (without-shared starts at 0.15) -> smaller lift.
+
+**What remains genuinely untested (hardware-gated):** all three *runnable* shared-
+expert MoEs turn out to be **high shared fraction (45-65%)**. The small-fraction
+regime (DeepSeek-V3 1-shared ~11%, GLM-4.5) lives only in **frontier-scale** models
+not runnable on one H100 -- so "small shared -> smaller lift" stays a prediction (the
+mechanism makes it likely), confirmable only on a multi-GPU / rental testbed. The
+anchor mechanism itself is now robust across 3 architectures and 2 gating types.
 
 ## Caveats
 
