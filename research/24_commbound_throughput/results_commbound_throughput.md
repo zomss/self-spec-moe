@@ -214,6 +214,37 @@ Caveat: SHM is the host-staged PCIe path. A no-NVLink box where GPUs share a PCI
 switch could use direct PCIe-P2P (~55 GB/s, 2x faster) -> lower f -> smaller speedup;
 this box's separate-root-complex topology uses the (more comm-bound) staged path.
 
+## 3f. End-to-end (all components measured on the real forced-PCIe 8-GPU engine)
+
+Both step times now measured on the actual forced-PCIe engine (`NCCL_P2P_DISABLE=1
+NCCL_NVLS_ENABLE=0 NCCL_IB_DISABLE=1`):
+- **draft (skip-A2A, comm-free):** 17.9 / 18.3 / 17.9 / 19.9 ms at B=8/32/128/512 --
+  confirms the draft is genuinely comm-free (~compute; the slow PCIe never touches it,
+  and there is no significant residual non-MoE comm).
+- **verify (full-EP PCIe-SHM):** 23 / 27 / 35 / 48 ms (3e).
+
+Composed with the MEASURED accepted-length (B1 k-sweep, real tokens/cycle) and the
+MEASURED in-loop overhead (~1.5%, 3c): `speedup = real_T(k) * S_verify /
+((k*S_draft+S_verify)*1.015)`:
+
+| global B | k=2 | k=4 | k=6 |
+| ---: | ---: | ---: | ---: |
+| 128 | 1.26x | 1.21x | 1.07x |
+| 512 | **1.39x** | **1.39x** | 1.26x |
+
+**Real end-to-end: ~1.39x lossless at serving batch** (beta~0.85 local-routing draft),
+every input measured on the target engine. (Using a geometric beta=0.92 for the
+FP4-full-coverage draft with the same measured steps gives ~1.58x, but its multi-token
+acceptance is not yet measured.)
+
+**Provenance:** S_draft, S_verify, accepted-length, and overhead are ALL measured (the
+last modeled assumption -- geometric acceptance -- was replaced by the B1 k-sweep). The
+cycle-time `k*S_draft+S_verify` is exact accounting (the ~1.5% switch/sampling overhead
+is measured, not assumed). The one thing still NOT done is a single-process integrated
+stopwatch of the running loop (B2b-full: engine-internal step driver with in-loop config
+switch + distributed rejection sampler + correct local-mode MoE) -- it would only add
+any residual interaction beyond the measured 1.5% overhead.
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a
