@@ -1,0 +1,73 @@
+{
+  "model": "deepseek-ai/DeepSeek-V2-Lite",
+  "routed_E": 64,
+  "n_shared": 2,
+  "quant": "nvfp4",
+  "shared_mass_fraction": 0.4788,
+  "results": {
+    "with_shared": [
+      {
+        "frac": 0.0625,
+        "C": 4,
+        "sampled": 0.2528
+      },
+      {
+        "frac": 0.125,
+        "C": 8,
+        "sampled": 0.3839
+      },
+      {
+        "frac": 0.25,
+        "C": 16,
+        "sampled": 0.6219
+      },
+      {
+        "frac": 0.5,
+        "C": 32,
+        "sampled": 0.809
+      },
+      {
+        "frac": 0.75,
+        "C": 48,
+        "sampled": 0.8772
+      },
+      {
+        "frac": 1.0,
+        "C": 64,
+        "sampled": 0.9338
+      }
+    ],
+    "without_shared": [
+      {
+        "frac": 0.0625,
+        "C": 4,
+        "sampled": 0.0061
+      },
+      {
+        "frac": 0.125,
+        "C": 8,
+        "sampled": 0.0137
+      },
+      {
+        "frac": 0.25,
+        "C": 16,
+        "sampled": 0.0479
+      },
+      {
+        "frac": 0.5,
+        "C": 32,
+        "sampled": 0.2078
+      },
+      {
+        "frac": 0.75,
+        "C": 48,
+        "sampled": 0.3344
+      },
+      {
+        "frac": 1.0,
+        "C": 64,
+        "sampled": 0.5399
+      }
+    ]
+  }
+}

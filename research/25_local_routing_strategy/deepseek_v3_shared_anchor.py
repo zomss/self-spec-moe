@@ -77,6 +77,35 @@ def patched_v3_forward(self, hidden_states):
     return y
 
 
+_FP4 = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0]
+
+
+def nvfp4_qdq(w, grid, mids, group=16):
+    last = w.shape[-1]
+    g = group if last % group == 0 else last
+    wf = w.float().reshape(-1, g)
+    absmax = wf.abs().amax(dim=1, keepdim=True).clamp_min(1e-8)
+    scale = (absmax / 6.0).to(torch.float8_e4m3fn).float().clamp_min(1e-8)
+    sign = torch.sign(wf)
+    ax = (wf / scale).abs().clamp(max=6.0)
+    q = sign * grid[torch.bucketize(ax, mids)]
+    return (q * scale).reshape(w.shape).to(w.dtype)
+
+
+def quantize_experts(blocks, dev):
+    grid = torch.tensor(_FP4, device=dev)
+    mids = (grid[1:] + grid[:-1]) / 2.0
+    n = 0
+    with torch.inference_mode():
+        for b in blocks:
+            for mod in [b.experts, b.shared_experts]:
+                for p in mod.parameters():
+                    if p.dim() >= 2:
+                        p.data = nvfp4_qdq(p.data, grid, mids)
+                        n += 1
+    return n
+
+
 def accept(p_logits, q_logits, n, gen):
     p = torch.softmax(p_logits, -1)
     q = torch.softmax(q_logits, -1)
@@ -104,6 +133,7 @@ def main():
     ap.add_argument("--sample-count", type=int, default=512)
     ap.add_argument("--pos-from", type=int, default=4)
     ap.add_argument("--cache-fracs", default="0.0625,0.125,0.25,0.5,0.75,1.0")
+    ap.add_argument("--quant", choices=["none", "nvfp4"], default="none")
     ap.add_argument("--output-json", type=Path, required=True)
     a = ap.parse_args()
     dev = a.device
@@ -145,22 +175,33 @@ def main():
     shared_frac = float(np.mean(sn / (sn + rn + 1e-9)))
     print(f"[shared mass fraction] ~{shared_frac:.3f}")
 
-    results = {}
+    # bf16 full-routing targets for both modes, computed BEFORE any quant
+    targets = {}
     for mode in ["with_shared", "without_shared"]:
         _ST["ablate"] = (mode == "without_shared")
         _ST["masks"] = None
-        target = []
+        tg = []
         for enc in enc_cache:
             with torch.inference_mode():
                 lg = model(**enc, use_cache=False).logits[0].float()
             pos = list(range(a.pos_from, lg.shape[0]))
-            target.append((pos, lg[pos].cpu()))
+            tg.append((pos, lg[pos].cpu()))
+        targets[mode] = tg
+    _ST["ablate"] = False
+
+    if a.quant == "nvfp4":
+        nq = quantize_experts(blocks, dev)
+        print(f"[quant] NVFP4 fake-quantized {nq} expert tensors (routed+shared)")
+
+    results = {}
+    for mode in ["with_shared", "without_shared"]:
+        _ST["ablate"] = (mode == "without_shared")
         rows = []
         for frac in fracs:
             C = max(1, int(round(frac * E)))
             _ST["masks"] = masks_for(C)
             sa = []
-            for enc, (pos, p_cpu) in zip(enc_cache, target):
+            for enc, (pos, p_cpu) in zip(enc_cache, targets[mode]):
                 with torch.inference_mode():
                     q = model(**enc, use_cache=False).logits[0].float().cpu()
                 for j, t in enumerate(pos):
@@ -174,7 +215,7 @@ def main():
     a.output_json.parent.mkdir(parents=True, exist_ok=True)
     a.output_json.write_text(json.dumps(
         {"model": a.model, "routed_E": E, "n_shared": cfg.n_shared_experts,
-         "routed_scaling_factor": cfg.routed_scaling_factor,
+         "routed_scaling_factor": cfg.routed_scaling_factor, "quant": a.quant,
          "shared_mass_fraction": round(shared_frac, 4), "results": results}, indent=2))
     print(f"[saved] {a.output_json}")
     return 0

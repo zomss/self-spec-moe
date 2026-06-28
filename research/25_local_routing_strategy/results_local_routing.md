@@ -119,6 +119,32 @@ not runnable on one H100 -- so "small shared -> smaller lift" stays a prediction
 mechanism makes it likely), confirmable only on a multi-GPU / rental testbed. The
 anchor mechanism itself is now robust across 3 architectures and 2 gating types.
 
+## Three-way: shared anchor + local routing + FP4 (the realized comm-free draft)
+
+The actual comm-free draft the design wants is all three levers at once. Measured
+(NVFP4 fake-quant of routed *and* shared experts; bf16 full-routing target). FP4 cost
+= bf16(local+shared) - FP4(local+shared), `with_shared`:
+
+| model (shared%) | C=0.25E | C=0.5E | C=0.75E | C=1.0 |
+| --- | ---: | ---: | ---: | ---: |
+| V2-Lite (48%) bf16 -> FP4 | 0.627->0.622 | 0.822->0.809 | 0.903->0.877 | 1.00->**0.934** |
+| Moonlight (65%) bf16 -> FP4 | 0.589->0.558 | 0.837->0.820 | 0.943->0.891 | 1.00->**0.906** |
+
+**The three levers compose as `beta ~ min(coverage-with-shared(C), quant-floor)`** --
+FP4 costs <=0.03 while coverage is the bottleneck (<=0.5E) and only caps beta at the
+quant floor (~0.91-0.93) at full coverage. No destructive compounding. So the
+comm-free FP4 draft on a shared-expert model gets ~0.82 at 0.5E and ~0.91-0.93 at
+full coverage -- comm-free (local) AND cheap-memory (FP4) AND anchor-lifted, together.
+
+**Bonus: the shared anchor buffers quant error too.** With shared, FP4 at full
+coverage = 0.93; without shared, FP4 full = 0.54 (routed-only FP4 -- partly OOD from
+ablating a shared expert the model trained with). So on shared-expert models the
+comm-free FP4 draft is robust to *both* coverage and quant error.
+
+(Earlier pairwise checks: Phase 18 FP8+local -> 0.82 [coverage-dominated]; Phase 25
+Exp 2 NVFP4+local on Qwen3 -> the min(coverage, 0.92) curve. The three-way extends
+these to shared-expert models.)
+
 ## Caveats
 
 - **Shared lift is model-specific.** Qwen1.5-MoE's shared expert is unusually large
