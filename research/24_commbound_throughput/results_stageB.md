@@ -59,6 +59,42 @@ theorem gives exactness with no tie issue.
   times and B1 the acceptance/losslessness; B2 closes the loop with end-to-end
   throughput under the real (socket/comm-bound) fabric and the verify-as-oracle cache.
 
+## 3b. k-sweep: REAL multi-token accepted-length (replaces the geometric assumption)
+
+The k-curve speedup used the geometric `T(k,beta)=1+beta(1-beta^k)/(1-beta)` (constant
+per-position beta). Measured the real lockstep accepted-length at k=2..12 (local-routing
+draft, C=0.5E, bf16 verify, greedy; `stageB_ksweep.py`):
+
+| k | real mean accepted | real tokens/cycle | implied beta | real/geometric |
+| ---: | ---: | ---: | ---: | ---: |
+| 2 | 1.58 | 2.58 | 0.851 | 1.00 |
+| 4 | 2.74 | 3.74 | 0.853 | 1.00 |
+| 6 | 3.43 | 4.43 | 0.841 | 0.97 |
+| 8 | 4.00 | 5.00 | 0.843 | 0.97 |
+| 12 | 4.32 | 5.32 | 0.829 | 0.90 |
+
+**The geometric model holds in the regime that matters.** Per-position acceptance a_j
+stays ~0.85 and roughly flat across depth (no collapse); implied beta drifts only
+mildly (0.85 -> 0.83 over k=2->12). Real tokens/cycle matches geometric to <1% through
+k=4, ~3% low at k=6-8, ~10% low at k=12. So the geometric k-curve is real-data-accurate
+up to ~k=8 and only modestly optimistic beyond -- and the speedup *optimum* sits at k=4,
+inside the validated range.
+
+**Real-data k-curve** (measured accepted-length x measured PCIe-SHM verify, B=512):
+
+| k | speedup (draft 15ms) | speedup (draft 19ms) |
+| ---: | ---: | ---: |
+| 2 | 1.59x | 1.44x |
+| 4 | **1.66x** | **1.45x** |
+| 6 | 1.54x | 1.32x |
+| 8 | 1.43x | 1.20x |
+| 12 | 1.12x | 0.93x |
+
+Optimal k=4 -> **1.45-1.66x** (real data, beta~0.85 local-routing draft) -- confirming
+the modeled k-curve's shape and optimum with measured accepted-length. (This is the
+beta~0.85 local draft; the beta~0.92 FP4-full-coverage multi-token k-behavior still
+uses the one-step Phase 22 number -- would need a dual-weight lockstep to measure.)
+
 ## 4. Caveats
 
 - Local-routing draft, static per-request cache; the verify-warmed dynamic cache

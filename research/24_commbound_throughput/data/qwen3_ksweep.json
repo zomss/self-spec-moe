@@ -1,0 +1,86 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "C": 64,
+  "n_tokens": 64,
+  "beta_ref_k4": 0.853,
+  "results": {
+    "2": {
+      "mean_accepted": 1.576,
+      "tokens_per_cycle_real": 2.576,
+      "implied_beta": 0.851,
+      "n_cycles": 151,
+      "lossless": true,
+      "per_pos_accept": [
+        0.8543,
+        0.845
+      ]
+    },
+    "4": {
+      "mean_accepted": 2.736,
+      "tokens_per_cycle_real": 3.736,
+      "implied_beta": 0.853,
+      "n_cycles": 106,
+      "lossless": true,
+      "per_pos_accept": [
+        0.8302,
+        0.875,
+        0.8701,
+        0.8657
+      ]
+    },
+    "6": {
+      "mean_accepted": 3.429,
+      "tokens_per_cycle_real": 4.429,
+      "implied_beta": 0.841,
+      "n_cycles": 91,
+      "lossless": false,
+      "per_pos_accept": [
+        0.8242,
+        0.88,
+        0.8182,
+        0.8889,
+        0.7708,
+        0.8649
+      ]
+    },
+    "8": {
+      "mean_accepted": 4.0,
+      "tokens_per_cycle_real": 5.0,
+      "implied_beta": 0.843,
+      "n_cycles": 81,
+      "lossless": true,
+      "per_pos_accept": [
+        0.8272,
+        0.8806,
+        0.8136,
+        0.9167,
+        0.75,
+        0.8788,
+        0.7931,
+        0.913
+      ]
+    },
+    "12": {
+      "mean_accepted": 4.324,
+      "tokens_per_cycle_real": 5.324,
+      "implied_beta": 0.829,
+      "n_cycles": 74,
+      "lossless": false,
+      "per_pos_accept": [
+        0.8108,
+        0.9167,
+        0.8,
+        0.8182,
+        0.75,
+        0.8889,
+        0.7083,
+        0.8824,
+        0.8,
+        0.9167,
+        0.9091,
+        0.9
+      ]
+    }
+  }
+}
