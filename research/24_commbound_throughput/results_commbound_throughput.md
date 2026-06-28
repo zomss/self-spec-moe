@@ -178,6 +178,42 @@ but a throughput-regime effect, not the dramatic low-batch win the socket number
 implied. The exact f still needs a real no-NVLink box (collective latency under 8-way
 PCIe contention is the residual unknown the raw-copy microbenchmark cannot capture).
 
+## 3e. ACTUAL single-server-PCIe measurement (the gap, now closed on this box)
+
+The integrated PCIe path is measurable after all -- the hang was NCCL falling back to
+**NET/IB** (which fails here), and even `NCCL_P2P_DISABLE` left **NVLS** (NVLink
+multicast over NVSwitch) active. Disabling all three forces real PCIe:
+
+```
+NCCL_P2P_DISABLE=1 NCCL_NVLS_ENABLE=0 NCCL_IB_DISABLE=1
+-> channels run "via SHM/direct" = GPU->host->GPU over PCIe (no NVLink, no TCP, no hang)
+```
+
+Real vLLM EP decode (Qwen3-30B, attention-DP8 + EP, 8-way PCIe contention), measured:
+
+| global B | NVLink | **PCIe-SHM** | socket(TCP) | **real f** | speedup b0.82 | speedup b0.92 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 14.7 | 23.3 | 92.6 | 0.367 | 1.11x | 1.22x |
+| 32 | 15.2 | 26.8 | 117.6 | 0.433 | 1.17x | 1.31x |
+| 128 | 15.3 | 35.0 | 138.5 | 0.562 | 1.33x | 1.55x |
+| 512 | 16.9 | 48.2 | -- | **0.649** | 1.48x | **1.78x** |
+
+(speedup = comm-free local-routing draft [S_draft~=S_nvlink] + exact PCIe-bound verify
+[S_verify=PCIe-SHM], measured beta, best k. PCIe-SHM = GPU<->host<->GPU staged copy,
+~27.5 GB/s, the path NCCL uses here since GPUs are on separate PCIe root complexes.)
+
+**This is the actual number.** Real single-server-PCIe f = **0.37-0.65** (growing with
+batch), exactly bracketing the 3d estimate and confirming the socket proxy (f=0.85)
+was TCP-latency-inflated. Lossless integrated speedup is **1.2-1.8x (beta 0.92) /
+1.1-1.5x (beta 0.82)**, ~**1.78x at serving batch** -- modest, a throughput effect,
+and far below the socket-proxy's 2.5-3.1x. Extrapolating, f keeps rising toward the
+compute-saturated asymptote (~0.9) at larger batch, so the speedup trends toward the
+~3-4x analytical ceiling, but the measured value through B=512 is 1.78x.
+
+Caveat: SHM is the host-staged PCIe path. A no-NVLink box where GPUs share a PCIe
+switch could use direct PCIe-P2P (~55 GB/s, 2x faster) -> lower f -> smaller speedup;
+this box's separate-root-complex topology uses the (more comm-bound) staged path.
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a
