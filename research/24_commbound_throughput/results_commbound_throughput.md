@@ -139,6 +139,45 @@ point, overhead-accounted. Combined with B1 (algorithm correct + lossless) and B
 (real comm-free draft step), this is the integrated estimate without the week-scale
 distributed step-driver (deferred to B2-full / a real-PCIe rental).
 
+## 3d. Real PCIe-link calibration (corrects the socket proxy's optimism)
+
+The integrated PCIe path (`NCCL_P2P_DISABLE`) hangs, but the **raw PCIe link** is
+measurable directly (`bench_pcie_link.py`, GPU<->host<->GPU copies):
+
+| path | asymptotic BW | vs NVLink |
+| --- | ---: | ---: |
+| NVLink P2P | 389 GB/s | 1x |
+| PCIe 1-hop (D2H/H2D ~ direct-P2P) | 55 GB/s | 7.1x |
+| PCIe staged (GPU->host->GPU) | 27.5 GB/s | 14.1x |
+
+**This corrects the socket proxy.** Sockets gave f=0.84 *even at low batch* -- but
+that is **TCP-loopback latency** (78 ms / ~145 collectives ~ 540 us/collective), not
+PCIe. Real PCIe is far lower-latency, so the comm cost is **bandwidth-bound, not
+latency-bound**, and f scales with *payload* (batch):
+
+- **Low batch** (tiny payload): PCIe comm is sub-ms -> **f ~ 0.05-0.1**, basically
+  compute-bound. The comm-amortization lever is *weak* here (like the single-server
+  case) -- the socket's high low-batch f was a TCP artifact.
+- **Serving batch** (BW-bound): per-rank all-to-all ~hundreds of MB/step; at PCIe
+  27-55 GB/s with 8-way contention (~20-40 GB/s effective) vs ~15-17 ms compute ->
+  **f ~ 0.3-0.5**.
+
+Speedup at the BW-calibrated real-PCIe operating point (`speedup =
+E[acc]/((k+1)-k*f)`):
+
+| f (real PCIe) | beta=0.82 | beta=0.92 |
+| ---: | ---: | ---: |
+| 0.3 | ~1.05x | ~1.15x |
+| 0.4 | ~1.10x | ~1.26x |
+| 0.5 | ~1.20x | ~1.40x |
+
+**Revised headline: the socket-measured 2.5-3.1x is an optimistic upper bound (its f
+was latency-inflated). The real-PCIe BW-calibrated win is more modest -- ~1.2-1.4x at
+serving batch (beta 0.92), and ~1x at low batch.** Still net-positive and lossless,
+but a throughput-regime effect, not the dramatic low-batch win the socket numbers
+implied. The exact f still needs a real no-NVLink box (collective latency under 8-way
+PCIe contention is the residual unknown the raw-copy microbenchmark cannot capture).
+
 ## 4. Bottom line
 
 On real transports, MoE EP decode off NVLink is **84-89% communication**, and a
