@@ -156,3 +156,49 @@ resident cache (the quantized-draft + memory story).
 2. Add the **resident FP4 cache** (W2).
 3. **KV-slot correctness** (W5).
 4. **Measure** (W7).
+
+---
+
+## W0 CODE READ -- CORRECTION: the framework is HEAD-oriented; a full-model self-draft does NOT fit cleanly
+
+Read the actual V2 speculator code (`autoregressive/speculator.py`, `speculator.py`,
+`mtp/speculator.py`, `eagle/utils.py`). The Explore summary's "subclass and return the
+target model" is NOT viable. Two hard mismatches for a FULL-MODEL self-draft:
+
+1. **Forward signature is a draft-HEAD signature.** `_run_model` calls
+   `self.model(input_ids, positions, hidden_states=..., inputs_embeds=...)`
+   (autoregressive/speculator.py:315-330) -- the draft is CONDITIONED on the target's
+   hidden states (EAGLE/MTP head). A full target model's `forward(input_ids, positions)`
+   does not accept `hidden_states` -> `TypeError`. A full-model self-draft would need a
+   wrapper that ignores the fed hidden_states and runs the full forward from input_ids.
+
+2. **The framework assumes the draft has its OWN attention layers/KV.** `load_model`
+   computes `draft_attn_layer_names = all_attn_layers - target_attn_layer_names`
+   (speculator.py:159); `set_attn` inits the draft attn backend over those (line 169-174).
+   For a self-draft that REUSES the target's attention layers, this set is **EMPTY** -> the
+   draft attn machinery collapses. The only framework-native alternative is a SEPARATE draft
+   instance with its own attention layers -> a SECOND full KV cache (48 layers) -> ~2x KV
+   memory. EAGLE works because its draft is ONE layer (tiny extra KV); a full-model draft is
+   not that.
+
+**Conclusion:** the v1 spec framework is architected for small draft HEADS (cheap,
+hidden-state-conditioned, own small KV). World A's full-model self-draft is an outlier and
+does not fit cleanly. Two real paths remain, both substantial:
+- **B2 (intricate framework reuse):** self-draft wrapper sharing the target's attention
+  layers + OVERRIDE `draft_attn_layer_names` to the target's layers + drive draft KV into
+  speculative slots on those shared layers + cudagraph interplay. Reuses rejection/scheduler/
+  cudagraphs but is subtle (shared layers used in two modes).
+- **A (custom lockstep driver):** single model, two modes (draft=local/comm-free,
+  verify=full), single KV cache with draft KV in scratch slots, reuse B1 rejection logic.
+  Full control; reimplements the scheduler/KV glue; loses cudagraphs.
+
+**This also mirrors the perf finding:** the spec-decode ecosystem assumes cheap draft heads,
+and World A's full-model draft fights that in BOTH performance (dominated by EAGLE) and
+implementation (doesn't fit the framework).
+
+**Sequencing implication:** **World B is both the stronger result (~2.3x) AND the far easier
+build** -- it reuses the EXISTING EAGLE spec-decode path unchanged and only changes the
+draft-TREE SIZE (a comm-aware small/pruned tree), no custom draft, no framework fight, no
+2x KV. World A's full-model self-draft is the harder build for the weaker (training-free-only)
+result. Recommend building **World B first**; pursue World A only if its training-free
+novelty justifies the custom-driver cost.
