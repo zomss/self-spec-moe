@@ -50,6 +50,7 @@ def worker(rank, dp, tp, master_ip, master_port, a):
         trust_remote_code=True,
         gpu_memory_utilization=0.85,
         max_model_len=2048,
+        quantization=(a.quantization or None),
     )
     sp = SamplingParams(
         temperature=1.0, top_p=1.0, ignore_eos=True,
@@ -114,6 +115,8 @@ def main() -> int:
     ap.add_argument("--iters", type=int, default=6)
     ap.add_argument("--warmup", type=int, default=2)
     ap.add_argument("--output-json", type=Path, required=True)
+    ap.add_argument("--quantization", default=None,
+                    help="vLLM quantization (e.g. fp8) for the draft-step measurement")
     a = ap.parse_args()
 
     # research hooks off; we measure the real fabric, not an injected delay

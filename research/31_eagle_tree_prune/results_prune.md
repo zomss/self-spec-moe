@@ -66,3 +66,24 @@ batch) or small tree (low batch)** -- the verify-comm-scaling insight (Phase 27:
 trees on comm-bound MoE) is the durable contribution; tree pruning adds nothing on top.
 
 Self-MoE-spec does NOT earn extra keep at the verify-pruning layer once EAGLE exists.
+
+## Quantization note (FP4 is the thesis; why it doesn't rescue this on H100)
+
+The pruner/draft cost above is comm-free local routing at **bf16**. The project's bit-width
+is **FP4** (memory thesis), so the right question is whether FP4 cheapens the draft. On
+**H100 (Hopper) FP4 is a memory lever, not a speed lever**: no FP4 tensor cores, so vLLM
+dequantizes FP4->bf16 and the matmul runs in bf16. Therefore:
+- High batch (compute-bound, where 31a fails 0.66x vs chain 1.27x): FP4 gives ~no compute
+  speedup -> the wide-tree DRAFT cost that kills 31a is unchanged -> **NO-GO holds with FP4
+  on H100**. The bf16-speed economics above already represent FP4-on-Hopper.
+- Low batch (read-bound): FP4 cuts weight-read ~4x -> ~10-25% draft speedup, but that
+  regime only tied full_d2b2 -> verdict unchanged.
+
+(FP8 *would* speed the draft on H100 -- Hopper has FP8 tensor cores -- but at 2x the FP4
+memory, it is off the memory thesis, so it is not the project's design point.)
+
+**Hardware caveat:** on **Blackwell** FP4 has native tensor cores -> an FP4 comm-free draft
+IS faster on compute (high batch too), so the wide-tree draft cost drops and the prune
+economics could improve/flip. So "FP4 makes the pruner cheap enough" is **false on H100,
+plausibly true on Blackwell** -- a genuine hardware-dependent open question, not resolved
+here.
