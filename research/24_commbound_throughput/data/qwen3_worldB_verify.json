@@ -1,0 +1,44 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "worldB_verify",
+  "config": "verify",
+  "skip_a2a": "0",
+  "nccl_p2p_disable": "1",
+  "nccl_shm_disable": "0",
+  "data_parallel_size": 8,
+  "tensor_parallel_size": 1,
+  "input_len": 4,
+  "output_len": 16,
+  "rows": [
+    {
+      "batch_per_rank": 8,
+      "batch_global": 64,
+      "step_ms": 29.6106
+    },
+    {
+      "batch_per_rank": 32,
+      "batch_global": 256,
+      "step_ms": 40.8503
+    },
+    {
+      "batch_per_rank": 48,
+      "batch_global": 384,
+      "step_ms": 46.9619
+    },
+    {
+      "batch_per_rank": 64,
+      "batch_global": 512,
+      "step_ms": 49.8819
+    },
+    {
+      "batch_per_rank": 128,
+      "batch_global": 1024,
+      "step_ms": 70.2198
+    },
+    {
+      "batch_per_rank": 240,
+      "batch_global": 1920,
+      "step_ms": 110.8369
+    }
+  ]
+}
