@@ -1,6 +1,7 @@
 # Lossless Self-Speculative MoE Decoding on a Single PCIe Server
 
-**Synthesis of Phases 24-29.** Date: 2026-06-29. All numbers measured on 8xH100 (NVSwitch)
+**Synthesis of Phases 24-31** (incl. the EAGLE/cascade survival test and a comparison to
+conventional speculative decoding). Date: 2026-06-29. All numbers measured on 8xH100 (NVSwitch)
 unless noted; model = Qwen3-30B-A3B (128 experts, top-8, no shared) unless noted;
 cross-model = DeepSeek-V2-Lite, GPT-OSS-20B (Phase 29).
 
@@ -157,7 +158,79 @@ The enablers are not Qwen3 artifacts:
 
 ---
 
-## 5. Bottom line, regime splits, and ceilings
+## 5. Does this survive a trained draft head? (Phase 31, EAGLE/MTP)
+
+The honest stress-test: in a world that already has EAGLE3/MTP, does self-MoE-spec still
+earn its keep? EAGLE's head is dense and comm-free, so it **subsumes the "comm-free draft"
+thesis at the draft layer** (and, since it uses no MoE experts, it also moots the resident-
+expert memory mechanism of Sec. 3). The only place a self-spec MoE forward could still add
+value is the **exact-verify tree** (whose all-to-all scales with node count, Sec. 1/2).
+Three variants tested, all NO-GO:
+
+- **31a (free prune of our own wide tree).** Confidence-pruning is near-oracle (P_conf ~95%
+  of P_exact), but a pruned-wide tree beats a plain CHAIN by only ~+2.5% accept at matched
+  verify nodes (+7% even at oracle). Economically it loses: you pay the full wide-tree
+  draft, and pruning only saves the verify. High batch 0.66-0.87x vs chain 1.18-1.27x;
+  low batch merely ties Phase-27's small tree.
+- **31b / two-phase cascade (EAGLE draft -> quantized comm-free phase-1 prune -> full
+  phase-2 verify).** Valid and lossless, and it elegantly unifies the two worlds. But
+  sweeping the phase-1 cheapness q (FP8-H100 ~0.6, FP4-Blackwell ~0.4) with a FREE draft:
+  it beats the chain only if q < 0.01-0.07 (phase-1 < ~1-2 ms, essentially free). FP8,
+  FP4-Blackwell, and even free-draft all LOSE.
+
+**One root cause for all three:** on a confident acceptance profile (`h(1)=0.875` already
+high), a chain captures most of the accept length, so the tree's advantage over it is tiny
+(~+2.5%). There is almost no headroom for pruning/cascading to harvest, and any extra stage
+-- however cheap or quantized -- is pure cost. (Quantizing phase-1 lowers its cost but
+cannot manufacture headroom the profile doesn't have.) The cascade would only pay on a
+high tree-vs-chain-gap profile (high-entropy / ambiguous decoding) -- a falsifiable open
+hypothesis, NO-GO here.
+
+**What survives EAGLE:** exactly one thing, and it is draft-agnostic -- the **verify-comm-
+scaling** result (Sec. 1/2): on comm-bound MoE use a CHAIN (high batch) or a SMALL tree
+(low batch), never a wide tree, and don't add a pruning/cascade stage. This improves
+EAGLE-on-MoE too.
+
+## 6. Self-spec vs conventional speculative decoding (EAGLE/MTP)
+
+| axis | conventional (EAGLE/MTP) | self-spec (this work) |
+| --- | --- | --- |
+| draft | separate trained head/model | SAME model, comm-free local routing + FP4 experts |
+| training | per-model training required | **training-free** |
+| draft cost / token | cheap (~1-3 layers, ~2-3 ms @ B512) | expensive (full comm-free forward, ~23 ms @ B512) |
+| acceptance beta | high (trained to match, ~0.8, 4-5 tok) | lower (local 0.85 / FP4 0.92) |
+| extra memory | tiny (the head) | resident expert cache (1-8 GB, Sec. 3) |
+| draft communication | comm-free (dense head) | comm-free (local routing) |
+| lossless | yes (rejection sampling) | yes (rejection sampling) |
+| out-of-the-box on any MoE | no (train a head) | **yes** |
+
+**The uncomfortable truth:** EAGLE already provides a **comm-free draft**, so the project's
+original distinctive claim ("remove the all-to-all from the draft") is *not* novel -- EAGLE
+has it. And EAGLE's draft is **~8-10x cheaper** than our local-routing draft (a small head
+vs a full-model forward), so even in the comm-bound regime EAGLE gets a higher speedup:
+
+```
+serving batch (B=512, k=1, comm-bound MoE; EAGLE draft estimated from head-size + measured verify):
+  EAGLE:     (1.8)*48 / (3 + 48)  ~= 1.69x
+  self-spec: (1.85)*48 / (23 + 48) ~= 1.25x
+```
+
+EAGLE also wins on memory (no expert cache) and acceptance (trained). **So conventional
+spec dominates self-spec on every axis except one: training-free / out-of-the-box.**
+
+**Where self-spec is still the right tool:** when you will not or cannot train a head --
+proprietary or rapidly-rotating models, no training pipeline, or a need to run on *any* MoE
+immediately. There, self-spec gives a lossless comm-bound speedup (~1.2-1.35x single-node)
+with no extra model to train, store, or serve.
+
+**The convergent ceiling (the real scientific point):** in comm-bound MoE both methods are
+capped by the **verify communication**, not the draft -- the all-to-all over `B*k` tokens.
+Phase 27/31 show this wall forces chains/small trees for *either* draft. So the draft
+method changes how *close* you get to the ceiling (EAGLE's cheaper draft gets closer), but
+the ceiling itself is set by the verify comm and is draft-agnostic. That analysis -- the
+durable contribution -- improves conventional spec decoding on MoE as much as it does ours.
+
+## 7. Bottom line, regime splits, and ceilings
 
 **The design works and is lossless. On a single PCIe server it is a modest, throughput-
 regime win:**
@@ -183,7 +256,7 @@ comm-bound -> 1.6-2.3x even at low batch). Single-server PCIe is the milder cous
 
 ---
 
-## 6. Reproducibility
+## 8. Reproducibility
 
 | result | script |
 | --- | --- |
@@ -193,6 +266,7 @@ comm-bound -> 1.6-2.3x even at low batch). Single-server PCIe is the milder cous
 | tree h(b) + optimizer + attention validation | `27_tree_drafting/{tree_hitrate,tree_optimize,tree_verify,control_lossless}.py` |
 | dynamic cache / depth decay / skip-cold / union | `28_dynamic_cache/{dynamic_cache,depth_decay,skip_cold,union_coverage}.py` |
 | cross-model skew | `29_cross_model/cross_model_skew.py` |
+| EAGLE/cascade survival (Phase 31) | `31_eagle_tree_prune/{prune_frontier,prune_cascade_economics}.py` |
 
 **Open / not done:** integrated distributed step-level driver (B2b-full); inter-node IB +
 DBO baseline (need a real multi-node box); per-model beta refinements (renorm recovery,
