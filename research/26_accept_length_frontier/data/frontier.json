@@ -1,0 +1,120 @@
+{
+  "points": [
+    {
+      "config": "FP4 C=8",
+      "C": 8,
+      "frac": 0.0625,
+      "mem_gb": 1.0,
+      "beta": 0.242,
+      "acc_len": 0.32,
+      "acc_per_gb": 0.32
+    },
+    {
+      "config": "FP4 C=16",
+      "C": 16,
+      "frac": 0.125,
+      "mem_gb": 2.0,
+      "beta": 0.4,
+      "acc_len": 0.65,
+      "acc_per_gb": 0.325
+    },
+    {
+      "config": "FP4 C=32",
+      "C": 32,
+      "frac": 0.25,
+      "mem_gb": 4.1,
+      "beta": 0.598,
+      "acc_len": 1.3,
+      "acc_per_gb": 0.317
+    },
+    {
+      "config": "FP4 C=64",
+      "C": 64,
+      "frac": 0.5,
+      "mem_gb": 8.2,
+      "beta": 0.84,
+      "acc_len": 2.64,
+      "acc_per_gb": 0.322
+    },
+    {
+      "config": "FP4 C=96",
+      "C": 96,
+      "frac": 0.75,
+      "mem_gb": 12.2,
+      "beta": 0.9,
+      "acc_len": 3.1,
+      "acc_per_gb": 0.254
+    },
+    {
+      "config": "FP4 C=128",
+      "C": 128,
+      "frac": 1.0,
+      "mem_gb": 16.3,
+      "beta": 0.92,
+      "acc_len": 3.26,
+      "acc_per_gb": 0.2
+    },
+    {
+      "config": "FP8 full",
+      "C": 128,
+      "frac": 1.0,
+      "mem_gb": 29.0,
+      "beta": 0.95,
+      "acc_len": 3.52,
+      "acc_per_gb": 0.121
+    },
+    {
+      "config": "bf16 full",
+      "C": 128,
+      "frac": 1.0,
+      "mem_gb": 58.0,
+      "beta": 1.0,
+      "acc_len": 4.0,
+      "acc_per_gb": 0.069
+    }
+  ],
+  "marginal_fp4": [
+    {
+      "to": "FP4 C=8",
+      "mem_gb": 1.0,
+      "d_acc": 0.32,
+      "d_mem": 1.0,
+      "marg_acc_per_gb": 0.32
+    },
+    {
+      "to": "FP4 C=16",
+      "mem_gb": 2.0,
+      "d_acc": 0.33,
+      "d_mem": 1.0,
+      "marg_acc_per_gb": 0.33
+    },
+    {
+      "to": "FP4 C=32",
+      "mem_gb": 4.1,
+      "d_acc": 0.65,
+      "d_mem": 2.1,
+      "marg_acc_per_gb": 0.31
+    },
+    {
+      "to": "FP4 C=64",
+      "mem_gb": 8.2,
+      "d_acc": 1.34,
+      "d_mem": 4.1,
+      "marg_acc_per_gb": 0.327
+    },
+    {
+      "to": "FP4 C=96",
+      "mem_gb": 12.2,
+      "d_acc": 0.46,
+      "d_mem": 4.0,
+      "marg_acc_per_gb": 0.115
+    },
+    {
+      "to": "FP4 C=128",
+      "mem_gb": 16.3,
+      "d_acc": 0.16,
+      "d_mem": 4.1,
+      "marg_acc_per_gb": 0.039
+    }
+  ]
+}
