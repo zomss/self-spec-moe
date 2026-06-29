@@ -51,6 +51,10 @@ class AgRsAll2AllManager(All2AllManagerBase):
         super().__init__(cpu_group, tcp_store_group)
         self._emulated_a2a_count = 0
         self._active_emulated_a2a_count = 0
+        # Number of REAL cross-rank collectives issued (all_gatherv /
+        # reduce_scatterv). Stays 0 under the comm-free local-routing path,
+        # which is how we verify the draft step issues no all-to-all.
+        self._real_collective_count = 0
         # GPU-clock cycles per microsecond for torch.cuda._sleep injection.
         # Calibrated once here (eager, before any CUDA-graph capture) so the
         # delay can be enqueued on the stream and captured into the graph.
@@ -160,6 +164,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 dim=0,
                 sizes=sizes,
             )
+            self._real_collective_count += 1
         self._emulate_exposed_a2a_delay()
 
         if extra_tensors is not None:
@@ -205,6 +210,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 dim=0,
                 sizes=sizes,
             )
+            self._real_collective_count += 1
         self._emulate_exposed_a2a_delay()
 
         hidden_states = gathered_tensors[0]
@@ -241,15 +247,17 @@ class AgRsAll2AllManager(All2AllManagerBase):
             hidden_states = dist_group.reduce_scatterv(
                 hidden_states, dim=0, sizes=sizes
             )
+            self._real_collective_count += 1
         self._emulate_exposed_a2a_delay()
         return hidden_states
 
     def destroy(self):
         if envs.VLLM_SELF_SPEC_LOG_A2A_COUNTS:
             logger.info(
-                "Self-spec AgRs all2all count: total=%d active=%d",
+                "Self-spec AgRs all2all count: total=%d active=%d real=%d",
                 self._emulated_a2a_count,
                 self._active_emulated_a2a_count,
+                self._real_collective_count,
             )
 
 
