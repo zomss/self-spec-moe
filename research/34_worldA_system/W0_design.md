@@ -72,5 +72,37 @@ num_speculative_tokens: K, draft_tensor_parallel_size: N}`.
 - Greedy-target is lossless out of the box; for temperature sampling confirm the draft-probs
   path is enabled (`llm_base_proposer.py:236-239`) so rejection stays lossless.
 
-## Status
-Designed (this commit). Next: build increments (i)-(iii) in a worktree + validate.
+## Status: DONE, validated, merged (worktree ssm-w0 -> research/self-spec-moe)
+5 files, ~70 lines, additive + flag-gated; default draft_model behavior unchanged on non-EP.
+
+**Design correction made during the build:** gate the draft injection on a NEW dedicated
+producer env `VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE` (NOT the W1 reader env
+`VLLM_SELF_SPEC_LOCAL_ROUTE`). The reader env is a global fallback, so using it would also
+make the VERIFY forward (which carries no `additional_kwargs` key) go comm-free -> broken
+full-EP verify. Run config: `VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE=1`, reader env stays 0.
+`set_forward_context` now merges caller `additional_kwargs` over the platform context
+(caller wins). EP propagation is unconditional for draft_model+EP targets (changes the
+draft from TP-sharded-experts to EP-sharded) -- desired here; gate it on the flag if
+upstreaming.
+
+**Validation (DeepSeek-V2-Lite, native deepseek_v2, greedy):**
+- (i) Lockstep + accept: full-routing draft (producer OFF) -> **acceptance 1.0, accept len
+  4/4 (beta=1)**; local-routing draft (producer ON) -> **0.758** (verify corrects the lossy
+  draft). Lockstep works.
+- (ii) Draft EP: both workers log `use_ep=True expert_map=set`. The W1 flag is now live on
+  the draft.
+- (iii) Comm-free (DP=2+EP AgRs path; pure TP+EP has no AgRs so DP is needed to exercise the
+  W1 skip): producer OFF `real=7280` -> producer ON **`real=1820`** (draft's ~75% of
+  collectives eliminated; verify retains full-EP). Holds under forced-PCIe.
+- **Losslessness (honest):** lossless in the rejection-sampling sense -- every output token
+  is the verify's greedy argmax given the accepted prefix. NOT bit-identical to no-spec
+  greedy, but that gap is a **pre-existing vLLM property**: on UNMODIFIED main the
+  draft_model spec path already diverges from no-spec greedy in 4/16 prompts (batched-verify
+  near-tie FP flips). Producer-OFF reproduces main exactly (16/16); producer-ON adds 1 extra
+  near-tie flip (15/16 vs producer-OFF). So W0 is **as lossless as vLLM's native spec
+  decoding** -- consistent with the B1 greedy-numerics caveat (batched-vs-sequential MoE FP
+  non-associativity). The paper's "lossless" = the standard distribution-preserving
+  rejection-sampling guarantee + this documented FP caveat.
+
+**Next:** W2 (FP4 resident cache to raise the 0.758 draft acceptance) + W7 (tokens/s vs
+no-spec baseline, measured in the **DP+EP layout** where the W1 comm-skip lives).
