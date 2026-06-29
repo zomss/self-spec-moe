@@ -1,0 +1,213 @@
+{
+  "B": 128,
+  "h_pooled": [
+    0.875,
+    0.9792,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "ranked": [
+    {
+      "name": "chain d=1",
+      "depth": 1,
+      "nodes": 1,
+      "accept_len": 0.875,
+      "draft_ms": 17.2,
+      "verify_ms": 29.0,
+      "speedup": 1.176
+    },
+    {
+      "name": "chain d=2",
+      "depth": 2,
+      "nodes": 2,
+      "accept_len": 1.641,
+      "draft_ms": 34.5,
+      "verify_ms": 35.4,
+      "speedup": 1.097
+    },
+    {
+      "name": "full d=1,b=2",
+      "depth": 1,
+      "nodes": 2,
+      "accept_len": 0.979,
+      "draft_ms": 17.2,
+      "verify_ms": 35.4,
+      "speedup": 1.092
+    },
+    {
+      "name": "spine d=1,w=2",
+      "depth": 1,
+      "nodes": 2,
+      "accept_len": 0.979,
+      "draft_ms": 17.2,
+      "verify_ms": 35.4,
+      "speedup": 1.092
+    },
+    {
+      "name": "chain d=3",
+      "depth": 3,
+      "nodes": 3,
+      "accept_len": 2.311,
+      "draft_ms": 51.7,
+      "verify_ms": 41.7,
+      "speedup": 1.029
+    },
+    {
+      "name": "spine d=2,w=2",
+      "depth": 2,
+      "nodes": 4,
+      "accept_len": 1.836,
+      "draft_ms": 34.5,
+      "verify_ms": 48.0,
+      "speedup": 0.998
+    },
+    {
+      "name": "full d=1,b=3",
+      "depth": 1,
+      "nodes": 3,
+      "accept_len": 1.0,
+      "draft_ms": 17.2,
+      "verify_ms": 41.7,
+      "speedup": 0.985
+    },
+    {
+      "name": "spine d=1,w=3",
+      "depth": 1,
+      "nodes": 3,
+      "accept_len": 1.0,
+      "draft_ms": 17.2,
+      "verify_ms": 41.7,
+      "speedup": 0.985
+    },
+    {
+      "name": "chain d=4",
+      "depth": 4,
+      "nodes": 4,
+      "accept_len": 2.897,
+      "draft_ms": 69.0,
+      "verify_ms": 48.0,
+      "speedup": 0.967
+    },
+    {
+      "name": "spine d=3,w=2",
+      "depth": 3,
+      "nodes": 6,
+      "accept_len": 2.586,
+      "draft_ms": 51.7,
+      "verify_ms": 60.7,
+      "speedup": 0.926
+    },
+    {
+      "name": "chain d=5",
+      "depth": 5,
+      "nodes": 5,
+      "accept_len": 3.41,
+      "draft_ms": 86.2,
+      "verify_ms": 54.4,
+      "speedup": 0.911
+    },
+    {
+      "name": "full d=1,b=4",
+      "depth": 1,
+      "nodes": 4,
+      "accept_len": 1.0,
+      "draft_ms": 17.2,
+      "verify_ms": 48.0,
+      "speedup": 0.889
+    },
+    {
+      "name": "spine d=1,w=4",
+      "depth": 1,
+      "nodes": 4,
+      "accept_len": 1.0,
+      "draft_ms": 17.2,
+      "verify_ms": 48.0,
+      "speedup": 0.889
+    },
+    {
+      "name": "full d=2,b=2",
+      "depth": 2,
+      "nodes": 6,
+      "accept_len": 1.938,
+      "draft_ms": 36.4,
+      "verify_ms": 60.7,
+      "speedup": 0.878
+    },
+    {
+      "name": "spine d=2,w=3",
+      "depth": 2,
+      "nodes": 6,
+      "accept_len": 1.875,
+      "draft_ms": 34.5,
+      "verify_ms": 60.7,
+      "speedup": 0.877
+    },
+    {
+      "name": "spine d=4,w=2",
+      "depth": 4,
+      "nodes": 8,
+      "accept_len": 3.242,
+      "draft_ms": 69.0,
+      "verify_ms": 73.4,
+      "speedup": 0.865
+    },
+    {
+      "name": "chain d=6",
+      "depth": 6,
+      "nodes": 6,
+      "accept_len": 3.858,
+      "draft_ms": 103.5,
+      "verify_ms": 60.7,
+      "speedup": 0.859
+    },
+    {
+      "name": "chain d=7",
+      "depth": 7,
+      "nodes": 7,
+      "accept_len": 4.251,
+      "draft_ms": 120.7,
+      "verify_ms": 67.1,
+      "speedup": 0.812
+    },
+    {
+      "name": "spine d=5,w=2",
+      "depth": 5,
+      "nodes": 10,
+      "accept_len": 3.816,
+      "draft_ms": 86.2,
+      "verify_ms": 86.1,
+      "speedup": 0.812
+    },
+    {
+      "name": "spine d=3,w=3",
+      "depth": 3,
+      "nodes": 9,
+      "accept_len": 2.641,
+      "draft_ms": 51.7,
+      "verify_ms": 79.7,
+      "speedup": 0.804
+    }
+  ],
+  "best": {
+    "name": "chain d=1",
+    "depth": 1,
+    "nodes": 1,
+    "accept_len": 0.875,
+    "draft_ms": 17.2,
+    "verify_ms": 29.0,
+    "speedup": 1.176
+  },
+  "best_chain": {
+    "name": "chain d=1",
+    "depth": 1,
+    "nodes": 1,
+    "accept_len": 0.875,
+    "draft_ms": 17.2,
+    "verify_ms": 29.0,
+    "speedup": 1.176
+  }
+}
