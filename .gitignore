@@ -254,3 +254,6 @@ vllm/grpc/vllm_engine_pb2.pyi
 
 # Ignore generated cpu headers 
 csrc/cpu/cpu_attn_dispatch_generated.h
+
+# FP4 (W2c) checkpoints — do NOT commit weights
+research/34_worldA_system/ckpts/

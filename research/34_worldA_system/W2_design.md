@@ -48,12 +48,24 @@ reusing the logical-source mapping at :964 but WITHOUT EPLB's physical/all-to-al
 at bounded memory (Phase 28: ~8 GB / 0.5E). This is the paper's memory mechanism realized in
 the system; bigger lift.
 
-### W2c -- FP4 on the cache (separate; checkpoint-gated)
+### W2c -- FP4 on the cache (separate; checkpoint-gated) <- DONE (Stage 2)
 No on-the-fly bf16->NVFP4 in the loader; NVFP4 is checkpoint-deserialized
 (`quantization/modelopt.py`). Needs a pre-quantized DeepSeek-V2-Lite NVFP4 checkpoint, then
 drop the `quant_config=None` force (`draft_model.py:60`) and point the draft `ModelConfig` at
 it (`config/vllm.py:608-642` derives `ModelOptNvFp4Config`). Composes with W2b's loader to
 bound the replicated-cache memory.
+- **DONE.** modelopt 0.44.0 PTQ (NVFP4_DEFAULT_CFG, MoE experts quantized) -> HF
+  export to `ckpts/dsv2lite-nvfp4` (8.9 GB vs bf16 30 GB, ~3.4x). The already-merged
+  draft-quant wiring auto-detects `modelopt_fp4` from the ckpt's `hf_quant_config.json`
+  (pass draft `model=<nvfp4 ckpt>`, NO `quantization` key). **GATE: vLLM loads + RUNS
+  NVFP4 on H100 (sm_90)** via the **Marlin W4A16 dequant** path (no FP4 tensor cores ->
+  FlashInfer/cutlass FP4 backends auto-fall-through to MARLIN; log: "Weight-only FP4
+  compression ... Marlin kernel"). Self-spec re-test (W7-FP4): full-replica NVFP4 draft,
+  lossless (12/16 vs no-spec, == bf16), acceptance unchanged. **Wall-clock: NVFP4 still
+  LOSES (best 0.346x, crosses 1.0 nowhere); ordering bf16 > NVFP4 > FP8** -- NVFP4 W4A16
+  beats FP8 (no activation-quant tax) but loses to bf16 (Marlin dequant = no FLOP win on
+  sm_90, dequant cost > weight-bandwidth saved on V2-Lite's tiny experts). FP4's win is
+  memory only. See `results_W7_fp4.md`.
 
 ## Key files
 `vllm/config/speculative.py:984-1011` (draft parallel config),
