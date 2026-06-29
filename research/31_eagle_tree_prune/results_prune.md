@@ -85,5 +85,38 @@ memory, it is off the memory thesis, so it is not the project's design point.)
 **Hardware caveat:** on **Blackwell** FP4 has native tensor cores -> an FP4 comm-free draft
 IS faster on compute (high batch too), so the wide-tree draft cost drops and the prune
 economics could improve/flip. So "FP4 makes the pruner cheap enough" is **false on H100,
-plausibly true on Blackwell** -- a genuine hardware-dependent open question, not resolved
-here.
+plausibly true on Blackwell** -- this is tested directly below.
+
+## Two-phase cascade economics (quantized phase-1) -- NO-GO even on Blackwell
+
+The user's framing: a CASCADE -- EAGLE draft -> cheap **quantized comm-free phase-1**
+(prunes the wide tree, lossless) -> full-precision full-EP **phase-2** verify (small tree).
+Valid and lossless (phase-1 only prunes; phase-2 does the exact rejection sampling), and it
+elegantly unifies World A (FP4 local routing = phase-1) + World B (EAGLE + full verify).
+But does the quantized phase-1 make it efficient? Swept the phase-1 cheapness
+`q` (phase-1 = `q*S_skip(B*N_wide)`, q=1 bf16; FP8-H100 ~0.6; FP4-Blackwell ~0.4),
+EAGLE draft treated as FREE -> generous (`prune_cascade_economics.py`):
+
+| batch | chain (ref) | phase-1 FP8 q0.6 | FP4-Blkwl q0.4 | ideal q0.2 | free q0 |
+| ---: | --- | --- | --- | --- | --- |
+| 8 | baseline | LOSE | LOSE | LOSE | ~tie |
+| 128 | baseline | LOSE | LOSE | LOSE | ~tie |
+| 512 | baseline | LOSE | LOSE | LOSE | ~tie |
+
+**Cross-over: the cascade beats the chain only if `q < 0.01-0.07`, i.e. phase-1 < ~1-2 ms
+(vs a full 1-token verify of 23-48 ms) -- essentially FREE.** No quantization reaches that:
+FP8-H100, FP4-Blackwell, and even a free EAGLE draft all LOSE.
+
+**Root cause (cleaner than the 31a draft-cost story):** pruning a wide tree requires
+*forwarding the whole wide tree* in phase-1 (cost scales with `N_wide`), and the accept-
+length gain of a pruned-wide tree over a plain chain is only ~+2.5% (Stage A; +7% even at
+oracle) because `h(b)` saturates (the chain already captures most of the accept length). So
+phase-1 is pure added cost chasing a tiny gain -- you are strictly better off **drafting a
+chain directly** and skipping the wide-tree-then-prune entirely. This holds even when
+phase-1 is comm-free AND quantized AND the draft is free.
+
+**When the cascade WOULD pay:** only on an acceptance profile with a *large* tree-vs-chain
+gap (top-1 often wrong but top-b right -- high-entropy/ambiguous decoding). On Qwen3's
+confident profile (`h(1)=0.875` already high), the gap is too small. So the cascade is
+**profile-dependent and NO-GO here**; quantizing phase-1 helps its cost but cannot
+manufacture headroom that the acceptance profile doesn't provide.
