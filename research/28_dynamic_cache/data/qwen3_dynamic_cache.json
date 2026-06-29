@@ -1,0 +1,33 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "E": 128,
+  "top_k": 8,
+  "decay": 0.9,
+  "results": {
+    "4": {
+      "static": 0.227,
+      "vwarm": 0.424,
+      "oracle": 0.898
+    },
+    "8": {
+      "static": 0.449,
+      "vwarm": 0.641,
+      "oracle": 0.992
+    },
+    "16": {
+      "static": 0.565,
+      "vwarm": 0.885,
+      "oracle": 0.992
+    },
+    "32": {
+      "static": 0.774,
+      "vwarm": 0.991,
+      "oracle": 0.992
+    },
+    "64": {
+      "static": 0.903,
+      "vwarm": 0.99,
+      "oracle": 0.992
+    }
+  }
+}
