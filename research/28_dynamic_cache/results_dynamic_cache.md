@@ -98,8 +98,55 @@ So the **8x memory win is specifically the k=1 (high-batch / serving) operating 
 ~2x (4 GB vs static's 8 GB for similar accept), and deep trees are capped by the
 context-degradation limit above.
 
+## Batched-memory correction: the per-request win is LOW-BATCH only
+
+CRITICAL: experts are SHARED weights per DEVICE, not per request. With B concurrent
+requests on a device, the resident set must cover the UNION of their hot experts. So the
+Phase 28 per-request results (C=8 -> beta 0.99) only give small PER-DEVICE memory when a
+device serves ~1 request. Measured (`union_coverage.py`, 401 request snapshots):
+
+union(B) = distinct experts B requests need (per layer, E=128):
+
+| B requests | experts | % of E | FP4 mem |
+| ---: | ---: | ---: | ---: |
+| 1 | 8 | 6% | 1.0 GB |
+| 2 | 15 | 12% | 1.9 GB |
+| 8 | 41 | 32% | 5.2 GB |
+| 32 | 77 | 61% | 9.8 GB |
+| 128 | 103 | 80% | 13 GB |
+
+The union saturates at ~80% of E (skew leaves a rare tail), but reaches most of the model
+by B~32. So per-device memory for HIGH beta scales with the per-device batch -- the 1 GB
+"8x win" is a single-request (low-batch) property, NOT a high-batch one.
+
+Fixed globally-hot top-C cache (batch-INDEPENDENT) + skip-cold (verify corrects misses,
+lossless) -- coverage = beta proxy:
+
+| C | % of E | FP4 mem | coverage (beta) |
+| ---: | ---: | ---: | ---: |
+| 8 | 6% | 1.0 GB | 0.26 |
+| 16 | 12% | 2.0 GB | 0.42 |
+| 32 | 25% | 4.1 GB | 0.65 |
+| 64 | 50% | 8.2 GB | 0.90 |
+
+This is the static frontier again (global skew, not per-request adaptation).
+
+## Memory strategies (corrected, honest)
+
+1. **Full FP4 replication** -- 16.3 GB/dev, beta 0.92, any batch. Simple, batch-independent.
+2. **Globally-hot top-C + skip-cold** -- fixed C, batch-independent; C=64 (8 GB) covers
+   90% -> beta ~0.85; cold-routed tokens draft degraded, verify corrects (lossless). Half
+   the memory of (1), slightly lower beta.
+3. **Dynamic per-request/union cache** -- sized to the per-device batch union: 1 GB @
+   B=1 (beta 0.99) growing to ~full by B~32. A LOW-BATCH (latency) optimization only.
+
+**The tension:** the comm-bound SPEEDUP wants HIGH batch (f rises with batch), but the
+memory WIN wants LOW batch (small union). They conflict. At high serving batch the
+comm-free draft needs ~full FP4 replication (16 GB) or globally-hot+skip-cold (8 GB,
+beta 0.85). The 1 GB / beta 0.99 result is real but is a low-batch/latency regime.
+
 ## Next
 
-- The context-degradation cap suggests the comm-free local draft can't sustain long
-  accept lengths regardless of memory -- a real ceiling worth stating in any writeup.
-- Cross-model check (DeepSeek shared-expert, GPT-OSS) of the last-token / C=32 results.
+- The context-degradation cap + the union growth both say: the comm-free draft is cheap
+  on memory only at low batch; high-batch serving pays ~full FP4 replication.
+- Cross-model check (DeepSeek shared-expert, GPT-OSS) of the union/coverage skew.
