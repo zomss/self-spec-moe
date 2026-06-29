@@ -60,4 +60,28 @@ bound the replicated-cache memory.
 `local_route.py:62-66` + `runner/moe_runner.py:559-562` (the W1 mask, unchanged).
 
 ## Status
-Designed (this commit). Building **W2a (full replica)** first -> unblocks W7; then W2b/c.
+- **W2a (full replica): DONE, validated (worktree ssm-w2 / branch w2-draft-cache).**
+  2 files, ~25 lines, additive + flag-gated (env `VLLM_SELF_SPEC_DRAFT_FULL_REPLICA`,
+  default off -> W0 EP-shard behavior unchanged). Knob ON overrides the W0 EP
+  propagation in `create_draft_parallel_config` (`speculative.py`) so the draft
+  builds `enable_expert_parallel=False` -> `use_ep=False` -> `expert_map=None`.
+  The draft stays data-parallel (DP) when the target is DP (only EP is flipped).
+  - **(1) Draft is full replica:** both DP workers log
+    `use_ep=False expert_map=None` (vs `use_ep=True expert_map=set` knob-OFF).
+  - **(2) Acceptance jump (headline), DeepSeek-V2-Lite DP=2+EP, greedy, K=4,
+    same harness** (`scripts/w2_dp.py`): shard draft (knob OFF, producer ON)
+    **0.4234** (accept-len 2.69) -> full replica (knob ON) **0.9707**
+    (accept-len 4.88 of 5). Beta -> ~1, exactly as designed. (The W0 doc's 0.758
+    was a different config/window; the relative jump is the result.)
+  - **(3) Comm-free by construction:** the non-EP draft never enters the AgRs
+    path. AgRs counter: shard `total=17420 real=3484` (draft skips, verify real)
+    -> replica `total=9100 real=9100` (total drops by the draft's share; the
+    draft contributes ZERO collectives, all remaining are the full-EP verify).
+  - **(4) Losslessness:** rejection-correct, as lossless as vLLM's native spec
+    (W0 standard). replica vs no-spec greedy: 12/16 exact seqs, 82.4% token
+    agreement -- the mismatches are the pre-existing batched-verify near-tie FP
+    flips, not corruption; replica is closer to greedy than shard (11/16).
+  - Memory: ~37 GB/rank steady weights (target shard + full-replica draft) on an
+    H100; fits. -> unblocks W7.
+- **Next:** W2b (static globally-hot top-C replica, custom loader) + W2c (FP4),
+  then W7 (tokens/s).
