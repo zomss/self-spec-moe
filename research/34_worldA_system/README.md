@@ -76,3 +76,60 @@ scaffolding (extend to correct); forced-PCIe recipe; `bench_commbound` timing pa
 ## Decision criteria
 Stage 1 GO = measured lockstep tokens/s on forced-PCIe exceeds the no-spec baseline AND
 per-cycle losslessness ~0.99. Then memory (Stage 2), then breadth (Stage 3).
+
+---
+
+## vLLM spec-decode scoping -- DECISION: reuse the framework (path B), no custom driver
+
+Scoped the v1 spec-decode API (Explore agent). Findings + decision:
+
+- **Two engine paths.** MoE targets (DeepSeek-V2, Qwen2Moe, Qwen3) default to the **V2
+  runner** (`vllm/v1/worker/gpu/model_runner.py`), whose spec methods are limited to
+  eagle/eagle3/mtp/dflash; non-eagle methods fall back to the V1 runner. So we implement
+  against the **V2 `AutoRegressiveSpeculator`** (`vllm/v1/worker/gpu/spec_decode/
+  autoregressive/speculator.py`).
+- **The framework decouples rejection/KV/scheduler from how drafts are produced.** The
+  speculator runs IN-PROCESS in the same `GPUModelRunner.execute_model`; `propose()` just
+  returns draft tokens, and `RejectionSampler` + block-table/KV management + scheduler
+  accept/reject accounting + cudagraphs are all free. **No custom lockstep driver needed.**
+- **EAGLE/MTP are the self-spec precedent:** they share the target's embed/lm_head/KV pool,
+  reuse the target's hidden states, and are distinct `nn.Module`s -- no separate model
+  server. Our "same MoE in comm-free mode" is a variant where the draft module IS the
+  target (+ a resident expert cache).
+- **Clean integration:** subclass `AutoRegressiveSpeculator` (mirror `mtp/speculator.py`);
+  `load_draft_model` returns the target (sharing backbone) + our resident expert cache;
+  register a method literal (`SpeculativeMethod`, `vllm/config/speculative.py:60`) + the
+  **V2 allow-list** (`vllm/config/vllm.py:2031` -- else silent fallback to V1) + a branch in
+  `init_speculator` (`.../spec_decode/__init__.py:8`).
+- **The local-routing flag has a clean channel:** `ForwardContext.additional_kwargs`
+  (`vllm/forward_context.py:180`), set in the speculator's `_run_model` `set_forward_context`,
+  read by the FusedMoE forward to (i) skip dispatch/combine (the all-to-all) and (ii) mask
+  the router to resident experts. **This replaces the SKIP_A2A env hack with a per-step,
+  per-forward signal.**
+- **Bonus:** `SpeculativeConfig.moe_backend` already overrides the *drafter's* MoE kernel
+  ("useful when drafter and generator require different MoE kernels") -- the framework
+  anticipates a different draft MoE path.
+
+### Revised work split (much of W3/W4/W6 is now free)
+- **W1 (main work):** the comm-free local-routing MoE bypass in `fused_moe/modular_kernel.py`
+  (+ EP gating `config.py:1018`), signalled via `ForwardContext.additional_kwargs`. Largest,
+  most invasive piece; orthogonal to spec-decode.
+- **W2:** the draft's resident FP4 expert cache (draft module shares target attention/
+  embed/lm_head, holds its own experts -- mirrors EAGLE's draft-specific weights).
+- **W4/W6:** FREE -- reuse `AutoRegressiveSpeculator` + `RejectionSampler`. Work reduces to
+  the speculator subclass + method registration.
+- **W3:** subsumed -- the mode signal is the `ForwardContext` flag, not a DP control plane.
+- **W5 (subtlest risk):** our self-draft reuses the target's OWN attention layers (unlike
+  EAGLE's draft-only layers), so `draft_attn_layer_names` is empty; we must wire the
+  draft-step attention to the **speculative slot mappings** so draft KV lands in scratch
+  blocks and never corrupts committed target KV (the verify-context-KV pattern). Reuses the
+  framework's `compute_slot_mappings` but deviates from the draft-only-layer assumption.
+
+### Revised first steps (de-risk the integration before the invasive MoE work)
+0. **Scaffold + sanity:** speculator subclass + registration with draft = target in FULL
+   mode (full routing). Confirms the framework wiring runs and is lossless (beta=1, no
+   speedup yet). Cheap, isolates integration bugs from MoE bugs.
+1. Add the **local-routing flag** (W1) -> comm-free draft.
+2. Add the **resident FP4 cache** (W2).
+3. **KV-slot correctness** (W5).
+4. **Measure** (W7).
