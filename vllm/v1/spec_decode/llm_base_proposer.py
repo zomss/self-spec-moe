@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+import vllm.envs as envs
 from vllm.compilation.breakable_cudagraph import BreakableCUDAGraphWrapper
 from vllm.config import (
     CUDAGraphMode,
@@ -75,12 +76,21 @@ class SpecDecodeBaseProposer:
         self._share_mtp_indices = False
 
         # Self-spec W0: signal the comm-free local-routing MoE path on the draft
-        # forward only (verify runs in a separate forward context, so it stays
-        # full-EP). Value-driven via ForwardContext.additional_kwargs; gated to
-        # the draft_model method so EAGLE/MTP heads are unaffected. None when
+        # forward only (verify runs in a separate forward context with no key, so
+        # it stays full-EP). Value-driven via ForwardContext.additional_kwargs;
+        # gated to the draft_model method (so EAGLE/MTP heads are unaffected) AND
+        # to the opt-in VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE env so default
+        # draft_model behavior is unchanged. Note we gate on the PRODUCER env,
+        # not VLLM_SELF_SPEC_LOCAL_ROUTE (the reader fallback) -- that one must
+        # stay 0 so the verify forward does not inherit local routing. None when
         # inactive -> no change to the forward context.
         self._draft_forward_additional_kwargs: dict[str, Any] | None = (
-            {SELF_SPEC_LOCAL_ROUTE_KEY: True} if self.method == "draft_model" else None
+            {SELF_SPEC_LOCAL_ROUTE_KEY: True}
+            if (
+                self.method == "draft_model"
+                and envs.VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE
+            )
+            else None
         )
 
         self.device = device

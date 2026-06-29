@@ -250,6 +250,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE: str = ""
     VLLM_SELF_SPEC_SKIP_A2A: bool = False
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
+    VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1807,6 +1808,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # (this env is the default when that key is absent). Default off.
     "VLLM_SELF_SPEC_LOCAL_ROUTE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_LOCAL_ROUTE", "0"))
+    ),
+    # Self-spec W0 PRODUCER opt-in: when set, the V1 draft_model proposer drives
+    # the comm-free local-routing flag per DRAFT forward (via
+    # ForwardContext.additional_kwargs["self_spec_local_route"]=True), so the
+    # draft step routes to resident experts and skips the AgRs collectives while
+    # the VERIFY forward (a separate forward context, no key) stays full-EP. This
+    # is intentionally distinct from VLLM_SELF_SPEC_LOCAL_ROUTE (the reader's
+    # env fallback): keep that one at 0 so the verify does NOT inherit local
+    # routing. Default off -> no change to default draft_model behavior.
+    "VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.
