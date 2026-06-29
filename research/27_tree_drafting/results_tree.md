@@ -97,8 +97,30 @@ recompute -- it cannot be saved, which reinforces the verify-cost-with-size find
 draft also recomputes context with local routing -> a conservative beta; reusing verify's
 context KV for the draft, still comm-free, could raise acceptance -- untested upside.)
 
+## 5b. Verify-context-KV draft upside: real but small (measured)
+
+Tested whether giving the draft the VERIFY's full-weight context KV (vs recomputing
+context with local routing), running local routing only for the predicting token (still
+comm-free), raises acceptance (`verify_kv_draft.py`, same positions both ways):
+
+| b | conservative (local context) | verify-KV context | delta |
+| ---: | ---: | ---: | ---: |
+| 1 | 0.867 | 0.883 | +0.017 |
+| 2 | 0.967 | 0.983 | +0.017 |
+| 3 | 1.000 | 1.000 | +0.000 |
+
+The upside is **only ~+0.017 beta** (+0.12 accept length at k=4), and it's the BEST case
+(measured on the first draft token; deeper draft tokens condition on local-routing draft
+tokens, so they get less). So **context fidelity is NOT the draft's bottleneck** -- at
+0.5E the local-routing context is already a good approximation (top-half experts carry
+most mass). The draft's real limit is the local MoE for the *predicting* token, which
+this variant doesn't change. Upshot: the conservative beta measurements (~0.85-0.875)
+are nearly tight, and the verify-context-KV variant isn't worth its KV-plumbing
+complexity for ~1pt.
+
 ## 6. Caveat / next
 
-Validated: structure, accept length, losslessness, KV correctness -- all on real tree
-attention. The integrated distributed end-to-end remains B2b-full. The accept-length
-upside from a verify-context-KV draft is an untested lever.
+Validated: structure, accept length, losslessness, KV correctness, and the
+verify-context-KV upside (small) -- all on real tree attention. The integrated
+distributed end-to-end remains B2b-full. Single-node accept-length levers are now
+mapped; the open objective is memory (verify-warmed dynamic cache, Phase 26 frontier).
