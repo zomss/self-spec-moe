@@ -201,6 +201,28 @@ def is_forward_context_available() -> bool:
     return _forward_context is not None
 
 
+# Self-spec W1: signal-channel key for the CORRECT comm-free local-routing path.
+# Set per forward via additional_kwargs (e.g. by the lockstep driver's draft
+# forward); falls back to the VLLM_SELF_SPEC_LOCAL_ROUTE env var when absent.
+SELF_SPEC_LOCAL_ROUTE_KEY = "self_spec_local_route"
+
+
+def self_spec_local_route_enabled() -> bool:
+    """True if the correct comm-free local-routing MoE path is active.
+
+    Reads ``ForwardContext.additional_kwargs[SELF_SPEC_LOCAL_ROUTE_KEY]`` if
+    present, otherwise falls back to ``VLLM_SELF_SPEC_LOCAL_ROUTE``. Off by
+    default; never changes any existing path when unset. Kept here (low-level)
+    so both the distributed all2all manager and the MoE runner can read it
+    without importing the fused_moe package.
+    """
+    if _forward_context is not None:
+        val = _forward_context.additional_kwargs.get(SELF_SPEC_LOCAL_ROUTE_KEY)
+        if val is not None:
+            return bool(val)
+    return envs.VLLM_SELF_SPEC_LOCAL_ROUTE
+
+
 def create_forward_context(
     attn_metadata: Any,
     vllm_config: VllmConfig,

@@ -12,7 +12,7 @@ import torch.distributed as dist
 import vllm.envs as envs
 from vllm.distributed import get_dp_group, get_ep_group
 from vllm.distributed.utils import StatelessProcessGroup
-from vllm.forward_context import get_forward_context
+from vllm.forward_context import get_forward_context, self_spec_local_route_enabled
 from vllm.logger import init_logger
 from vllm.utils.flashinfer import (
     has_flashinfer_nvlink_one_sided,
@@ -146,7 +146,11 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+        if self_spec_local_route_enabled():
+            # CORRECT comm-free local routing: no gather, use local tokens
+            # as-is (router already masked to resident experts upstream).
+            gathered_tensors = tensors_to_gather
+        elif envs.VLLM_SELF_SPEC_SKIP_A2A:
             gathered_tensors = self._skip_gatherv(
                 tensors_to_gather, sizes, dist_group.rank_in_group
             )
@@ -187,7 +191,11 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+        if self_spec_local_route_enabled():
+            # CORRECT comm-free local routing: no gather, use local tokens
+            # as-is (topk_ids already masked to resident experts upstream).
+            gathered_tensors = tensors_to_gather
+        elif envs.VLLM_SELF_SPEC_SKIP_A2A:
             gathered_tensors = self._skip_gatherv(
                 tensors_to_gather, sizes, dist_group.rank_in_group
             )
@@ -220,7 +228,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
         assert sizes is not None
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
-        if envs.VLLM_SELF_SPEC_SKIP_A2A:
+        if self_spec_local_route_enabled():
+            # CORRECT comm-free local routing: no combine, output is already
+            # local (each rank computed only its resident experts on its own
+            # tokens, so there is nothing to reduce-scatter across ranks).
+            pass
+        elif envs.VLLM_SELF_SPEC_SKIP_A2A:
             hidden_states = self._skip_reduce_scatterv(
                 hidden_states, sizes, dist_group.rank_in_group
             )

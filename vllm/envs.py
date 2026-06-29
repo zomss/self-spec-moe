@@ -249,6 +249,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOG_A2A_COUNTS: bool = False
     VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE: str = ""
     VLLM_SELF_SPEC_SKIP_A2A: bool = False
+    VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1794,6 +1795,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # incorrect values, so do not use for correctness. Default off.
     "VLLM_SELF_SPEC_SKIP_A2A": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_SKIP_A2A", "0"))
+    ),
+    # Research-only: CORRECT comm-free local-routing MoE forward. When set, each
+    # rank routes its LOCAL tokens to only its RESIDENT experts (the EP shard,
+    # via expert_map) and skips BOTH the AgRs dispatch (allgather) and combine
+    # (reducescatter). Unlike VLLM_SELF_SPEC_SKIP_A2A (timing-only, tiled
+    # garbage), this masks the router to the resident experts (skip-cold) so the
+    # output is the correct local-routing result. At resident=all-experts this
+    # is identical to normal full routing. The flag can also be driven per
+    # forward via ForwardContext.additional_kwargs["self_spec_local_route"]
+    # (this env is the default when that key is absent). Default off.
+    "VLLM_SELF_SPEC_LOCAL_ROUTE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_LOCAL_ROUTE", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.

@@ -31,6 +31,10 @@ from vllm.model_executor.layers.fused_moe.fused_moe_method_base import (
 from vllm.model_executor.layers.fused_moe.fused_moe_modular_method import (
     FusedMoEModularMethod,
 )
+from vllm.model_executor.layers.fused_moe.local_route import (
+    local_route_enabled,
+    mask_router_logits_to_resident,
+)
 from vllm.model_executor.layers.fused_moe.routed_experts import (
     RoutedExperts,
 )
@@ -547,6 +551,15 @@ class MoERunner(MoERunnerInterface):
         self._maybe_apply_shared_experts(
             shared_experts_input, SharedExpertsOrder.NO_OVERLAP
         )
+
+        # Self-spec W1 (correct comm-free local routing): when the flag is set,
+        # mask the router to this rank's resident experts (skip-cold) before
+        # top-k. No-op when expert_map is None (resident=all -> identical to
+        # full routing, preserving the sanity invariant).
+        if local_route_enabled():
+            router_logits = mask_router_logits_to_resident(
+                router_logits, self.expert_map
+            )
 
         if self.routed_experts.quant_method.is_monolithic:
             # Monolithic kernels: pass router_logits to routed_experts
