@@ -229,3 +229,16 @@ SHARED foundation for both worlds:
 
 W0 is now "custom lockstep driver skeleton (chain draft, comm-free local MoE)", not a
 framework speculator subclass. **Starting with W1** -- the comm-free local-routing MoE.
+
+### CORRECTION (W0 re-scope): NOT a custom driver -- reuse the V1 `draft_model` path
+W1 is done + merged. Scoping W0 revealed the "custom driver" is unnecessary: the earlier
+rejection was of the **V2 head** speculator; vLLM's **V1 `draft_model`** path runs a
+*separate full model* as the draft and FITS a full-model self-draft (plain
+`forward(input_ids, positions)`, its own attention/KV, draft==target allowed). It hands us
+verify + lossless rejection + KV rollback + scheduler + cudagraphs for FREE. W0 collapses to
+~10 lines: thread `additional_kwargs` through `set_forward_context`, inject the W1 flag at
+the draft's 3 forward sites, and propagate `enable_expert_parallel` into the draft parallel
+config (else the draft builds `use_ep=False` and the flag is a silent no-op). The custom
+driver / KV-scratch-slot work (W5) is no longer needed -- the framework owns it. Full design:
+`W0_design.md`. Cost: 2x weights/KV (separate draft instance) -- the Stage-1 plan, and a
+feature for W2 (the draft holds its own FP4 experts).
