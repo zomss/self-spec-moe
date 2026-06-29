@@ -1,0 +1,79 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "wide": [
+    2,
+    2,
+    2,
+    2
+  ],
+  "Nfull": 30,
+  "L_full": 3.827,
+  "budgets": {
+    "1": {
+      "conf": 0.942,
+      "exact": 1.0,
+      "recall_conf": 0.246,
+      "recall_exact": 0.261
+    },
+    "2": {
+      "conf": 1.731,
+      "exact": 1.846,
+      "recall_conf": 0.452,
+      "recall_exact": 0.482
+    },
+    "3": {
+      "conf": 2.5,
+      "exact": 2.615,
+      "recall_conf": 0.653,
+      "recall_exact": 0.683
+    },
+    "4": {
+      "conf": 3.135,
+      "exact": 3.327,
+      "recall_conf": 0.819,
+      "recall_exact": 0.869
+    },
+    "6": {
+      "conf": 3.404,
+      "exact": 3.577,
+      "recall_conf": 0.889,
+      "recall_exact": 0.935
+    },
+    "8": {
+      "conf": 3.577,
+      "exact": 3.712,
+      "recall_conf": 0.935,
+      "recall_exact": 0.97
+    },
+    "12": {
+      "conf": 3.731,
+      "exact": 3.808,
+      "recall_conf": 0.975,
+      "recall_exact": 0.995
+    },
+    "16": {
+      "conf": 3.827,
+      "exact": 3.827,
+      "recall_conf": 1.0,
+      "recall_exact": 1.0
+    }
+  },
+  "direct": {
+    "chain_k2": {
+      "nodes": 2,
+      "accept": 1.769
+    },
+    "chain_k3": {
+      "nodes": 3,
+      "accept": 2.442
+    },
+    "chain_k4": {
+      "nodes": 4,
+      "accept": 3.077
+    },
+    "full_d2b2": {
+      "nodes": 6,
+      "accept": 1.962
+    }
+  }
+}
