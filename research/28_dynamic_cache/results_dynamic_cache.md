@@ -131,14 +131,36 @@ lossless) -- coverage = beta proxy:
 
 This is the static frontier again (global skew, not per-request adaptation).
 
-## Memory strategies (corrected, honest)
+## Skip-cold beta MEASURED (globally-hot top-C, batch-independent)
 
-1. **Full FP4 replication** -- 16.3 GB/dev, beta 0.92, any batch. Simple, batch-independent.
-2. **Globally-hot top-C + skip-cold** -- fixed C, batch-independent; C=64 (8 GB) covers
-   90% -> beta ~0.85; cold-routed tokens draft degraded, verify corrects (lossless). Half
-   the memory of (1), slightly lower beta.
-3. **Dynamic per-request/union cache** -- sized to the per-device batch union: 1 GB @
-   B=1 (beta 0.99) growing to ~full by B~32. A LOW-BATCH (latency) optimization only.
+The coverage proxy was pessimistic. Real beta = overlap(verify, verify-KV draft) with a
+FIXED globally-hot top-C cache, cold-routed tokens drafting their top RESIDENT experts +
+renorm (`skip_cold.py`):
+
+| C | %E | FP4 mem | coverage | **skip-cold beta** |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 | 6% | 1.0 GB | 0.263 | 0.338 |
+| 16 | 12% | 2.0 GB | 0.421 | 0.536 |
+| 32 | 25% | 4.1 GB | 0.661 | 0.708 |
+| 64 | 50% | 8.2 GB | 0.916 | **0.936** |
+
+beta EXCEEDS raw coverage at every C: renorming over the resident experts recovers the
+mass (the dropped cold experts are usually the low-weight ones). So skip-cold is more
+forgiving than coverage suggests. **Globally-hot 0.5E (8 GB) + skip-cold -> beta 0.94
+(bf16) / ~0.91 with FP4, batch-INDEPENDENT** -- nearly matching full replication's 0.92 at
+HALF the memory.
+
+## Memory strategies (corrected, with measured beta)
+
+1. **Full FP4 replication** -- 16.3 GB/dev, beta 0.92, any batch. Simplest.
+2. **Globally-hot 0.5E + skip-cold** -- **8.2 GB/dev, beta ~0.91 (FP4), batch-independent**
+   (measured 0.936 bf16); cold-routed tokens draft degraded, verify corrects (lossless).
+   **2x less memory than (1) at ~the same beta** -- the realistic high-batch design.
+3. **Dynamic per-request/union cache** -- 1 GB @ B=1 (beta 0.99) growing to ~full by
+   B~32. A LOW-BATCH (latency) optimization only.
+
+So "keep small experts per device" at HIGH batch = **globally-hot 0.5E + skip-cold (8 GB,
+beta 0.91)**, batch-independent; at LOW batch the dynamic cache reaches 1-4 GB / beta 0.99.
 
 **The tension:** the comm-bound SPEEDUP wants HIGH batch (f rises with batch), but the
 memory WIN wants LOW batch (small union). They conflict. At high serving batch the
