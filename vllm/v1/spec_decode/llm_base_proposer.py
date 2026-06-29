@@ -15,7 +15,7 @@ from vllm.config import (
     replace,
 )
 from vllm.distributed.parallel_state import get_pp_group
-from vllm.forward_context import set_forward_context
+from vllm.forward_context import SELF_SPEC_LOCAL_ROUTE_KEY, set_forward_context
 from vllm.logger import init_logger
 from vllm.model_executor.layers.attention_layer_base import AttentionLayerBase
 from vllm.model_executor.model_loader import get_model
@@ -73,6 +73,15 @@ class SpecDecodeBaseProposer:
         self.method = self.speculative_config.method
         self.pass_hidden_states_to_model = pass_hidden_states_to_model
         self._share_mtp_indices = False
+
+        # Self-spec W0: signal the comm-free local-routing MoE path on the draft
+        # forward only (verify runs in a separate forward context, so it stays
+        # full-EP). Value-driven via ForwardContext.additional_kwargs; gated to
+        # the draft_model method so EAGLE/MTP heads are unaffected. None when
+        # inactive -> no change to the forward context.
+        self._draft_forward_additional_kwargs: dict[str, Any] | None = (
+            {SELF_SPEC_LOCAL_ROUTE_KEY: True} if self.method == "draft_model" else None
+        )
 
         self.device = device
         self.dtype = vllm_config.model_config.dtype
@@ -520,6 +529,7 @@ class SpecDecodeBaseProposer:
             slot_mapping=self._get_slot_mapping(
                 slot_mapping_size, common_attn_metadata.slot_mapping
             ),
+            additional_kwargs=self._draft_forward_additional_kwargs,
         ):
             ret_hidden_states = self.model(**model_kwargs)
             if not self.model_returns_tuple():
@@ -663,6 +673,7 @@ class SpecDecodeBaseProposer:
                 num_tokens_across_dp=batch_size_across_dp,
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
                 slot_mapping=self._get_slot_mapping(input_batch_size),
+                additional_kwargs=self._draft_forward_additional_kwargs,
             ):
                 ret_hidden_states = self.model(**model_kwargs)
                 if not self.model_returns_tuple():
@@ -1539,6 +1550,7 @@ class SpecDecodeBaseProposer:
                 num_tokens_across_dp=num_tokens_across_dp,
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
                 slot_mapping=slot_mapping_dict,
+                additional_kwargs=self._draft_forward_additional_kwargs,
             ):
                 if self.supports_mm_inputs:
                     input_ids = None

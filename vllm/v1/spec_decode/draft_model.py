@@ -75,7 +75,27 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 vllm_config=draft_vllm_config,
                 prefix="draft_model",
             )
+        self._log_draft_moe_ep_status(model)
         return model
+
+    @staticmethod
+    def _log_draft_moe_ep_status(model: nn.Module) -> None:
+        """One-time check (W0 validation rung ii): confirm the draft's MoE
+        layers build with expert parallelism (use_ep=True, non-None expert_map).
+        Without EP propagated into the draft parallel config, use_ep=False and
+        the comm-free local-routing path is a silent no-op on the draft.
+        """
+        from vllm.model_executor.layers.fused_moe.routed_experts import RoutedExperts
+
+        for name, module in model.named_modules():
+            if isinstance(module, RoutedExperts):
+                logger.info(
+                    "Draft MoE EP status [%s]: use_ep=%s expert_map=%s",
+                    name,
+                    module.use_ep,
+                    "None" if module.expert_map is None else "set",
+                )
+                return
 
     @override
     def _maybe_share_embeddings(self, target_language_model: nn.Module) -> None:

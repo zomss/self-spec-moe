@@ -998,6 +998,14 @@ class SpeculativeConfig:
             disable_custom_all_reduce=target_parallel_config.disable_custom_all_reduce,
             ray_workers_use_nsight=target_parallel_config.ray_workers_use_nsight,
             placement_group=target_parallel_config.placement_group,
+            # Propagate expert parallelism (+ DP/all2all backend) so the draft's
+            # FusedMoE builds use_ep=True with a non-None expert_map, matching the
+            # target. Without this the draft defaults to use_ep=False and the
+            # comm-free local-routing path (W1) becomes a silent no-op on the
+            # draft. Only meaningful when draft_tp == target_tp (EP=TP).
+            enable_expert_parallel=target_parallel_config.enable_expert_parallel,
+            data_parallel_size=target_parallel_config.data_parallel_size,
+            all2all_backend=target_parallel_config.all2all_backend,
         )
 
         return draft_parallel_config
