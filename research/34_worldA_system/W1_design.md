@@ -58,6 +58,21 @@ router masking AND the dispatch/combine skip.
 4. End-to-end via the custom driver (W0): lossless + tokens/s (W7).
 
 ## Status
-W1 increment 1 (this commit): the correct-routing core (`local_route`) + tests. Next: the
-local prepare/finalize + the routing integration (needs a model run to validate) -- the
-invasive vLLM piece, best done iteratively in a worktree.
+- **Increment 1 (done):** the correct-routing core (`local_route`) + unit tests.
+- **Increment 2 (done, validated, merged):** the vLLM integration, built in worktree
+  `ssm-w1` and merged to `research/self-spec-moe`. Additive + flag-gated; OFF by default.
+  - Flag: `ForwardContext.additional_kwargs["self_spec_local_route"]` (driver sets it per
+    forward) with env `VLLM_SELF_SPEC_LOCAL_ROUTE` as the default; reader
+    `forward_context.self_spec_local_route_enabled()`.
+  - Router masking: `fused_moe/local_route.py::mask_router_logits_to_resident` (non-resident
+    logits -> dtype min; equivalent to the reference's prob-masking for both selection and
+    renormed weights -- the normalizer cancels), applied in `runner/moe_runner.py`. No-op
+    when `expert_map is None` -> resident=all is byte-identical to baseline.
+  - Comm-skip: `AgRsAll2AllManager.{dispatch,dispatch_router_logits,combine}` return local
+    tensors as-is / `pass` when the flag is set; `real=` collective counter proves 0.
+  - **Validated:** resident=all -> byte-identical to baseline (sanity invariant);
+    DP=2+EP flag-ON -> `real=0` (comm-free) + coherent non-garbage output; forced-PCIe ->
+    `real=0`. (Losslessness is a driver-level property, validated later at W7.)
+  - Resident set = the rank's EP shard (`expert_map`) -> low coverage/beta; W2 expands it
+    with the FP4 cache.
+- **Next:** W0 (driver toggles the flag per phase) + W2 (FP4 resident cache).
