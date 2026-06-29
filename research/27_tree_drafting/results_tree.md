@@ -61,8 +61,44 @@ of levels are worth it.
 - Optimal structure: **small balanced tree (d=2-3, b=2-3) at low batch; 1-token chain at
   high batch.**
 
-## 5. Caveat / next
+## 5. Tree-attention validation (DONE): real accept length + losslessness + KV
 
-Accept length uses measured h(b) + the standard geometric tree model; the verify/draft
-costs are measured. A real tree-attention end-to-end run (accept length for the winning
-small tree, the B1-analog for trees) would validate the structure before any integration.
+Real tree-attention verify -- proper tree mask (each node attends to context + ancestors),
+shared position ids per depth, full-weight verify, recompute (no KV reuse from draft);
+`tree_verify.py`:
+
+| structure | nodes | real accept | pred (h(b)+geom) | real/pred |
+| --- | ---: | ---: | ---: | ---: |
+| chain k2 | 2 | 1.58 | 1.64 | 0.96 |
+| **full d2b2** | 6 | **1.95** | 1.94 | 1.01 |
+| chain k3 | 3 | 2.35 | 2.31 | 1.02 |
+| full d3b2 | 14 | 2.82 | 2.88 | 0.98 |
+
+Accept lengths match the model within 2-4%, and the small tree beats the chain by
+**+23%** (full d2b2 1.95 vs chain k2 1.58) -- branching validated with real tree attention.
+
+**Losslessness (the low greedy_match is cascade, not a bug).** Trees showed greedy_match
+~0.70 vs chains ~0.94 against the global reference. Per-cycle fresh-reference control
+(compare each cycle's accepted tokens to a sequential bf16 greedy from THAT cycle's
+prefix, removing cross-cycle cascade; `control_lossless.py`): **0.990 (97/98)** -- one
+flip per ~98 tokens = the B1 batched-vs-sequential GPU-numerics floor. So the tree verify
+is correct; a single early numerics flip cascades and tanks the global-reference match.
+Distributional losslessness holds (rejection-sampling theorem); greedy bit-exactness vs
+sequential is GPU-limited for ANY parallel verifier (B1), and trees just have more nodes
+per batched forward so the per-sequence cascade is longer.
+
+**KV-cache correctness.** Draft (local-routing/quantized experts) and verify (full bf16)
+hidden states diverge after the first MoE layer, so their attention K,V differ at every
+later layer -> draft KV must NOT be reused at verify. The harness recomputes
+(`use_cache=False`); verify runs full weights over [context+tree], never draft KV. In a
+real impl: verify keeps its OWN KV (source of truth), accepted tokens commit verify's KV,
+draft KV is scratch. The verify cost (full forward over tree nodes) already includes this
+recompute -- it cannot be saved, which reinforces the verify-cost-with-size finding. (My
+draft also recomputes context with local routing -> a conservative beta; reusing verify's
+context KV for the draft, still comm-free, could raise acceptance -- untested upside.)
+
+## 6. Caveat / next
+
+Validated: structure, accept length, losslessness, KV correctness -- all on real tree
+attention. The integrated distributed end-to-end remains B2b-full. The accept-length
+upside from a verify-context-KV draft is an untested lever.

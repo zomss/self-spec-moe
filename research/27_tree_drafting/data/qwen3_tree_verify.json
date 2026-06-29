@@ -1,0 +1,56 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "C": 64,
+  "results": {
+    "chain_k2": {
+      "schedule": [
+        1,
+        1
+      ],
+      "nodes": 2,
+      "mean_accept_real": 1.579,
+      "pred_geom": 1.641,
+      "real_over_pred": 0.962,
+      "greedy_match": 0.941,
+      "cycles": 114
+    },
+    "full_d2b2": {
+      "schedule": [
+        2,
+        2
+      ],
+      "nodes": 6,
+      "mean_accept_real": 1.95,
+      "pred_geom": 1.937,
+      "real_over_pred": 1.006,
+      "greedy_match": 0.698,
+      "cycles": 100
+    },
+    "chain_k3": {
+      "schedule": [
+        1,
+        1,
+        1
+      ],
+      "nodes": 3,
+      "mean_accept_real": 2.348,
+      "pred_geom": 2.311,
+      "real_over_pred": 1.016,
+      "greedy_match": 0.885,
+      "cycles": 89
+    },
+    "full_d3b2": {
+      "schedule": [
+        2,
+        2,
+        2
+      ],
+      "nodes": 14,
+      "mean_accept_real": 2.818,
+      "pred_geom": 2.876,
+      "real_over_pred": 0.98,
+      "greedy_match": 0.736,
+      "cycles": 77
+    }
+  }
+}
