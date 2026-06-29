@@ -1,7 +1,10 @@
 # W2 design: resident draft-expert cache (raise the draft's coverage/beta)
 
-W0+W1 give a comm-free draft routing ONLY to its EP shard -> measured acceptance 0.758. W2
-raises coverage by giving each device more resident experts. Scoping (Explore) found:
+W0+W1 give a comm-free draft routing ONLY to its EP shard -> LOW coverage (W2 harness:
+mean accept-length ~2.7 of 5 at K=4, per-draft-token accept ~0.42; the W0 doc's "0.758"
+used a different metric/window -- the canonical metric going forward is mean accept-length,
+which is unambiguous and drives tokens/s). W2 raises coverage by giving each device more
+resident experts. Scoping (Explore) found:
 
 ## Scoping verdict
 - **No config-only path that reuses the W1 mask for a *partial* replica.** vLLM's only
