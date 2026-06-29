@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, get_args
 from pydantic import Field, SkipValidation, field_validator, model_validator
 from typing_extensions import Self
 
+import vllm.envs as envs
 from vllm.config import LoadConfig
 from vllm.config.kernel import MoEBackend
 from vllm.config.model import ModelConfig
@@ -990,6 +991,17 @@ class SpeculativeConfig:
 
         This is mostly a copy of the target parallel config, except the tp_size.
         """
+        # W2a (full bf16 replica): when VLLM_SELF_SPEC_DRAFT_FULL_REPLICA is set,
+        # build the draft non-EP (enable_expert_parallel=False) regardless of the
+        # target. The draft's FusedMoE then builds use_ep=False -> expert_map=None
+        # -> every rank holds ALL experts (full replica) and routes over all of
+        # them (the W1 router mask is a no-op when expert_map is None). This is
+        # comm-free by replication (non-EP MoE has no all-to-all). The draft stays
+        # data-parallel when the target is DP. Default off -> W0 EP-shard draft.
+        draft_enable_expert_parallel = target_parallel_config.enable_expert_parallel
+        if envs.VLLM_SELF_SPEC_DRAFT_FULL_REPLICA:
+            draft_enable_expert_parallel = False
+
         draft_parallel_config = ParallelConfig(
             pipeline_parallel_size=target_parallel_config.pipeline_parallel_size,
             tensor_parallel_size=speculative_draft_tensor_parallel_size,
@@ -1003,7 +1015,8 @@ class SpeculativeConfig:
             # target. Without this the draft defaults to use_ep=False and the
             # comm-free local-routing path (W1) becomes a silent no-op on the
             # draft. Only meaningful when draft_tp == target_tp (EP=TP).
-            enable_expert_parallel=target_parallel_config.enable_expert_parallel,
+            # W2a overrides this to False for a full-replica draft.
+            enable_expert_parallel=draft_enable_expert_parallel,
             data_parallel_size=target_parallel_config.data_parallel_size,
             all2all_backend=target_parallel_config.all2all_backend,
         )

@@ -251,6 +251,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_SKIP_A2A: bool = False
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
+    VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1819,6 +1820,19 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # routing. Default off -> no change to default draft_model behavior.
     "VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE", "0"))
+    ),
+    # Self-spec W2a FULL REPLICA opt-in: when set, the draft_model parallel
+    # config is built with enable_expert_parallel=False (overriding the W0 EP
+    # propagation from the target). The draft's FusedMoE then builds use_ep=False
+    # -> expert_map=None -> EVERY rank holds ALL experts (a full bf16 replica)
+    # and routes over all of them. This is comm-free by replication (non-EP MoE
+    # has no all-to-all) and the W1 router mask becomes a no-op (expert_map=None),
+    # so the draft gets full expert coverage -> acceptance approaches 1.0 (vs the
+    # low coverage of an EP shard draft). Cost: full E experts/rank in bf16. The
+    # draft stays data-parallel (DP) when the target is DP. Default off -> W0
+    # (EP shard) draft behavior unchanged.
+    "VLLM_SELF_SPEC_DRAFT_FULL_REPLICA": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_REPLICA", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.
