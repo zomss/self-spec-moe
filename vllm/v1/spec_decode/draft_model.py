@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 
+import copy
+
 import torch
 import torch.nn as nn
 from typing_extensions import override
@@ -55,9 +57,35 @@ class DraftModelProposer(SpecDecodeBaseProposer):
         base = super()._create_draft_vllm_config()
         spec = self.speculative_config
 
+        # By default the draft runs unquantized (bf16). If the speculative
+        # config requests a draft quantization (e.g. "fp8"), derive the draft's
+        # quant_config from the draft model_config (which already carries that
+        # quantization). This lets the DRAFT use on-the-fly FP8 (halving its
+        # expert weight-load and FLOPs) while the TARGET stays bf16. Default
+        # (no draft quantization) keeps the original quant_config=None behavior.
+        quant_config = None
+        if spec.draft_model_config.quantization is not None:
+            load_config = spec.draft_load_config or self.vllm_config.load_config
+            # get_quant_config reads hf_overrides as a dict when the checkpoint
+            # has no embedded quant config (the on-the-fly FP8 path). The draft
+            # model_config carries hf_overrides as the SpeculativeConfig callable,
+            # so normalize it to {} on a copy (get_quantization_config deep-copies
+            # anyway, but be explicit so the callable is never indexed).
+            quant_model_config = copy.copy(spec.draft_model_config)
+            if not isinstance(quant_model_config.hf_overrides, dict):
+                quant_model_config.hf_overrides = {}
+            quant_config = VllmConfig.get_quantization_config(
+                quant_model_config, load_config
+            )
+            logger.info(
+                "Draft model quantization: %s (target stays %s)",
+                spec.draft_model_config.quantization,
+                self.vllm_config.model_config.quantization,
+            )
+
         return replace(
             base,
-            quant_config=None,
+            quant_config=quant_config,
             parallel_config=replace(
                 spec.draft_parallel_config,
                 rank=self.vllm_config.parallel_config.rank,

@@ -1,0 +1,98 @@
+{
+  "mode": "nospec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "qwen30b_nospec",
+  "dp": 2,
+  "tp": 1,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 100.0,
+  "suffix": "cg_a2a100us",
+  "by_k": {
+    "0": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 3.7672151540561267,
+        "short_s_mean": 1.1855838916574915,
+        "long_s_all": [
+          3.7667990210466087,
+          3.767762308008969,
+          3.767084133112803
+        ],
+        "short_s_all": [
+          1.1856507160700858,
+          1.185679747024551,
+          1.1854212118778378
+        ],
+        "decode_s_mean": 2.5816312623986355,
+        "decode_s_std": 0.00046793192187565355,
+        "tok_s_mean": 396.64844369630936,
+        "tok_s_std": 0.07189557734049438,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 4.502558508111785,
+        "short_s_mean": 1.3159045483140897,
+        "long_s_all": [
+          4.502330064075068,
+          4.502008743118495,
+          4.503336717141792
+        ],
+        "short_s_all": [
+          1.3163643588777632,
+          1.3165870821103454,
+          1.3147622039541602
+        ],
+        "decode_s_mean": 3.1866539597976953,
+        "decode_s_std": 0.0016853456656236217,
+        "tok_s_mean": 1285.3610135469946,
+        "tok_s_std": 0.6796135054797784,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 5.07067077094689,
+        "short_s_mean": 1.4743266336930294,
+        "long_s_all": [
+          5.067148040048778,
+          5.074221409857273,
+          5.070642862934619
+        ],
+        "short_s_all": [
+          1.4648354321252555,
+          1.5094283500220627,
+          1.4487161189317703
+        ],
+        "decode_s_mean": 3.5963441372538605,
+        "decode_s_std": 0.02903069837676706,
+        "tok_s_mean": 2277.9679666079046,
+        "tok_s_std": 18.432784734262604,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false
+      }
+    ]
+  }
+}
