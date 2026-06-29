@@ -125,6 +125,29 @@ Scoped the v1 spec-decode API (Explore agent). Findings + decision:
   blocks and never corrupts committed target KV (the verify-context-KV pattern). Reuses the
   framework's `compute_slot_mappings` but deviates from the draft-only-layer assumption.
 
+### Precision & dual-residency (FP4 draft + bf16 verify) -- explicit
+
+The two passes use **different expert weights at different precisions**, both resident:
+
+- **Verify = the target's bf16 experts, EP-sharded** (E/num_devices per device). This is the
+  exact target -> losslessness is w.r.t. the bf16 model. Unchanged from normal serving.
+- **Draft = a SEPARATE resident FP4 expert cache** (globally-hot top-C / replica, sized for
+  local-routing coverage -- *larger* than the EP shard), sharing the target's bf16
+  attention / embed / lm_head. The draft is lossy (FP4 + local routing); the bf16 verify
+  corrects it -> still lossless.
+- **Dual-residency:** the device holds BOTH the bf16 verify shard AND the FP4 draft cache;
+  the FP4 cache is the *extra* memory (1-16 GB by cache size, Phase 26/28). The draft does
+  NOT reuse the verify's bf16 experts (it has its own FP4 weights), so the speculator's
+  draft module is "shared bf16 backbone + draft-specific FP4 experts" -- exactly EAGLE's
+  shared-backbone + draft-specific-weights pattern, where the draft-specific weights are the
+  FP4 expert cache.
+- **The ForwardContext flag gates BOTH** the routing mode (local, comm-free) AND the weight
+  set (FP4 draft cache vs bf16 verify shard). W1 wires the flag; W2 loads the FP4 weights.
+
+Staging note: FP4 enters at **W2**. W0/W1 use bf16 experts (reused from the target) to
+de-risk the framework wiring and the comm-free path first; W2 swaps in the separate FP4
+resident cache (the quantized-draft + memory story).
+
 ### Revised first steps (de-risk the integration before the invasive MoE work)
 0. **Scaffold + sanity:** speculator subclass + registration with draft = target in FULL
    mode (full routing). Confirms the framework wiring runs and is lossless (beta=1, no
