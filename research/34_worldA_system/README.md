@@ -196,9 +196,36 @@ does not fit cleanly. Two real paths remain, both substantial:
 and World A's full-model draft fights that in BOTH performance (dominated by EAGLE) and
 implementation (doesn't fit the framework).
 
-**Sequencing implication:** **World B is both the stronger result (~2.3x) AND the far easier
-build** -- it reuses the EXISTING EAGLE spec-decode path unchanged and only changes the
-draft-TREE SIZE (a comm-aware small/pruned tree), no custom draft, no framework fight, no
-2x KV. World A's full-model self-draft is the harder build for the weaker (training-free-only)
-result. Recommend building **World B first**; pursue World A only if its training-free
-novelty justifies the custom-driver cost.
+**Sequencing implication (SUPERSEDED -- see RE-SCOPE below):** the "World B first" note
+assumed the EAGLE-head version of World B. The PROJECT is training-free, so World B has no
+head -- it uses World A's draft. World A is the foundation. See below.
+
+---
+
+## RE-SCOPED PLAN (custom-driver foundation; World A is the foundation for World B)
+
+**Why World A first (corrects the note above):** in the TRAINING-FREE setting (the project's
+identity) there is no EAGLE head, so **World B's draft IS World A's comm-free local-routing
+draft.** The two worlds share the draft and differ only in the verify STRUCTURE:
+- **World A** = comm-free local-routing draft -> verify a CHAIN (or small structure).
+- **World B** = the SAME draft -> verify a comm-aware (pruned) TREE.
+(Phase 33's World B already ran on World A's local-routing draft as the EAGLE stand-in.)
+
+**Architecture = a custom lockstep driver** (the vLLM v1 spec framework is head-oriented and
+does not fit a full-model self-draft -- see the W0 code read above). The driver is the
+SHARED foundation for both worlds:
+- single model, two modes: **draft = comm-free local routing** / **verify = full EP**;
+- single KV cache, draft KV written to scratch/speculative slots;
+- rejection sampling (reuse B1); draft STRUCTURE is a parameter: **chain = World A**,
+  **pruned tree = World B**.
+
+**Build order:**
+1. **W1 (the shared heart):** comm-free local-routing MoE forward -- mask router to resident
+   experts, skip the all-to-all, skip-cold for misses. The one capability both worlds need.
+2. **Custom lockstep driver** (chain draft): draft -> verify -> reject -> commit, scratch-slot
+   draft KV. = World A.
+3. **W2** (FP4 resident cache) + **W5** (KV-slot correctness) + **W7** (measure World A tokens/s).
+4. **World B extension:** tree-structured drafting + comm-aware pruning on the same driver.
+
+W0 is now "custom lockstep driver skeleton (chain draft, comm-free local MoE)", not a
+framework speculator subclass. **Starting with W1** -- the comm-free local-routing MoE.
