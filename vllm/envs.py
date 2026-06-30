@@ -256,6 +256,9 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
+    VLLM_SELF_SPEC_MOE_NUM_DUMP: str = ""
+    VLLM_SELF_SPEC_MOE_DUMP_LAYER: int = 0
+    VLLM_SELF_SPEC_MOE_FP32_ACCUM: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1883,6 +1886,34 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # only -- no behavior change. Default off. See research/34_worldA_system.
     "VLLM_SELF_SPEC_PROFILE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_PROFILE", "0"))
+    ),
+    # Self-spec W7 numerical-divergence instrumentation (Step 1): when set to a
+    # directory path, the MoE runner dumps, for the FIRST decode forward on DP
+    # rank 0 at layer VLLM_SELF_SPEC_MOE_DUMP_LAYER, the per-token (a) router
+    # logits, (b) selected expert ids + weights, and (c) post-combine MoE
+    # output, to "{path}/moe_dump_L{layer}.pt". Lets configs A (comm-free
+    # full-replica) and C (EP all-to-all) be diffed on the SAME prompt to prove
+    # the comm-free-vs-EP bf16 reduce structure is the divergence cause. Timing-
+    # neutral, default off (empty -> no dump). See research/40_num_divergence.
+    "VLLM_SELF_SPEC_MOE_NUM_DUMP": lambda: os.getenv(
+        "VLLM_SELF_SPEC_MOE_NUM_DUMP", ""
+    ),
+    "VLLM_SELF_SPEC_MOE_DUMP_LAYER": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_MOE_DUMP_LAYER", "0")
+    ),
+    # Self-spec W7 FP32-accumulation fix (Step 2): when set, force FP32
+    # accumulation in BOTH MoE reduce paths so the bf16 summation associativity
+    # stops mattering and the comm-free full-replica sum and the EP all-to-all
+    # sum both converge to the true FP32 sum (-> match). Affects:
+    #   * the LOCAL moe_sum (config A path): topk experts are summed in fp32 and
+    #     the result cast back to the activation dtype;
+    #   * the reduce_scatterv cross-rank combine (config C path): the cross-rank
+    #     partials are accumulated in fp32. The wire payload stays bf16 only when
+    #     fp32 transport is not needed; here we upcast the partials to fp32 for a
+    #     faithful fp32 cross-rank sum (correctness probe; see results for the
+    #     bandwidth note). Default off -> both paths unchanged (bf16-accum).
+    "VLLM_SELF_SPEC_MOE_FP32_ACCUM": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_MOE_FP32_ACCUM", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.

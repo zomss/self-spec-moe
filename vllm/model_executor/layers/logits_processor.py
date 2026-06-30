@@ -70,6 +70,15 @@ class LogitsProcessor(PluggableLayer):
 
             if self.scale != 1.0:
                 logits *= self.scale
+
+        if logits is not None:
+            # Self-spec W7 num-divergence (d): dump the FIRST decode forward's
+            # final next-token logits on DP rank 0 so configs A and C can be
+            # diffed for argmax flips (= the rejected draft tokens). Env-gated,
+            # default off -> zero overhead.
+            from vllm.model_executor.layers.fused_moe import num_divergence_dump
+
+            num_divergence_dump.record_logits(logits)
         return logits
 
     def _gather_logits(self, logits: torch.Tensor) -> torch.Tensor:

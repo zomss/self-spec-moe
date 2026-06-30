@@ -35,6 +35,7 @@ from vllm.model_executor.layers.fused_moe.local_route import (
     local_route_enabled,
     mask_router_logits_to_resident,
 )
+from vllm.model_executor.layers.fused_moe import num_divergence_dump
 from vllm.model_executor.layers.fused_moe.routed_experts import (
     RoutedExperts,
 )
@@ -577,6 +578,11 @@ class MoERunner(MoERunnerInterface):
                 input_ids=input_ids,
             )
 
+            if num_divergence_dump.dump_enabled():
+                num_divergence_dump.record_topk(
+                    self.layer_id, topk_ids, topk_weights
+                )
+
             fused_out = self.routed_experts.forward_modular(
                 x=hidden_states,
                 topk_weights=topk_weights,
@@ -726,7 +732,13 @@ class MoERunner(MoERunnerInterface):
 
         result = self._maybe_reduce_final_output(result, og_hidden_dim_post_xform)
 
-        return self._maybe_add_zero_expert_output(result)
+        result = self._maybe_add_zero_expert_output(result)
+
+        if num_divergence_dump.dump_enabled():
+            # (a) router logits (rank-0 local tokens) + (c) post-combine output.
+            num_divergence_dump.record_forward(self.layer_id, router_logits, result)
+
+        return result
 
     @property
     def do_naive_dispatch_combine(self) -> bool:

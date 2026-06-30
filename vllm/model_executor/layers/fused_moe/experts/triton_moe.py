@@ -4,6 +4,7 @@
 
 import torch
 
+import vllm.envs as envs
 import vllm.model_executor.layers.fused_moe.modular_kernel as mk
 from vllm import _custom_ops as ops
 from vllm.model_executor.layers.fused_moe.activation import MoEActivation
@@ -525,7 +526,16 @@ class TritonExperts(LoRAExpertsMixin, mk.FusedMoEExpertsModular):
         self.moe_sum(intermediate_cache3, output)
 
     def moe_sum(self, input: torch.Tensor, output: torch.Tensor) -> None:
-        ops.moe_sum(input, output)
+        # Self-spec W7 fix: when VLLM_SELF_SPEC_MOE_FP32_ACCUM is set, sum the
+        # (M, topk, K) per-expert outputs over the topk dim in FP32 (then cast
+        # back to ``output``'s dtype). This single fp32 reduction equals the
+        # true sum regardless of comm-free-vs-EP structure, so the comm-free
+        # full-replica local sum and the EP per-shard sum converge. Default off
+        # -> the bf16 ``ops.moe_sum`` kernel (unchanged).
+        if envs.VLLM_SELF_SPEC_MOE_FP32_ACCUM and output.dtype != torch.float32:
+            output.copy_(input.float().sum(dim=1))
+        else:
+            ops.moe_sum(input, output)
 
 
 class TritonWNA16Experts(TritonExperts):

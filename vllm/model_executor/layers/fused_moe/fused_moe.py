@@ -1732,9 +1732,22 @@ def fused_experts_impl(
         B_bias=w2_bias,
     )
 
-    ops.moe_sum(
-        intermediate_cache3.view(*intermediate_cache3.size()),
-        out_hidden_states,
-    )
+    if (
+        envs.VLLM_SELF_SPEC_MOE_FP32_ACCUM
+        and out_hidden_states.dtype != torch.float32
+    ):
+        # Self-spec W7 fix: sum the top-k experts in FP32 (then cast back) so
+        # the bf16 summation associativity stops mattering -- this single fp32
+        # reduction equals the true sum regardless of comm-free-vs-EP structure.
+        out_hidden_states.copy_(
+            intermediate_cache3.view(*intermediate_cache3.size())
+            .float()
+            .sum(dim=1)
+        )
+    else:
+        ops.moe_sum(
+            intermediate_cache3.view(*intermediate_cache3.size()),
+            out_hidden_states,
+        )
 
     return out_hidden_states

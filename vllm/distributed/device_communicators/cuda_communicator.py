@@ -349,6 +349,20 @@ class CudaCommunicator(DeviceCommunicatorBase):
         # the input_tensor contiguous. Possible bug in reduce_scatter_tensor?
         input_tensor = input_.movedim(0, dim).contiguous()
 
+        # Self-spec W7 fix: accumulate the cross-rank MoE combine in FP32 so the
+        # EP all-to-all sum matches the comm-free full-replica fp32 sum (the
+        # structure stops mattering). NCCL reduces in the wire dtype, so we
+        # upcast the low-precision partials to fp32 for the reduce, then narrow
+        # the result back. Probe only -> doubles the combine wire bytes; see
+        # results for the bandwidth note. Default off (low-precision unchanged).
+        orig_dtype = input_tensor.dtype
+        fp32_accum = (
+            envs.VLLM_SELF_SPEC_MOE_FP32_ACCUM
+            and orig_dtype in (torch.bfloat16, torch.float16)
+        )
+        if fp32_accum:
+            input_tensor = input_tensor.float()
+
         if sizes is not None:
             assert len(sizes) == world_size, f"{len(sizes)} == {world_size}"
             assert input_tensor.shape[0] == sum(sizes)
@@ -366,6 +380,9 @@ class CudaCommunicator(DeviceCommunicatorBase):
             pynccl_comm.reduce_scatterv(output, input_tensor, sizes=sizes)
         else:
             pynccl_comm.reduce_scatter(output, input_tensor)
+
+        if fp32_accum:
+            output = output.to(orig_dtype)
 
         # Reshape before returning
         return output.movedim(0, dim).contiguous()

@@ -5,7 +5,26 @@
 import torch
 
 import vllm._custom_ops as ops
+import vllm.envs as envs
 import vllm.model_executor.layers.fused_moe.modular_kernel as mk
+
+
+def moe_sum_maybe_fp32(fused_expert_output: torch.Tensor,
+                       output: torch.Tensor) -> None:
+    """Reduce (M, topk, K) -> (M, K), optionally accumulating in FP32.
+
+    Self-spec W7 fix: when VLLM_SELF_SPEC_MOE_FP32_ACCUM is set, the top-k
+    experts are summed in FP32 (then cast back to ``output``'s dtype) so the
+    bf16 summation associativity stops mattering -- the comm-free full-replica
+    sum and the EP per-shard sum then both equal the true FP32 sum. Otherwise
+    delegates to the bf16 ``ops.moe_sum`` kernel (unchanged default).
+    """
+    if envs.VLLM_SELF_SPEC_MOE_FP32_ACCUM and output.dtype != torch.float32:
+        # Sum over the topk dim in fp32, then narrow back to the activation
+        # dtype. Single fp32 reduction -> structure-independent result.
+        output.copy_(fused_expert_output.float().sum(dim=1))
+    else:
+        ops.moe_sum(fused_expert_output, output)
 
 
 class TopKWeightAndReduceDelegate(mk.TopKWeightAndReduce):
@@ -117,7 +136,7 @@ class TopKWeightAndReduceContiguous(mk.TopKWeightAndReduce):
             f"Expected output size {(m, k)}. But got {output.size()}"
         )
 
-        ops.moe_sum(fused_expert_output, output)
+        moe_sum_maybe_fp32(fused_expert_output, output)
         return output
 
 
