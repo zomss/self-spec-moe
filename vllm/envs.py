@@ -252,6 +252,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
+    VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -1833,6 +1834,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # (EP shard) draft behavior unchanged.
     "VLLM_SELF_SPEC_DRAFT_FULL_REPLICA": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_REPLICA", "0"))
+    ),
+    # Self-spec W7 micro-benchmark: when set, the proposer and target-verify
+    # forwards record additive, CUDA-synchronized wall-clock timings (whole
+    # draft chain, a single draft forward, and the verify forward) into a
+    # process-local profiler (vllm.v1.spec_decode.self_spec_profiler). Timing
+    # only -- no behavior change. Default off. See research/34_worldA_system.
+    "VLLM_SELF_SPEC_PROFILE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_PROFILE", "0"))
     ),
     # The number of SMs/CUs to allocate for communication kernels when
     # running DBO; the rest will be allocated to compute.

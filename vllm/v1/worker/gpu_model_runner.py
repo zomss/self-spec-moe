@@ -190,6 +190,9 @@ from vllm.v1.spec_decode.ngram_proposer_gpu import (
     update_ngram_gpu_tensors_incremental,
     update_scheduler_for_invalid_drafts,
 )
+from vllm.v1.spec_decode.self_spec_profiler import (
+    get_profiler as _self_spec_profiler,
+)
 from vllm.v1.spec_decode.step3p5 import Step3p5MTPProposer
 from vllm.v1.spec_decode.suffix_decoding import SuffixDecodingProposer
 from vllm.v1.spec_decode.utils import update_num_computed_tokens_for_batch_change
@@ -4312,13 +4315,16 @@ class GPUModelRunner(
                 defer_finalize=defer_kv_connector_finalize,
             ) as kv_connector_output,
         ):
-            model_output = self._model_forward(
-                input_ids=input_ids,
-                positions=positions,
-                intermediate_tensors=intermediate_tensors,
-                inputs_embeds=inputs_embeds,
-                **model_kwargs,
-            )
+            # Self-spec W7 micro-bench: time the target (verify) forward. With
+            # spec on, this forward covers the K+1 proposed tokens per request.
+            with _self_spec_profiler().region("verify"):
+                model_output = self._model_forward(
+                    input_ids=input_ids,
+                    positions=positions,
+                    intermediate_tensors=intermediate_tensors,
+                    inputs_embeds=inputs_embeds,
+                    **model_kwargs,
+                )
 
         with record_function_or_nullcontext("gpu_model_runner: postprocess"):
             if self.use_aux_hidden_state_outputs:
@@ -5102,19 +5108,21 @@ class GPUModelRunner(
             else:
                 mm_embed_inputs = None
 
-            draft_token_ids = self.drafter.propose(
-                num_speculative_tokens=num_spec_tokens_to_schedule,
-                target_token_ids=target_token_ids,
-                target_positions=target_positions,
-                target_hidden_states=target_hidden_states,
-                next_token_ids=next_token_ids,
-                token_indices_to_sample=token_indices_to_sample,
-                sampling_metadata=sampling_metadata,
-                common_attn_metadata=common_attn_metadata,
-                mm_embed_inputs=mm_embed_inputs,
-                num_rejected_tokens_gpu=num_rejected_tokens_gpu,
-                slot_mappings=slot_mappings,
-            )
+            # Self-spec W7 micro-bench: time the whole draft chain (propose()).
+            with _self_spec_profiler().region("draft_chain"):
+                draft_token_ids = self.drafter.propose(
+                    num_speculative_tokens=num_spec_tokens_to_schedule,
+                    target_token_ids=target_token_ids,
+                    target_positions=target_positions,
+                    target_hidden_states=target_hidden_states,
+                    next_token_ids=next_token_ids,
+                    token_indices_to_sample=token_indices_to_sample,
+                    sampling_metadata=sampling_metadata,
+                    common_attn_metadata=common_attn_metadata,
+                    mm_embed_inputs=mm_embed_inputs,
+                    num_rejected_tokens_gpu=num_rejected_tokens_gpu,
+                    slot_mappings=slot_mappings,
+                )
             if hasattr(self.drafter, "take_last_draft_probs"):
                 draft_probs = self.drafter.take_last_draft_probs()
                 if draft_probs is not None:

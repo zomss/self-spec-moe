@@ -1,0 +1,22 @@
+{
+  "mode": "nospec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-V2-Lite/snapshots/604d5664dddd88a0433dbae533b7fe9472482de0",
+  "tag": "v2lite",
+  "dp": 2,
+  "tp": 1,
+  "batch": 64,
+  "K": 0,
+  "a2a_us": 100.0,
+  "gpu_mem": 0.9,
+  "outlen": 210,
+  "warmup": 50,
+  "steady": 100,
+  "run_result": {
+    "decode_s_mean": 3.1958698915938535,
+    "decode_s_std": 0.010635344634715663,
+    "steps_per_seq": 178,
+    "nospec_step_ms": 17.954325233673334
+  },
+  "rank0_profile": null,
+  "n_profile_files": 0
+}

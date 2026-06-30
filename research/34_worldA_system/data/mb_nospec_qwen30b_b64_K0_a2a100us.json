@@ -1,0 +1,39 @@
+{
+  "mode": "nospec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "qwen30b",
+  "dp": 2,
+  "tp": 1,
+  "batch": 64,
+  "K": 0,
+  "a2a_us": 100.0,
+  "gpu_mem": 0.9,
+  "outlen": 210,
+  "warmup": 50,
+  "steady": 100,
+  "run_result": {
+    "decode_s_mean": 5.594407538960998,
+    "decode_s_std": 0.42155757233366925,
+    "steps_per_seq": 178,
+    "nospec_step_ms": 31.429255836859536
+  },
+  "rank0_profile": {
+    "pid": 2001291,
+    "dp_rank": "1",
+    "warmup": 50,
+    "counts": {
+      "verify": 1225
+    },
+    "summary": {
+      "verify": {
+        "n": 1175,
+        "n_total": 1225,
+        "mean_ms": 28.391537232958573,
+        "std_ms": 21.905286156300054,
+        "min_ms": 17.33701303601265,
+        "max_ms": 765.2170150540769
+      }
+    }
+  },
+  "n_profile_files": 2
+}

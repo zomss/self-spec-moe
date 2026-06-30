@@ -41,6 +41,9 @@ from vllm.v1.sample.ops.topk_topp_sampler import (
 )
 from vllm.v1.sample.sampler import _SAMPLING_EPS
 from vllm.v1.spec_decode.metadata import SpecDecodeMetadata
+from vllm.v1.spec_decode.self_spec_profiler import (
+    get_profiler as _self_spec_profiler,
+)
 from vllm.v1.spec_decode.utils import (
     PADDING_SLOT_ID,
     compute_new_slot_mapping,
@@ -541,7 +544,11 @@ class SpecDecodeBaseProposer:
             ),
             additional_kwargs=self._draft_forward_additional_kwargs,
         ):
-            ret_hidden_states = self.model(**model_kwargs)
+            # Self-spec W7 micro-bench: the first (step-0) draft forward. Timed
+            # under a distinct label since its input shape can differ from the
+            # subsequent decode-step loop forwards.
+            with _self_spec_profiler().region("draft_forward_first"):
+                ret_hidden_states = self.model(**model_kwargs)
             if not self.model_returns_tuple():
                 last_hidden_states = ret_hidden_states
                 hidden_states = last_hidden_states
@@ -685,7 +692,11 @@ class SpecDecodeBaseProposer:
                 slot_mapping=self._get_slot_mapping(input_batch_size),
                 additional_kwargs=self._draft_forward_additional_kwargs,
             ):
-                ret_hidden_states = self.model(**model_kwargs)
+                # Self-spec W7 micro-bench: time a SINGLE draft model forward
+                # (one decode-step forward inside the K-step chain) so it can
+                # be compared against K of them and the whole chain.
+                with _self_spec_profiler().region("draft_forward"):
+                    ret_hidden_states = self.model(**model_kwargs)
                 if not self.model_returns_tuple():
                     last_hidden_states = ret_hidden_states
                     hidden_states = ret_hidden_states
