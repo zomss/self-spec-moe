@@ -57,6 +57,10 @@ class SelfSpecProfiler:
         self._out_dir: str = ""
         self._flush_every: int = 25
         self._since_flush: int = 0
+        # Fine-grained per-step sub-region timers (step_*/step0_*/chain_setup)
+        # are extra and perturb the chain total via additional CUDA syncs; only
+        # record them when explicitly requested.
+        self._fine: bool = bool(int(os.environ.get("VLLM_SELF_SPEC_PROFILE_FINE", "0")))
         if self.enabled:
             self._out_dir = os.environ.get(
                 "VLLM_SELF_SPEC_PROFILE_OUT", ""
@@ -66,6 +70,11 @@ class SelfSpecProfiler:
 
     def reset(self) -> None:
         self._samples = {}
+
+    @staticmethod
+    def _fine_only(label: str) -> bool:
+        """Whether a region label is a fine-grained per-step sub-region."""
+        return label.startswith(("step_", "step0_", "chain_setup"))
 
     def _record(self, label: str, elapsed: float) -> None:
         self._samples.setdefault(label, []).append(elapsed)
@@ -84,6 +93,13 @@ class SelfSpecProfiler:
         sync captures the region's own GPU work in the elapsed wall time.
         """
         if not self.enabled:
+            yield
+            return
+        if self._fine_only(label) and not self._fine:
+            # Fine-grained per-step sub-region timers add many extra CUDA syncs
+            # that perturb the enclosing draft_chain total. Gate them behind
+            # VLLM_SELF_SPEC_PROFILE_FINE so the clean before/after measurement
+            # (draft_chain / draft_forward / verify) is undisturbed by default.
             yield
             return
         if torch.cuda.is_available():

@@ -1,0 +1,67 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-V2-Lite/snapshots/604d5664dddd88a0433dbae533b7fe9472482de0",
+  "tag": "ab_off3",
+  "dp": 2,
+  "tp": 1,
+  "batch": 64,
+  "K": 2,
+  "a2a_us": 100.0,
+  "gpu_mem": 0.9,
+  "outlen": 210,
+  "warmup": 50,
+  "steady": 100,
+  "run_result": {
+    "long_s": 5.614302692934871,
+    "long_ntok": 13440,
+    "accept_len": 2.6997553303040895,
+    "num_accepted": 9726.0,
+    "num_drafts": 5722.0
+  },
+  "rank0_profile": {
+    "pid": 2166671,
+    "dp_rank": "1",
+    "warmup": 50,
+    "counts": {
+      "verify": 107,
+      "draft_forward_first": 106,
+      "draft_forward": 106,
+      "draft_chain": 106
+    },
+    "summary": {
+      "verify": {
+        "n": 57,
+        "n_total": 107,
+        "mean_ms": 19.86902921967078,
+        "std_ms": 2.239119683894179,
+        "min_ms": 14.311897102743387,
+        "max_ms": 21.157185081392527
+      },
+      "draft_forward_first": {
+        "n": 56,
+        "n_total": 106,
+        "mean_ms": 15.217154128809593,
+        "std_ms": 0.8820009880778249,
+        "min_ms": 13.20339203812182,
+        "max_ms": 18.787109991535544
+      },
+      "draft_forward": {
+        "n": 56,
+        "n_total": 106,
+        "mean_ms": 12.543571518368221,
+        "std_ms": 0.9439995964954797,
+        "min_ms": 9.769972879439592,
+        "max_ms": 13.275142991915345
+      },
+      "draft_chain": {
+        "n": 56,
+        "n_total": 106,
+        "mean_ms": 32.25795110587829,
+        "std_ms": 1.7959942769661819,
+        "min_ms": 27.292365906760097,
+        "max_ms": 36.46349813789129
+      }
+    }
+  },
+  "n_profile_files": 2
+}

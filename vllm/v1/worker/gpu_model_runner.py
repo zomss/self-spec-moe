@@ -5317,6 +5317,23 @@ class GPUModelRunner(
                 and getattr(drafter, "use_full_cudagraphs", False)
                 and hasattr(drafter, "model")
             ):
+                # W7 sampling-in-graph: build the combined forward+sample
+                # runnable BEFORE wrapping drafter.model, so it captures the
+                # RAW (unwrapped) model and we don't nest cudagraphs. It is then
+                # FULL-wrapped as its own graph (sibling to drafter.model, which
+                # keeps serving step-0 PIECEWISE and the dummy capture path).
+                from vllm.v1.spec_decode.llm_base_proposer import (
+                    _DraftDecodeForwardSample,
+                )
+
+                drafter._decode_fwd_sample = CUDAGraphWrapper(
+                    _DraftDecodeForwardSample(
+                        drafter.model,
+                        getattr(drafter, "use_local_argmax_reduction", False),
+                    ),
+                    self.vllm_config,
+                    runtime_mode=CUDAGraphMode.FULL,
+                )
                 drafter.model = CUDAGraphWrapper(
                     drafter.model,
                     self.vllm_config,

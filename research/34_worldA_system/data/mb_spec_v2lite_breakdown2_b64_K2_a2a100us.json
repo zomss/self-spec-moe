@@ -1,0 +1,148 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-V2-Lite/snapshots/604d5664dddd88a0433dbae533b7fe9472482de0",
+  "tag": "v2lite_breakdown2",
+  "dp": 2,
+  "tp": 1,
+  "batch": 64,
+  "K": 2,
+  "a2a_us": 100.0,
+  "gpu_mem": 0.9,
+  "outlen": 210,
+  "warmup": 50,
+  "steady": 100,
+  "run_result": {
+    "long_s": 6.302881340961903,
+    "long_ntok": 13440,
+    "accept_len": 2.698218651763884,
+    "num_accepted": 9724.0,
+    "num_drafts": 5726.0
+  },
+  "rank0_profile": {
+    "pid": 2150836,
+    "dp_rank": "0",
+    "warmup": 50,
+    "counts": {
+      "verify": 112,
+      "step0_set_inputs": 112,
+      "step0_build_attn_md": 112,
+      "step0_determine_batch": 112,
+      "draft_forward_first": 112,
+      "step0_sample": 112,
+      "chain_setup": 112,
+      "step_pos_slot_update": 111,
+      "step_build_attn_md": 111,
+      "step_input_buffering": 111,
+      "draft_forward": 111,
+      "step_sample": 111,
+      "draft_chain": 111
+    },
+    "summary": {
+      "verify": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 19.44452061903693,
+        "std_ms": 2.6753687995642497,
+        "min_ms": 12.970146955922246,
+        "max_ms": 21.247888915240765
+      },
+      "step0_set_inputs": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.0484696080487583,
+        "std_ms": 0.0422814094386783,
+        "min_ms": 1.0190149769186974,
+        "max_ms": 1.3403219636529684
+      },
+      "step0_build_attn_md": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 0.6818225562211967,
+        "std_ms": 0.13900585802630128,
+        "min_ms": 0.6445699837058783,
+        "max_ms": 1.7423939425498247
+      },
+      "step0_determine_batch": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.1109819320300893,
+        "std_ms": 0.36533118245141183,
+        "min_ms": 0.9534049313515425,
+        "max_ms": 3.6677210591733456
+      },
+      "draft_forward_first": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 14.926749593277851,
+        "std_ms": 1.0509544519103775,
+        "min_ms": 11.63413212634623,
+        "max_ms": 16.633928986266255
+      },
+      "step0_sample": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 0.7084857694984924,
+        "std_ms": 0.32623212302719934,
+        "min_ms": 0.6351310294121504,
+        "max_ms": 3.1636711210012436
+      },
+      "chain_setup": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.2204893263837984,
+        "std_ms": 0.8171202362106398,
+        "min_ms": 0.9798458777368069,
+        "max_ms": 6.573093123733997
+      },
+      "step_pos_slot_update": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.6026385932183657,
+        "std_ms": 0.0461646544837612,
+        "min_ms": 0.5575509276241064,
+        "max_ms": 0.9367328602820635
+      },
+      "step_build_attn_md": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.6649511461680541,
+        "std_ms": 0.03762187264403188,
+        "min_ms": 0.6440321449190378,
+        "max_ms": 0.916643999516964
+      },
+      "step_input_buffering": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.4799312522604329,
+        "std_ms": 0.031969846817419885,
+        "min_ms": 0.45402604155242443,
+        "max_ms": 0.6481991149485111
+      },
+      "draft_forward": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 12.25819983366938,
+        "std_ms": 1.1690458198387281,
+        "min_ms": 9.82217607088387,
+        "max_ms": 13.18434695713222
+      },
+      "step_sample": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.647428479870079,
+        "std_ms": 0.03783013197321635,
+        "min_ms": 0.6244368851184845,
+        "max_ms": 0.895070843398571
+      },
+      "draft_chain": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 40.59514910608652,
+        "std_ms": 2.585203848530428,
+        "min_ms": 34.10868183709681,
+        "max_ms": 47.1853818744421
+      }
+    }
+  },
+  "n_profile_files": 2
+}

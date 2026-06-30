@@ -67,6 +67,44 @@ from vllm.v1.worker.utils import AttentionGroup
 logger = init_logger(__name__)
 
 
+class _DraftDecodeForwardSample(nn.Module):
+    """W7 sampling-in-graph runnable for the draft FULL cudagraph.
+
+    Wraps the (unwrapped) draft model so the decode-step forward, the
+    ``compute_logits`` GEMM and the greedy ``argmax`` are recorded as a single
+    captured graph -- mirroring V2's ``AutoRegressiveSpeculator._generate_draft``
+    which captures forward + sample + update as one graph. Only the greedy
+    argmax path is captured (probabilistic draft sampling stays eager).
+
+    Returns ``(last_hidden_states, hidden_states, draft_token_ids)`` so the
+    proposer reads the sampled tokens straight out of the graph output with no
+    separate eager ``compute_logits`` launch per step.
+
+    Pointer stability: the inputs are the proposer's persistent buffers (same as
+    the plain-forward FULL graph), so the captured graph replays correctly.
+    """
+
+    def __init__(self, model: nn.Module, use_local_argmax_reduction: bool):
+        super().__init__()
+        self.model = model
+        self.use_local_argmax_reduction = use_local_argmax_reduction
+
+    def forward(self, **model_kwargs: Any):
+        ret = self.model(**model_kwargs)
+        if isinstance(ret, tuple):
+            last_hidden_states, hidden_states = ret
+        else:
+            last_hidden_states = ret
+            hidden_states = ret
+        if self.use_local_argmax_reduction:
+            draft_token_ids = self.model.get_top_tokens(last_hidden_states)
+        else:
+            draft_token_ids = self.model.compute_logits(last_hidden_states).argmax(
+                dim=-1
+            )
+        return last_hidden_states, hidden_states, draft_token_ids
+
+
 class SpecDecodeBaseProposer:
     def __init__(
         self,
@@ -179,6 +217,21 @@ class SpecDecodeBaseProposer:
         # W7: opt-in FULL cudagraphs for the draft decode-step forwards (see
         # VLLM_SELF_SPEC_DRAFT_FULL_CG). Default off -> PIECEWISE as before.
         self.use_full_cudagraphs = envs.VLLM_SELF_SPEC_DRAFT_FULL_CG
+        # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
+        # runnable for the decode-step chain (set by the runner's wrap pass when
+        # use_full_cudagraphs). None -> plain-forward path (sampling stays
+        # eager). Enabled by default whenever the draft FULL graph is on; the
+        # capture (dummy_run) and replay (decode loop) paths both use it.
+        self._decode_fwd_sample: nn.Module | None = None
+        # W7 A/B knobs (default ON under FULL-CG): allow disabling each per-step
+        # reduction independently on the SAME binary for clean measurement.
+        # 0 -> keep the reduction (default); 1 -> revert to the old behavior.
+        self._disable_skip_rebuild = bool(
+            int(os.environ.get("W7_DISABLE_SKIP_REBUILD", "0"))
+        )
+        self._disable_sample_in_graph = bool(
+            int(os.environ.get("W7_DISABLE_SAMPLE_IN_CG", "0"))
+        )
         # Last dispatched FULL batch descriptor (set by
         # _determine_batch_execution_and_padding) so callers can put it in the
         # forward context for the FULL CUDAGraphWrapper.
@@ -543,29 +596,32 @@ class SpecDecodeBaseProposer:
             )
             assert target_hidden_states.shape[-1] == self.hidden_size
 
-        num_tokens, token_indices_to_sample, common_attn_metadata = (
-            self.set_inputs_first_pass(
-                target_token_ids=target_token_ids,
-                next_token_ids=next_token_ids,
-                target_positions=target_positions,
-                target_hidden_states=target_hidden_states,
-                token_indices_to_sample=token_indices_to_sample,
-                cad=common_attn_metadata,
-                num_rejected_tokens_gpu=num_rejected_tokens_gpu,
+        with _self_spec_profiler().region("step0_set_inputs"):
+            num_tokens, token_indices_to_sample, common_attn_metadata = (
+                self.set_inputs_first_pass(
+                    target_token_ids=target_token_ids,
+                    next_token_ids=next_token_ids,
+                    target_positions=target_positions,
+                    target_hidden_states=target_hidden_states,
+                    token_indices_to_sample=token_indices_to_sample,
+                    cad=common_attn_metadata,
+                    num_rejected_tokens_gpu=num_rejected_tokens_gpu,
+                )
             )
-        )
 
-        per_group_attn_metadata, per_layer_attn_metadata = (
-            self.build_per_group_and_layer_attn_metadata(common_attn_metadata)
-        )
+        with _self_spec_profiler().region("step0_build_attn_md"):
+            per_group_attn_metadata, per_layer_attn_metadata = (
+                self.build_per_group_and_layer_attn_metadata(common_attn_metadata)
+            )
 
-        cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
-            self._determine_batch_execution_and_padding(num_tokens)
-        )
+        with _self_spec_profiler().region("step0_determine_batch"):
+            cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
+                self._determine_batch_execution_and_padding(num_tokens)
+            )
 
-        model_kwargs, slot_mapping_size = self.build_model_inputs_first_pass(
-            num_tokens, num_input_tokens, mm_embed_inputs
-        )
+            model_kwargs, slot_mapping_size = self.build_model_inputs_first_pass(
+                num_tokens, num_input_tokens, mm_embed_inputs
+            )
         # Step 0 of index_share_for_mtp_iteration: let the MTP layer
         # compute its own indices (skip_topk=False) so subsequent steps
         # can reuse them.
@@ -635,9 +691,10 @@ class SpecDecodeBaseProposer:
             # (which read via _get_positions) use the correct values.
             self.positions[:batch_size] = positions
 
-        draft_token_ids, draft_probs = self._sample_draft_tokens(
-            sample_hidden_states, sampling_metadata
-        )
+        with _self_spec_profiler().region("step0_sample"):
+            draft_token_ids, draft_probs = self._sample_draft_tokens(
+                sample_hidden_states, sampling_metadata
+            )
         draft_probs_list = None if draft_probs is None else [draft_probs]
 
         if self.allowed_attn_types is not None:
@@ -653,30 +710,34 @@ class SpecDecodeBaseProposer:
         # Generate the remaining draft tokens.
         draft_token_ids_list = [draft_token_ids]
 
-        # The K-chain decode-step forwards are uniform 1-token-per-seq batches,
-        # eligible for the draft's FULL cudagraph (when enabled).
-        cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
-            self._determine_batch_execution_and_padding(
-                batch_size, uniform_decode=True
+        with _self_spec_profiler().region("chain_setup"):
+            # The K-chain decode-step forwards are uniform 1-token-per-seq
+            # batches, eligible for the draft's FULL cudagraph (when enabled).
+            cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
+                self._determine_batch_execution_and_padding(
+                    batch_size, uniform_decode=True
+                )
             )
-        )
 
-        common_attn_metadata.num_actual_tokens = batch_size
-        common_attn_metadata.max_query_len = 1
-        common_attn_metadata.query_start_loc = self.arange[: batch_size + 1]
-        common_attn_metadata.query_start_loc_cpu = torch.from_numpy(
-            self.token_arange_np[: batch_size + 1]
-        ).clone()
+            common_attn_metadata.num_actual_tokens = batch_size
+            common_attn_metadata.max_query_len = 1
+            common_attn_metadata.query_start_loc = self.arange[: batch_size + 1]
+            common_attn_metadata.query_start_loc_cpu = torch.from_numpy(
+                self.token_arange_np[: batch_size + 1]
+            ).clone()
 
-        # In padded drafter batch, we need to adjust the sequence lengths
-        # to remove the "padding" (i.e. rejected tokens).
-        # Only apply this adjustment when we have rejected tokens
-        # (i.e., not the first proposal).
-        if self.num_speculative_tokens > 1 and num_rejected_tokens_gpu is not None:
-            common_attn_metadata.seq_lens -= num_rejected_tokens_gpu
-            # Invalidate the CPU-side shadows to avoid H<>D sync.
-            common_attn_metadata._seq_lens_cpu = None
-            common_attn_metadata._num_computed_tokens_cpu = None
+            # In padded drafter batch, we need to adjust the sequence lengths
+            # to remove the "padding" (i.e. rejected tokens).
+            # Only apply this adjustment when we have rejected tokens
+            # (i.e., not the first proposal).
+            if (
+                self.num_speculative_tokens > 1
+                and num_rejected_tokens_gpu is not None
+            ):
+                common_attn_metadata.seq_lens -= num_rejected_tokens_gpu
+                # Invalidate the CPU-side shadows to avoid H<>D sync.
+                common_attn_metadata._seq_lens_cpu = None
+                common_attn_metadata._num_computed_tokens_cpu = None
 
         block_size = self.block_size
         assert block_size > 0, "block_size has not been initialized."
@@ -686,45 +747,92 @@ class SpecDecodeBaseProposer:
             # tensor.argmax() returns int64 by default.
             input_ids = draft_token_ids_list[-1].int()
 
-            if not self.constant_draft_positions:
-                positions = self._update_positions_dependent_metadata(
-                    positions,
-                    common_attn_metadata,
-                    batch_size,
-                    input_batch_size,
-                    block_size,
-                )
+            # W7 micro-bench region (b): position/slot-mapping/seq-len update.
+            with _self_spec_profiler().region("step_pos_slot_update"):
+                if not self.constant_draft_positions:
+                    positions = self._update_positions_dependent_metadata(
+                        positions,
+                        common_attn_metadata,
+                        batch_size,
+                        input_batch_size,
+                        block_size,
+                    )
 
             # Rebuild attention metadata. When draft positions are constant
             # (e.g. Gemma4 MTP), common_attn_metadata is invariant across
             # loop iterations so we build once and reuse.
-            if not self.constant_draft_positions or token_index == 0:
-                _, per_layer_attn_metadata = (
-                    self.build_per_group_and_layer_attn_metadata(
-                        common_attn_metadata, draft_index=token_index + 1
-                    )
+            # W7 micro-bench region (a): per-step attn-metadata (re)build.
+            #
+            # W7-perf: under the draft FULL cudagraph, the replayed graph reads
+            # the live attention tensors (seq_lens / block_table / slot_mapping)
+            # through the pointers captured at graph-capture time -- it never
+            # re-reads the per-step attn_metadata object from the forward
+            # context (CUDAGraphWrapper.__call__ just replays the captured
+            # graph). _update_positions_dependent_metadata already advances
+            # those tensors IN-PLACE (the seq_lens view aliases runner.seq_lens
+            # which capture pointed at, and the slot mapping lands in the
+            # persistent _slot_mapping_buffer). So the fresh build_for_drafting
+            # each step is dead work for FULL-CG replay: skip it and keep the
+            # step-0 metadata object only as a placeholder for set_forward_context
+            # (its contents are ignored on replay). Guarded by the opt-in flag;
+            # the eager / PIECEWISE path is unchanged.
+            with _self_spec_profiler().region("step_build_attn_md"):
+                skip_rebuild_full_cg = (
+                    self.use_full_cudagraphs
+                    and cudagraph_runtime_mode == CUDAGraphMode.FULL
+                    and not self._disable_skip_rebuild
                 )
+                if not skip_rebuild_full_cg and (
+                    not self.constant_draft_positions or token_index == 0
+                ):
+                    _, per_layer_attn_metadata = (
+                        self.build_per_group_and_layer_attn_metadata(
+                            common_attn_metadata, draft_index=token_index + 1
+                        )
+                    )
 
-            # copy inputs to buffer for cudagraph
-            self.input_ids[:batch_size] = input_ids
-            self.hidden_states[:batch_size] = hidden_states
-            if self.supports_mm_inputs:
-                self.inputs_embeds[:batch_size] = self.model.embed_input_ids(input_ids)
+            # W7 micro-bench region (d): input buffering + forward-context setup
+            # (the part of the step that is neither attn-md build, pos/slot
+            # update, the forward itself, nor sampling).
+            with _self_spec_profiler().region("step_input_buffering"):
+                # copy inputs to buffer for cudagraph
+                self.input_ids[:batch_size] = input_ids
+                self.hidden_states[:batch_size] = hidden_states
+                if self.supports_mm_inputs:
+                    self.inputs_embeds[:batch_size] = self.model.embed_input_ids(
+                        input_ids
+                    )
 
-                input_ids = None
-                inputs_embeds = self.inputs_embeds[:input_batch_size]
-            else:
-                input_ids = self.input_ids[:input_batch_size]
-                inputs_embeds = None
+                    input_ids = None
+                    inputs_embeds = self.inputs_embeds[:input_batch_size]
+                else:
+                    input_ids = self.input_ids[:input_batch_size]
+                    inputs_embeds = None
 
-            # Run the model.
-            model_kwargs = {
-                "input_ids": input_ids,
-                "positions": self._get_positions(input_batch_size),
-                "inputs_embeds": inputs_embeds,
-            }
-            if self.pass_hidden_states_to_model:
-                model_kwargs["hidden_states"] = self.hidden_states[:input_batch_size]
+                # Run the model.
+                model_kwargs = {
+                    "input_ids": input_ids,
+                    "positions": self._get_positions(input_batch_size),
+                    "inputs_embeds": inputs_embeds,
+                }
+                if self.pass_hidden_states_to_model:
+                    model_kwargs["hidden_states"] = self.hidden_states[
+                        :input_batch_size
+                    ]
+
+            # W7 sampling-in-graph: when the draft FULL graph is active and the
+            # request is greedy, run forward + compute_logits + argmax as one
+            # captured graph (mirrors V2 _generate_draft). Otherwise fall back
+            # to the plain forward + eager sample.
+            sample_in_graph = (
+                self._decode_fwd_sample is not None
+                and cudagraph_runtime_mode == CUDAGraphMode.FULL
+                and not self._disable_sample_in_graph
+                and (
+                    not self._enable_probabilistic_draft_probs
+                    or sampling_metadata.all_greedy
+                )
+            )
 
             with set_forward_context(
                 per_layer_attn_metadata,
@@ -740,17 +848,29 @@ class SpecDecodeBaseProposer:
                 # (one decode-step forward inside the K-step chain) so it can
                 # be compared against K of them and the whole chain.
                 with _self_spec_profiler().region("draft_forward"):
-                    ret_hidden_states = self.model(**model_kwargs)
-                if not self.model_returns_tuple():
-                    last_hidden_states = ret_hidden_states
-                    hidden_states = ret_hidden_states
-                else:
-                    last_hidden_states, hidden_states = ret_hidden_states
+                    if sample_in_graph:
+                        last_hidden_states, hidden_states, draft_token_ids = (
+                            self._decode_fwd_sample(**model_kwargs)
+                        )
+                    else:
+                        ret_hidden_states = self.model(**model_kwargs)
+                        if not self.model_returns_tuple():
+                            last_hidden_states = ret_hidden_states
+                            hidden_states = ret_hidden_states
+                        else:
+                            last_hidden_states, hidden_states = ret_hidden_states
 
             hidden_states = hidden_states[:batch_size]
-            draft_token_ids, draft_probs = self._sample_draft_tokens(
-                last_hidden_states[:batch_size], sampling_metadata
-            )
+            # W7 micro-bench region (c): draft sampling (compute_logits + argmax).
+            with _self_spec_profiler().region("step_sample"):
+                if sample_in_graph:
+                    # Token ids were already argmax'd inside the captured graph.
+                    draft_token_ids = draft_token_ids[:batch_size]
+                    draft_probs = None
+                else:
+                    draft_token_ids, draft_probs = self._sample_draft_tokens(
+                        last_hidden_states[:batch_size], sampling_metadata
+                    )
             if draft_probs is not None:
                 assert draft_probs_list is not None
                 draft_probs_list.append(draft_probs)
@@ -1722,6 +1842,11 @@ class SpecDecodeBaseProposer:
                 if self.pass_hidden_states_to_model:
                     kwargs["hidden_states"] = self.hidden_states[:num_input_tokens]
                 self.model(**kwargs)
+                # W7 sampling-in-graph: on the draft FULL (uniform-decode)
+                # capture pass, also capture the combined forward+sample graph
+                # so its per-step replay in the decode loop finds the key.
+                if capture_full_attn and self._decode_fwd_sample is not None:
+                    self._decode_fwd_sample(**kwargs)
 
     def _get_eagle3_use_aux_hidden_state_from_config(self) -> bool:
         """

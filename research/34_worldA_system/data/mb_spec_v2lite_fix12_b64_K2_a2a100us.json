@@ -1,0 +1,148 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-V2-Lite/snapshots/604d5664dddd88a0433dbae533b7fe9472482de0",
+  "tag": "v2lite_fix12",
+  "dp": 2,
+  "tp": 1,
+  "batch": 64,
+  "K": 2,
+  "a2a_us": 100.0,
+  "gpu_mem": 0.9,
+  "outlen": 210,
+  "warmup": 50,
+  "steady": 100,
+  "run_result": {
+    "long_s": 6.320802882080898,
+    "long_ntok": 13440,
+    "accept_len": 2.698218651763884,
+    "num_accepted": 9724.0,
+    "num_drafts": 5726.0
+  },
+  "rank0_profile": {
+    "pid": 2158255,
+    "dp_rank": "0",
+    "warmup": 50,
+    "counts": {
+      "verify": 112,
+      "step0_set_inputs": 112,
+      "step0_build_attn_md": 112,
+      "step0_determine_batch": 112,
+      "draft_forward_first": 112,
+      "step0_sample": 112,
+      "chain_setup": 112,
+      "step_pos_slot_update": 111,
+      "step_build_attn_md": 111,
+      "step_input_buffering": 111,
+      "draft_forward": 111,
+      "step_sample": 111,
+      "draft_chain": 111
+    },
+    "summary": {
+      "verify": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 19.431823489045904,
+        "std_ms": 2.6909423933156758,
+        "min_ms": 12.928257929161191,
+        "max_ms": 21.14756009541452
+      },
+      "step0_set_inputs": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.0702072740382245,
+        "std_ms": 0.038255941239944684,
+        "min_ms": 1.0413529817014933,
+        "max_ms": 1.3534000609070063
+      },
+      "step0_build_attn_md": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 0.6882448102377595,
+        "std_ms": 0.0295746186562316,
+        "min_ms": 0.6556899752467871,
+        "max_ms": 0.8712080307304859
+      },
+      "step0_determine_batch": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.0436750580406478,
+        "std_ms": 0.3352455933215214,
+        "min_ms": 0.9789988398551941,
+        "max_ms": 3.6299240309745073
+      },
+      "draft_forward_first": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 14.930280804213497,
+        "std_ms": 1.0330119209910529,
+        "min_ms": 11.655722046270967,
+        "max_ms": 16.714813886210322
+      },
+      "step0_sample": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 0.738189431778606,
+        "std_ms": 0.36002710095286716,
+        "min_ms": 0.65088109113276,
+        "max_ms": 3.496900899335742
+      },
+      "chain_setup": {
+        "n": 62,
+        "n_total": 112,
+        "mean_ms": 1.1307155120096382,
+        "std_ms": 0.5234036448704502,
+        "min_ms": 1.0107718408107758,
+        "max_ms": 4.40826010890305
+      },
+      "step_pos_slot_update": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.6242535596133256,
+        "std_ms": 0.030711700724402248,
+        "min_ms": 0.57237409055233,
+        "max_ms": 0.8090808987617493
+      },
+      "step_build_attn_md": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.3899631785137243,
+        "std_ms": 0.024207592755225132,
+        "min_ms": 0.3692999016493559,
+        "max_ms": 0.4949430003762245
+      },
+      "step_input_buffering": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.496654427747746,
+        "std_ms": 0.03240168103425399,
+        "min_ms": 0.4666221793740988,
+        "max_ms": 0.6113611161708832
+      },
+      "draft_forward": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 12.459698339282978,
+        "std_ms": 1.1500807152285366,
+        "min_ms": 9.999716188758612,
+        "max_ms": 13.341303914785385
+      },
+      "step_sample": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 0.4213468599148461,
+        "std_ms": 0.05156513437642513,
+        "min_ms": 0.3849640488624573,
+        "max_ms": 0.7451968267560005
+      },
+      "draft_chain": {
+        "n": 61,
+        "n_total": 111,
+        "mean_ms": 40.3525560949242,
+        "std_ms": 2.2748520260140808,
+        "min_ms": 34.04924622736871,
+        "max_ms": 44.78569608181715
+      }
+    }
+  },
+  "n_profile_files": 2
+}
