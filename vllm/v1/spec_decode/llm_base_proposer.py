@@ -1128,8 +1128,13 @@ class SpecDecodeBaseProposer:
         scheduler_metadata. Pointer stability across capture/replay is what
         makes the captured FULL graph attend against live metadata.
 
-        Scoped to FLASH_ATTN_MLA (the backend DeepSeek-V2-Lite self-spec uses);
-        other backends fall back to the prior (stub-capturing) behavior.
+        Backend-agnostic: the metadata is built through the draft builder's
+        own ``build_for_cudagraph_capture`` (no backend branching), so it
+        covers both FLASH_ATTN_MLA (DeepSeek-V2-Lite) and FLASH_ATTN (GQA
+        models such as Qwen3-30B). Both builders share the same FA3
+        scheduler_metadata + split machinery; the matching split cap is
+        applied in ``initialize_attn_backend``. Other backends without that
+        machinery still build real metadata here (no-op split cap).
         """
         runner = self.runner
         assert runner is not None, (
@@ -1950,15 +1955,20 @@ class SpecDecodeBaseProposer:
         logger.debug("Using block size %d for drafting layers", self.block_size)
 
         # W7: with the draft FULL cudagraph (VLLM_SELF_SPEC_DRAFT_FULL_CG), cap
-        # the draft attention builder's FA3/MLA split count to 1. The draft
-        # decode steps attend over short, growing sequences, where the default
-        # 32-way split-reduction is both pathological AND produces INCORRECT
-        # results when captured into the draft's FULL graph: the split-combine
-        # reads per-split partial buffers whose layout is tied to the
-        # capture-time (padded, uniform) schedule and does not replay correctly
-        # for the per-step growing sequences (measured: accept_len collapses
-        # ~2.85 -> ~1.9 with 32 splits, recovers to ~2.78 with 1 split). One
-        # split = no combine = exact attention, and it is also faster here.
+        # the draft attention builder's FA3 split count to 1. The draft decode
+        # steps attend over short, growing sequences, where the default 32-way
+        # split-reduction is both pathological AND produces INCORRECT results
+        # when captured into the draft's FULL graph: the split-combine reads
+        # per-split partial buffers whose layout is tied to the capture-time
+        # (padded, uniform) schedule and does not replay correctly for the
+        # per-step growing sequences (measured: accept_len collapses ~2.85 ->
+        # ~1.9 with 32 splits, recovers to ~2.78 with 1 split). One split = no
+        # combine = exact attention, and it is also faster here.
+        #
+        # Backend-agnostic: both FLASH_ATTN_MLA (DeepSeek, FlashAttnMLA) and
+        # FLASH_ATTN (GQA models such as Qwen3-30B) expose ``max_num_splits``
+        # on their FA3 metadata builder and consume it identically, so the
+        # getattr-gated cap covers both. Builders without the knob are skipped.
         # An env override is kept for experimentation.
         if self.use_full_cudagraphs:
             draft_splits = int(os.environ.get("W7_FG2_DRAFT_SPLITS", "1"))
