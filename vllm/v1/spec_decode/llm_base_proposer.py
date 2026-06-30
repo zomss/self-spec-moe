@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+import os
 from importlib.util import find_spec
 from typing import Any, cast
 
@@ -81,6 +82,11 @@ class SpecDecodeBaseProposer:
         self.method = self.speculative_config.method
         self.pass_hidden_states_to_model = pass_hidden_states_to_model
         self._share_mtp_indices = False
+        # Reference to the GPUModelRunner that owns this proposer. Used by the
+        # W7 draft FULL-cudagraph path to reach the runner's persistent
+        # block-table / seq-len buffers when building capture-time attention
+        # metadata (see _build_draft_decode_capture_metadata).
+        self.runner = runner
 
         # Self-spec W0: signal the comm-free local-routing MoE path on the draft
         # forward only (verify runs in a separate forward context with no key, so
@@ -987,6 +993,72 @@ class SpecDecodeBaseProposer:
                 per_layer_attn_metadata[layer_name] = attn_metadata
         return per_group_attn_metadata, per_layer_attn_metadata
 
+    def _build_draft_decode_capture_metadata(
+        self, batch_size: int
+    ) -> dict[str, object]:
+        """Build per-layer attention metadata for the draft's FULL-cudagraph
+        capture pass (W7, VLLM_SELF_SPEC_DRAFT_FULL_CG).
+
+        The draft's per-decode-step forwards are uniform 1-token-per-seq decode
+        batches. To capture the *real* attention kernel (and not the
+        attn_metadata-is-None zero-fill stub), capture must run with a real
+        CommonAttentionMetadata built from the SAME persistent buffers the
+        per-step replay reads -- the runner's block table + seq_lens, the
+        proposer's arange/slot_mapping buffer, and the builder's persistent
+        scheduler_metadata. Pointer stability across capture/replay is what
+        makes the captured FULL graph attend against live metadata.
+
+        Scoped to FLASH_ATTN_MLA (the backend DeepSeek-V2-Lite self-spec uses);
+        other backends fall back to the prior (stub-capturing) behavior.
+        """
+        runner = self.runner
+        assert runner is not None, (
+            "Draft FULL cudagraph capture requires a runner reference."
+        )
+        # Runner's persistent block table for the draft's kv-cache group; the
+        # runner already populated seq_lens (= max_query_len) before calling
+        # the draft dummy_run during capture.
+        blk_table = runner.input_batch.block_table[self.kv_cache_gid]
+        block_table_tensor = blk_table.get_device_tensor(batch_size)
+        seq_lens = runner.seq_lens[:batch_size]
+        seq_lens_cpu = runner.optimistic_seq_lens_cpu[:batch_size]
+        # Bake a LARGE step-invariant max_seq_len upper bound into the captured
+        # graph (mirrors V2's draft_max_seq_len). The runner's capture-time
+        # seq_lens are tiny (= the verify query len) while replay seq_lens grow
+        # into the hundreds; using a large upper bound keeps the captured FA3
+        # schedule valid across all steps. The live per-step seq_lens tensor
+        # (with scheduler_metadata recomputed each step) drives the actual key
+        # count at replay.
+        max_seq_len = self.max_model_len
+
+        query_start_loc = self.arange[: batch_size + 1]
+        query_start_loc_cpu = torch.from_numpy(
+            self.token_arange_np[: batch_size + 1]
+        ).clone()
+
+        common_attn_metadata = CommonAttentionMetadata(
+            query_start_loc=query_start_loc,
+            query_start_loc_cpu=query_start_loc_cpu,
+            seq_lens=seq_lens,
+            _seq_lens_cpu=seq_lens_cpu,
+            seq_lens_cpu_upper_bound=seq_lens_cpu,
+            num_reqs=batch_size,
+            num_actual_tokens=batch_size,
+            max_query_len=1,
+            max_seq_len=max_seq_len,
+            block_table_tensor=block_table_tensor,
+            slot_mapping=self._slot_mapping_buffer[:batch_size],
+            causal=True,
+        )
+
+        per_layer_attn_metadata: dict[str, object] = {}
+        for attn_group in self.draft_attn_groups:
+            builder = attn_group.get_metadata_builder()
+            attn_metadata = builder.build_for_cudagraph_capture(common_attn_metadata)
+            for layer_name in attn_group.layer_names:
+                per_layer_attn_metadata[layer_name] = attn_metadata
+        return per_layer_attn_metadata
+
     def model_returns_tuple(self) -> bool:
         if self.method == "mtp":
             # DeepSeek-family MTP (deepseek_mtp.py) recycles the post-final-
@@ -1605,8 +1677,28 @@ class SpecDecodeBaseProposer:
             else:
                 slot_mapping_dict = slot_mappings or {}
 
+            # W7: when capturing the draft's FULL (uniform-decode) cudagraph,
+            # build REAL attention metadata from persistent buffers so the
+            # captured graph records the real attention kernel instead of the
+            # attn_metadata-is-None zero-fill stub (which would make every
+            # captured decode step attend against garbage -> accept-length
+            # collapse). Replay reads the same persistent buffers, so the
+            # captured pointers stay live. Default (flag off) keeps None.
+            capture_full_attn = (
+                self.use_full_cudagraphs
+                and uniform_decode
+                and cudagraph_runtime_mode == CUDAGraphMode.FULL
+                and self.runner is not None
+                and self._draft_attn_layer_names
+            )
+            draft_attn_metadata = (
+                self._build_draft_decode_capture_metadata(num_input_tokens)
+                if capture_full_attn
+                else None
+            )
+
             with set_forward_context(
-                None,
+                draft_attn_metadata,
                 self.vllm_config,
                 num_tokens=num_input_tokens,
                 num_tokens_across_dp=num_tokens_across_dp,
@@ -1731,6 +1823,24 @@ class SpecDecodeBaseProposer:
             self.draft_attn_groups[0].get_metadata_builder().kv_cache_spec.block_size
         )
         logger.debug("Using block size %d for drafting layers", self.block_size)
+
+        # W7: with the draft FULL cudagraph (VLLM_SELF_SPEC_DRAFT_FULL_CG), cap
+        # the draft attention builder's FA3/MLA split count to 1. The draft
+        # decode steps attend over short, growing sequences, where the default
+        # 32-way split-reduction is both pathological AND produces INCORRECT
+        # results when captured into the draft's FULL graph: the split-combine
+        # reads per-split partial buffers whose layout is tied to the
+        # capture-time (padded, uniform) schedule and does not replay correctly
+        # for the per-step growing sequences (measured: accept_len collapses
+        # ~2.85 -> ~1.9 with 32 splits, recovers to ~2.78 with 1 split). One
+        # split = no combine = exact attention, and it is also faster here.
+        # An env override is kept for experimentation.
+        if self.use_full_cudagraphs:
+            draft_splits = int(os.environ.get("W7_FG2_DRAFT_SPLITS", "1"))
+            for attn_group in self.draft_attn_groups:
+                builder = attn_group.get_metadata_builder()
+                if getattr(builder, "max_num_splits", 0):
+                    builder.max_num_splits = draft_splits
 
     def _determine_batch_execution_and_padding(
         self,
