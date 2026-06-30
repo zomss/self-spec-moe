@@ -1,0 +1,2 @@
+[VERIFY r2 model.layers.0.mlp.experts] use_ep=True expert_map_None=False local_num_experts=8 n_resident=8 w13.shape=(8, 2816, 2048) nonzero=8/8
+[DRAFT r2 draft_model.model.layers.0.mlp.experts] use_ep=False expert_map_None=True local_num_experts=60 n_resident=ALL60 w13.shape=(60, 352, 2048) nonzero=60/60

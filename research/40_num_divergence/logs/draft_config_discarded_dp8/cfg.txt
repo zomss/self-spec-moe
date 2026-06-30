@@ -1,0 +1,6 @@
+FULL_REPLICA_env=1
+target_parallel_config.enable_expert_parallel = True
+speculative.draft_parallel_config.enable_expert_parallel = False
+draft is SAME obj as target_pc: False
+_create_draft_vllm_config USED parallel_config.enable_expert_parallel = True
+>>> BUG if draft_ep=False but used_ep=True (override discarded)

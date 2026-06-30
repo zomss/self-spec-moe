@@ -15,6 +15,7 @@ from vllm.config import (
     VllmConfig,
     get_layers_from_vllm_config,
     replace,
+    set_current_vllm_config,
 )
 from vllm.distributed.parallel_state import get_pp_group
 from vllm.forward_context import (
@@ -1512,6 +1513,30 @@ class SpecDecodeBaseProposer:
             ),
         )
 
+        # Self-spec W2a FULL REPLICA: create_draft_parallel_config builds the
+        # draft ParallelConfig with enable_expert_parallel overridden to False
+        # (full bf16 replica) when VLLM_SELF_SPEC_DRAFT_FULL_REPLICA is set. The
+        # draft model is built from `base` (the TARGET vllm_config), whose
+        # parallel_config keeps the target's enable_expert_parallel=True -- so the
+        # override was silently discarded and the draft built use_ep=True, an
+        # EP-shard (e.g. 7-8/60 experts/rank at DP=8) instead of a full replica.
+        # Propagate ONLY the enable_expert_parallel override onto the base
+        # parallel_config (preserving all runtime DP fields like data_parallel_rank
+        # and the master IP/port) so the draft's FusedMoE builds use_ep=False ->
+        # expert_map=None -> every rank holds ALL experts. Gated to the flag so
+        # default draft_model behavior is unchanged.
+        if (
+            envs.VLLM_SELF_SPEC_DRAFT_FULL_REPLICA
+            and base.parallel_config.enable_expert_parallel
+        ):
+            base = replace(
+                base,
+                parallel_config=replace(
+                    base.parallel_config,
+                    enable_expert_parallel=False,
+                ),
+            )
+
         return base
 
     def _get_model(self) -> nn.Module:
@@ -1522,7 +1547,17 @@ class SpecDecodeBaseProposer:
         from vllm.compilation.backends import set_model_tag
 
         draft_vllm_config = self._create_draft_vllm_config()
-        with set_model_tag("eagle_head"):
+        # The FusedMoE layer reads the parallel config from the GLOBAL
+        # get_current_vllm_config() at construction time, not from the
+        # vllm_config passed to get_model(). Without this context the draft
+        # MoE would inherit the engine's (target) parallel_config -- discarding
+        # the W2a full-replica enable_expert_parallel=False override (the draft
+        # would build use_ep=True, an EP shard, not a full replica). Set the
+        # draft config as current so the draft's MoE honors draft_vllm_config.
+        with (
+            set_current_vllm_config(draft_vllm_config),
+            set_model_tag("eagle_head"),
+        ):
             model = get_model(
                 vllm_config=draft_vllm_config,
                 model_config=self.speculative_config.draft_model_config,
