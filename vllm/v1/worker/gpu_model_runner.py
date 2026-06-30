@@ -5308,6 +5308,20 @@ class GPUModelRunner(
             self.model = CUDAGraphWrapper(
                 self.model, self.vllm_config, runtime_mode=CUDAGraphMode.FULL
             )
+            # W7: opt-in FULL cudagraphs for the draft_model proposer. Mirror
+            # the verify model so the draft's decode-step forwards replay a
+            # single graph instead of PIECEWISE (per-layer eager glue).
+            drafter = getattr(self, "drafter", None)
+            if (
+                drafter is not None
+                and getattr(drafter, "use_full_cudagraphs", False)
+                and hasattr(drafter, "model")
+            ):
+                drafter.model = CUDAGraphWrapper(
+                    drafter.model,
+                    self.vllm_config,
+                    runtime_mode=CUDAGraphMode.FULL,
+                )
         elif self.parallel_config.use_ubatching:
             if cudagraph_mode.has_full_cudagraphs():
                 self.model = UBatchWrapper(
@@ -5974,13 +5988,27 @@ class GPUModelRunner(
                     | Gemma4Proposer,
                 )
                 assert self.speculative_config is not None
-                # Eagle currently only supports PIECEWISE cudagraphs.
-                # Therefore only use cudagraphs if the main model uses PIECEWISE
+                # Eagle by default only supports PIECEWISE cudagraphs, so during
+                # graph capture the drafter only captures on the PIECEWISE pass.
+                # W7: when the drafter opts into FULL cudagraphs
+                # (VLLM_SELF_SPEC_DRAFT_FULL_CG), also capture its FULL graph on
+                # the FULL (uniform-decode) capture pass.
                 # NOTE(lucas): this is a hack, need to clean up.
+                drafter_full_cg = getattr(
+                    self.drafter, "use_full_cudagraphs", False
+                )
+                capture_draft_full = (
+                    drafter_full_cg
+                    and cudagraph_runtime_mode == CUDAGraphMode.FULL
+                    and uniform_decode
+                )
                 use_cudagraphs = (
                     (
                         is_graph_capturing
-                        and cudagraph_runtime_mode == CUDAGraphMode.PIECEWISE
+                        and (
+                            cudagraph_runtime_mode == CUDAGraphMode.PIECEWISE
+                            or capture_draft_full
+                        )
                     )
                     or (
                         not is_graph_capturing
@@ -5998,10 +6026,19 @@ class GPUModelRunner(
                 ):
                     use_cudagraphs = False
 
+                # For the draft FULL (uniform-decode) graph, the runner-side
+                # batch is sized at num_reqs * (1 + K) tokens (the verify query
+                # len), but each draft decode-step forward processes exactly one
+                # token per seq. Capture the draft at num_reqs tokens so the key
+                # matches the runtime draft batch (batch_size == num_reqs).
+                drafter_num_tokens = num_tokens
+                if capture_draft_full:
+                    drafter_num_tokens = num_reqs_padded
                 self.drafter.dummy_run(
-                    num_tokens,
+                    drafter_num_tokens,
                     use_cudagraphs=use_cudagraphs,
                     is_graph_capturing=is_graph_capturing,
+                    uniform_decode=uniform_decode,
                     slot_mappings=slot_mappings,
                 )
 
@@ -6920,16 +6957,27 @@ class GPUModelRunner(
         )
 
         # Initialize drafter's cudagraph dispatcher if using spec decode.
+        # W7: draft_model is included so its cudagraph dispatcher gets keys
+        # (otherwise the draft runs eager). It is gated behind
+        # VLLM_SELF_SPEC_DRAFT_FULL_CG via the proposer so default behavior is
+        # unchanged when the flag is off (NONE -> eager, as before).
+        draft_model_full_cg = (
+            self.speculative_config is not None
+            and self.speculative_config.uses_draft_model()
+            and getattr(self.drafter, "use_full_cudagraphs", False)
+        )
         if self.speculative_config and (
             self.speculative_config.use_eagle()
             or self.speculative_config.uses_extract_hidden_states()
+            or draft_model_full_cg
         ):
             assert isinstance(
                 self.drafter,
                 EagleProposer
                 | DFlashProposer
                 | ExtractHiddenStatesProposer
-                | Gemma4Proposer,
+                | Gemma4Proposer
+                | DraftModelProposer,
             )
             self.drafter.initialize_cudagraph_keys(cudagraph_mode)
 

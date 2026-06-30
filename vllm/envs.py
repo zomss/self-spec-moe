@@ -252,6 +252,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
+    VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
@@ -1834,6 +1835,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # (EP shard) draft behavior unchanged.
     "VLLM_SELF_SPEC_DRAFT_FULL_REPLICA": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_REPLICA", "0"))
+    ),
+    # Self-spec W7: when set, the draft_model proposer uses FULL cudagraphs for
+    # its decode-step forwards (mirroring the verify model's FULL decode graph).
+    # By default the draft_model proposer's cudagraph dispatcher keys are never
+    # initialized, so the draft runs fully eager; this flag both initializes the
+    # draft's keys and FULL-wraps the draft model, capturing the whole draft
+    # decode forward as one graph and removing the per-forward kernel-launch
+    # overhead. Only takes effect when the engine's decode cudagraph mode is
+    # FULL. Default off (draft eager, unchanged). See research/34_worldA_system.
+    "VLLM_SELF_SPEC_DRAFT_FULL_CG": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_CG", "0"))
     ),
     # Self-spec W7 micro-benchmark: when set, the proposer and target-verify
     # forwards record additive, CUDA-synchronized wall-clock timings (whole

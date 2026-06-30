@@ -16,7 +16,11 @@ from vllm.config import (
     replace,
 )
 from vllm.distributed.parallel_state import get_pp_group
-from vllm.forward_context import SELF_SPEC_LOCAL_ROUTE_KEY, set_forward_context
+from vllm.forward_context import (
+    SELF_SPEC_LOCAL_ROUTE_KEY,
+    BatchDescriptor,
+    set_forward_context,
+)
 from vllm.logger import init_logger
 from vllm.model_executor.layers.attention_layer_base import AttentionLayerBase
 from vllm.model_executor.model_loader import get_model
@@ -166,7 +170,16 @@ class SpecDecodeBaseProposer:
 
         self.compilation_config = self.vllm_config.compilation_config
 
-        # Cudagraph dispatcher for PIECEWISE-only dispatching in eagle.
+        # W7: opt-in FULL cudagraphs for the draft decode-step forwards (see
+        # VLLM_SELF_SPEC_DRAFT_FULL_CG). Default off -> PIECEWISE as before.
+        self.use_full_cudagraphs = envs.VLLM_SELF_SPEC_DRAFT_FULL_CG
+        # Last dispatched FULL batch descriptor (set by
+        # _determine_batch_execution_and_padding) so callers can put it in the
+        # forward context for the FULL CUDAGraphWrapper.
+        self._last_batch_desc: BatchDescriptor | None = None
+
+        # Cudagraph dispatcher for the drafter. PIECEWISE by default; FULL for
+        # the decode-step forwards when use_full_cudagraphs is set.
         # Keys are initialized later via initialize_cudagraph_keys() called from
         # gpu_model_runner._check_and_update_cudagraph_mode after
         # adjust_cudagraph_sizes_for_spec_decode is called.
@@ -416,19 +429,39 @@ class SpecDecodeBaseProposer:
     def initialize_cudagraph_keys(self, cudagraph_mode: CUDAGraphMode) -> None:
         """Initialize cudagraph dispatcher keys for the drafter.
 
-        Only supports PIECEWISE cudagraphs (via mixed_mode).
+        By default only PIECEWISE cudagraphs are supported (via mixed_mode),
+        which leaves the per-layer inter-piece glue (attention launches /
+        boundaries) eager. When VLLM_SELF_SPEC_DRAFT_FULL_CG is set and the
+        engine's decode cudagraph mode is FULL, the drafter instead captures a
+        FULL cudagraph for its decode-step forwards (each step is 1 token/seq,
+        a uniform decode shape FULL supports), mirroring the verify model.
         This should be called after adjust_cudagraph_sizes_for_spec_decode.
         """
-        if (
-            not self.speculative_config.enforce_eager
-            and cudagraph_mode.mixed_mode()
-            in [CUDAGraphMode.PIECEWISE, CUDAGraphMode.FULL]
+        if self.speculative_config.enforce_eager:
+            eagle_cudagraph_mode = CUDAGraphMode.NONE
+        elif (
+            self.use_full_cudagraphs
+            and cudagraph_mode.decode_mode() == CUDAGraphMode.FULL
         ):
+            # Draft decode steps are uniform 1-token-per-seq batches, so a
+            # decode-only FULL routine is what we want. PIECEWISE keys are
+            # still added for the step-0 (variable-shape) draft forward.
+            eagle_cudagraph_mode = CUDAGraphMode.FULL_AND_PIECEWISE
+        elif cudagraph_mode.mixed_mode() in [
+            CUDAGraphMode.PIECEWISE,
+            CUDAGraphMode.FULL,
+        ]:
             eagle_cudagraph_mode = CUDAGraphMode.PIECEWISE
         else:
             eagle_cudagraph_mode = CUDAGraphMode.NONE
 
-        self.cudagraph_dispatcher.initialize_cudagraph_keys(eagle_cudagraph_mode)
+        # The draft dispatcher's uniform_decode_query_len defaults to
+        # 1 + num_speculative_tokens (the *verify* query len); override to 1
+        # because each draft decode-step forward is a single token per seq.
+        self.cudagraph_dispatcher.uniform_decode_query_len = 1
+        self.cudagraph_dispatcher.initialize_cudagraph_keys(
+            eagle_cudagraph_mode, uniform_decode_query_len=1
+        )
 
     def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Greedy-sample draft tokens from hidden states."""
@@ -614,8 +647,12 @@ class SpecDecodeBaseProposer:
         # Generate the remaining draft tokens.
         draft_token_ids_list = [draft_token_ids]
 
+        # The K-chain decode-step forwards are uniform 1-token-per-seq batches,
+        # eligible for the draft's FULL cudagraph (when enabled).
         cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
-            self._determine_batch_execution_and_padding(batch_size)
+            self._determine_batch_execution_and_padding(
+                batch_size, uniform_decode=True
+            )
         )
 
         common_attn_metadata.num_actual_tokens = batch_size
@@ -689,6 +726,7 @@ class SpecDecodeBaseProposer:
                 num_tokens=input_batch_size,
                 num_tokens_across_dp=batch_size_across_dp,
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
+                batch_descriptor=self._last_batch_desc,
                 slot_mapping=self._get_slot_mapping(input_batch_size),
                 additional_kwargs=self._draft_forward_additional_kwargs,
             ):
@@ -1540,6 +1578,7 @@ class SpecDecodeBaseProposer:
         use_cudagraphs: bool = True,
         is_graph_capturing: bool = False,
         slot_mappings: dict[str, torch.Tensor] | None = None,
+        uniform_decode: bool = False,
     ) -> None:
         # FIXME: when using tree-based specdec, adjust number of forward-passes
         # according to the depth of the tree.
@@ -1550,7 +1589,9 @@ class SpecDecodeBaseProposer:
             if fwd_idx <= 1:
                 cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
                     self._determine_batch_execution_and_padding(
-                        num_tokens, use_cudagraphs=use_cudagraphs
+                        num_tokens,
+                        use_cudagraphs=use_cudagraphs,
+                        uniform_decode=uniform_decode,
                     )
                 )
 
@@ -1570,6 +1611,7 @@ class SpecDecodeBaseProposer:
                 num_tokens=num_input_tokens,
                 num_tokens_across_dp=num_tokens_across_dp,
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
+                batch_descriptor=self._last_batch_desc,
                 slot_mapping=slot_mapping_dict,
                 additional_kwargs=self._draft_forward_additional_kwargs,
             ):
@@ -1694,9 +1736,19 @@ class SpecDecodeBaseProposer:
         self,
         num_tokens: int,
         use_cudagraphs: bool = True,
+        uniform_decode: bool = False,
     ) -> tuple[CUDAGraphMode, int, torch.Tensor | None]:
+        # FULL draft graphs only match keys for uniform-decode batches (the
+        # K-chain decode-step forwards). The step-0 forward stays PIECEWISE.
+        uniform_decode = uniform_decode and self.use_full_cudagraphs
+        # FULL cudagraphs require the batch_descriptor in the forward context so
+        # the FULL CUDAGraphWrapper can key its capture/replay. Stash the
+        # dispatched descriptor for the caller to forward (only used for FULL;
+        # harmless otherwise).
+        self._last_batch_desc = None
         cudagraph_mode, batch_desc = self.cudagraph_dispatcher.dispatch(
             num_tokens,
+            uniform_decode=uniform_decode,
             valid_modes=({CUDAGraphMode.NONE} if not use_cudagraphs else None),
         )
         num_tokens_padded = batch_desc.num_tokens
@@ -1725,6 +1777,7 @@ class SpecDecodeBaseProposer:
                 # batch_descriptor
                 cudagraph_mode, batch_desc = self.cudagraph_dispatcher.dispatch(
                     num_tokens_padded,
+                    uniform_decode=uniform_decode,
                     valid_modes={CUDAGraphMode(synced_cudagraph_mode)},
                 )
                 # Assert to make sure the agreed upon token count is correct
@@ -1732,6 +1785,8 @@ class SpecDecodeBaseProposer:
                 assert batch_desc.num_tokens == num_tokens_padded
                 num_tokens_across_dp[dp_rank] = num_tokens_padded
 
+        if cudagraph_mode == CUDAGraphMode.FULL:
+            self._last_batch_desc = batch_desc
         return cudagraph_mode, num_tokens_padded, num_tokens_across_dp
 
 
