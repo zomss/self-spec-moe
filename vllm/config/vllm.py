@@ -1073,6 +1073,30 @@ class VllmConfig:
             )
             self.compilation_config.mode = CompilationMode.NONE
 
+        # Self-spec W7 compile-consistency: a self-spec draft_model runs its
+        # MoE/GEMM/attention at the decode batch shape (~1 token/seq) while the
+        # verify runs at the larger verify shape. The default kernels (cuBLAS
+        # split-k, shape-tiled Triton MoE, FA split scheduling) are batch-variant,
+        # so the COMPILED draft's greedy tokens drift from the COMPILED verify's
+        # and acceptance collapses (Qwen1.5-MoE K=4: 1.57 vs 4.78 eager). Enabling
+        # batch-invariant numerics makes draft==verify with BOTH compiled (accept
+        # ~5.0, draft stays compiled/cudagraphed). We force VLLM_BATCH_INVARIANT
+        # in the process env HERE (before the attention/MoE modules that cache it
+        # at import) so all existing batch-invariant readers pick it up. Default
+        # off -> unchanged. See research/37_compile_consistency.
+        if (
+            envs.VLLM_SELF_SPEC_COMPILE_CONSISTENT
+            and self.speculative_config is not None
+            and self.speculative_config.method == "draft_model"
+            and not os.environ.get("VLLM_BATCH_INVARIANT")
+        ):
+            os.environ["VLLM_BATCH_INVARIANT"] = "1"
+            logger.info_once(
+                "Self-spec: VLLM_SELF_SPEC_COMPILE_CONSISTENT=1 -> enabling "
+                "batch-invariant numerics so the compiled draft and compiled "
+                "verify produce per-position-identical greedy tokens."
+            )
+
         # For model classes don't carry @support_torch_compile —
         # the breakable cudagraph is the supported PIECEWISE path. Auto-enable
         # it unless the user has explicitly opted out via the env var.

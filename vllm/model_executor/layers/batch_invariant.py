@@ -972,7 +972,9 @@ def override_envs_for_invariance():
 
 
 def init_batch_invariance():
-    # this will hit all the csrc overrides as well
+    # this will hit all the csrc overrides as well. VLLM_BATCH_INVARIANT may be
+    # set here directly by the user, or forced on by VllmConfig.__post_init__ for
+    # self-spec compile-consistency (VLLM_SELF_SPEC_COMPILE_CONSISTENT).
     if envs.VLLM_BATCH_INVARIANT:
         override_envs_for_invariance()
         enable_batch_invariant_mode()

@@ -254,6 +254,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
+    VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
@@ -1860,6 +1861,20 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # needs enforce_eager. Default off. See research/36_dp_accept.
     "VLLM_SELF_SPEC_DRAFT_EAGER": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_EAGER", "0"))
+    ),
+    # Self-spec W7 compile-consistency: when set, enables batch-invariant
+    # numerics (the same machinery as VLLM_BATCH_INVARIANT) so the COMPILED
+    # draft and the COMPILED verify produce per-position-identical greedy
+    # tokens. Root cause it fixes: the draft runs its MoE/GEMM/attention at the
+    # decode batch shape (~1 token/seq) while the verify runs at the larger
+    # verify shape; the default kernels (cuBLAS split-k, shape-tiled Triton MoE)
+    # are batch-variant, so the draft's tokens drift from the compiled verify's
+    # and acceptance collapses (Qwen1.5-MoE K=4: 1.57 compiled vs 4.78 eager).
+    # Disabling batch variance makes draft==verify with BOTH compiled, recovering
+    # acceptance to ~5.0 while keeping the draft compiled/cudagraphed (fast).
+    # Default off -> unchanged. See research/37_compile_consistency.
+    "VLLM_SELF_SPEC_COMPILE_CONSISTENT": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_COMPILE_CONSISTENT", "0"))
     ),
     # Self-spec W7 micro-benchmark: when set, the proposer and target-verify
     # forwards record additive, CUDA-synchronized wall-clock timings (whole
