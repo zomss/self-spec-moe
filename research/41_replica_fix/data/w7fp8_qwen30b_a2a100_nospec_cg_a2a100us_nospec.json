@@ -1,0 +1,75 @@
+{
+  "mode": "nospec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "qwen30b_a2a100",
+  "dp": 8,
+  "tp": 1,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 100.0,
+  "suffix": "cg_a2a100us",
+  "by_k": {
+    "0": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 7.893215925665572,
+        "short_s_mean": 2.3118560887717954,
+        "long_s_all": [
+          7.896387895103544,
+          7.891656352905557,
+          7.891603528987616
+        ],
+        "short_s_all": [
+          2.2675349491182715,
+          2.2695877561345696,
+          2.3984455610625446
+        ],
+        "decode_s_mean": 5.581359836893777,
+        "decode_s_std": 0.07646034341895702,
+        "tok_s_mean": 1467.9277795560758,
+        "tok_s_std": 20.26840560802251,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false
+      }
+    ]
+  },
+  "this_k": 0,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 7.893215925665572,
+      "short_s_mean": 2.3118560887717954,
+      "long_s_all": [
+        7.896387895103544,
+        7.891656352905557,
+        7.891603528987616
+      ],
+      "short_s_all": [
+        2.2675349491182715,
+        2.2695877561345696,
+        2.3984455610625446
+      ],
+      "decode_s_mean": 5.581359836893777,
+      "decode_s_std": 0.07646034341895702,
+      "tok_s_mean": 1467.9277795560758,
+      "tok_s_std": 20.26840560802251,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false
+    }
+  ]
+}

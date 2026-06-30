@@ -6,6 +6,7 @@ from typing import Union
 
 import torch
 
+import vllm.envs as envs
 from vllm.config import ParallelConfig, SchedulerConfig
 from vllm.config.kernel import MoEBackend
 from vllm.distributed import get_dp_group, get_pcp_group, get_tensor_model_parallel_rank
@@ -1194,6 +1195,40 @@ class FusedMoEParallelConfig:
         dp_rank = get_dp_group().rank_in_group if dp_size > 1 else 0
         pcp_size = pcp_size_
         pcp_rank = get_pcp_group().rank_in_group if pcp_size > 1 else 0
+
+        # Self-spec W2a FULL REPLICA: the full-replica draft is built non-EP
+        # (enable_expert_parallel=False), so without this it falls into the
+        # non-EP branch below and `flatten_tp_across_dp_and_pcp` sets
+        # tp_size = dp_size * pcp_size * tp_size. That TP-shards each expert's
+        # weights across all DP ranks and relies on a tensor-parallel all-reduce
+        # to recombine the partial outputs. In a pure-DP deployment the TP group
+        # has world_size 1, so that all-reduce is a NO-OP -> every rank emits a
+        # 1/dp_size-sharded MoE output. For a GENUINE per-rank replica we force
+        # tp_size=1, ep_size=1 (full unsharded experts resident AND fully
+        # computed locally; no reduce needed). The draft stays data-parallel:
+        # each rank processes its own tokens over the full expert set. Gated to
+        # the opt-in flag so default behavior is unchanged.
+        if (
+            not use_ep
+            and dp_size_ * pcp_size_ > 1
+            and envs.VLLM_SELF_SPEC_DRAFT_FULL_REPLICA
+            and not vllm_parallel_config.enable_expert_parallel
+        ):
+            return FusedMoEParallelConfig(
+                tp_size=tp_size_,
+                tp_rank=0 if tp_size_ == 1 else get_tensor_model_parallel_rank(),
+                pcp_size=pcp_size,
+                pcp_rank=pcp_rank,
+                dp_size=dp_size,
+                dp_rank=dp_rank,
+                ep_size=1,
+                ep_rank=0,
+                sp_size=sp_size_,
+                use_ep=False,
+                all2all_backend=vllm_parallel_config.all2all_backend,
+                enable_eplb=vllm_parallel_config.enable_eplb,
+            )
+
         tp_size, tp_rank = FusedMoEParallelConfig.flatten_tp_across_dp_and_pcp(
             tp_size_, dp_size_, dp_rank, pcp_size_, pcp_rank
         )

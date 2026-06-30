@@ -1,0 +1,1 @@
+[DRAFT r4 draft_model.model.layers.0.mlp.experts] moe_tp_size=1 moe_ep_size=1 moe_dp_size=8 use_ep=False GLOBAL get_tp_group().world_size=1 => all_reduce over 1 ranks (no-op if 1 -> 1/1 sharded output)
