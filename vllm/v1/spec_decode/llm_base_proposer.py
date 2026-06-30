@@ -217,6 +217,13 @@ class SpecDecodeBaseProposer:
         # W7: opt-in FULL cudagraphs for the draft decode-step forwards (see
         # VLLM_SELF_SPEC_DRAFT_FULL_CG). Default off -> PIECEWISE as before.
         self.use_full_cudagraphs = envs.VLLM_SELF_SPEC_DRAFT_FULL_CG
+        # W7-gqa: when True, the FULL-CG draft chain runs its attention EAGERLY
+        # (per-step kernel launch) instead of replaying the captured decode
+        # graph. Set in initialize_attn_backend for non-MLA (FA3 / GQA) draft
+        # backends, whose decode kernel freezes its work distribution at capture
+        # and can't replay the draft's intra-loop growing sequence. MLA keeps
+        # the captured graph (fg2). Env override W7_GQA_FORCE_EAGER_ATTN.
+        self._draft_chain_force_eager_attn = False
         # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
         # runnable for the decode-step chain (set by the runner's wrap pass when
         # use_full_cudagraphs). None -> plain-forward path (sampling stays
@@ -713,9 +720,29 @@ class SpecDecodeBaseProposer:
         with _self_spec_profiler().region("chain_setup"):
             # The K-chain decode-step forwards are uniform 1-token-per-seq
             # batches, eligible for the draft's FULL cudagraph (when enabled).
+            #
+            # W7-gqa: the FULL-CG draft chain replays ONE captured decode graph
+            # K-1 times with the sequence GROWING by 1 each replay. The FA3
+            # (GQA) decode kernel freezes its host-side work distribution at
+            # capture-time seq_len=1 and does NOT re-derive it from the live,
+            # growing ``seqused_k`` at replay -> the 2nd+ draft token attends
+            # over a truncated context -> accept_len collapses (~4.9 -> ~1.9 on
+            # Qwen3-8B). This is INSENSITIVE to scheduler_metadata / num_splits /
+            # capture seq_len (all measured identical); running the SAME chain
+            # eagerly restores accept_len fully. (The MLA decode kernel does not
+            # have this dependency, so MLA keeps the FULL graph -- see fg2.)
+            # Fix: for non-MLA (FA3) draft backends, take the eager (NONE) path
+            # for the chain so each step launches a fresh attention kernel
+            # against live seq_lens. We pass use_cudagraphs=False so the DP batch
+            # coordination matches the eager path -- overriding the mode AFTER
+            # coordination would desync num_tokens_across_dp and trip the DP
+            # assert in set_forward_context at DP>1.
+            chain_use_cudagraphs = not self._draft_chain_force_eager_attn
             cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
                 self._determine_batch_execution_and_padding(
-                    batch_size, uniform_decode=True
+                    batch_size,
+                    uniform_decode=True,
+                    use_cudagraphs=chain_use_cudagraphs,
                 )
             )
 
@@ -782,6 +809,11 @@ class SpecDecodeBaseProposer:
                     and cudagraph_runtime_mode == CUDAGraphMode.FULL
                     and not self._disable_skip_rebuild
                 )
+                # When the FA (GQA) chain falls back to eager attention,
+                # cudagraph_runtime_mode is NONE here, so skip_rebuild_full_cg is
+                # False and the per-step build_for_drafting runs -- giving each
+                # eager attention launch a fresh metadata object with live
+                # seq_lens / slot mapping (the correct path, matching PIECEWISE).
                 if not skip_rebuild_full_cg and (
                     not self.constant_draft_positions or token_index == 0
                 ):
@@ -1815,6 +1847,10 @@ class SpecDecodeBaseProposer:
                 and cudagraph_runtime_mode == CUDAGraphMode.FULL
                 and self.runner is not None
                 and self._draft_attn_layer_names
+                # W7-gqa: FA3 draft chains run attention eagerly and never replay
+                # the captured decode graph -- skip building the real capture
+                # metadata (and the sample-in-graph capture below) for them.
+                and not self._draft_chain_force_eager_attn
             )
             draft_attn_metadata = (
                 self._build_draft_decode_capture_metadata(num_input_tokens)
@@ -1955,27 +1991,52 @@ class SpecDecodeBaseProposer:
         logger.debug("Using block size %d for drafting layers", self.block_size)
 
         # W7: with the draft FULL cudagraph (VLLM_SELF_SPEC_DRAFT_FULL_CG), cap
-        # the draft attention builder's FA3 split count to 1. The draft decode
-        # steps attend over short, growing sequences, where the default 32-way
-        # split-reduction is both pathological AND produces INCORRECT results
-        # when captured into the draft's FULL graph: the split-combine reads
-        # per-split partial buffers whose layout is tied to the capture-time
-        # (padded, uniform) schedule and does not replay correctly for the
-        # per-step growing sequences (measured: accept_len collapses ~2.85 ->
-        # ~1.9 with 32 splits, recovers to ~2.78 with 1 split). One split = no
-        # combine = exact attention, and it is also faster here.
+        # the MLA draft attention builder's FA3 split count to 1. The draft
+        # decode steps attend over short, growing sequences, where the default
+        # 32-way split-reduction produces INCORRECT results when captured into
+        # the draft's FULL graph: the split-combine reads per-split partial
+        # buffers whose layout is tied to the capture-time (padded, uniform)
+        # schedule and does not replay correctly for the per-step growing
+        # sequences (measured on V2-Lite: accept_len 2.85 -> 1.9 with 32 splits,
+        # recovers to 2.78 with 1 split). One split = no combine = exact
+        # attention. An env override is kept for experimentation.
         #
-        # Backend-agnostic: both FLASH_ATTN_MLA (DeepSeek, FlashAttnMLA) and
-        # FLASH_ATTN (GQA models such as Qwen3-30B) expose ``max_num_splits``
-        # on their FA3 metadata builder and consume it identically, so the
-        # getattr-gated cap covers both. Builders without the knob are skipped.
-        # An env override is kept for experimentation.
+        # W7-gqa: this MLA cap does NOT fix FA3 (GQA). On FA3 the captured decode
+        # kernel freezes its host-side work distribution at capture-time
+        # seq_len=1 regardless of num_splits / scheduler_metadata (measured
+        # identical accept ~1.99 for splits 0/1/2/32 and with/without a refreshed
+        # AOT schedule). So instead of a split cap, FA3 draft chains run their
+        # attention EAGERLY (see _draft_chain_force_eager_attn) -- the proven
+        # correct path (accept restored to the PIECEWISE reference). Detect MLA
+        # vs FA3 by builder type and apply the right remedy per backend.
         if self.use_full_cudagraphs:
+            from vllm.model_executor.layers.attention.mla_attention import (
+                MLACommonMetadataBuilder,
+            )
+
             draft_splits = int(os.environ.get("W7_FG2_DRAFT_SPLITS", "1"))
+            force_eager_attn = False
             for attn_group in self.draft_attn_groups:
                 builder = attn_group.get_metadata_builder()
-                if getattr(builder, "max_num_splits", 0):
+                is_mla = isinstance(builder, MLACommonMetadataBuilder)
+                if is_mla and getattr(builder, "max_num_splits", 0):
                     builder.max_num_splits = draft_splits
+                elif not is_mla:
+                    # FA3 / GQA (or any non-MLA backend): the captured decode
+                    # graph cannot replay the draft's intra-loop growing
+                    # sequence -> run the chain attention eagerly.
+                    force_eager_attn = True
+            # Env override for A/B (1 -> force eager, 0 -> force captured graph).
+            _env = os.environ.get("W7_GQA_FORCE_EAGER_ATTN")
+            if _env is not None:
+                force_eager_attn = bool(int(_env))
+            self._draft_chain_force_eager_attn = force_eager_attn
+            if force_eager_attn:
+                logger.info(
+                    "Draft FULL-CG: running the draft chain attention eagerly "
+                    "(non-MLA backend); the captured decode graph is not "
+                    "replay-safe for the draft's growing sequence."
+                )
 
     def _determine_batch_execution_and_padding(
         self,
