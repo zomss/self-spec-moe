@@ -253,6 +253,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
+    VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
@@ -1846,6 +1847,19 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # FULL. Default off (draft eager, unchanged). See research/34_worldA_system.
     "VLLM_SELF_SPEC_DRAFT_FULL_CG": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_CG", "0"))
+    ),
+    # Self-spec W7-dp: when set, the draft_model is loaded UNCOMPILED (eager,
+    # CompilationMode.NONE, no cudagraphs) while the target/verify model keeps
+    # its normal torch.compile config. Partial mitigation for a torch.compile
+    # numerical inconsistency in the self-spec MoE forward for non-MLA MoE
+    # models (e.g. Qwen2-MoE / Qwen3-MoE under FLASH_ATTN): with compile on, the
+    # separately-compiled draft and verify disagree per position so acceptance
+    # collapses (Qwen1.5-MoE K=4: per-token 0.94 eager vs 0.14 compiled). Dense
+    # and MLA-MoE drafts are unaffected. Eager draft alone only partly recovers
+    # (~1.6->1.9) since the verify is still compiled; full recovery (->4.8)
+    # needs enforce_eager. Default off. See research/36_dp_accept.
+    "VLLM_SELF_SPEC_DRAFT_EAGER": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_EAGER", "0"))
     ),
     # Self-spec W7 micro-benchmark: when set, the proposer and target-verify
     # forwards record additive, CUDA-synchronized wall-clock timings (whole

@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from typing_extensions import override
 
+from vllm import envs
 from vllm.config import VllmConfig
 from vllm.config.utils import replace
 from vllm.logger import init_logger
@@ -95,10 +96,51 @@ class DraftModelProposer(SpecDecodeBaseProposer):
 
     @override
     def _get_model(self) -> nn.Module:
+        from contextlib import contextmanager
+
         from vllm.compilation.backends import set_model_tag
+        from vllm.config.compilation import CompilationMode, CUDAGraphMode
+
+        @contextmanager
+        def _maybe_uncompiled_draft(cc):
+            # W7-dp: build the draft UNCOMPILED. For non-MLA MoE self-spec
+            # (Qwen2/Qwen3-MoE under FLASH_ATTN) torch.compile produces an MoE
+            # forward that is numerically INCONSISTENT between the separately
+            # compiled draft ("draft_model" tag) and verify ("backbone" tag):
+            # with compile on the draft's per-position greedy tokens diverge from
+            # the verify's and acceptance collapses (Qwen1.5-MoE K=4: per-token
+            # 0.94 eager vs 0.14 compiled; even the EP-shard draft and the verify
+            # disagree). Dense and MLA-MoE drafts are unaffected. The verify model
+            # is built BEFORE the draft, so flipping these flags now affects only
+            # the draft's per-module do_not_compile decision; we restore them
+            # after so nothing else sees the change. We deliberately mutate the
+            # SHARED compilation_config (not a replace()) so static_forward_context
+            # stays the same dict and the draft's attn/MoE layers register where
+            # the proposer's runtime forward context looks them up.
+            # NOTE: this is a partial mitigation -- it makes the draft eager but
+            # the verify stays compiled, so they still partially disagree (accept
+            # recovers only ~1.6->1.9 on Qwen1.5-MoE). Full recovery (->4.8)
+            # needs the WHOLE engine eager (enforce_eager), so draft and verify
+            # share the eager numerics. Default off; see research/36_dp_accept.
+            if not envs.VLLM_SELF_SPEC_DRAFT_EAGER:
+                yield
+                return
+            logger.info_once(
+                "Self-spec: building draft model UNCOMPILED "
+                "(VLLM_SELF_SPEC_DRAFT_EAGER=1); verify model stays compiled."
+            )
+            old_mode, old_cg = cc.mode, cc.cudagraph_mode
+            cc.mode = CompilationMode.NONE
+            cc.cudagraph_mode = CUDAGraphMode.NONE
+            try:
+                yield
+            finally:
+                cc.mode, cc.cudagraph_mode = old_mode, old_cg
 
         draft_vllm_config = self._create_draft_vllm_config()
-        with set_model_tag("draft_model"):
+        with set_model_tag("draft_model"), _maybe_uncompiled_draft(
+            draft_vllm_config.compilation_config
+        ):
             model = get_model(
                 vllm_config=draft_vllm_config,
                 prefix="draft_model",
