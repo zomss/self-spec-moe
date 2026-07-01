@@ -253,6 +253,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
+    VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
     VLLM_SELF_SPEC_CPU_ORCH: bool = False
@@ -1854,6 +1855,21 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # FULL. Default off (draft eager, unchanged). See research/34_worldA_system.
     "VLLM_SELF_SPEC_DRAFT_FULL_CG": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_CG", "0"))
+    ),
+    # Self-spec W7-piecewise: when the FA3 (GQA / non-MLA) draft chain runs its
+    # attention eagerly (VLLM_SELF_SPEC_DRAFT_FULL_CG=1 -> _draft_chain_force_
+    # eager_attn), by default the WHOLE chain forward runs eager (CUDAGraphMode.
+    # NONE) because the FULL decode graph is not replay-safe for the draft's
+    # growing sequence. That leaves the model BODY (GEMM/MoE) running op-by-op
+    # eagerly (~67 ms/step on Qwen3-30B) instead of on a captured graph (~18 ms
+    # for the identical-shape step-0 PIECEWISE forward). This flag switches the
+    # chain to PIECEWISE cudagraphs: the body runs on captured graph pieces while
+    # attention stays a splitting op (eager, live seq_lens -> byte-identical
+    # numerics / accept to the NONE chain). Only takes effect when the chain is
+    # already forcing eager attention (i.e. with DRAFT_FULL_CG on a non-MLA
+    # backend). Default off -> unchanged (NONE chain). See research W7-draft-graph.
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE", "0"))
     ),
     # Self-spec W7-dp: when set, the draft_model is loaded UNCOMPILED (eager,
     # CompilationMode.NONE, no cudagraphs) while the target/verify model keeps

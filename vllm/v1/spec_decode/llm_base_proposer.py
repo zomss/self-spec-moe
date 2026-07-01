@@ -225,6 +225,14 @@ class SpecDecodeBaseProposer:
         # and can't replay the draft's intra-loop growing sequence. MLA keeps
         # the captured graph (fg2). Env override W7_GQA_FORCE_EAGER_ATTN.
         self._draft_chain_force_eager_attn = False
+        # W7-piecewise: when the chain forces eager attention (above), run the
+        # model BODY on captured PIECEWISE graph pieces instead of the whole
+        # forward eager (NONE). Attention still runs eager (splitting op) so
+        # numerics / accept are byte-identical to the NONE chain, but the GEMM/
+        # MoE body replays a captured graph (fast). Opt-in; default off keeps the
+        # NONE chain. See VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE.
+        self._draft_chain_piecewise = envs.VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE
+        self._logged_chain_pw = False
         # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
         # runnable for the decode-step chain (set by the runner's wrap pass when
         # use_full_cudagraphs). None -> plain-forward path (sampling stays
@@ -747,14 +755,36 @@ class SpecDecodeBaseProposer:
             # coordination matches the eager path -- overriding the mode AFTER
             # coordination would desync num_tokens_across_dp and trip the DP
             # assert in set_forward_context at DP>1.
-            chain_use_cudagraphs = not self._draft_chain_force_eager_attn
+            # W7-piecewise: when the chain forces eager attention (FA3/GQA under
+            # DRAFT_FULL_CG), the default takes the fully-eager NONE path
+            # (use_cudagraphs=False). With DRAFT_CHAIN_PIECEWISE, instead run the
+            # body on captured PIECEWISE pieces (piecewise_only) while attention
+            # stays eager -- same numerics, faster body. DP stays consistent: all
+            # ranks dispatch PIECEWISE so coordinate_batch_across_dp syncs to
+            # PIECEWISE and pads uniformly (mirrors normal decode).
+            chain_piecewise = (
+                self._draft_chain_force_eager_attn and self._draft_chain_piecewise
+            )
+            chain_use_cudagraphs = (
+                not self._draft_chain_force_eager_attn or chain_piecewise
+            )
             cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
                 self._determine_batch_execution_and_padding(
                     batch_size,
                     uniform_decode=True,
                     use_cudagraphs=chain_use_cudagraphs,
+                    piecewise_only=chain_piecewise,
                 )
             )
+            if chain_piecewise and not self._logged_chain_pw:
+                self._logged_chain_pw = True
+                logger.info(
+                    "Draft chain PIECEWISE: runtime_mode=%s batch_size=%d "
+                    "input_batch_size=%d (attention eager, body cudagraph).",
+                    cudagraph_runtime_mode,
+                    batch_size,
+                    input_batch_size,
+                )
 
             common_attn_metadata.num_actual_tokens = batch_size
             common_attn_metadata.max_query_len = 1
@@ -2094,19 +2124,35 @@ class SpecDecodeBaseProposer:
         num_tokens: int,
         use_cudagraphs: bool = True,
         uniform_decode: bool = False,
+        piecewise_only: bool = False,
     ) -> tuple[CUDAGraphMode, int, torch.Tensor | None]:
         # FULL draft graphs only match keys for uniform-decode batches (the
         # K-chain decode-step forwards). The step-0 forward stays PIECEWISE.
         uniform_decode = uniform_decode and self.use_full_cudagraphs
+        # W7-piecewise: for the FA3 (GQA) draft chain we want the model BODY on
+        # captured PIECEWISE graph pieces while attention stays eager (a
+        # splitting op, so PIECEWISE runs it live -> identical numerics to the
+        # NONE chain). Constrain the dispatch to PIECEWISE (+NONE fallback) so it
+        # never keys the FULL decode graph (not replay-safe for the growing
+        # sequence). uniform_decode is forced off so the plain batch descriptor
+        # matches the relaxed PIECEWISE key.
+        if piecewise_only:
+            uniform_decode = False
         # FULL cudagraphs require the batch_descriptor in the forward context so
         # the FULL CUDAGraphWrapper can key its capture/replay. Stash the
         # dispatched descriptor for the caller to forward (only used for FULL;
         # harmless otherwise).
         self._last_batch_desc = None
+        if not use_cudagraphs:
+            first_valid_modes = {CUDAGraphMode.NONE}
+        elif piecewise_only:
+            first_valid_modes = {CUDAGraphMode.PIECEWISE, CUDAGraphMode.NONE}
+        else:
+            first_valid_modes = None
         cudagraph_mode, batch_desc = self.cudagraph_dispatcher.dispatch(
             num_tokens,
             uniform_decode=uniform_decode,
-            valid_modes=({CUDAGraphMode.NONE} if not use_cudagraphs else None),
+            valid_modes=first_valid_modes,
         )
         num_tokens_padded = batch_desc.num_tokens
 
@@ -2142,7 +2188,15 @@ class SpecDecodeBaseProposer:
                 assert batch_desc.num_tokens == num_tokens_padded
                 num_tokens_across_dp[dp_rank] = num_tokens_padded
 
-        if cudagraph_mode == CUDAGraphMode.FULL:
+        # FULL needs the exact (uniform, num_reqs) descriptor for keying. For the
+        # PIECEWISE chain forward (piecewise_only) stash the resolved (relaxed)
+        # descriptor too, so the caller's set_forward_context keys the captured
+        # body graph directly. Other PIECEWISE callers leave it None (their
+        # forward context derives BatchDescriptor(num_tokens), which is the same
+        # relaxed key) so the default path is untouched.
+        if cudagraph_mode == CUDAGraphMode.FULL or (
+            piecewise_only and cudagraph_mode == CUDAGraphMode.PIECEWISE
+        ):
             self._last_batch_desc = batch_desc
         return cudagraph_mode, num_tokens_padded, num_tokens_across_dp
 
