@@ -1,0 +1,83 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "kr_a2a500_fp8",
+  "dp": 8,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 500.0,
+  "suffix": "cg_a2a500us",
+  "by_k": {
+    "3": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 20.685484614378463,
+        "short_s_mean": 9.343052140281847,
+        "long_s_all": [
+          19.84828065522015,
+          19.893820406869054,
+          22.314352781046182
+        ],
+        "short_s_all": [
+          8.972157150041312,
+          9.432518995832652,
+          9.624480274971575
+        ],
+        "decode_s_mean": 11.342432474096617,
+        "decode_s_std": 1.1852068689810302,
+        "tok_s_mean": 727.2800900548235,
+        "tok_s_std": 72.33502199302269,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 3.7875753550628386,
+        "num_accepted": 27282.0,
+        "num_drafted": 29361.0,
+        "num_drafts": 9787.0
+      }
+    ]
+  },
+  "this_k": 3,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 20.685484614378463,
+      "short_s_mean": 9.343052140281847,
+      "long_s_all": [
+        19.84828065522015,
+        19.893820406869054,
+        22.314352781046182
+      ],
+      "short_s_all": [
+        8.972157150041312,
+        9.432518995832652,
+        9.624480274971575
+      ],
+      "decode_s_mean": 11.342432474096617,
+      "decode_s_std": 1.1852068689810302,
+      "tok_s_mean": 727.2800900548235,
+      "tok_s_std": 72.33502199302269,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 3.7875753550628386,
+      "num_accepted": 27282.0,
+      "num_drafted": 29361.0,
+      "num_drafts": 9787.0
+    }
+  ]
+}

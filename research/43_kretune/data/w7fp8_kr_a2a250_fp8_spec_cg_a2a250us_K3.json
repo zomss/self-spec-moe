@@ -1,0 +1,83 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "kr_a2a250_fp8",
+  "dp": 8,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 250.0,
+  "suffix": "cg_a2a250us",
+  "by_k": {
+    "3": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 18.278092820042122,
+        "short_s_mean": 7.221023651926468,
+        "long_s_all": [
+          18.306577797047794,
+          18.176839294377714,
+          18.350861368700862
+        ],
+        "short_s_all": [
+          7.217832806054503,
+          7.122914776671678,
+          7.322323373053223
+        ],
+        "decode_s_mean": 11.057069168115655,
+        "decode_s_std": 0.030226432005562305,
+        "tok_s_mean": 740.8871800431876,
+        "tok_s_std": 2.024497378353658,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 3.8015783540022547,
+        "num_accepted": 27335.0,
+        "num_drafted": 29271.0,
+        "num_drafts": 9757.0
+      }
+    ]
+  },
+  "this_k": 3,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 18.278092820042122,
+      "short_s_mean": 7.221023651926468,
+      "long_s_all": [
+        18.306577797047794,
+        18.176839294377714,
+        18.350861368700862
+      ],
+      "short_s_all": [
+        7.217832806054503,
+        7.122914776671678,
+        7.322323373053223
+      ],
+      "decode_s_mean": 11.057069168115655,
+      "decode_s_std": 0.030226432005562305,
+      "tok_s_mean": 740.8871800431876,
+      "tok_s_std": 2.024497378353658,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 3.8015783540022547,
+      "num_accepted": 27335.0,
+      "num_drafted": 29271.0,
+      "num_drafts": 9757.0
+    }
+  ]
+}
