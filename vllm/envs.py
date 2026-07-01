@@ -251,6 +251,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_SKIP_A2A: bool = False
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
+    VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
@@ -1831,6 +1832,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # routing. Default off -> no change to default draft_model behavior.
     "VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE", "0"))
+    ),
+    # Self-spec W7 top-C draft prune (W2b probe): when > 0 AND the comm-free
+    # draft flag is active (the self_spec_local_route path), the DRAFT MoE keeps
+    # only the C highest-gate-weight experts per token (C < top_k), renormalizes
+    # those C to sum to 1, and zeros the rest -> only C experts are computed per
+    # token in the draft. The VERIFY forward (no draft flag) keeps full top_k, so
+    # the draft stays lossless regardless of C (verify corrects). Isolates the
+    # accept/compute tradeoff of a "smart" prune WITHOUT building the bounded
+    # expert cache (experts stay resident). 0 -> off (full top_k). Only affects
+    # the modular-kernel draft path (select_experts). Default off.
+    "VLLM_SELF_SPEC_DRAFT_TOPC": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_DRAFT_TOPC", "0")
     ),
     # Self-spec W2a FULL REPLICA opt-in: when set, the draft_model parallel
     # config is built with enable_expert_parallel=False (overriding the W0 EP

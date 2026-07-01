@@ -22,6 +22,7 @@ selected top-k. At resident = all experts this is identical to full routing.
 
 import torch
 
+import vllm.envs as envs
 from vllm.forward_context import (
     SELF_SPEC_LOCAL_ROUTE_KEY,
     self_spec_local_route_enabled as local_route_enabled,
@@ -31,7 +32,53 @@ __all__ = [
     "SELF_SPEC_LOCAL_ROUTE_KEY",
     "local_route_enabled",
     "mask_router_logits_to_resident",
+    "draft_topc",
+    "prune_topk_to_topc",
 ]
+
+
+def draft_topc() -> int:
+    """The draft top-C prune width (VLLM_SELF_SPEC_DRAFT_TOPC); 0 = off."""
+    return envs.VLLM_SELF_SPEC_DRAFT_TOPC
+
+
+def prune_topk_to_topc(
+    topk_weights: torch.Tensor,
+    topk_ids: torch.Tensor,
+    c: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Prune the model's top_k selection to the C largest-gate-weight experts.
+
+    A *smart* prune: for each token, keep the C experts with the largest gate
+    weights (drop the smallest), renormalize the kept weights to sum to 1, and
+    narrow the tensors to width C so the fused kernel physically computes only C
+    experts per token. Used by the comm-free self-spec DRAFT forward to trade a
+    little acceptance for draft compute; the full-top_k VERIFY corrects, so the
+    output stays lossless regardless of C.
+
+    Args:
+        topk_weights: ``[n_tokens, top_k]`` renormalized gate weights.
+        topk_ids: ``[n_tokens, top_k]`` selected expert ids.
+        c: Number of experts to keep per token (``1 <= c <= top_k``). Values
+            ``>= top_k`` or ``<= 0`` return the inputs unchanged.
+
+    Returns:
+        ``(weights_c, ids_c)`` of width C, weights renormalized over the kept C.
+        The original dtypes are preserved.
+    """
+    top_k = topk_weights.shape[-1]
+    if c <= 0 or c >= top_k:
+        return topk_weights, topk_ids
+    # Largest-C by gate weight (values), gather the matching ids.
+    kept_w, kept_pos = torch.topk(topk_weights, c, dim=-1)
+    kept_ids = torch.gather(topk_ids, -1, kept_pos)
+    # Renormalize the kept weights over the retained C (sum to 1), matching the
+    # full-top_k renormalization semantics but over the C survivors. Guard the
+    # degenerate all-zero row (never happens post-softmax but keep it safe).
+    denom = kept_w.sum(dim=-1, keepdim=True)
+    denom = torch.where(denom > 0, denom, torch.ones_like(denom))
+    kept_w = (kept_w / denom).to(topk_weights.dtype)
+    return kept_w, kept_ids.to(topk_ids.dtype)
 
 
 def mask_router_logits_to_resident(

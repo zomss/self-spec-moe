@@ -32,8 +32,10 @@ from vllm.model_executor.layers.fused_moe.fused_moe_modular_method import (
     FusedMoEModularMethod,
 )
 from vllm.model_executor.layers.fused_moe.local_route import (
+    draft_topc,
     local_route_enabled,
     mask_router_logits_to_resident,
+    prune_topk_to_topc,
 )
 from vllm.model_executor.layers.fused_moe import num_divergence_dump
 from vllm.model_executor.layers.fused_moe.routed_experts import (
@@ -60,6 +62,40 @@ from vllm.utils.torch_utils import (
 )
 
 logger = init_logger(__name__)
+
+# Self-spec W2b probe: emit the "draft computes C, verify keeps top_k" confirm
+# log at most once per (layer, C) so it fires once and does not spam the run.
+_TOPC_LOGGED: set[tuple[int, int]] = set()
+
+
+def _log_topc_once(layer_id: int, full_k: int, c: int) -> None:
+    key = (layer_id, c)
+    if key in _TOPC_LOGGED:
+        return
+    _TOPC_LOGGED.add(key)
+    logger.info(
+        "[self-spec topc] DRAFT layer %s: pruning top_k=%d -> computing C=%d "
+        "experts/token (VERIFY keeps full top_k=%d)",
+        layer_id,
+        full_k,
+        c,
+        full_k,
+    )
+
+
+_TOPC_MONO_WARNED: set[int] = set()
+
+
+def _warn_monolithic_topc_once(layer_id: int) -> None:
+    if layer_id in _TOPC_MONO_WARNED:
+        return
+    _TOPC_MONO_WARNED.add(layer_id)
+    logger.warning(
+        "[self-spec topc] DRAFT layer %s uses the MONOLITHIC MoE kernel; "
+        "VLLM_SELF_SPEC_DRAFT_TOPC has no effect on this path (top-k is done "
+        "inside the kernel). The probe needs the modular (select_experts) path.",
+        layer_id,
+    )
 
 
 def register_layer_for_moe_forward_op(
@@ -563,6 +599,12 @@ class MoERunner(MoERunnerInterface):
             )
 
         if self.routed_experts.quant_method.is_monolithic:
+            # Self-spec W2b probe: the top-C prune lives on the modular
+            # (select_experts) path; a monolithic kernel does top-k internally
+            # from router_logits, so C can't be applied here. Warn once so a
+            # silent no-op is never mistaken for "C had no effect".
+            if draft_topc() > 0 and local_route_enabled():
+                _warn_monolithic_topc_once(self.layer_id)
             # Monolithic kernels: pass router_logits to routed_experts
             fused_out = self.routed_experts.forward_monolithic(
                 x=hidden_states,
@@ -577,6 +619,18 @@ class MoERunner(MoERunnerInterface):
                 topk_indices_dtype=self._quant_method.topk_indices_dtype,
                 input_ids=input_ids,
             )
+
+            # Self-spec W2b probe: on the DRAFT forward only (local_route flag
+            # active), prune the model's top_k selection to the C largest-weight
+            # experts so the kernel computes only C experts/token. The VERIFY
+            # forward has no draft flag -> keeps full top_k -> lossless.
+            _c = draft_topc()
+            if _c > 0 and local_route_enabled():
+                _full_k = topk_weights.shape[-1]
+                topk_weights, topk_ids = prune_topk_to_topc(
+                    topk_weights, topk_ids, _c
+                )
+                _log_topc_once(self.layer_id, _full_k, topk_weights.shape[-1])
 
             if num_divergence_dump.dump_enabled():
                 num_divergence_dump.record_topk(

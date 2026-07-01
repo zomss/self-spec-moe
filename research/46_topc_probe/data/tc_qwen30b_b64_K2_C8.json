@@ -1,0 +1,70 @@
+{
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "qwen30b",
+  "dp": 8,
+  "tp": 1,
+  "batch": 64,
+  "K": 2,
+  "C": 8,
+  "nospec": false,
+  "draft_quant": "fp8",
+  "gpu_mem": 0.9,
+  "outlen": 220,
+  "warmup": 60,
+  "steady": 80,
+  "run_result": {
+    "num_accepted": 10592.0,
+    "num_drafted": 11070.0,
+    "num_drafts": 5535.0,
+    "long_s": 9.834559041075408,
+    "long_ntok": 14080,
+    "sys_tok_s": 1431.6859496387092,
+    "accept_len": 2.9136404697380307
+  },
+  "rank0_profile": {
+    "pid": 1827177,
+    "dp_rank": "1",
+    "warmup": 60,
+    "counts": {
+      "verify": 94,
+      "draft_forward_first": 94,
+      "draft_forward": 94,
+      "draft_chain": 93
+    },
+    "summary": {
+      "verify": {
+        "n": 34,
+        "n_total": 94,
+        "mean_ms": 63.56231449171901,
+        "std_ms": 6.665694999359509,
+        "min_ms": 34.760579001158476,
+        "max_ms": 67.37123895436525
+      },
+      "draft_forward_first": {
+        "n": 34,
+        "n_total": 94,
+        "mean_ms": 19.460333922110937,
+        "std_ms": 0.4573755982744502,
+        "min_ms": 17.407597973942757,
+        "max_ms": 20.058349706232548
+      },
+      "draft_forward": {
+        "n": 34,
+        "n_total": 94,
+        "mean_ms": 15.818892402903122,
+        "std_ms": 0.9928370835106874,
+        "min_ms": 10.312004946172237,
+        "max_ms": 16.677508130669594
+      },
+      "draft_chain": {
+        "n": 33,
+        "n_total": 93,
+        "mean_ms": 40.884956971488215,
+        "std_ms": 0.45616077142590056,
+        "min_ms": 39.53892597928643,
+        "max_ms": 42.172699235379696
+      }
+    }
+  },
+  "n_profile_files": 8
+}
