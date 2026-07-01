@@ -1,0 +1,56 @@
+==========================================================================
+PHASE 44 RECON  Qwen3-30B-A3B DP=8/EP=8 forced-PCIe a2a=0 K=2 batch=64
+==========================================================================
+
+accept_len = 2.9176768590555455   long-run sys tok/s = 940.0752175457898
+
+--- 1. CYCLE DECOMPOSITION (ms, rank-0 steady means) ---
+  draft_forward_first (step0)          18.516
+  draft_forward (per K-step)           67.541
+  draft_chain (whole propose)          94.335
+  verify (target forward)              65.400
+
+  draft_chain + verify (measured regions) = 159.734 ms
+  cycle from THIS run's tok/s (940.1) = 198.6 ms
+  cycle from K-retune 1021 tok/s (brief target) = 182.9 ms
+
+  RESIDUAL (cycle - draft_chain - verify) = 23.2 ms  [sampling/rejection + outer CPU glue]
+
+  Inside draft_chain: 2 draft GPU forwards (1x18.52 + 1x67.54) = 86.06 ms
+                      draft-side CPU orchestration = 8.28 ms
+
+--- 2. DRAFT COST VERDICT (batch 64, 1 tok/seq decode) ---
+  T_compute(64) cost-model value         = 16.27 ms
+  full-replica draft forward (measured)      = 67.54 ms
+  skip-A2A tile draft forward (measured)     = 107.36 ms
+  no-spec / verify-compute forward (measured)= 37.82 ms
+
+  full-replica / skip-A2A tile  = 0.63x
+  full-replica / T_compute(64)   = 4.15x
+  full-replica / no-spec verify = 1.79x
+  skip-A2A tile / T_compute(64)  = 6.60x
+
+--- 3. TERM-BY-TERM RECONCILIATION (cost model -> measured cycle) ---
+  cost model: K*T_compute(64) + T_verify(192)
+            = 2*16.27 + 32.20 = 64.75 ms
+  measured cycle = 182.9 ms   (gap = 118.1 ms)
+
+  Gap attribution (self-consistent; sums to the gap):
+   (a) draft-GPU underestimate  (df0 18.5 + 1x df 67.5 = 86.1) - K*T_compute 32.5 = +53.5 ms
+   (b) verify underestimate     (meas verify 65.4) - T_verify 32.2 = +33.2 ms
+   (c) draft-side CPU (in draft_chain, UNMODELED) = +8.3 ms
+   (d) outer CPU / sample-reject residual (UNMODELED) = +23.2 ms
+   sum(a..d) = 118.1 ms  vs measured gap 118.1 ms
+   DOMINANT TERM: a draft-GPU (+53.5 ms, 45% of gap)
+   Unmodeled CPU orchestration (c+d) = 31.4 ms (27% of gap)
+
+--- 4. SPEEDUP ISOLATION ---
+  no-spec step (K-retune 1857.6 tok/s) = 34.45 ms [baseline for speedup]
+  no-spec step (this run, measured)    = 42.54 ms
+
+  measured cycle=182.9ms -> speedup 0.550x (vs K-retune reported 0.55x)
+  (a) if draft-GPU == K*T_compute (shave 53.5ms): cycle 129.4ms -> speedup 0.777x
+  (b) if verify == T_verify (shave 33.2ms): cycle 149.7ms -> speedup 0.672x
+  (c+d) if CPU overhead == 0 (shave 31.4ms): cycle 151.5ms -> speedup 0.664x
+  (all) cost-model cycle 64.7ms -> speedup 1.552x (all 3 errors removed, K-retune baseline)
+  (paper) E_tok*T_verify(64)/[K*T_compute+T_verify(192)] = 2.92*25.9/64.7 = 1.166x (the model's ~1.1x)
