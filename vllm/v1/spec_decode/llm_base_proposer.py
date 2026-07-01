@@ -301,6 +301,15 @@ class SpecDecodeBaseProposer:
         self.arange = torch.arange(
             max_num_slots_for_arange, device=device, dtype=torch.int32
         )
+        # W7 phase-45 CPU-orch: persistent CPU arange for the chain's
+        # query_start_loc_cpu, so the per-cycle chain_setup does not allocate a
+        # fresh tensor via torch.from_numpy(...).clone() each decode step. The
+        # values are the constant [0, 1, ..., batch_size]; a view is stored so
+        # it must NOT be mutated by callers (the drafting chain never does).
+        self._cpu_orch = bool(envs.VLLM_SELF_SPEC_CPU_ORCH)
+        self._chain_qsl_cpu = torch.arange(
+            max_num_slots_for_arange, dtype=torch.int32
+        )
 
         if self.needs_extra_input_slots:
             self._raise_if_padded_drafter_batch_disabled()
@@ -750,9 +759,16 @@ class SpecDecodeBaseProposer:
             common_attn_metadata.num_actual_tokens = batch_size
             common_attn_metadata.max_query_len = 1
             common_attn_metadata.query_start_loc = self.arange[: batch_size + 1]
-            common_attn_metadata.query_start_loc_cpu = torch.from_numpy(
-                self.token_arange_np[: batch_size + 1]
-            ).clone()
+            if self._cpu_orch:
+                # Reuse the persistent CPU arange view (constant contents); the
+                # chain never mutates query_start_loc_cpu in place, so no clone.
+                common_attn_metadata.query_start_loc_cpu = self._chain_qsl_cpu[
+                    : batch_size + 1
+                ]
+            else:
+                common_attn_metadata.query_start_loc_cpu = torch.from_numpy(
+                    self.token_arange_np[: batch_size + 1]
+                ).clone()
 
             # In padded drafter batch, we need to adjust the sequence lengths
             # to remove the "padding" (i.e. rejected tokens).

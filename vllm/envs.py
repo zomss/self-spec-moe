@@ -255,7 +255,10 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
+    VLLM_SELF_SPEC_CPU_ORCH: bool = False
+    VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
+    VLLM_SELF_SPEC_PROFILE_FINE: bool = False
     VLLM_SELF_SPEC_MOE_NUM_DUMP: str = ""
     VLLM_SELF_SPEC_MOE_DUMP_LAYER: int = 0
     VLLM_SELF_SPEC_MOE_FP32_ACCUM: bool = False
@@ -1879,6 +1882,24 @@ environment_variables: dict[str, Callable[[], Any]] = {
     "VLLM_SELF_SPEC_COMPILE_CONSISTENT": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_COMPILE_CONSISTENT", "0"))
     ),
+    # Self-spec W7 CPU-orchestration reductions (phase 45): master opt-in that
+    # enables the lossless per-cycle CPU-overhead cuts on the comm-free
+    # self-spec (draft_model) decode path. Individual cuts can also be toggled
+    # by their own flags below; this one turns the whole set on. Default off ->
+    # the outer/bookkeeping path is byte-identical to before. Only affects the
+    # draft_model + sync-scheduling verify path.
+    "VLLM_SELF_SPEC_CPU_ORCH": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_CPU_ORCH", "0"))
+    ),
+    # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
+    # Replaces the per-request Python list-comprehension + blocking .cpu() D2H
+    # in RejectionSampler.parse_output with a single pinned-buffer async copy
+    # (event-synced, does not stall other CUDA streams) + one flat .tolist()
+    # split by per-row valid counts. Byte-identical output. Implied by
+    # VLLM_SELF_SPEC_CPU_ORCH. Default off.
+    "VLLM_SELF_SPEC_FAST_PARSE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_FAST_PARSE", "0"))
+    ),
     # Self-spec W7 micro-benchmark: when set, the proposer and target-verify
     # forwards record additive, CUDA-synchronized wall-clock timings (whole
     # draft chain, a single draft forward, and the verify forward) into a
@@ -1886,6 +1907,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # only -- no behavior change. Default off. See research/34_worldA_system.
     "VLLM_SELF_SPEC_PROFILE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_PROFILE", "0"))
+    ),
+    # Self-spec W7: record fine-grained per-step / per-cycle CPU sub-regions
+    # (step_*, cpu_*) in the profiler. Extra timers -- default off so the clean
+    # draft_chain/verify measurement is undisturbed. Read directly by the
+    # profiler; listed here for discoverability.
+    "VLLM_SELF_SPEC_PROFILE_FINE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_PROFILE_FINE", "0"))
     ),
     # Self-spec W7 numerical-divergence instrumentation (Step 1): when set to a
     # directory path, the MoE runner dumps, for the FIRST decode forward on DP

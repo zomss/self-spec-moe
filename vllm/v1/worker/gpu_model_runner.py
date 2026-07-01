@@ -862,6 +862,12 @@ class GPUModelRunner(
             device="cpu",
             pin_memory=PIN_MEMORY,
         )
+        # W7 phase-45 (VLLM_SELF_SPEC_FAST_PARSE): pinned [max_reqs, K+1] buffer
+        # + event for a non-blocking D2H of the rejection-sampler output, so the
+        # spec-decode bookkeeping parse does not do a stream-wide blocking
+        # .cpu(). Allocated lazily on first spec parse (needs num_spec_tokens).
+        self._spec_sampled_pinned_cpu: torch.Tensor | None = None
+        self._spec_parse_event: torch.Event | None = None
 
         # Pre-allocated tensor for copying valid sampled token counts to CPU,
         # with dedicated stream for overlapping and event for coordination.
@@ -3588,12 +3594,13 @@ class GPUModelRunner(
             self.input_batch.update_async_spec_token_ids(draft_token_ids_cpu)
 
         draft_probs = self._get_spec_decode_draft_probs(spec_decode_metadata)
-        sampler_output = self.rejection_sampler(
-            spec_decode_metadata,
-            draft_probs,
-            logits,
-            sampling_metadata,
-        )
+        with _self_spec_profiler().cpu_region("cpu_rejection_sample"):
+            sampler_output = self.rejection_sampler(
+                spec_decode_metadata,
+                draft_probs,
+                logits,
+                sampling_metadata,
+            )
         return sampler_output
 
     def _bookkeeping_sync(
@@ -3664,12 +3671,28 @@ class GPUModelRunner(
                     logprobs_lists = logprobs_tensors.tolists()
             else:
                 # Includes spec decode tokens.
-                valid_sampled_token_ids, logprobs_lists = RejectionSampler.parse_output(
-                    sampled_token_ids,
-                    self.input_batch.vocab_size,
-                    discard_sampled_tokens_req_indices,
-                    logprobs_tensors=logprobs_tensors,
-                )
+                with _self_spec_profiler().cpu_region("cpu_reject_parse"):
+                    if (
+                        (
+                            envs.VLLM_SELF_SPEC_FAST_PARSE
+                            or envs.VLLM_SELF_SPEC_CPU_ORCH
+                        )
+                        and logprobs_tensors is None
+                    ):
+                        valid_sampled_token_ids = self._parse_spec_output_fast(
+                            sampled_token_ids,
+                            self.input_batch.vocab_size,
+                            discard_sampled_tokens_req_indices,
+                        )
+                    else:
+                        valid_sampled_token_ids, logprobs_lists = (
+                            RejectionSampler.parse_output(
+                                sampled_token_ids,
+                                self.input_batch.vocab_size,
+                                discard_sampled_tokens_req_indices,
+                                logprobs_tensors=logprobs_tensors,
+                            )
+                        )
         else:
             valid_sampled_token_ids = []
             invalid_req_indices = discard_sampled_tokens_req_indices.tolist()
@@ -3694,32 +3717,37 @@ class GPUModelRunner(
         # the sampled tokens back, because there's no direct communication
         # between the first-stage worker and the last-stage worker.
         req_ids = self.input_batch.req_ids
-        for req_idx in range(num_sampled_tokens):
-            if self.use_async_scheduling:
-                sampled_ids = [-1] if req_idx not in invalid_req_indices_set else None
-            else:
-                sampled_ids = valid_sampled_token_ids[req_idx]
+        with _self_spec_profiler().cpu_region("cpu_bookkeep_loop"):
+            for req_idx in range(num_sampled_tokens):
+                if self.use_async_scheduling:
+                    sampled_ids = (
+                        [-1] if req_idx not in invalid_req_indices_set else None
+                    )
+                else:
+                    sampled_ids = valid_sampled_token_ids[req_idx]
 
-            num_sampled_ids: int = len(sampled_ids) if sampled_ids else 0
+                num_sampled_ids: int = len(sampled_ids) if sampled_ids else 0
 
-            if not sampled_ids:
-                continue
+                if not sampled_ids:
+                    continue
 
-            start_idx = self.input_batch.num_tokens_no_spec[req_idx]
-            end_idx = start_idx + num_sampled_ids
-            assert end_idx <= self.max_model_len, (
-                "Sampled token IDs exceed the max model length. "
-                f"Total number of tokens: {end_idx} > max_model_len: "
-                f"{self.max_model_len}"
-            )
+                start_idx = self.input_batch.num_tokens_no_spec[req_idx]
+                end_idx = start_idx + num_sampled_ids
+                assert end_idx <= self.max_model_len, (
+                    "Sampled token IDs exceed the max model length. "
+                    f"Total number of tokens: {end_idx} > max_model_len: "
+                    f"{self.max_model_len}"
+                )
 
-            self.input_batch.token_ids_cpu[req_idx, start_idx:end_idx] = sampled_ids
-            self.input_batch.is_token_ids[req_idx, start_idx:end_idx] = True
-            self.input_batch.num_tokens_no_spec[req_idx] = end_idx
+                self.input_batch.token_ids_cpu[req_idx, start_idx:end_idx] = (
+                    sampled_ids
+                )
+                self.input_batch.is_token_ids[req_idx, start_idx:end_idx] = True
+                self.input_batch.num_tokens_no_spec[req_idx] = end_idx
 
-            req_id = req_ids[req_idx]
-            req_state = self.requests[req_id]
-            req_state.output_token_ids.extend(sampled_ids)
+                req_id = req_ids[req_idx]
+                req_state = self.requests[req_id]
+                req_state.output_token_ids.extend(sampled_ids)
 
         # Compute prompt logprobs if needed.
         prompt_logprobs_dict = self._get_prompt_logprobs_dict(
@@ -4123,10 +4151,11 @@ class GPUModelRunner(
             max_num_scheduled_tokens = int(num_scheduled_tokens_np.max())
             num_tokens_unpadded = scheduler_output.total_num_scheduled_tokens
 
-            logits_indices, spec_decode_metadata = self._prepare_inputs(
-                scheduler_output,
-                num_scheduled_tokens_np,
-            )
+            with _self_spec_profiler().cpu_region("cpu_exec_prepare_inputs"):
+                logits_indices, spec_decode_metadata = self._prepare_inputs(
+                    scheduler_output,
+                    num_scheduled_tokens_np,
+                )
 
             cascade_attn_prefix_lens = None
             # Disable cascade attention when using microbatching (DBO)
@@ -5026,17 +5055,18 @@ class GPUModelRunner(
                     "sampled_token_ids should be a torch.Tensor when"
                     "padded-batch is enabled."
                 )
-                next_token_ids, valid_sampled_tokens_count = (
-                    self.drafter.prepare_next_token_ids_padded(
-                        sampled_token_ids,
-                        self.requests,
-                        self.input_batch,
-                        self.discard_request_mask.gpu,
+                with _self_spec_profiler().cpu_region("cpu_next_input_build"):
+                    next_token_ids, valid_sampled_tokens_count = (
+                        self.drafter.prepare_next_token_ids_padded(
+                            sampled_token_ids,
+                            self.requests,
+                            self.input_batch,
+                            self.discard_request_mask.gpu,
+                        )
                     )
-                )
-                self._copy_valid_sampled_token_count(
-                    next_token_ids, valid_sampled_tokens_count
-                )
+                    self._copy_valid_sampled_token_count(
+                        next_token_ids, valid_sampled_tokens_count
+                    )
 
             # Let the target override the hidden state fed to the drafter
             # (e.g. DeepSeek V4 MTP needs the pre-hc_head residual). Safe to
@@ -5079,15 +5109,18 @@ class GPUModelRunner(
                     else:
                         target_hidden_states = hidden_states[token_indices]
                 else:
-                    (
-                        common_attn_metadata,
-                        token_indices_to_sample,
-                        num_rejected_tokens_gpu,
-                    ) = self.drafter.prepare_inputs_padded(
-                        common_attn_metadata,
-                        spec_decode_metadata,
-                        valid_sampled_tokens_count,
-                    )
+                    with _self_spec_profiler().cpu_region(
+                        "cpu_prepare_inputs_padded"
+                    ):
+                        (
+                            common_attn_metadata,
+                            token_indices_to_sample,
+                            num_rejected_tokens_gpu,
+                        ) = self.drafter.prepare_inputs_padded(
+                            common_attn_metadata,
+                            spec_decode_metadata,
+                            valid_sampled_tokens_count,
+                        )
                     total_num_tokens = common_attn_metadata.num_actual_tokens
                     # When padding the batch, token_indices is just a range
                     target_token_ids = self.input_ids.gpu[:total_num_tokens]
@@ -7571,6 +7604,57 @@ class GPUModelRunner(
         self.transfer_event.record()
         self.transfer_event.synchronize()
         return pinned.tolist()
+
+    def _parse_spec_output_fast(
+        self,
+        sampled_token_ids: torch.Tensor,
+        vocab_size: int,
+        discard_req_indices: np.ndarray,
+    ) -> list[list[int]]:
+        """W7 phase-45: vectorized, non-blocking equivalent of
+        ``RejectionSampler.parse_output`` for the greedy spec-decode path.
+
+        Semantically identical to ``parse_output`` (rejected tokens are
+        ``PLACEHOLDER_TOKEN_ID = -1``; valid tokens are those ``!= -1`` and
+        ``< vocab_size``; discarded rows -> empty list), but:
+          - copies the [B, K+1] output to a pinned buffer with a NON-blocking
+            D2H + event sync (does not stream-wide-block like ``.cpu()``), and
+          - does ONE flat ``.tolist()`` split by per-row valid counts instead
+            of B separate boolean-index + ``.tolist()`` calls.
+        Only used when logprobs are not requested (greedy path), which is the
+        comm-free self-spec operating point.
+        """
+        batch_size, num_tokens = sampled_token_ids.shape
+        if (
+            self._spec_sampled_pinned_cpu is None
+            or self._spec_sampled_pinned_cpu.shape[1] != num_tokens
+        ):
+            self._spec_sampled_pinned_cpu = torch.empty(
+                (self.max_num_reqs, num_tokens),
+                dtype=sampled_token_ids.dtype,
+                device="cpu",
+                pin_memory=PIN_MEMORY,
+            )
+            self._spec_parse_event = torch.Event()
+        pinned = self._spec_sampled_pinned_cpu[:batch_size]
+        pinned.copy_(sampled_token_ids, non_blocking=True)
+        assert self._spec_parse_event is not None
+        self._spec_parse_event.record()
+        self._spec_parse_event.synchronize()
+
+        out_np = pinned.numpy()
+        valid_mask = (out_np != -1) & (out_np < vocab_size)
+        if discard_req_indices.shape[0] > 0:
+            valid_mask[discard_req_indices] = False
+        # Per-row valid counts; a single flat tolist() then split by counts.
+        counts = valid_mask.sum(axis=1)
+        flat = out_np[valid_mask].tolist()
+        outputs: list[list[int]] = []
+        pos = 0
+        for c in counts.tolist():
+            outputs.append(flat[pos : pos + c])
+            pos += c
+        return outputs
 
     def get_encoder_timing_stats(self) -> dict[str, dict[str, float | int]]:
         """

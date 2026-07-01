@@ -112,6 +112,27 @@ class SelfSpecProfiler:
                 torch.cuda.synchronize()
             self._record(label, time.perf_counter() - t0)
 
+    @contextmanager
+    def cpu_region(self, label: str):
+        """Time a region WITHOUT any CUDA sync (pure host wall-clock).
+
+        Used to attribute per-cycle CPU orchestration (rejection-sampler
+        parse, bookkeeping loops, next-input build) without perturbing the
+        stream: no sync is inserted, so any forced H<->D sync inside the region
+        (e.g. ``.cpu()`` / ``.tolist()``) still shows up as the stall it is,
+        but this timer adds none of its own. Gated behind
+        ``VLLM_SELF_SPEC_PROFILE_FINE`` (like the other sub-region timers) so
+        the clean draft_chain/verify measurement is undisturbed by default.
+        """
+        if not self.enabled or not self._fine:
+            yield
+            return
+        t0 = time.perf_counter()
+        try:
+            yield
+        finally:
+            self._record(label, time.perf_counter() - t0)
+
     def counts(self) -> dict[str, int]:
         return {k: len(v) for k, v in self._samples.items()}
 
