@@ -1,0 +1,54 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "sweep2rerun_a2a0_fp8",
+  "dp": 8,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 5,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 5,
+        "warmup": 2,
+        "long_s_mean": 6.726277608796954,
+        "short_s_mean": 2.45836101686582,
+        "long_s_all": [
+          6.660527111962438,
+          6.7782099191099405,
+          6.773095962125808,
+          6.746114901732653,
+          6.673440149053931
+        ],
+        "short_s_all": [
+          2.4089990803040564,
+          2.4226020560599864,
+          2.504233618732542,
+          2.4422699213027954,
+          2.5137004079297185
+        ],
+        "decode_s_mean": 4.267916591931135,
+        "decode_s_std": 0.0723745786424597,
+        "tok_s_mean": 1919.8822187333549,
+        "tok_s_std": 32.77070909627893,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 2.8984345529988684,
+        "num_accepted": 40262.0,
+        "num_drafted": 42416.0,
+        "num_drafts": 21208.0
+      }
+    ]
+  }
+}
