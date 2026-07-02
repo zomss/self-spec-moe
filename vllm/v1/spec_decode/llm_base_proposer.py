@@ -302,12 +302,15 @@ class SpecDecodeBaseProposer:
             self._ahead_chain and envs.VLLM_SELF_SPEC_CONSUME_AHEAD
         )
         self._ahead_out: torch.Tensor | None = None
+        self._ahead_outs_full: torch.Tensor | None = None
+        self._ahead_anchor_committed: torch.Tensor | None = None
         self._ahead_pending_tok: torch.Tensor | None = None
         self._ahead_pending_pos: torch.Tensor | None = None
         self._ahead_valid: torch.Tensor | None = None
         self._expect_tok: torch.Tensor | None = None
         self._expect_rej: torch.Tensor | None = None
         self._reanchor: dict[str, Any] | None = None
+        self._ra_keepalive: dict[str, Any] | None = None
         self._ahead_dispatch: dict[str, Any] | None = None
         self._ahead_cad: Any = None
         # Private caching-allocator pool for the shadow's TRANSIENT allocations
@@ -1176,27 +1179,20 @@ class SpecDecodeBaseProposer:
         num_rejected_tokens_gpu: torch.Tensor | None,
         common_attn_metadata,
     ) -> torch.Tensor | None:
-        """OV1(b): return the ahead chain's drafts instead of running propose.
+        """OV1(b2) DELTA-SLICE consumption (post-sampler, depth-1 truth).
 
-        Called by the runner post-rejection-sampling. Returns None (caller
-        falls back to the real propose) when there are no ahead drafts
-        (bootstrap cycle / after a batch-boundary fence / batch-size change).
-        Otherwise stashes the re-anchor state for the next run_ahead_chain --
-        the actual bonus/corrected token, the committed lengths, the
-        2-pending mask (all-K accepted AND the last draft's KV is pending),
-        and a FRESH block-table snapshot (block tables grow every cycle; a
-        stale clone would map new positions to garbage pages) -- and returns
-        the drafts. Misses return garbage drafts by design: the verify
-        rejects them losslessly and the next re-anchor corrects the chain
-        (one low-accept cycle per miss).
+        Always stashes the ground-truth anchor state for the next
+        run_ahead_chain (the actual bonus/corrected token, committed lengths,
+        fresh block-table snapshot). If the previous run's 2K+1 predictions
+        are available, serves outs[Delta : Delta+K] where Delta =
+        committed_now - committed_the_run_anchored_on -- exactly the
+        predictions for the live positions. Rows whose intervening commits
+        diverged from the chain's predictions serve garbage (losslessly
+        rejected; the next run re-anchors on actuals and heals in one cycle).
+        Returns None on bootstrap/fence cycles (caller runs propose).
         """
         bs = common_attn_metadata.batch_size()
-        if (
-            self._ahead_out is None
-            or num_rejected_tokens_gpu is None
-            or self._ahead_out.shape[0] != bs
-            or self._ahead_pending_tok is None
-        ):
+        if num_rejected_tokens_gpu is None:
             self._ahead_out = None
             return None
         # OV1(b2) per-row consumption: ALWAYS serve the ahead drafts once warm
@@ -1207,42 +1203,75 @@ class SpecDecodeBaseProposer:
         # INCLUDING this step's input token; the new bonus/corrected token
         # (next_token_ids) sits AT that position (0-indexed).
         rejected = num_rejected_tokens_gpu[:bs]
-        # A/B knob (W7_B2_ALLHIT=1): b1-style all-hit gating THROUGH the b2
-        # K+2/extraction machinery -- consume only on all-hit cycles (misses
-        # re-bootstrap via propose) and force valid=all in the steady run.
-        # Restores accept 2.9 => the K+2 loop/extraction/pending machinery is
-        # sound and the bug is in mixed-row recovery; stays broken => the new
-        # loop shape itself corrupts the chain.
-        if bool(int(os.environ.get("W7_B2_ALLHIT", "0"))):
-            all_hit = bool(
-                (
-                    (rejected == 0)
-                    & (next_token_ids[:bs].long() == self._ahead_pending_tok[:bs])
+        # DP1 deterministic repro (W7_B2_DUMP=path): one JSONL event per
+        # consume with row-0's verify verdict + the drafts being served.
+        # Host-syncing; debug only.
+        _dump = os.environ.get("W7_B2_DUMP", "")
+        if _dump:
+            import json as _json
+
+            self._dump_cyc = getattr(self, "_dump_cyc", 0) + 1
+            with open(f"{_dump}.rank{self.dp_rank}.jsonl", "a") as f:
+                f.write(
+                    _json.dumps(
+                        {
+                            "ev": "consume",
+                            "cyc": self._dump_cyc,
+                            "b": int(next_token_ids[0].item()),
+                            "rej": int(rejected[0].item()),
+                            "committed": int(
+                                (
+                                    common_attn_metadata.seq_lens[0]
+                                    - rejected[0]
+                                ).item()
+                            ),
+                            "served": (
+                                self._ahead_outs_full[0].tolist()
+                                if self._ahead_outs_full is not None
+                                else []
+                            ),
+                        }
+                    )
+                    + "\n"
                 )
-                .all()
-                .item()
-            )
-            if not all_hit:
-                self._ahead_out = None
-                self._ahead_pending_tok = None
-                self._reanchor = None
-                return None
+        committed_now = (common_attn_metadata.seq_lens[:bs] - rejected).long()
         self._reanchor = {
             "b": next_token_ids[:bs].long().clone(),
             "rejected": rejected.clone(),
-            "committed": (
-                common_attn_metadata.seq_lens[:bs] - rejected
-            ).long(),
+            "committed": committed_now.clone(),
             "block_table": common_attn_metadata.block_table_tensor.clone(),
         }
-        # Order the next ahead run (side stream) after these main-stream
-        # clones (propose never runs in steady state, so re-record here).
+        # Delta-slice serve: predictions exist for anchor_committed+1 ..
+        # anchor_committed+2K+1; the live positions start at committed_now+1.
+        if (
+            self._ahead_outs_full is None
+            or self._ahead_outs_full.shape[0] != bs
+            or self._ahead_anchor_committed is None
+        ):
+            self._ahead_out = None
+            # Order the next side run after the stash clones above.
+            if self._propose_done_event is None:
+                self._propose_done_event = torch.cuda.Event()
+            self._propose_done_event.record()
+            return None
+        k = self.num_speculative_tokens
+        delta = (
+            (committed_now - self._ahead_anchor_committed[:bs])
+            .clamp(1, k + 1)
+            .unsqueeze(1)
+        )
+        idx = delta + torch.arange(
+            k, device=self.device, dtype=torch.int64
+        ).unsqueeze(0)
+        served = torch.gather(self._ahead_outs_full, 1, idx)
+        self._ahead_outs_full = None
+        # Record AFTER the gather: the next side run waits on this event, so
+        # its writes into (possibly allocator-reused) blocks cannot race the
+        # gather's reads (cross-stream reuse hazard seen in the DP1 repro).
         if self._propose_done_event is None:
             self._propose_done_event = torch.cuda.Event()
         self._propose_done_event.record()
-        out = self._ahead_out
-        self._ahead_out = None
-        return out
+        return served
 
     def fence_ahead_chain(self) -> None:
         """OV1(a): order the MAIN stream after the in-flight ahead chain.
@@ -1266,6 +1295,8 @@ class SpecDecodeBaseProposer:
         # the re-anchor stash, and the pending-token state so the next cycle
         # bootstraps via propose.
         self._ahead_out = None
+        self._ahead_outs_full = None
+        self._ahead_anchor_committed = None
         self._reanchor = None
         self._ahead_pending_tok = None
         self._ahead_pending_pos = None
@@ -1296,15 +1327,20 @@ class SpecDecodeBaseProposer:
         # bootstrap / OV1(a) validation -- continue the chain's own guess).
         ra = self._reanchor if self._consume_mode else None
         self._reanchor = None
+        # Cross-stream lifetime: ra's tensors are read by SIDE-stream kernels
+        # enqueued below; freeing them at host-return lets the allocator
+        # reuse their blocks for main-stream work while side reads are still
+        # pending (observed: position-arithmetic values leaking into step-0
+        # inputs). Hold them until the next run replaces the reference.
+        self._ra_keepalive = ra if ra is not None else self._ra_keepalive
         state = self._ahead_state
         self._ahead_state = None
-        if (
-            ra is not None
-            and self._ahead_dispatch is not None
-            and self._ahead_pending_tok is not None
-        ):
+        if ra is not None and self._ahead_dispatch is not None:
             disp = self._ahead_dispatch
-        elif state is not None:
+        elif state is not None and not self._consume_mode:
+            # OV1(a) validation-mode continuation only; consume mode always
+            # anchors on the stash (bootstrap = a propose cycle, no special
+            # ahead mode).
             ra = None
             disp = None
         else:
@@ -1363,19 +1399,22 @@ class SpecDecodeBaseProposer:
             bs = ra["b"].shape[0]
             ibs = disp["input_batch_size"]
             cad = self._ahead_cad
-            n_ahead = self.num_speculative_tokens + 1
-            # Depth-1 pipeline invariant: each stash is the verdict of the
-            # PREVIOUS run's drafts, and the runner positions served drafts at
-            # the just-updated committed+1. So the universally correct anchor
-            # is the ACTUAL bonus/corrected token at the ACTUAL committed
-            # position -- for hit rows it equals their trailing guess (same
-            # token, same position, KV idempotent), for miss rows it is the
-            # correction. No validity/pending state machine is needed:
-            # accepted drafts' KV was self-written at exactly the positions
-            # they got committed, and consuming b heals the one divergence.
-            valid = (ra["rejected"] == 0) & (
-                ra["b"] == self._ahead_pending_tok[:bs]
-            )  # diagnostic only (hit-rate logging)
+            # DELTA-SLICE design (the DP1 repro's verdict): the run always
+            # anchors on ground truth -- the actual bonus/corrected token at
+            # the actual committed position from its (one-cycle-old) stash --
+            # and produces 2K+1 predictions for positions committed+1 ..
+            # committed+2K+1. By consume time the live commit level has
+            # advanced by Delta in [1, K+1]; consume serves outs[Delta :
+            # Delta+K], exactly the predictions for the live positions.
+            # Anchors are never speculative, so misses self-heal in one
+            # cycle; no pending/expect/bootstrap state machine exists.
+            n_ahead = 2 * self.num_speculative_tokens + 1
+            if self._ahead_pending_tok is not None:
+                valid = (ra["rejected"] == 0) & (
+                    ra["b"] == self._ahead_pending_tok[:bs]
+                )  # diagnostic only (hit-rate logging)
+            else:
+                valid = ra["rejected"] == 0
             if bool(int(os.environ.get("W7_AHEAD_DEBUG", "0"))):
                 self._dbg_n = getattr(self, "_dbg_n", 0) + 1
                 if self._dbg_n % 50 == 1:
@@ -1411,11 +1450,15 @@ class SpecDecodeBaseProposer:
             anchor = ra["b"]
             p1 = ra["committed"]
             cad.block_table_tensor = ra["block_table"]
-            cad.seq_lens[:bs].copy_(p1)
             cad._seq_lens_cpu = None
             cad._num_computed_tokens_cpu = None
             cad.max_seq_len = self.max_model_len
-            self.positions[:bs].copy_(p1 - 1)
+            # NOTE: the seq_lens/positions preset COPIES are deferred into the
+            # side-stream context below. Enqueued here (main stream) they land
+            # AFTER the just-launched verify and are NOT covered by the
+            # consume-time propose_done event, so the side-stream forwards can
+            # race them -- observed as position-correlated garbage tokens
+            # (out[0] id == p1+2) on losing cycles in the DP1 repro.
             positions = self.positions[:bs]
             self._ahead_pending_pos = p1 + self.num_speculative_tokens + 1
             self._ahead_valid = valid
@@ -1486,6 +1529,11 @@ class SpecDecodeBaseProposer:
         # was enqueued after it on the main stream, so this still overlaps.
         ahead_stream.wait_event(self._propose_done_event)
         with mem_pool_ctx, torch.cuda.stream(ahead_stream):
+            if ra is not None:
+                # Deferred presets, enqueued ON THE SIDE STREAM so they are
+                # ordered before this run's forwards (see note above).
+                cad.seq_lens[:bs].copy_(p1)
+                self.positions[:bs].copy_(p1 - 1)
             for j in range(n_ahead):
                 # Per-step input selection. Re-anchor mode: step 0 consumes
                 # the KV-pending last draft (2-pending rows) or the actual
@@ -1547,6 +1595,25 @@ class SpecDecodeBaseProposer:
                     last_tokens = self._greedy_sample(last_hidden_states[:bs])
                     tokens_out[:, j] = last_tokens
                 _ck("sample", j)
+                if bool(int(os.environ.get("W7_AHEAD_STEPLOG", "0"))):
+                    self._steplog_n = getattr(self, "_steplog_n", 0)
+                    if j == 0:
+                        self._steplog_n += 1
+                    if self._steplog_n <= 4:
+                        torch.cuda.current_stream().synchronize()
+                        logger.info(
+                            "OV1(b2) step run%d j%d row0: in=%d pos=%d "
+                            "slot=%d seq=%d -> out=%d",
+                            self._steplog_n,
+                            j,
+                            int(self.input_ids[0].item()),
+                            int(self.positions[0].item()),
+                            int(self._slot_mapping_buffer[0].item()),
+                            int(cad.seq_lens[0].item())
+                            if cad is not None
+                            else -1,
+                            int(tokens_out[0, j].item()),
+                        )
             assert self._shadow_done_event is not None
             self._shadow_done_event.record()
         self._ahead_tokens = tokens_out
@@ -1558,10 +1625,12 @@ class SpecDecodeBaseProposer:
         if self._consume_mode and n_ahead >= self.num_speculative_tokens + 1:
             k = self.num_speculative_tokens
             if ra is not None:
-                # Offset-0 extraction (K+1 outputs from [b, out0..out_{K-1}]):
-                # drafts = outputs[0:K] land exactly at committed+1..+K where
-                # the next verify checks them; outputs[K] is the trailing
-                # guess of the next bonus (diagnostic hit-rate only).
+                # Delta-slice design: keep ALL 2K+1 predictions (positions
+                # anchor_committed+1 .. +2K+1); consume slices per row by the
+                # live commit delta. tokens_out[:, K] doubles as the
+                # diagnostic bonus guess.
+                self._ahead_outs_full = tokens_out
+                self._ahead_anchor_committed = ra["committed"]
                 self._ahead_out = tokens_out[:, :k]
                 self._ahead_pending_tok = tokens_out[:, k]
             else:
@@ -1571,6 +1640,33 @@ class SpecDecodeBaseProposer:
                 self._ahead_pending_tok = tokens_out[:, k + 1]
                 # Bootstrap trailing guess doubles as the diagnostic
                 # pending token; positioning no longer depends on it.
+            _dump = os.environ.get("W7_B2_DUMP", "")
+            if _dump:
+                import json as _json
+
+                self._dump_run = getattr(self, "_dump_run", 0) + 1
+                if ra is not None:
+                    rec = {
+                        "ev": "run",
+                        "n": self._dump_run,
+                        "mode": "steady",
+                        "anchor": int(anchor[0].item()),
+                        "p1": int(p1[0].item()),
+                        "outs": tokens_out[0].tolist(),
+                    }
+                else:
+                    rec = {
+                        "ev": "run",
+                        "n": self._dump_run,
+                        "mode": "boot",
+                        "anchor": int(last_tokens[0].item())
+                        if last_tokens is not None
+                        else -1,
+                        "p1": int(boot_p1[0].item()),
+                        "outs": tokens_out[0].tolist(),
+                    }
+                with open(f"{_dump}.rank{self.dp_rank}.jsonl", "a") as f:
+                    f.write(_json.dumps(rec) + "\n")
             if bool(int(os.environ.get("W7_AHEAD_DEBUG2", "0"))):
                 if getattr(self, "_dbg2_n", 0) <= 8:
                     logger.info(

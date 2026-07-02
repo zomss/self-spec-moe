@@ -112,3 +112,39 @@ run-side does pure continuation only, consume-side (post-sampler, depth-1
 info) decides re-anchor and can LAUNCH the corrective re-run in the same
 cycle -- avoids run-side depth-2 reasoning entirely and is likely the
 simplest correct b2.
+
+### b2 session 3 (DP1 deterministic repro): SOLVED to the speculation tax
+
+The DP1 repro (Qwen1.5-MoE, batch 2, per-cycle JSONL event dump + tokenizer
+decode) produced the ground-truth table that cracked the remaining defects:
+
+1. **The delta-slice design** (replacing all prior state machines): the run
+   anchors on ground truth (b @ committed from its one-cycle-old stash) and
+   produces 2K+1 predictions; consume (depth-1 truth) serves
+   outs[Delta : Delta+K] where Delta = committed_now - anchor_committed --
+   exactly the live positions. No pending/expect/bootstrap machinery.
+2. **Side-stream preset race**: the seq_lens/positions preset copies were
+   enqueued on the MAIN stream, uncovered by the consume-time event -- losing
+   cycles computed with stale positions (out[0] token id == p1+2, decoded as
+   position-correlated letters). Fixed: presets enqueued on the side stream.
+3. **Cross-stream allocator lifetime hazards** (two): the ra stash tensors
+   (read by side kernels) were host-freed at run-return -> blocks reused by
+   main-stream position arithmetic while side reads pending (keepalive fix);
+   and the consume gather was enqueued AFTER the event the next side run
+   waits on -> reused tokens_out blocks written mid-gather (event now
+   recorded after the gather). The same hazard class likely explains the
+   parked OV1(a) unbounded-window race.
+
+Result: clean text chains, verified full-accept cycles, accept 1.09 -> 2.17
+on the repro config vs lockstep baseline 2.57 (84%). The residual gap is the
+**bonus-speculation tax** -- running ahead of the sampler means the chain must
+guess the intervening bonus; a miss (~1-beta) kills that cycle's slice --
+plus the known stale-KV-cell leak (wrong-KV position behind the anchor after
+a miss, never re-consumed). Both are quality effects, not correctness bugs;
+the tax is the inherent price of overlap.
+
+Projection for Qwen3 (beta~0.95): b2 accept ~2.7 vs lockstep 2.9; at a2a=500
+(verify 78.5 ms + ~15 ms exposure vs lockstep 108.5 ms) net ~ +8% over
+lockstep spec, growing with f, before the K-retune multiplier (the hidden
+chain makes K=3-4 nearly free at high f). Next: DP4/Qwen3 measurement pair,
+then K-retune under overlap.

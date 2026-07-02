@@ -1,0 +1,46 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen1.5-MoE-A2.7B/snapshots/1a758c50ecb6350748b9ce0a99d2352fd9fc11c9",
+  "tag": "dp1repro",
+  "dp": 1,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "out_len": 48,
+  "short_len": 8,
+  "iters": 1,
+  "warmup": 0,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 2,
+        "out_len": 48,
+        "short_len": 8,
+        "iters": 1,
+        "warmup": 0,
+        "long_s_mean": 1.2693993342109025,
+        "short_s_mean": 0.1912923944182694,
+        "long_s_all": [
+          1.2693993342109025
+        ],
+        "short_s_all": [
+          0.1912923944182694
+        ],
+        "decode_s_mean": 1.078106939792633,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 74.20414158115658,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 80,
+        "full_ntoks": 96,
+        "suspect": false,
+        "accept_len": 1.1224489795918366,
+        "num_accepted": 12.0,
+        "num_drafted": 196.0,
+        "num_drafts": 98.0
+      }
+    ]
+  }
+}
