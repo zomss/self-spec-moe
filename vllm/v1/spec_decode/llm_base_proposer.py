@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+import copy
 import os
 from importlib.util import find_spec
 from typing import Any, cast
@@ -263,6 +264,24 @@ class SpecDecodeBaseProposer:
         self._shadow_stream: torch.cuda.Stream | None = None
         self._shadow_ctx: dict[str, Any] | None = None
         self._shadow_done_event: torch.cuda.Event | None = None
+        # OV1(a) (phase 49): free-running ahead-chain, VALIDATION mode. After
+        # each propose the chain CONTINUES K+1 steps on the side stream during
+        # the verify (input = its own last token; first ahead token = the bonus
+        # guess), with real KV writes (covered by the extended scheduler
+        # lookahead). Outputs are DISCARDED in this mode -- the normal propose
+        # still runs, so the served output is byte-identical -- while the
+        # machinery is exercised for real and the per-request hit rate
+        # P(all K accepted AND bonus == guess) is measured (the free-running
+        # design's speculation prior, expected ~beta^(K+1)).
+        self._ahead_chain = (
+            envs.VLLM_SELF_SPEC_AHEAD_CHAIN and self.method == "draft_model"
+        )
+        self._ahead_state: dict[str, Any] | None = None
+        self._ahead_tokens: torch.Tensor | None = None
+        self._ahead_batch_size = -1
+        self._ahead_hits: torch.Tensor | None = None
+        self._ahead_total = 0
+        self._ahead_compared = 0
         # Private caching-allocator pool for the shadow's TRANSIENT allocations
         # (eager attention outputs, forward-context temporaries). vLLM's
         # piecewise replay relies on allocator ADDRESS DETERMINISM for the
@@ -640,6 +659,36 @@ class SpecDecodeBaseProposer:
         self._last_draft_probs = None
         batch_size = common_attn_metadata.batch_size()
 
+        # OV1(a) hit-rate check: the previous cycle's ahead chain speculated
+        # "all K accepted, bonus == its guess". next_token_ids is the token the
+        # committed sequence actually continues from; a hit means the ahead
+        # chain's remaining K tokens ARE the next drafts (in full OV1 this
+        # propose would be skipped for hit requests). Validation-mode: count
+        # and continue with the normal propose.
+        if (
+            self._ahead_tokens is not None
+            and self._ahead_batch_size == batch_size
+            and num_rejected_tokens_gpu is not None
+        ):
+            hit = (num_rejected_tokens_gpu[:batch_size] == 0) & (
+                next_token_ids[:batch_size] == self._ahead_tokens[:batch_size, 0]
+            )
+            hits = hit.sum()
+            self._ahead_hits = (
+                hits if self._ahead_hits is None else self._ahead_hits + hits
+            )
+            self._ahead_total += batch_size
+            self._ahead_compared += 1
+            if self._ahead_compared % 200 == 0:
+                logger.info(
+                    "Self-spec OV1(a) ahead-chain hit rate: %.3f "
+                    "(%d requests over %d cycles)",
+                    self._ahead_hits.item() / max(self._ahead_total, 1),
+                    self._ahead_total,
+                    self._ahead_compared,
+                )
+        self._ahead_tokens = None
+
         if self.method in ("eagle3", "dflash"):
             model = self.model
             if isinstance(model, BreakableCUDAGraphWrapper):
@@ -1007,11 +1056,181 @@ class SpecDecodeBaseProposer:
             assert self._propose_done_event is not None
             self._propose_done_event.record()
 
+        # OV1(a): cache the LIVE chain-end state so run_ahead_chain() can
+        # CONTINUE this chain (not replay it) on the side stream during the
+        # verify. Greedy only (the bonus guess is the argmax continuation).
+        if (
+            self._ahead_chain
+            and self.num_speculative_tokens > 1
+            and sampling_metadata.all_greedy
+        ):
+            # PRIVATIZE the mutable metadata for the ahead loop. seq_lens and
+            # block_table_tensor are views of RUNNER-owned buffers; in lockstep
+            # that is safe (serial), but the free-running ahead chain advances
+            # seq_lens on the side stream WHILE the runner's next-step input
+            # prep and the verify read/write the same buffers on the main
+            # stream -> torn values -> FA3 indexes garbage pages (observed
+            # illegal memory access). Clone them here (main stream, end of
+            # propose -> a consistent snapshot); the shallow copy keeps the
+            # scalar mutations (max_seq_len etc.) private too. The proposer's
+            # own buffers (positions/input_ids/hidden/slot) stay shared -- the
+            # next propose waits on the ahead-done event before touching them.
+            cad_priv = copy.copy(common_attn_metadata)
+            cad_priv.seq_lens = common_attn_metadata.seq_lens.clone()
+            cad_priv.block_table_tensor = (
+                common_attn_metadata.block_table_tensor.clone()
+            )
+            cad_priv._seq_lens_cpu = None
+            cad_priv._num_computed_tokens_cpu = None
+            self._ahead_state = {
+                "positions": positions,
+                "cad": cad_priv,
+                "batch_size": batch_size,
+                "input_batch_size": input_batch_size,
+                "block_size": block_size,
+                "mode": cudagraph_runtime_mode,
+                "batch_size_across_dp": batch_size_across_dp,
+                "batch_desc": self._last_batch_desc,
+                "hidden_states": hidden_states,
+                "last_tokens": draft_token_ids,
+            }
+            if self._propose_done_event is None:
+                self._propose_done_event = torch.cuda.Event()
+            self._propose_done_event.record()
+
         # [batch_size, num_speculative_tokens]
         draft_token_ids = torch.stack(draft_token_ids_list, dim=1)
         if draft_probs_list is not None:
             self._last_draft_probs = torch.stack(draft_probs_list, dim=1).contiguous()
         return draft_token_ids
+
+    def _side_stream_and_pool(self):
+        """Lazily create the side stream + done event; return the mem-pool ctx
+        (private pool preserving the main allocator's determinism) unless
+        disabled via W7_SHADOW_NO_MEM_POOL."""
+        from contextlib import nullcontext
+
+        if self._shadow_stream is None:
+            self._shadow_stream = torch.cuda.Stream()
+        if self._shadow_done_event is None:
+            self._shadow_done_event = torch.cuda.Event()
+        if bool(int(os.environ.get("W7_SHADOW_NO_MEM_POOL", "0"))):
+            return nullcontext()
+        if self._shadow_mem_pool is None:
+            self._shadow_mem_pool = torch.cuda.MemPool()
+            logger.info(
+                "Self-spec OV0b/OV1: side-stream transient allocations pinned "
+                "to a private MemPool (preserves the main allocator's address "
+                "determinism for piecewise replay)."
+            )
+        return torch.cuda.use_mem_pool(self._shadow_mem_pool)
+
+    def run_ahead_chain(self) -> None:
+        """OV1(a) (phase 49): continue the draft chain K+1 steps on the side
+        stream, concurrently with the verify the runner just enqueued.
+
+        This is the free-running draft's core move: the chain's most-likely
+        future is its own continuation (all K drafts accepted; the bonus token
+        = the chain's next argmax). Real inputs, real position/metadata
+        updates, real KV writes (positions covered by the extended scheduler
+        lookahead). VALIDATION mode: the produced tokens [bonus-guess,
+        e1..eK] are stashed for the hit-rate check at the next propose and
+        then discarded -- the normal propose still runs, so the served output
+        is byte-identical while the overlap machinery runs for real.
+
+        Requires the phase-49 isolation stack (dedicated draft cudagraph pool
+        + dedicated draft MoE workspace); the next propose waits on the done
+        event before touching shared buffers.
+        """
+        state = self._ahead_state
+        if state is None or self.uses_mrope or self.supports_mm_inputs:
+            return
+        self._ahead_state = None
+        mem_pool_ctx = self._side_stream_and_pool()
+        n_ahead = int(
+            os.environ.get(
+                "W7_AHEAD_STEPS", str(self.num_speculative_tokens + 1)
+            )
+        )
+        # Bisect knob: suppress the ahead chain's KV writes (fill the slot
+        # buffer with PADDING after each position update). Isolates the
+        # KV-write/block-bounds path; the ahead drafts degrade (no KV for
+        # ahead tokens) but that is irrelevant while bisecting a crash.
+        no_kv = bool(int(os.environ.get("W7_AHEAD_NO_KV", "0")))
+        # Bisect knob: skip the per-step compute_logits+argmax (feed the same
+        # token every step instead). Isolates the LM-head/greedy path.
+        no_sample = bool(int(os.environ.get("W7_AHEAD_NO_SAMPLE", "0")))
+        bs = state["batch_size"]
+        ibs = state["input_batch_size"]
+        # Allocated OUTSIDE the private pool: read by the next propose (main
+        # stream, after the done-event wait) for the hit-rate check.
+        tokens_out = torch.empty(
+            (bs, n_ahead), dtype=torch.int64, device=self.device
+        )
+        assert self._shadow_stream is not None
+        assert self._propose_done_event is not None
+        # Debug knob (W7_SHADOW_MAIN_STREAM=1): run the ahead loop serialized
+        # on the main stream -- with CUDA_LAUNCH_BLOCKING=1 this surfaces the
+        # true faulting kernel if the loop has an intrinsic bug.
+        if bool(int(os.environ.get("W7_SHADOW_MAIN_STREAM", "0"))):
+            ahead_stream = torch.cuda.current_stream()
+        else:
+            ahead_stream = self._shadow_stream
+        # Start only after the real chain's device work completes; the verify
+        # was enqueued after it on the main stream, so this still overlaps.
+        ahead_stream.wait_event(self._propose_done_event)
+        positions = state["positions"]
+        cad = state["cad"]
+        hidden_states = state["hidden_states"]
+        last_tokens = state["last_tokens"]
+        with mem_pool_ctx, torch.cuda.stream(ahead_stream):
+            for j in range(n_ahead):
+                input_ids = last_tokens.int()
+                positions = self._update_positions_dependent_metadata(
+                    positions, cad, bs, ibs, state["block_size"]
+                )
+                if no_kv:
+                    self._slot_mapping_buffer[:ibs].fill_(PADDING_SLOT_ID)
+                _, per_layer_attn_metadata = (
+                    self.build_per_group_and_layer_attn_metadata(
+                        cad, draft_index=self.num_speculative_tokens + j + 1
+                    )
+                )
+                self.input_ids[:bs] = input_ids
+                self.hidden_states[:bs] = hidden_states
+                model_kwargs: dict[str, Any] = {
+                    "input_ids": self.input_ids[:ibs],
+                    "positions": self._get_positions(ibs),
+                    "inputs_embeds": None,
+                }
+                if self.pass_hidden_states_to_model:
+                    model_kwargs["hidden_states"] = self.hidden_states[:ibs]
+                with set_forward_context(
+                    per_layer_attn_metadata,
+                    self.vllm_config,
+                    num_tokens=ibs,
+                    num_tokens_across_dp=state["batch_size_across_dp"],
+                    cudagraph_runtime_mode=state["mode"],
+                    batch_descriptor=state["batch_desc"],
+                    slot_mapping=self._get_slot_mapping(ibs),
+                    additional_kwargs=self._draft_forward_additional_kwargs,
+                ):
+                    ret_hidden_states = self.model(**model_kwargs)
+                if not self.model_returns_tuple():
+                    last_hidden_states = ret_hidden_states
+                    hidden_states = ret_hidden_states
+                else:
+                    last_hidden_states, hidden_states = ret_hidden_states
+                hidden_states = hidden_states[:bs]
+                if no_sample:
+                    tokens_out[:, j] = last_tokens[:bs].long()
+                else:
+                    last_tokens = self._greedy_sample(last_hidden_states[:bs])
+                    tokens_out[:, j] = last_tokens
+            assert self._shadow_done_event is not None
+            self._shadow_done_event.record()
+        self._ahead_tokens = tokens_out
+        self._ahead_batch_size = bs
 
     def shadow_replay_chain(self) -> None:
         """OV0b (phase 49): replay draft-chain decode-step forwards on a side

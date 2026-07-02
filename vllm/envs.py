@@ -261,6 +261,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_SHADOW_CHAIN: int = 0
     VLLM_SELF_SPEC_DRAFT_GRAPH_POOL: bool = False
     VLLM_SELF_SPEC_DRAFT_WORKSPACE: bool = False
+    VLLM_SELF_SPEC_AHEAD_CHAIN: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
@@ -1955,6 +1956,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Costs one extra workspace buffer. Default off = shared, unchanged.
     "VLLM_SELF_SPEC_DRAFT_WORKSPACE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_WORKSPACE", "0"))
+    ),
+    # Self-spec OV1(a) (phase 49): free-running ahead-chain, VALIDATION mode.
+    # After each propose, the draft chain CONTINUES for K+1 steps on the side
+    # stream during the verify (assuming full acceptance; the first ahead token
+    # is the draft's bonus guess), with real KV writes covered by the extended
+    # scheduler lookahead. Outputs are DISCARDED (the normal propose still
+    # runs; served output byte-identical); per-request hit rate
+    # P(all-K accepted AND bonus == guess) is measured and logged. Requires the
+    # phase-49 isolation stack (DRAFT_GRAPH_POOL + DRAFT_WORKSPACE). Greedy
+    # only. Default off.
+    "VLLM_SELF_SPEC_AHEAD_CHAIN": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_AHEAD_CHAIN", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H

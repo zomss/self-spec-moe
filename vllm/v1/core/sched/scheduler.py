@@ -3,6 +3,8 @@
 import itertools
 import time
 from collections import defaultdict, deque
+
+import vllm.envs as envs
 from collections.abc import Iterable
 from dataclasses import replace
 from typing import Any
@@ -242,6 +244,13 @@ class Scheduler(SchedulerInterface):
                 self.num_lookahead_tokens = self.num_spec_tokens
             if speculative_config.uses_draft_model():
                 self.num_lookahead_tokens = self.num_spec_tokens
+                # Self-spec OV1 (phase 49): the ahead-chain drafts K+1 tokens
+                # PAST the normal chain during the verify (bonus guess + the
+                # next cycle's drafts), writing draft KV up to
+                # committed + 2K+2. Extend the lookahead so those positions
+                # always land in allocated blocks (never foreign pages).
+                if envs.VLLM_SELF_SPEC_AHEAD_CHAIN:
+                    self.num_lookahead_tokens = 2 * self.num_spec_tokens + 2
             if speculative_config.use_dflash():
                 # DFlash requires an extra lookahead slot since it uses in-fill-style
                 # decoding instead of standard next-token sampling, so it has a query

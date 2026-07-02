@@ -4366,6 +4366,16 @@ class GPUModelRunner(
         ):
             with _self_spec_profiler().region("shadow_chain"):
                 self.drafter.shadow_replay_chain()
+        # Self-spec OV1(a) (phase 49): CONTINUE the real draft chain K+1 steps
+        # on the side stream during the verify (free-running draft, validation
+        # mode: outputs feed the hit-rate check, the normal propose still runs).
+        if (
+            envs.VLLM_SELF_SPEC_AHEAD_CHAIN
+            and self.speculative_config is not None
+            and hasattr(self.drafter, "run_ahead_chain")
+        ):
+            with _self_spec_profiler().region("ahead_chain"):
+                self.drafter.run_ahead_chain()
 
         with record_function_or_nullcontext("gpu_model_runner: postprocess"):
             if self.use_aux_hidden_state_outputs:

@@ -39,12 +39,41 @@ for _ in $(seq 1 60); do
   sleep 5
 done
 sleep 20
-timeout 6000 "$REPO/.venv/bin/python" \
-  "$REPO/research/34_worldA_system/scripts/w7_fp8_timing.py" spec \
-  > "$LOGD/${TAG}.log" 2>&1
-echo "EXIT=$?"
-pkill -9 -f "w7_fp8_timing" 2>/dev/null
-for pid in $(ps -u "$USER" -o pid,cmd | grep -E "EngineCore|VLLM::" | grep -v grep | awk '{print $1}'); do
-  tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q "^OV0B_MARK=1$" && kill -9 "$pid" 2>/dev/null
+
+cleanup() {
+  pkill -9 -f "w7_fp8_timing" 2>/dev/null
+  for pid in $(ps -u "$USER" -o pid,cmd | grep -E "EngineCore|VLLM::" | grep -v grep | awk '{print $1}'); do
+    tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q "^OV0B_MARK=1$" && kill -9 "$pid" 2>/dev/null
+  done
+  sleep 5
+}
+
+# Engine boot flakes on this shared box (EADDRINUSE races against other
+# users' engines grabbing ports + TIME_WAIT from our own teardown; a failed
+# boot can then wedge a worker for 600 s on the dead port). Bound the boot
+# damage with a shorter timeout on failure detection and retry up to 3x.
+for attempt in 1 2 3; do
+  timeout 6000 "$REPO/.venv/bin/python" \
+    "$REPO/research/34_worldA_system/scripts/w7_fp8_timing.py" spec \
+    > "$LOGD/${TAG}.log" 2>&1 &
+  HARNESS_PID=$!
+  # Watch for a failed boot: kill the harness early instead of letting a
+  # worker wait 600 s on a dead port.
+  while kill -0 "$HARNESS_PID" 2>/dev/null; do
+    if grep -q "Engine core initialization failed" "$LOGD/${TAG}.log" 2>/dev/null; then
+      echo "BOOT FAILED (attempt $attempt) -- killing and retrying"
+      kill -9 "$HARNESS_PID" 2>/dev/null
+      break
+    fi
+    sleep 10
+  done
+  wait "$HARNESS_PID" 2>/dev/null
+  RC=$?
+  cleanup
+  if ! grep -q "Engine core initialization failed" "$LOGD/${TAG}.log" 2>/dev/null; then
+    echo "EXIT=$RC attempt=$attempt"
+    break
+  fi
+  sleep 30
 done
 true
