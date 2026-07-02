@@ -148,3 +148,30 @@ Projection for Qwen3 (beta~0.95): b2 accept ~2.7 vs lockstep 2.9; at a2a=500
 lockstep spec, growing with f, before the K-retune multiplier (the hidden
 chain makes K=3-4 nearly free at high f). Next: DP4/Qwen3 measurement pair,
 then K-retune under overlap.
+
+### b2 final measurement (DP4/Qwen3, b64, K=2, full-length)
+
+| | a2a=0 | a2a=500 |
+|---|---|---|
+| lockstep | 2478 tok/s / accept 2.91 | 1710 / 2.89 |
+| b2 free-running | 1542 / **2.68** | 1208 / **2.70** |
+
+- **Speculation tax confirmed as predicted**: accept 2.68-2.70 = 0.93x
+  lockstep (projected ~2.7 from beta~0.95). The loop is correct; the tax is
+  the inherent price of drafting ahead of the sampler.
+- **Throughput: slower than lockstep at f<=0.6** -- the delta-slice needs
+  2K+1=5 forwards (~75 ms), and the comm window at a2a<=500 hides less than
+  the 45 ms premium over lockstep's 2-forward chain. Crossover ~a2a
+  650-1000us by the cycle model.
+- **The win case is where the design aimed**: multi-node f>=0.7 with
+  K-retune. b2-K4 (9 forwards) hides entirely in a >=135 ms window while
+  lockstep-K4 pays its 60 ms chain serially: projected ~1.35x over the BEST
+  lockstep config (accept 4.4 vs 4.7, cycle verify+epsilon vs verify+60ms).
+- Remaining quality lever: the stale-KV-cell leak fix (feed 2 tokens on
+  post-miss cycles) recovers part of the 0.2 accept tax.
+
+**Phase verdict**: OV1(b2) machinery complete and quantified end to end. The
+overlap free-running design is a HIGH-f instrument: pair it with K-retune on
+the emulated 1000us+ points and the multi-node rental; at single-node
+f<=0.6, lockstep (with the Phase-48 shielding) remains the right operating
+mode. Both modes ship from the same env-gated stack.
