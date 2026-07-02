@@ -260,6 +260,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_CPU_ORCH: bool = False
     VLLM_SELF_SPEC_SHADOW_CHAIN: int = 0
     VLLM_SELF_SPEC_DRAFT_GRAPH_POOL: bool = False
+    VLLM_SELF_SPEC_DRAFT_WORKSPACE: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
@@ -1945,6 +1946,15 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # extra memory. Default off = shared pool, unchanged behavior.
     "VLLM_SELF_SPEC_DRAFT_GRAPH_POOL": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_GRAPH_POOL", "0"))
+    ),
+    # Self-spec OV1 (phase 49): dedicated WorkspaceManager for the comm-free
+    # draft forward. The fused-MoE modular kernel takes its gemm/activation
+    # scratch from the global workspace; draft and verify graphs bake pointers
+    # into the SAME buffer, so concurrent replay corrupts the verify's MoE
+    # output (OV0b root cause). Routes by the draft forward-context flag.
+    # Costs one extra workspace buffer. Default off = shared, unchanged.
+    "VLLM_SELF_SPEC_DRAFT_WORKSPACE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_WORKSPACE", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H

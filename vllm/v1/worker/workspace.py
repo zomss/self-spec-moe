@@ -26,6 +26,10 @@ _GiB = 1024**3
 
 # Global workspace manager instance
 _manager: "WorkspaceManager | None" = None
+# Self-spec OV1 (phase 49): dedicated workspace manager for the comm-free draft
+# forward, so draft and verify graphs never bake pointers into the same MoE
+# scratch buffer (see current_workspace_manager).
+_draft_manager: "WorkspaceManager | None" = None
 
 
 class WorkspaceManager:
@@ -203,6 +207,21 @@ def is_workspace_manager_initialized() -> bool:
 def current_workspace_manager() -> "WorkspaceManager":
     """Get the current workspace manager instance.
 
+    Self-spec OV1 (phase 49): when VLLM_SELF_SPEC_DRAFT_WORKSPACE is set and the
+    comm-free draft forward is active (the draft's forward-context flag), return
+    a DEDICATED draft workspace manager instead of the global one. The fused-MoE
+    modular kernel draws its gemm/activation scratch (workspace13/workspace2)
+    from this manager; with one shared workspace the draft's and the verify's
+    captured graphs bake pointers into the SAME buffer, so replaying draft
+    graphs on a side stream concurrently with the verify corrupts the verify's
+    MoE output (Phase 49 OV0b: served tokens diverge, accept 2.9 -> 1.0). The
+    flag is active during the draft's profiling/capture passes (dummy_run sets
+    the draft forward context), so the draft workspace is sized pre-capture and
+    the draft's graphs bake draft-workspace addresses. Costs one extra
+    workspace buffer; default off -> unchanged. The draft manager is never
+    locked (research-gated; it must be fully sized before capture like the
+    global one).
+
     Raises:
         AssertionError: If workspace manager has not been initialized.
     """
@@ -210,6 +229,20 @@ def current_workspace_manager() -> "WorkspaceManager":
         "WorkspaceManager not initialized. Call init_workspace_manager() "
         "with a device before using workspace functions."
     )
+    if envs.VLLM_SELF_SPEC_DRAFT_WORKSPACE:
+        from vllm.forward_context import self_spec_local_route_enabled
+
+        if self_spec_local_route_enabled():
+            global _draft_manager
+            if _draft_manager is None:
+                _draft_manager = WorkspaceManager(
+                    _manager._device, _manager._num_ubatches
+                )
+                logger.info(
+                    "Self-spec: created a DEDICATED workspace manager for the "
+                    "draft forward (VLLM_SELF_SPEC_DRAFT_WORKSPACE=1)."
+                )
+            return _draft_manager
     return _manager
 
 

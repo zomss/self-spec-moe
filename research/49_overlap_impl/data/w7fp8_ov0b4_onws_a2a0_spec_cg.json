@@ -1,0 +1,50 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "ov0b4_onws_a2a0",
+  "dp": 4,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 5.709409272763878,
+        "short_s_mean": 1.8890548677494128,
+        "long_s_all": [
+          5.754051165655255,
+          5.744994878768921,
+          5.629181773867458
+        ],
+        "short_s_all": [
+          1.950856130104512,
+          1.8553412342444062,
+          1.8609672388993204
+        ],
+        "decode_s_mean": 3.820354405014465,
+        "decode_s_std": 0.0625115773497663,
+        "tok_s_mean": 2144.6841387763575,
+        "tok_s_std": 34.878356536340085,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 2.908775799590358,
+        "num_accepted": 24230.0,
+        "num_drafted": 25388.0,
+        "num_drafts": 12694.0
+      }
+    ]
+  }
+}

@@ -1,14 +1,15 @@
 # OV0 results — overlap feasibility probes
 
-**TL;DR.** OV0a (physics): 72–81% of a chain-sized load hides inside forced-PCIe
-comm windows — GO. OV0b (engine): concurrent side-stream compute is *stable and
-correct* per se (GEMM shadow: accept 2.91), and a chain-sized side load at the
-a2a=500 point costs only 17.5% of throughput; but concurrently replaying the DRAFT
-MODEL corrupts the **verify** itself (served tokens diverge from position ~0) —
-a shared attention-kernel workspace is the prime suspect and is the one open
-correctness bug gating OV1. Three reusable isolation requirements were found and
-implemented en route (event ordering, dedicated draft cudagraph pool, private
-MemPool).
+**TL;DR — full GO.** OV0a (physics): 72–81% of a chain-sized load hides inside
+forced-PCIe comm windows. OV0b (engine): after root-causing a verify-corruption
+bug to the **shared fused-MoE workspace** (`workspace13/workspace2` from the
+global WorkspaceManager, whose addresses both models' captured graphs bake — fix:
+`VLLM_SELF_SPEC_DRAFT_WORKSPACE=1`, a dedicated draft workspace), the REAL draft
+chain replayed concurrently with the verify is **correct (accept 2.91–2.92) and
+~60% hidden at a2a=0 / ~71% hidden at a2a=500 — at the physics ceiling**. Four
+reusable isolation requirements for OV1, all implemented and env-gated: propose-
+done event ordering, dedicated draft cudagraph pool, private MemPool for shadow
+transients, dedicated draft MoE workspace.
 
 ## OV0a — physics probe: PASS
 
@@ -44,49 +45,45 @@ a2a=500 **1710 tok/s**, accept 2.90-2.91.
 | 7 | bisect B: private GEMMs only, no vLLM state (`W7_SHADOW_GEMM_ONLY=1`) | accept **2.91**, tok/s 1821 (partial hide of the ~30 ms load at a2a=0, as expected) | ANY concurrent compute is fine |
 | 8 | token-dump pair (`W7_DUMP_TOKENS`): diff generated ids, shadow off vs on | **DIVERGES at position 0–1** on all 4 sequences (off accept 2.92, on 1.02) | the **VERIFY is corrupted** — served output garbage, not just draft quality |
 
-A + B clean pins the corruption to **concurrently executing the draft model
-specifically** (its graph replays and/or its eager FA3 attention), not to streams,
-allocators, pools, or generic contention. Row 8 adds: the corrupted party is the
-verify. Prime suspect: a workspace shared between the draft's EAGER FA3 attention
-call and the verify's CAPTURED FA3 kernels (e.g. a cached scheduler-semaphore /
-accumulator buffer in the flash-attn wrapper) — the draft's captured pieces write
-only the dedicated pool, so the eager attention is the main writer left standing.
-Next step for OV1: audit `vllm_flash_attn` / the FA backend for per-device cached
-workspaces and give the draft's attention a private copy.
+| 9 | ROOT CAUSE: the fused-MoE modular kernel draws `workspace13/workspace2` (gemm scratch; ws13 doubles as the MoE OUTPUT) from the **global `WorkspaceManager`** (`vllm/v1/worker/workspace.py`) — draft and verify captured graphs bake pointers into the SAME buffer; concurrent replay = concurrent writes to shared MoE scratch → verify output garbage | audit: flash-attn wrapper clean (per-call allocs); `current_workspace_manager` users → `modular_kernel.py:1094` | explains all rows: serial clean (no concurrency), GEMM shadow clean (no workspace use), pools irrelevant (workspace is a persistent tensor outside graph pools) |
+| 10 | fix: `VLLM_SELF_SPEC_DRAFT_WORKSPACE=1` — `current_workspace_manager()` returns a DEDICATED draft manager when the draft forward-context flag is active (flag present during draft profiling/capture → draft graphs bake draft-workspace addresses) | a2a=0: accept **2.91**, 2144.7 tok/s (0.865×); a2a=500: accept **2.92**, 1586.2 tok/s (**0.928×**) | **CORRECT + OVERLAPPED** |
 
-## OV0b timing — engine-level overlap headroom (GEMM shadow, correctness clean)
+A + B clean pinned the corruption to concurrently executing the draft model
+specifically; row 9 found the shared writer (MoE workspace, not FA3 — the
+flash-attn wrapper allocates per call), and row 10 fixes it for one extra
+workspace buffer.
 
-The GEMM-only shadow is a valid overlap probe (chain-shaped ~31 ms side load, no
-vLLM state): accept stays 2.91 and the throughput cost measures how much the
-engine's real schedule can hide:
+## OV0b timing — REAL-chain overlap (correct, the number OV0b exists for)
 
-| a2a µs | off tok/s | gemm-shadow tok/s | ratio | side-load hidden |
-|---:|---:|---:|---:|---:|
-| 0   | 2478 | 1821 | 0.735 | ~13% |
-| 500 | 1710 | 1411 | **0.825** | ~26% |
+Side load = 2 draft chain-step replays (~29 ms, the real kernels):
 
-Engine-level hiding is far below OV0a's 72–81% because the verify is comm+compute
-*interleaved per layer* — the side load contends for SMs during the verify's compute
-phases, and the probe's coarse 4096² GEMMs (~0.17 ms each, whole-GPU) cannot slot
-into sub-millisecond comm gaps. Two known levers for the real draft: (1) the real
-chain's decode kernels at per-rank B=16 are far smaller-grained → finer
-interleaving; (2) CUDA stream priority (verify high / draft low) makes the draft
-yield SMs during verify compute. The headroom grows with the comm window (13% →
-26% from a2a 0 → 500), i.e., with f — consistent with the thesis that overlap pays
-in the comm-bound regime.
+| a2a µs | off tok/s | shadow-on tok/s | ratio | added ms/cycle | **hidden** |
+|---:|---:|---:|---:|---:|---:|
+| 0   | 2478 | 2144.7 | 0.865 | 11.6 of ~29 | **~60%** |
+| 500 | 1710 | 1586.2 | 0.928 | 8.5 of ~29 | **~71%** |
+
+The real chain's fine-grained decode kernels (per-rank B=16) interleave into the
+verify's comm gaps at essentially the OV0a physics ceiling (72–74%) — the coarse
+GEMM proxy's 13–26% was a granularity artifact, as suspected. Stream priority is
+now optional polish, not a requirement.
+
+*(Historical: the GEMM-only proxy measured 13–26% hiding — a granularity
+artifact of whole-GPU 4096² blocks; superseded by the real-chain numbers above.)*
 
 ## Verdict
 
-- **OV0a: GO** (physics).
-- **OV0b: stability GO** (isolation stack works), **correctness BLOCKED** on one
-  identified bug class (verify corruption via the draft's concurrent eager
-  attention — workspace audit is the next action), **timing: partial** (13–26%
-  naive hiding with a coarse probe; finer-grained draft kernels + stream priority
-  expected to raise it; grows with f).
-- **OV1 go/no-go: proceed, in this order** — (1) FA3 workspace audit + private
-  draft workspace; (2) re-run the model-replay shadow expecting accept 2.91;
-  (3) then the free-running implementation per `OV1_design.md` (which also avoids
-  the probe's double-replay artifact entirely).
+- **OV0a: GO** (physics, 72–81% hideable).
+- **OV0b: GO** — correctness restored (workspace fix, accept 2.91–2.92) AND the
+  real draft chain hides at the physics ceiling (~60% @ a2a=0, ~71% @ a2a=500).
+- **Required isolation stack for OV1** (all implemented, env-gated, default-off):
+  1. propose-done event ordering (side stream vs previous chain),
+  2. `VLLM_SELF_SPEC_DRAFT_GRAPH_POOL=1` (dedicated draft cudagraph pool),
+  3. private MemPool for side-stream transients,
+  4. `VLLM_SELF_SPEC_DRAFT_WORKSPACE=1` (dedicated draft MoE workspace — the
+     root-cause fix).
+- **Next: build OV1 per `OV1_design.md`** — the free-running chain consumes this
+  stack directly; expected recovery ≈ 71% of the chain cost at f≈0.6, more at
+  higher f, compounding with upward K-retune.
 
 ## Standing conclusions for OV1 (independent of the remaining bisect)
 
