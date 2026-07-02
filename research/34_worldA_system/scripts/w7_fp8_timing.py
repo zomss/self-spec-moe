@@ -126,15 +126,21 @@ def worker(rank, dp, tp, master_ip, master_port, mode, k, q):
         disable_log_stats=False,
     )
     if spec:
+        # Phase 50: W7_SPEC_METHOD/W7_SPEC_MODEL allow running OTHER drafters
+        # (e.g. a real EAGLE3 head) on the identical testbed. Defaults keep
+        # the original self-spec draft_model behavior byte-identical.
+        spec_method = os.environ.get("W7_SPEC_METHOD", "draft_model")
         spec_cfg = {
-            "method": "draft_model",
-            "model": MODEL,
+            "method": spec_method,
+            "model": os.environ.get("W7_SPEC_MODEL", MODEL),
             "num_speculative_tokens": k,
-            "draft_tensor_parallel_size": tp,
         }
-        # FP8 (or other) draft quantization: target stays bf16, draft quantized.
-        if DRAFT_QUANT:
-            spec_cfg["quantization"] = DRAFT_QUANT
+        if spec_method == "draft_model":
+            spec_cfg["draft_tensor_parallel_size"] = tp
+            # FP8 (or other) draft quantization: target stays bf16, draft
+            # quantized.
+            if DRAFT_QUANT:
+                spec_cfg["quantization"] = DRAFT_QUANT
         kwargs["speculative_config"] = spec_cfg
     llm = LLM(**kwargs)
 
