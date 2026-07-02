@@ -37,7 +37,7 @@ Measured (DP4 GPUs 0-3, b64, K=2, a2a=0, 1 iter):
    accept 1.09. The pending-token formulation fixes the algebra; the fully
    general per-row version needs a two-deep expectation register (see b2).
 
-## b2 — per-row consumption (designed, not implemented)
+## b2 — per-row consumption (WIP: implemented, debugging)
 
 Goal: remove the host sync and consume per-row (~91% of rows every cycle).
 Design notes from the b1 derivation:
@@ -58,3 +58,25 @@ Design notes from the b1 derivation:
 Expected effect (from the OV1(a) numbers): remove ~30 ms lockstep chain from
 ~91% of cycles at the cost of the bounded ahead exposure (~13 ms at a2a=500)
 -> ~+15-20% over lockstep at f~0.6, growing with f, before K-retune upside.
+
+### b2 debug state (WIP checkpoint)
+
+Implemented: GPU-side per-row gating (no host sync), uniform K+2 forwards,
+per-row offset extraction, expectation registers (expect_rej/expect_tok:
+normal rows expect rej==0 & bonus==anchor-consumed; re-anchored rows expect
+rej==K & correction==out[0]). Measured accept 1.08; the W7_AHEAD_DEBUG=1
+breakdown localizes it:
+
+- cycle 1: valid=0.72-0.80, tok_match=0.72-0.80 -- the expectation test works.
+- cycle 51: valid=0.00 with rej_match=1.00 (stale drafts fully rejected AS
+  PREDICTED) but tok_match=0.00 -- the recovery guess out[0] NEVER equals the
+  actual correction (systematic, not statistical): rows enter recovery and
+  never leave; initially-valid rows fall in within a few cycles.
+
+Since b1 validated the same extraction on the all-hit path (accept 2.92), the
+suspect space is the b1->b2 delta: (a) the K+2th forward / in-run pending
+consumption, (b) the expectation register pairing across mixed-row cycles,
+(c) per-row divergent p1 interacting with the shared metadata build. Next
+session: add a one-cycle A/B knob that gates consumption to all-hit (b1
+semantics) while keeping the K+2/expect machinery -- separates (a) from (b/c)
+in a single run; then instrument out[0] vs actual correction values directly.
