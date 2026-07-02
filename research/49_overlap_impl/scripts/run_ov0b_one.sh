@@ -6,7 +6,7 @@ REPO=/data/smcho/self-spec-moe
 cd "$REPO"
 export PYTHONPATH="$REPO"
 export PATH="$REPO/.venv/bin:$PATH"
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES="${GPUS:-0,1,2,3}"
 export OV0B_MARK=1
 export VLLM_USE_DEEP_GEMM=0 VLLM_MOE_USE_DEEP_GEMM=0
 export NCCL_P2P_DISABLE=1 NCCL_NVLS_ENABLE=0 NCCL_IB_DISABLE=1
@@ -18,8 +18,8 @@ export VLLM_SELF_SPEC_DRAFT_GRAPH_POOL=1
 # with EXTRA_ENV="VLLM_SELF_SPEC_DRAFT_WORKSPACE=0" for the A/B.
 export VLLM_SELF_SPEC_DRAFT_WORKSPACE=1
 export W7_MODEL=/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39
-export W7_DP=4 W7_TP=1 W7_TRC=0 W7_EAGER=0 W7_ITERS=3 W7_WARMUP=2
-export W7_KS=2 W7_BATCHES=64
+export W7_DP="${DP:-4}" W7_TP=1 W7_TRC=0 W7_EAGER=0 W7_ITERS=3 W7_WARMUP=2
+export W7_KS="${KS:-2}" W7_BATCHES=64
 export W7_OUT="$REPO/research/49_overlap_impl/data"
 export VLLM_SELF_SPEC_SHADOW_CHAIN="${SHADOW:-2}"
 export W7_TAG="${TAG:?}" W7_A2A_US="${A2A:-0}" W7_DRAFT_QUANT=fp8

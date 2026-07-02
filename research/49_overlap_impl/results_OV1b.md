@@ -175,3 +175,28 @@ overlap free-running design is a HIGH-f instrument: pair it with K-retune on
 the emulated 1000us+ points and the multi-node rental; at single-node
 f<=0.6, lockstep (with the Phase-48 shielding) remains the right operating
 mode. Both modes ship from the same env-gated stack.
+
+### K-retune under overlap @ a2a=1000 (DP4, b64, full-length)
+
+| | K=2 | K=4 |
+|---|---|---|
+| lockstep | **1306** tok/s / accept 2.91 | 1203 / 4.69 |
+| b2 overlap | 842 / 2.70 | **1272 / 3.95** |
+
+- **K-retune under overlap is real**: b2-K4 beats b2-K2 by +51% and beats
+  lockstep-K4 by +5.7% -- the first measured point where overlap wins its
+  like-for-like. Lockstep-K4 loses to lockstep-K2 (0.92x): the serial-chain
+  penalty overlap removes.
+- **vs the overall best (lockstep-K2): b2-K4 = 0.973x** -- parity at the
+  highest single-node-emulable f; the trend favors overlap as f grows
+  (lockstep's chain cost constant, overlap's exposure shrinking).
+- Caveats: the speculation tax compounds with depth (K4 accept 3.95/4.69 =
+  0.84x vs 0.93x at K2); the b2-K2 point shows anomalous zero hiding (its
+  75 ms chain fully exposed while the K4 run hid ~45%) -- per-run scheduling
+  artifact or captured-_sleep emulation infidelity; real multi-node comm is
+  the ground truth for the >=1x claim.
+
+**Deployment rule (measured)**: single node / f<=0.6 -> lockstep-K2 with
+Phase-48 shielding; emulated f~0.7 (a2a 1000) -> overlap-K4 reaches parity
+with best-lockstep and dominates its own K column; multi-node f>=0.7 with
+real (SM-free) comm -> overlap-K4+ projected to win outright.
