@@ -1196,7 +1196,6 @@ class SpecDecodeBaseProposer:
             or num_rejected_tokens_gpu is None
             or self._ahead_out.shape[0] != bs
             or self._ahead_pending_tok is None
-            or self._expect_tok is None
         ):
             self._ahead_out = None
             return None
@@ -1208,6 +1207,26 @@ class SpecDecodeBaseProposer:
         # INCLUDING this step's input token; the new bonus/corrected token
         # (next_token_ids) sits AT that position (0-indexed).
         rejected = num_rejected_tokens_gpu[:bs]
+        # A/B knob (W7_B2_ALLHIT=1): b1-style all-hit gating THROUGH the b2
+        # K+2/extraction machinery -- consume only on all-hit cycles (misses
+        # re-bootstrap via propose) and force valid=all in the steady run.
+        # Restores accept 2.9 => the K+2 loop/extraction/pending machinery is
+        # sound and the bug is in mixed-row recovery; stays broken => the new
+        # loop shape itself corrupts the chain.
+        if bool(int(os.environ.get("W7_B2_ALLHIT", "0"))):
+            all_hit = bool(
+                (
+                    (rejected == 0)
+                    & (next_token_ids[:bs].long() == self._ahead_pending_tok[:bs])
+                )
+                .all()
+                .item()
+            )
+            if not all_hit:
+                self._ahead_out = None
+                self._ahead_pending_tok = None
+                self._reanchor = None
+                return None
         self._reanchor = {
             "b": next_token_ids[:bs].long().clone(),
             "rejected": rejected.clone(),
@@ -1341,32 +1360,56 @@ class SpecDecodeBaseProposer:
             # continue from the pending guess token; invalid rows re-anchor
             # on the actual bonus/corrected token at the committed position.
             # Uniform K+2 forwards; drafts by per-row offset gather.
-            bs = self._ahead_pending_tok.shape[0]
+            bs = ra["b"].shape[0]
             ibs = disp["input_batch_size"]
             cad = self._ahead_cad
-            n_ahead = self.num_speculative_tokens + 2
-            valid = (ra["rejected"] == self._expect_rej) & (
-                ra["b"] == self._expect_tok
-            )
+            n_ahead = self.num_speculative_tokens + 1
+            # Depth-1 pipeline invariant: each stash is the verdict of the
+            # PREVIOUS run's drafts, and the runner positions served drafts at
+            # the just-updated committed+1. So the universally correct anchor
+            # is the ACTUAL bonus/corrected token at the ACTUAL committed
+            # position -- for hit rows it equals their trailing guess (same
+            # token, same position, KV idempotent), for miss rows it is the
+            # correction. No validity/pending state machine is needed:
+            # accepted drafts' KV was self-written at exactly the positions
+            # they got committed, and consuming b heals the one divergence.
+            valid = (ra["rejected"] == 0) & (
+                ra["b"] == self._ahead_pending_tok[:bs]
+            )  # diagnostic only (hit-rate logging)
             if bool(int(os.environ.get("W7_AHEAD_DEBUG", "0"))):
                 self._dbg_n = getattr(self, "_dbg_n", 0) + 1
                 if self._dbg_n % 50 == 1:
                     logger.info(
-                        "OV1(b2) dbg cycle %d: valid=%.2f rej_match=%.2f "
-                        "(rej0=%.2f) tok_match=%.2f",
+                        "OV1(b2) dbg cycle %d: hit=%.2f rej0=%.2f "
+                        "tok_match=%.2f",
                         self._dbg_n,
                         valid.float().mean().item(),
-                        (ra["rejected"] == self._expect_rej)
+                        (ra["rejected"] == 0).float().mean().item(),
+                        (ra["b"] == self._ahead_pending_tok[:bs])
                         .float()
                         .mean()
                         .item(),
-                        (ra["rejected"] == 0).float().mean().item(),
-                        (ra["b"] == self._expect_tok).float().mean().item(),
                     )
-            anchor = torch.where(valid, self._ahead_pending_tok, ra["b"])
-            p1 = torch.where(
-                valid, self._ahead_pending_pos, ra["committed"]
-            )
+                    # Value-level view of the first mismatching row: is the
+                    # expectation a repeat of the anchor, shifted by one, etc.
+                    mism = (~(ra["b"] == self._ahead_pending_tok[:bs])).nonzero()
+                    if mism.numel() > 0:
+                        r = int(mism[0].item())
+                        logger.info(
+                            "OV1(b2) dbg row %d: b=%d expect=%d rej=%d "
+                            "expect_rej=%d pending=%d committed=%d "
+                            "pending_pos=%d",
+                            r,
+                            int(ra["b"][r].item()),
+                            int(self._ahead_pending_tok[r].item()),
+                            int(ra["rejected"][r].item()),
+                            0,
+                            int(self._ahead_pending_tok[r].item()),
+                            int(ra["committed"][r].item()),
+                            int(self._ahead_pending_pos[r].item()),
+                        )
+            anchor = ra["b"]
+            p1 = ra["committed"]
             cad.block_table_tensor = ra["block_table"]
             cad.seq_lens[:bs].copy_(p1)
             cad._seq_lens_cpu = None
@@ -1374,22 +1417,32 @@ class SpecDecodeBaseProposer:
             cad.max_seq_len = self.max_model_len
             self.positions[:bs].copy_(p1 - 1)
             positions = self.positions[:bs]
-            # Normal rows' pending lands one earlier than re-anchored rows'
-            # (their extra leading output is the correction guess).
-            self._ahead_pending_pos = (
-                p1 + self.num_speculative_tokens + 1 + (~valid).long()
-            )
+            self._ahead_pending_pos = p1 + self.num_speculative_tokens + 1
             self._ahead_valid = valid
-            self._expect_rej = torch.where(
-                valid,
-                torch.zeros_like(ra["rejected"]),
-                torch.full_like(
-                    ra["rejected"], self.num_speculative_tokens
-                ),
-            )
             hidden_states = None
             last_tokens = None
             block_size = disp["block_size"]
+            if bool(int(os.environ.get("W7_AHEAD_DEBUG2", "0"))):
+                self._dbg2_n = getattr(self, "_dbg2_n", 0) + 1
+                if self._dbg2_n <= 8:
+                    logger.info(
+                        "OV1(b2) trace run %d row0: valid=%d anchor=%d p1=%d "
+                        "| stash b=%d rej=%d committed=%d | expect=%d "
+                        "expect_rej=%d pending=%d@%d",
+                        self._dbg2_n,
+                        int(valid[0].item()),
+                        int(anchor[0].item()),
+                        int(p1[0].item()),
+                        int(ra["b"][0].item()),
+                        int(ra["rejected"][0].item()),
+                        int(ra["committed"][0].item()),
+                        int(self._ahead_pending_tok[0].item()),
+                        0,
+                        int(self._ahead_pending_tok[0].item()),
+                        int(self._ahead_pending_pos[0].item())
+                        - self.num_speculative_tokens
+                        - 1,
+                    )
         else:
             bs = state["batch_size"]
             ibs = state["input_batch_size"]
@@ -1502,34 +1555,33 @@ class SpecDecodeBaseProposer:
         # (K+1 outputs): drafts = [:K], the trailing guess is the next pending
         # anchor (pending_pos already advanced above). Bootstrap runs produce
         # [b-guess, e1..eK, next-guess] (K+2 outputs): drafts = [1:K+1].
-        if self._consume_mode and n_ahead == self.num_speculative_tokens + 2:
+        if self._consume_mode and n_ahead >= self.num_speculative_tokens + 1:
             k = self.num_speculative_tokens
             if ra is not None:
-                # Per-row extraction: valid rows take outputs[0:K] (pending =
-                # outputs[K]); re-anchored rows take outputs[1:K+1] (their
-                # outputs[0] is the correction guess; pending = outputs[K+1]).
-                offset = (~self._ahead_valid).long().unsqueeze(1)
-                idx = offset + torch.arange(
-                    k, device=self.device, dtype=torch.int64
-                ).unsqueeze(0)
-                self._ahead_out = torch.gather(tokens_out, 1, idx)
-                self._ahead_pending_tok = torch.gather(
-                    tokens_out, 1, offset + k
-                ).squeeze(1)
-                # Next test's bonus guess: valid rows consumed it as the
-                # anchor; re-anchored rows guessed it as outputs[0].
-                self._expect_tok = torch.where(
-                    self._ahead_valid, anchor, tokens_out[:, 0]
-                )
+                # Offset-0 extraction (K+1 outputs from [b, out0..out_{K-1}]):
+                # drafts = outputs[0:K] land exactly at committed+1..+K where
+                # the next verify checks them; outputs[K] is the trailing
+                # guess of the next bonus (diagnostic hit-rate only).
+                self._ahead_out = tokens_out[:, :k]
+                self._ahead_pending_tok = tokens_out[:, k]
             else:
                 # Bootstrap: outputs [b-guess, e1..eK, next-guess]; propose's
                 # real drafts face the verify normally (expect rej==0).
                 self._ahead_out = tokens_out[:, 1 : k + 1]
                 self._ahead_pending_tok = tokens_out[:, k + 1]
-                self._expect_tok = tokens_out[:, 0]
-                self._expect_rej = torch.zeros(
-                    bs, dtype=torch.int32, device=self.device
-                )
+                # Bootstrap trailing guess doubles as the diagnostic
+                # pending token; positioning no longer depends on it.
+            if bool(int(os.environ.get("W7_AHEAD_DEBUG2", "0"))):
+                if getattr(self, "_dbg2_n", 0) <= 8:
+                    logger.info(
+                        "OV1(b2) trace out row0 (%s): outputs=%s -> drafts=%s "
+                        "pending=%d expect=%d",
+                        "steady" if ra is not None else "boot",
+                        tokens_out[0].tolist(),
+                        self._ahead_out[0].tolist(),
+                        int(self._ahead_pending_tok[0].item()),
+                        int(self._ahead_pending_tok[0].item()),
+                    )
 
     def shadow_replay_chain(self) -> None:
         """OV0b (phase 49): replay draft-chain decode-step forwards on a side

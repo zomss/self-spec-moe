@@ -80,3 +80,35 @@ consumption, (b) the expectation register pairing across mixed-row cycles,
 session: add a one-cycle A/B knob that gates consumption to all-hit (b1
 semantics) while keeping the K+2/expect machinery -- separates (a) from (b/c)
 in a single run; then instrument out[0] vs actual correction values directly.
+
+### b2 session 2: the depth asymmetry (key structural finding)
+
+Seven iterations converged on the load-bearing insight: **the free-running
+loop has two vantage points with DIFFERENT pipeline depths.**
+
+- `consume` runs AFTER the sampler: its stash is the verdict of the PREVIOUS
+  run's drafts (depth 1) -- which is why b1's consume-side all-hit test
+  (b == anchor-consumed-by-the-current-run) validates cleanly (accept 2.92).
+- `run_ahead_chain` launches BEFORE the sampler: the stash it reads is one
+  cycle older, i.e. the verdict of drafts from TWO runs back (depth 2) --
+  inherent to the overlap structure, NOT async scheduling (draft_model spec
+  disables async; the engine is sync).
+
+Every run-side scheme tried (pending-continuation with expect registers /
+uniform K+2 with per-row offsets / collapsed anchor=b@committed) fixed one
+vantage point's alignment while breaking the other's. The collapsed anchor=b
+design is depth-1-correct and therefore serves drafts one position early
+under the real depth-2 (rej0 -> 0.00, the year-token +1 signature). The
+original expect-register design was depth-2-correct structurally (its
+validity transitions verify in the trace) but recovery drafts still failed at
+the VALUE level -- the one unexplained defect.
+
+**Next session needs a deterministic repro, not more blind DP4 iterations**:
+DP=1, batch 1-2, dump per-cycle (draft consumed tokens+positions, served
+drafts, verify input+verdict+commits) into one aligned table. With the depth
+asymmetry now understood, that table should identify the recovery defect in
+one pass. The consume-side (depth-1) test is trustworthy; a hybrid design --
+run-side does pure continuation only, consume-side (post-sampler, depth-1
+info) decides re-anchor and can LAUNCH the corrective re-run in the same
+cycle -- avoids run-side depth-2 reasoning entirely and is likely the
+simplest correct b2.
