@@ -4,6 +4,7 @@
 import functools
 import gc
 import itertools
+import os
 import threading
 import time
 from collections import defaultdict
@@ -4103,6 +4104,29 @@ class GPUModelRunner(
             assert kv_connector_metadata is not None
             get_kv_transfer_group().handle_preemptions(kv_connector_metadata)
 
+        # Self-spec OV1(a) (phase 49): fence the in-flight ahead chain at any
+        # step that is not a pure uniform-decode continuation (new/finished
+        # requests or non-uniform token counts). At such boundaries the
+        # speculation is void, and the boundary step's work (e.g. a large
+        # prefill's allocations reclaiming cached blocks baked into the
+        # draft's piecewise graphs; freed KV pages being reused) races the
+        # side stream. Pure-decode steady state never takes this fence.
+        if (
+            envs.VLLM_SELF_SPEC_AHEAD_CHAIN
+            and self.speculative_config is not None
+            and hasattr(self.drafter, "fence_ahead_chain")
+        ):
+            n_reqs = len(scheduler_output.num_scheduled_tokens)
+            uniform = (
+                n_reqs > 0
+                and not scheduler_output.scheduled_new_reqs
+                and not scheduler_output.finished_req_ids
+                and scheduler_output.total_num_scheduled_tokens
+                == n_reqs * (1 + self.speculative_config.num_speculative_tokens)
+            )
+            if not uniform:
+                self.drafter.fence_ahead_chain()
+
         num_scheduled_tokens = scheduler_output.total_num_scheduled_tokens
         with (
             record_function_or_nullcontext("gpu_model_runner: preprocess"),
@@ -4376,6 +4400,19 @@ class GPUModelRunner(
         ):
             with _self_spec_profiler().region("ahead_chain"):
                 self.drafter.run_ahead_chain()
+            # Bound the overlap window to the verify only: the MAIN stream
+            # waits (stream-level, not host) on ahead-done, so the ahead chain
+            # fully overlaps the verify's GPU time but never runs concurrent
+            # with the post-verify epilogue (sampler/bookkeeping/next-step
+            # prep) -- the window where an intermittent illegal-access race
+            # lives (ahead ∥ verify alone is proven safe; see phase 49). Cost:
+            # max(0, ahead_end - verify_end) exposed. Env escape hatch
+            # W7_AHEAD_UNBOUNDED=1 re-opens the window for debugging.
+            ev = getattr(self.drafter, "_shadow_done_event", None)
+            if ev is not None and not bool(
+                int(os.environ.get("W7_AHEAD_UNBOUNDED", "0"))
+            ):
+                torch.cuda.current_stream().wait_event(ev)
 
         with record_function_or_nullcontext("gpu_model_runner: postprocess"):
             if self.use_aux_hidden_state_outputs:

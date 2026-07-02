@@ -42,8 +42,22 @@ sleep 20
 
 cleanup() {
   pkill -9 -f "w7_fp8_timing" 2>/dev/null
+  # Marker-based kill (the OV0B_MARK env does not survive every worker spawn
+  # path, so this alone leaks workers)...
   for pid in $(ps -u "$USER" -o pid,cmd | grep -E "EngineCore|VLLM::" | grep -v grep | awk '{print $1}'); do
     tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q "^OV0B_MARK=1$" && kill -9 "$pid" 2>/dev/null
+  done
+  # ...so ALSO kill any of OUR user's VLLM processes holding memory on OUR
+  # GPUs (0-3). Never touches other users (kill fails cross-user) nor GPUs
+  # 4-7 (bus-id scoped).
+  local buses
+  buses=$(nvidia-smi --query-gpu=index,pci.bus_id --format=csv,noheader \
+    | awk -F', ' '$1 <= 3 {print $2}')
+  for line in $(nvidia-smi --query-compute-apps=gpu_bus_id,pid --format=csv,noheader | tr -d ' '); do
+    bus="${line%,*}"; pid="${line#*,}"
+    echo "$buses" | grep -q "$bus" || continue
+    ps -o user= -p "$pid" 2>/dev/null | grep -q "^$USER$" || continue
+    ps -o cmd= -p "$pid" 2>/dev/null | grep -q "VLLM\|w7_fp8" && kill -9 "$pid" 2>/dev/null
   done
   sleep 5
 }
@@ -74,6 +88,6 @@ for attempt in 1 2 3; do
     echo "EXIT=$RC attempt=$attempt"
     break
   fi
-  sleep 30
+  sleep 60
 done
 true

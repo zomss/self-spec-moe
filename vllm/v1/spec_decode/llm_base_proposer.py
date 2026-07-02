@@ -679,7 +679,7 @@ class SpecDecodeBaseProposer:
             )
             self._ahead_total += batch_size
             self._ahead_compared += 1
-            if self._ahead_compared % 200 == 0:
+            if self._ahead_compared % 50 == 0:
                 logger.info(
                     "Self-spec OV1(a) ahead-chain hit rate: %.3f "
                     "(%d requests over %d cycles)",
@@ -1093,6 +1093,9 @@ class SpecDecodeBaseProposer:
                 "batch_desc": self._last_batch_desc,
                 "hidden_states": hidden_states,
                 "last_tokens": draft_token_ids,
+                # For the W7_AHEAD_FROZEN_MD bisect: the chain's last built
+                # per-layer metadata, reused verbatim by the ahead steps.
+                "per_layer_attn_metadata": per_layer_attn_metadata,
             }
             if self._propose_done_event is None:
                 self._propose_done_event = torch.cuda.Event()
@@ -1124,6 +1127,25 @@ class SpecDecodeBaseProposer:
                 "determinism for piecewise replay)."
             )
         return torch.cuda.use_mem_pool(self._shadow_mem_pool)
+
+    def fence_ahead_chain(self) -> None:
+        """OV1(a): order the MAIN stream after the in-flight ahead chain.
+
+        Called by the runner before executing a step that is NOT a pure
+        uniform-decode continuation (contains prefills / batch-composition
+        changes). At such boundaries the ahead chain's assumptions are void
+        AND its in-flight side-stream work races the main stream: the new
+        step's DRAFT prefill shares the draft workspace and persistent
+        buffers, freed KV pages get reallocated to new prompts while the
+        ahead chain may still write its (cloned-table) slots, and large
+        prefill allocations can reclaim cached blocks the in-flight replay
+        has baked. Pure-decode steady state never takes this fence, so the
+        overlap is untouched where it matters.
+        """
+        if self._shadow_done_event is not None:
+            torch.cuda.current_stream().wait_event(self._shadow_done_event)
+        self._ahead_tokens = None
+        self._ahead_state = None
 
     def run_ahead_chain(self) -> None:
         """OV1(a) (phase 49): continue the draft chain K+1 steps on the side
@@ -1160,6 +1182,34 @@ class SpecDecodeBaseProposer:
         # Bisect knob: skip the per-step compute_logits+argmax (feed the same
         # token every step instead). Isolates the LM-head/greedy path.
         no_sample = bool(int(os.environ.get("W7_AHEAD_NO_SAMPLE", "0")))
+        # Bisect knob: FREEZE the metadata path -- skip the position/slot
+        # update kernel and the per-step metadata build, reusing the chain's
+        # last built metadata (shadow-style). Implies KV-off (slots stale).
+        # Every crashing config so far ran the live metadata path; the clean
+        # concurrent shadow never did -- this isolates it.
+        frozen_md = bool(int(os.environ.get("W7_AHEAD_FROZEN_MD", "0")))
+        if frozen_md:
+            no_kv = True
+        # Debug knob (W7_AHEAD_SYNC=1): synchronize the SIDE STREAM ONLY after
+        # each ahead sub-op (main-stream concurrency -- the repro condition --
+        # is preserved) so the sticky async CUDA error surfaces at the exact
+        # faulting sub-op instead of at a later unrelated launch.
+        dbg_sync = bool(int(os.environ.get("W7_AHEAD_SYNC", "0")))
+        self._ahead_cycles = getattr(self, "_ahead_cycles", 0) + 1
+
+        def _ck(label: str, j: int) -> None:
+            if not dbg_sync:
+                return
+            try:
+                self._shadow_stream.synchronize()
+            except Exception:
+                logger.error(
+                    "OV1(a) FAULT at cycle %d, ahead step %d, after %s",
+                    self._ahead_cycles,
+                    j,
+                    label,
+                )
+                raise
         bs = state["batch_size"]
         ibs = state["input_batch_size"]
         # Allocated OUTSIDE the private pool: read by the next propose (main
@@ -1186,16 +1236,23 @@ class SpecDecodeBaseProposer:
         with mem_pool_ctx, torch.cuda.stream(ahead_stream):
             for j in range(n_ahead):
                 input_ids = last_tokens.int()
-                positions = self._update_positions_dependent_metadata(
-                    positions, cad, bs, ibs, state["block_size"]
-                )
-                if no_kv:
+                if frozen_md:
+                    per_layer_attn_metadata = state["per_layer_attn_metadata"]
                     self._slot_mapping_buffer[:ibs].fill_(PADDING_SLOT_ID)
-                _, per_layer_attn_metadata = (
-                    self.build_per_group_and_layer_attn_metadata(
-                        cad, draft_index=self.num_speculative_tokens + j + 1
+                else:
+                    positions = self._update_positions_dependent_metadata(
+                        positions, cad, bs, ibs, state["block_size"]
                     )
-                )
+                    _ck("pos_slot_update", j)
+                    if no_kv:
+                        self._slot_mapping_buffer[:ibs].fill_(PADDING_SLOT_ID)
+                    _, per_layer_attn_metadata = (
+                        self.build_per_group_and_layer_attn_metadata(
+                            cad,
+                            draft_index=self.num_speculative_tokens + j + 1,
+                        )
+                    )
+                    _ck("metadata_build", j)
                 self.input_ids[:bs] = input_ids
                 self.hidden_states[:bs] = hidden_states
                 model_kwargs: dict[str, Any] = {
@@ -1216,6 +1273,7 @@ class SpecDecodeBaseProposer:
                     additional_kwargs=self._draft_forward_additional_kwargs,
                 ):
                     ret_hidden_states = self.model(**model_kwargs)
+                _ck("forward", j)
                 if not self.model_returns_tuple():
                     last_hidden_states = ret_hidden_states
                     hidden_states = ret_hidden_states
@@ -1227,6 +1285,7 @@ class SpecDecodeBaseProposer:
                 else:
                     last_tokens = self._greedy_sample(last_hidden_states[:bs])
                     tokens_out[:, j] = last_tokens
+                _ck("sample", j)
             assert self._shadow_done_event is not None
             self._shadow_done_event.record()
         self._ahead_tokens = tokens_out
