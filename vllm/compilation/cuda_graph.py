@@ -28,6 +28,33 @@ from vllm.utils.torch_utils import current_stream, weak_ref_tensors
 
 logger = init_logger(__name__)
 
+# Self-spec OV0b/OV1 (phase 49): dedicated cudagraph memory pool for the
+# self-spec DRAFT's graphs. The overlap schedule replays draft graphs on a side
+# stream concurrently with the verify's graphs; sharing the global pool aliases
+# their capture-time workspaces and concurrent replay races. One extra pool =
+# the draft's activation workspace is no longer shared (a bounded memory cost),
+# in exchange for race-free concurrent replay. Used only when
+# VLLM_SELF_SPEC_DRAFT_GRAPH_POOL is set.
+_draft_graph_pool: Any = None
+
+
+def get_draft_graph_pool() -> Any:
+    global _draft_graph_pool
+    if _draft_graph_pool is None:
+        _draft_graph_pool = current_platform.graph_pool_handle()
+        logger.info_once(
+            "Self-spec: created a DEDICATED cudagraph pool for draft-tagged "
+            "graphs (VLLM_SELF_SPEC_DRAFT_GRAPH_POOL=1)."
+        )
+    return _draft_graph_pool
+
+
+def maybe_draft_graph_pool(prefix: str | None) -> Any:
+    """The draft pool for draft-tagged compilations, else None (global pool)."""
+    if envs.VLLM_SELF_SPEC_DRAFT_GRAPH_POOL and prefix == "draft_model":
+        return get_draft_graph_pool()
+    return None
+
 
 @dataclasses.dataclass(frozen=True)
 class CUDAGraphStat:
@@ -181,6 +208,7 @@ class CUDAGraphWrapper:
         vllm_config: VllmConfig,
         runtime_mode: CUDAGraphMode,
         cudagraph_options: CUDAGraphOptions | None = None,
+        graph_pool: Any = None,
     ) -> None:
         self.runnable = runnable
         self.vllm_config = vllm_config
@@ -197,7 +225,20 @@ class CUDAGraphWrapper:
         # TODO: in the future, if we want to use multiple
         # streams, it might not be safe to share a global pool.
         # only investigate this when we use multiple streams
-        self.graph_pool = current_platform.get_global_graph_pool()
+        #
+        # Self-spec OV0b/OV1 (phase 49): that TODO is now load-bearing. The
+        # self-spec draft's graphs replay on a side stream CONCURRENTLY with
+        # the verify's graphs (draft-behind-verify-comm overlap); with a shared
+        # pool their capture-time workspaces alias and concurrent replay races
+        # (observed: sticky CUDA illegal-instruction). Callers pass an explicit
+        # `graph_pool` (the draft pool) for draft-tagged graphs when
+        # VLLM_SELF_SPEC_DRAFT_GRAPH_POOL is set; default None keeps the shared
+        # global pool (unchanged behavior).
+        self.graph_pool = (
+            graph_pool
+            if graph_pool is not None
+            else current_platform.get_global_graph_pool()
+        )
 
         if cudagraph_options is None:
             cudagraph_options = CUDAGraphOptions()

@@ -4355,6 +4355,18 @@ class GPUModelRunner(
                     **model_kwargs,
                 )
 
+        # Self-spec OV0b (phase 49): the verify forward above is ENQUEUED (its
+        # kernels run async); replay the shadow draft chain on a side stream so
+        # its compute lands in the verify's comm windows. Timing-only probe;
+        # no-ops until the first propose has cached its dispatch state.
+        if (
+            envs.VLLM_SELF_SPEC_SHADOW_CHAIN > 0
+            and self.speculative_config is not None
+            and hasattr(self.drafter, "shadow_replay_chain")
+        ):
+            with _self_spec_profiler().region("shadow_chain"):
+                self.drafter.shadow_replay_chain()
+
         with record_function_or_nullcontext("gpu_model_runner: postprocess"):
             if self.use_aux_hidden_state_outputs:
                 # True when EAGLE 3 is used.
@@ -5359,6 +5371,12 @@ class GPUModelRunner(
                     _DraftDecodeForwardSample,
                 )
 
+                # Self-spec OV0b/OV1: draft-tagged graphs get a dedicated pool
+                # so they can replay on a side stream concurrently with the
+                # verify's graphs (None -> shared global pool, unchanged).
+                from vllm.compilation.cuda_graph import maybe_draft_graph_pool
+
+                _draft_pool = maybe_draft_graph_pool("draft_model")
                 drafter._decode_fwd_sample = CUDAGraphWrapper(
                     _DraftDecodeForwardSample(
                         drafter.model,
@@ -5366,11 +5384,13 @@ class GPUModelRunner(
                     ),
                     self.vllm_config,
                     runtime_mode=CUDAGraphMode.FULL,
+                    graph_pool=_draft_pool,
                 )
                 drafter.model = CUDAGraphWrapper(
                     drafter.model,
                     self.vllm_config,
                     runtime_mode=CUDAGraphMode.FULL,
+                    graph_pool=_draft_pool,
                 )
         elif self.parallel_config.use_ubatching:
             if cudagraph_mode.has_full_cudagraphs():

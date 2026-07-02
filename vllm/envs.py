@@ -258,6 +258,8 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
     VLLM_SELF_SPEC_CPU_ORCH: bool = False
+    VLLM_SELF_SPEC_SHADOW_CHAIN: int = 0
+    VLLM_SELF_SPEC_DRAFT_GRAPH_POOL: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
@@ -1919,6 +1921,30 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # draft_model + sync-scheduling verify path.
     "VLLM_SELF_SPEC_CPU_ORCH": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_CPU_ORCH", "0"))
+    ),
+    # Self-spec OV0b (phase 49): shadow-chain overlap probe. When >0, after the
+    # verify forward is ENQUEUED the proposer replays this many draft-chain
+    # decode-step forwards on a side CUDA stream, using the previous cycle's
+    # cached dispatch state, with the slot-mapping buffer filled with
+    # PADDING_SLOT_ID so every shadow KV write is discarded (timing-only,
+    # output-neutral). The main stream waits on the shadow-done event before the
+    # real propose touches shared buffers, so the step time measures
+    # max(verify, shadow) + rest. Probes (a) whether draft compute can hide in
+    # the verify's comm window and (b) cudagraph memory-pool aliasing between
+    # concurrently replaying draft/verify graphs (accept_len collapse = alias).
+    # Default 0 = off, byte-identical.
+    "VLLM_SELF_SPEC_SHADOW_CHAIN": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_SHADOW_CHAIN", "0")
+    ),
+    # Self-spec OV0b/OV1 (phase 49): capture draft-tagged graphs (compilation
+    # prefix "draft_model") into a DEDICATED cudagraph memory pool instead of
+    # the shared global pool. Required for any schedule that replays draft
+    # graphs concurrently with verify graphs (shadow chain / overlap): with a
+    # shared pool their workspaces alias and concurrent replay races (sticky
+    # CUDA illegal-instruction). Costs the draft's activation workspace as
+    # extra memory. Default off = shared pool, unchanged behavior.
+    "VLLM_SELF_SPEC_DRAFT_GRAPH_POOL": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_GRAPH_POOL", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H

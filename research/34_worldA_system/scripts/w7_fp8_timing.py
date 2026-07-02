@@ -138,6 +138,14 @@ def worker(rank, dp, tp, master_ip, master_port, mode, k, q):
         kwargs["speculative_config"] = spec_cfg
     llm = LLM(**kwargs)
 
+    # Phase 49 (OV0b): env-gated token-id dump for output-correctness diffs
+    # (e.g. shadow-on vs shadow-off: identical ids -> only the DRAFT is
+    # corrupted and the verify still corrects losslessly; diverging ids -> the
+    # VERIFY itself is corrupted). Dumps the first W7_DUMP_TOKENS requests'
+    # token ids of each long run into the results JSON. Default off.
+    DUMP_TOKENS = int(os.environ.get("W7_DUMP_TOKENS", "0"))
+    dumped_tokens = []
+
     def run_batch(batch, out_len):
         prompts = [f"{BASE_PROMPT} the year {1900 + i}." for i in range(batch)]
         sp = SamplingParams(
@@ -147,6 +155,10 @@ def worker(rank, dp, tp, master_ip, master_port, mode, k, q):
         outs = llm.generate(prompts, sp, use_tqdm=False)
         dt = time.perf_counter() - t0
         ntok = sum(len(o.outputs[0].token_ids) for o in outs)
+        if DUMP_TOKENS and out_len == OUTLEN and not dumped_tokens:
+            dumped_tokens.extend(
+                list(o.outputs[0].token_ids) for o in outs[:DUMP_TOKENS]
+            )
         return dt, ntok
 
     def _snap():
@@ -209,6 +221,8 @@ def worker(rank, dp, tp, master_ip, master_port, mode, k, q):
                 row["num_accepted"] = accepted
                 row["num_drafted"] = drafted
                 row["num_drafts"] = ndrafts
+            if DUMP_TOKENS and dumped_tokens:
+                row["dumped_token_ids"] = dumped_tokens[:DUMP_TOKENS]
             results.append(row)
             if rank == 0:
                 tag = f"K={k}" if spec else "nospec"

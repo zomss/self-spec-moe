@@ -631,6 +631,7 @@ def wrap_with_cudagraph_if_needed(
     compilation_config: CompilationConfig,
     is_first_graph: bool,
     is_last_graph: bool,
+    prefix: str | None = None,
 ) -> Any:
     """
     Wrap a piecewise backend with CUDA graph wrapper if needed.
@@ -655,7 +656,7 @@ def wrap_with_cudagraph_if_needed(
 
     # We're using Dynamo-based piecewise splitting, so we wrap
     # the whole subgraph with a static graph wrapper.
-    from .cuda_graph import CUDAGraphOptions
+    from .cuda_graph import CUDAGraphOptions, maybe_draft_graph_pool
 
     # resolve the static graph wrapper class (e.g. CUDAGraphWrapper
     # class) as platform dependent.
@@ -676,6 +677,9 @@ def wrap_with_cudagraph_if_needed(
             gc_disable=not is_first_graph,
             weak_ref_output=is_last_graph,
         ),
+        # Self-spec OV0b/OV1: draft-tagged graphs get a dedicated pool so they
+        # can replay concurrently with verify graphs (None -> global pool).
+        graph_pool=maybe_draft_graph_pool(prefix),
     )
 
 
@@ -764,6 +768,7 @@ class PiecewiseCompileInterpreter(torch.fx.Interpreter):  # type: ignore[misc]
                 self.compilation_config,
                 piecewise_backend.is_first_graph,
                 piecewise_backend.is_last_graph,
+                prefix=self.vllm_backend.prefix,
             )
 
             compilation_counter.num_piecewise_capturable_graphs_seen += 1

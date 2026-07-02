@@ -516,6 +516,7 @@ def reconstruct_serializable_fn_from_mega_artifact(
             compilation_config,
             is_first,
             is_last,
+            prefix=vllm_backend.prefix,
         )
 
         submod_callables[submod_name] = wrapped_backend

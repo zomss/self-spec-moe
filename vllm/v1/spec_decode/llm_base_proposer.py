@@ -252,6 +252,38 @@ class SpecDecodeBaseProposer:
         # _determine_batch_execution_and_padding) so callers can put it in the
         # forward context for the FULL CUDAGraphWrapper.
         self._last_batch_desc: BatchDescriptor | None = None
+        # OV0b (phase 49): shadow-chain overlap probe. When >0, the runner calls
+        # shadow_replay_chain() right after the verify forward is enqueued; it
+        # replays this many draft decode-step forwards on a side stream using
+        # the dispatch state cached at the end of the previous propose. Timing
+        # only: the slot buffer is filled with PADDING_SLOT_ID (KV writes
+        # discarded) and outputs are never read. propose() waits on
+        # _shadow_done_event before touching shared buffers/graphs.
+        self._shadow_chain_steps = envs.VLLM_SELF_SPEC_SHADOW_CHAIN
+        self._shadow_stream: torch.cuda.Stream | None = None
+        self._shadow_ctx: dict[str, Any] | None = None
+        self._shadow_done_event: torch.cuda.Event | None = None
+        # Private caching-allocator pool for the shadow's TRANSIENT allocations
+        # (eager attention outputs, forward-context temporaries). vLLM's
+        # piecewise replay relies on allocator ADDRESS DETERMINISM for the
+        # inter-piece eager outputs (captured graphs read them at baked
+        # addresses; the DEBUG-mode address check exists for exactly this).
+        # Shadow allocations from the shared allocator perturb the free lists,
+        # move the REAL chain's inter-piece tensors, and silently corrupt the
+        # draft tokens (accept 2.9 -> ~1.0, no fault). Keeping every shadow
+        # alloc in a private pool leaves the main pattern untouched.
+        # A/B off-knob: W7_SHADOW_NO_MEM_POOL=1.
+        self._shadow_mem_pool: Any = None
+        # Ordering for the shadow: the side stream must not start replaying the
+        # chain graphs while the PREVIOUS propose's chain kernels are still
+        # running on the main stream (same graphs -> same workspaces -> race,
+        # observed as a sticky CUDA illegal-instruction). Recorded on the main
+        # stream at the end of propose(); the shadow waits on it -- this orders
+        # shadow-after-previous-chain on the DEVICE while still overlapping the
+        # verify (enqueued after propose on the same main stream).
+        self._propose_done_event: torch.cuda.Event | None = (
+            torch.cuda.Event() if self._shadow_chain_steps > 0 else None
+        )
 
         # Cudagraph dispatcher for the drafter. PIECEWISE by default; FULL for
         # the decode-step forwards when use_full_cudagraphs is set.
@@ -599,6 +631,11 @@ class SpecDecodeBaseProposer:
         | list[dict[str, torch.Tensor]]
         | None = None,
     ) -> torch.Tensor:
+        # OV0b: the shadow chain (side stream) reads the persistent buffers and
+        # replays the same graphs this propose is about to use -- order the real
+        # propose after it (event wait, not a sync; measures max() semantics).
+        if self._shadow_done_event is not None:
+            torch.cuda.current_stream().wait_event(self._shadow_done_event)
         self.num_speculative_tokens = num_speculative_tokens
         self._last_draft_probs = None
         batch_size = common_attn_metadata.batch_size()
@@ -955,11 +992,149 @@ class SpecDecodeBaseProposer:
                 draft_probs_list.append(draft_probs)
             draft_token_ids_list.append(draft_token_ids)
 
+        # OV0b: cache the chain's dispatch state so the next verify's shadow
+        # replay can re-launch an identical decode-step forward on the side
+        # stream. The attn-metadata objects and buffer slices stay alive via
+        # this reference; their (stale) values are fine for a timing replay.
+        if self._shadow_chain_steps > 0 and self.num_speculative_tokens > 1:
+            self._shadow_ctx = {
+                "per_layer_attn_metadata": per_layer_attn_metadata,
+                "mode": cudagraph_runtime_mode,
+                "input_batch_size": input_batch_size,
+                "batch_size_across_dp": batch_size_across_dp,
+                "batch_desc": self._last_batch_desc,
+            }
+            assert self._propose_done_event is not None
+            self._propose_done_event.record()
+
         # [batch_size, num_speculative_tokens]
         draft_token_ids = torch.stack(draft_token_ids_list, dim=1)
         if draft_probs_list is not None:
             self._last_draft_probs = torch.stack(draft_probs_list, dim=1).contiguous()
         return draft_token_ids
+
+    def shadow_replay_chain(self) -> None:
+        """OV0b (phase 49): replay draft-chain decode-step forwards on a side
+        stream, concurrently with the verify forward the runner just enqueued.
+
+        Timing-only overlap probe. Uses the dispatch state cached at the end of
+        the previous propose (stale token/position values are irrelevant to
+        timing); fills the persistent slot-mapping buffer with PADDING_SLOT_ID
+        first (enqueued on the side stream) so every KV write of the shadow
+        forwards is discarded by the cache kernels -- the draft KV, the verify,
+        and the served output are untouched. The real propose of this step
+        waits on _shadow_done_event before reusing the buffers/graphs, so the
+        measured step time is max(verify, shadow) + the serial remainder.
+
+        What it probes: (a) whether the comm-free draft's compute can hide
+        inside the verify's A2A window on this engine (tok/s unchanged =>
+        hidden), and (b) cudagraph memory-pool aliasing between concurrently
+        replaying draft and verify graphs (accept_len collapse => aliased).
+        """
+        ctx = self._shadow_ctx
+        if (
+            ctx is None
+            or self._shadow_chain_steps <= 0
+            or self.supports_mm_inputs
+        ):
+            return
+        if self._shadow_stream is None:
+            self._shadow_stream = torch.cuda.Stream()
+            self._shadow_done_event = torch.cuda.Event()
+            logger.info(
+                "Self-spec OV0b: shadow chain ACTIVE (%d step(s)/cycle on a "
+                "side stream, KV writes discarded).",
+                self._shadow_chain_steps,
+            )
+            # Diagnostic: the KV-write suppression relies on the cached
+            # attention metadata's slot_mapping ALIASING _slot_mapping_buffer
+            # (so the -1 fill propagates into the eager attention's cache
+            # write). Log whether that holds; if False, shadow KV writes hit
+            # real slots and corrupt the draft KV (accept collapse).
+            for _md in ctx["per_layer_attn_metadata"].values():
+                _sm = getattr(_md, "slot_mapping", None)
+                if _sm is not None:
+                    logger.info(
+                        "Self-spec OV0b: metadata slot_mapping aliases the "
+                        "proposer slot buffer: %s",
+                        _sm.data_ptr() == self._slot_mapping_buffer.data_ptr(),
+                    )
+                break
+        ibs = ctx["input_batch_size"]
+        # A/B discriminator (W7_SHADOW_MAIN_STREAM=1): run the shadow on the
+        # MAIN stream (fully serialized after the verify) instead of the side
+        # stream. If the accept collapse persists serialized, the corruption is
+        # in the replay itself (KV/metadata); if it disappears, it needs
+        # concurrency (streams/allocator).
+        if bool(int(os.environ.get("W7_SHADOW_MAIN_STREAM", "0"))):
+            shadow_stream = torch.cuda.current_stream()
+        else:
+            shadow_stream = self._shadow_stream
+        # Do not race the PREVIOUS propose's chain kernels (same graphs/
+        # workspaces + this fill races their slot-buffer reads): start only
+        # after its device work completes. The verify was enqueued after it on
+        # the main stream, so this wait still overlaps the verify.
+        assert self._propose_done_event is not None
+        shadow_stream.wait_event(self._propose_done_event)
+        from contextlib import nullcontext
+
+        if bool(int(os.environ.get("W7_SHADOW_NO_MEM_POOL", "0"))):
+            mem_pool_ctx: Any = nullcontext()
+        else:
+            if self._shadow_mem_pool is None:
+                self._shadow_mem_pool = torch.cuda.MemPool()
+                logger.info(
+                    "Self-spec OV0b: shadow transient allocations pinned to a "
+                    "private MemPool (preserves the main allocator's address "
+                    "determinism for piecewise replay)."
+                )
+            mem_pool_ctx = torch.cuda.use_mem_pool(self._shadow_mem_pool)
+        # Bisection knobs: NO_FORWARD keeps the fill/context/event machinery but
+        # skips the model call; GEMM_ONLY replaces the model call with private
+        # matmuls (no vLLM state touched at all).
+        no_forward = bool(int(os.environ.get("W7_SHADOW_NO_FORWARD", "0")))
+        gemm_only = bool(int(os.environ.get("W7_SHADOW_GEMM_ONLY", "0")))
+        with mem_pool_ctx, torch.cuda.stream(shadow_stream):
+            # Discard all shadow KV writes (the cache kernels skip slot -1).
+            # The real propose refills this buffer every step before use.
+            self._slot_mapping_buffer.fill_(PADDING_SLOT_ID)
+            if gemm_only:
+                if not hasattr(self, "_shadow_gemm_ab"):
+                    self._shadow_gemm_ab = (
+                        torch.randn(4096, 4096, dtype=self.dtype,
+                                    device=self.device),
+                        torch.randn(4096, 4096, dtype=self.dtype,
+                                    device=self.device),
+                    )
+                a, b = self._shadow_gemm_ab
+                # ~one K=2 chain's worth of side-stream compute (~30 ms).
+                for _ in range(90 * self._shadow_chain_steps):
+                    torch.mm(a, b)
+                assert self._shadow_done_event is not None
+                self._shadow_done_event.record()
+                return
+            model_kwargs: dict[str, Any] = {
+                "input_ids": self.input_ids[:ibs],
+                "positions": self._get_positions(ibs),
+                "inputs_embeds": None,
+            }
+            if self.pass_hidden_states_to_model:
+                model_kwargs["hidden_states"] = self.hidden_states[:ibs]
+            for _ in range(self._shadow_chain_steps):
+                with set_forward_context(
+                    ctx["per_layer_attn_metadata"],
+                    self.vllm_config,
+                    num_tokens=ibs,
+                    num_tokens_across_dp=ctx["batch_size_across_dp"],
+                    cudagraph_runtime_mode=ctx["mode"],
+                    batch_descriptor=ctx["batch_desc"],
+                    slot_mapping=self._get_slot_mapping(ibs),
+                    additional_kwargs=self._draft_forward_additional_kwargs,
+                ):
+                    if not no_forward:
+                        self.model(**model_kwargs)
+            assert self._shadow_done_event is not None
+            self._shadow_done_event.record()
 
     def _update_positions_dependent_metadata(
         self,
