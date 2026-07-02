@@ -1,8 +1,8 @@
 # World A — Training-Free, Comm-Free, Lossless Self-Speculative Decoding for Communication-Bound MoE-EP Serving
 
-**Consolidated results, Phases 34–47.** This document ties the system build and the
+**Consolidated results, Phases 34–48.** This document ties the system build and the
 debugging/optimization arc into one story, with the final measured numbers. Companion
-per-phase docs live under `research/34_worldA_system/` and `research/{35..47}_*/`.
+per-phase docs live under `research/34_worldA_system/` and `research/{35..48}_*/`.
 
 ---
 
@@ -15,10 +15,12 @@ verifier's distribution. On a fully-optimized stack (Qwen3-30B-A3B, DP8/EP8, for
 the comm-free self-spec is:
 
 - **Lossless** — draft issues **zero** real collectives; output byte-identical to the verifier.
-- **A wall-clock win across the communication-bound regime** — measured **1.03–1.30×** at
-  small/mid batch on a single node, **rising monotonically with the communication fraction `f`**,
-  and **projected ~1.6–2.1× at realistic multi-node `f≈0.6–0.8`**.
-- **Tracking the cost model** to within ~5–20% at low `f`, validating it in its intended regime.
+- **A wall-clock win across the communication-bound regime** — measured **1.03–1.14×** at
+  small/mid batch natively, **rising monotonically with the communication fraction `f`** to
+  **2.59× / 2.27× / 1.34× (b32/b64/b128) at emulated `f≈0.67–0.78`** — the realistic
+  multi-node band, now **measured** (Phase 48, shielded), no longer just projected.
+- **Meeting or beating the cost model** across the grid (b32/b64 exceed
+  `accept_len/(K(1−f)+1)` by 20–28% at high `f`; the FP8 draft undercuts `T_compute`).
 
 The central finding of the arc: **every "fundamental limit" we hit along the way turned out to
 be a fixable implementation artifact, not physics.** The honest negatives that survive are (a) the
@@ -133,33 +135,36 @@ its marginal acceptance; W7-KRETUNE).
 
 ---
 
-## 4. The win curve (Phase 47 — the headline)
+## 4. The win curve (Phase 47 charged → Phase 48 shielded — the headline)
 
 Qwen3-30B-A3B, DP8/EP8, forced-PCIe, FP8 full-replica comm-free draft, **fully optimized**
 (genuine replica + PIECEWISE + local-route + FULL-CG + compile-consistent), **K=2**, greedy.
-Speedup vs no-spec, sweeping emulated exposed A2A per collective:
+Speedup vs no-spec, sweeping emulated exposed A2A per collective. **Phase 48 fixed the
+delay-shielding gate** (the draft — `real=0` collectives — is no longer charged the emulated
+A2A sleep; `all2all.py`, A/B revert `W7_CHARGE_DRAFT_A2A=1`), retiring Phase 47's
+conservative lower bound (in parens):
 
 | A2A µs/coll | batch 32 | batch 64 | batch 128 |
 |---:|---:|---:|---:|
-| 0 (native)  | **1.16×** | **1.03×** | 0.72× |
-| 100         | 1.20×     | 1.08×     | 0.81× |
-| 250         | 1.23×     | 1.13×     | 0.93× |
-| 500         | 1.25×     | 1.17×     | 0.96× |
-| 1000        | **1.30×** | **1.24×** | **1.14×** |
+| 0 (native)  | **1.14×** (1.16) | **1.03×** (1.03) | 0.65× (0.72) |
+| 100         | **1.42×** (1.20) | **1.21×** (1.08) | 0.79× (0.81) |
+| 250         | **1.72×** (1.23) | **1.34×** (1.13) | 0.87× (0.93) |
+| 500         | **2.12×** (1.25) | **1.43×** (1.17) | **1.21×** (0.96) |
+| 1000        | **2.59×** (1.30) | **2.27×** (1.24) | **1.34×** (1.14) |
 
-- **Small/mid batch wins everywhere, including native** (no added comm); large batch is compute-bound
-  at low comm and crosses into a win in the comm-bound regime (~616 µs measured).
-- **Monotone rising with communication**, as the model predicts; `accept_len` flat **2.88–2.91**.
-- **vs pre-piecewise** (Phase-42, K=4, plateau 0.82×): piecewise bought **+0.36 to +0.84 absolute**
-  speedup; the b64 native point went **0.36× → 1.03×**.
-- **Conservative lower bound:** the genuine replica issues **zero** real collectives, but the
-  benchmark's emulated A2A sleep is not gated by the local-route flag, so the draft is *charged*
-  communication it never performs. The **shielded** curve (verify-only delay) has b32/b64 winning
-  everywhere and reaches **2.18 / 1.95 / 1.46×** at 1000 µs.
-- **Cost-model tracking:** measured is within ~5–20% of `accept_len/(K(1−f)+1)` at low `f` (and
-  slightly exceeds it at `f=0`, the FP8 draft being cheaper than the formula assumes).
-- **Multi-node projection** at realistic **`f≈0.6–0.8`**: **~1.6–2.1×** (cost-model) /
-  **~1.15–1.95×** (measured-shielded) — the deployment win.
+- **Small/mid batch wins everywhere, including native** (no added comm); large batch is
+  compute-bound at low comm and crosses at ~343 µs.
+- **Monotone rising with communication**, as the model predicts; `accept_len` flat
+  **2.87–2.92** (identical to Phase 47 — the gate touches timing only, not numerics).
+- **vs pre-piecewise** (Phase-42, K=4, plateau 0.82×): piecewise + shielding multiply the
+  comm-bound points by **1.7–3.1×**.
+- **The multi-node band is now measured:** 1000 µs maps to `f = 0.67–0.78` (b128–b32), inside
+  the realistic multi-node `f≈0.6–0.8`, where the measured **2.59/2.27/1.34×** meets or beats
+  the cost-model band **1.6–2.1×** (b32/b64 exceed it by 20–28%; the FP8 draft undercuts the
+  `T_compute` the formula assumes).
+- **Over-charge eliminated (slope check):** measured spec delay-slope `s_sp/s_ns` dropped from
+  0.408 (charged) to **0.249/0.266/0.347** (b32/b64/b128) vs the verify-only model 0.346 —
+  b128 lands exactly on it. See `research/48_shielded_sweep/results_W7_shielded.md`.
 
 ---
 
@@ -201,9 +206,11 @@ DRAFT_CHAIN_PIECEWISE`, `K=2`.
 ## 7. Limitations & future work
 
 1. **Real multi-node validation.** The single node can only *emulate* the comm-bound regime (A2A
-   delay). The gold-standard number is a genuine inter-node IB run at `f≈0.6–0.8` (projected 1.6–2.1×).
-2. **Benchmark shielding.** Gate `_emulate_exposed_a2a_delay` by the local-route flag so the measured
-   curve equals the (higher) shielded curve rather than a conservative lower bound.
+   delay). The gold-standard number is a genuine inter-node IB run at `f≈0.6–0.8` (measured-emulated
+   1.3–2.6× there, Phase 48).
+2. ~~**Benchmark shielding.**~~ **DONE (Phase 48):** `_emulate_exposed_a2a_delay` is gated by the
+   local-route flag; the measured curve now IS the shielded curve (headline above), with a
+   `shielded` counter and an A/B revert knob (`W7_CHARGE_DRAFT_A2A=1`).
 3. **W2b bounded cache — for memory, not speed.** Models too large to replicate need a resident
    globally-hot top-C cache; the `DRAFT_TOPC` primitive + a custom loader realize it. The accept cost
    is the price of *fitting*, not a speed lever (Phase 46).
@@ -214,4 +221,5 @@ DRAFT_CHAIN_PIECEWISE`, `K=2`.
 
 *Every merged change is lossless and env-gated; the default vLLM path is unchanged. The result stands
 on the merged implementation + the measured win curve, reproducible via
-`research/47_sweep2/scripts/run_sweep2.sh`.*
+`research/48_shielded_sweep/scripts/run_sweep_shielded.sh` (shielded headline) /
+`research/47_sweep2/scripts/run_sweep2.sh` + `W7_CHARGE_DRAFT_A2A=1` (charged lower bound).*

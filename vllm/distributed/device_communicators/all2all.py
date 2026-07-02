@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+import os
 import threading
 import time
 from dataclasses import dataclass
@@ -55,6 +56,16 @@ class AgRsAll2AllManager(All2AllManagerBase):
         # reduce_scatterv). Stays 0 under the comm-free local-routing path,
         # which is how we verify the draft step issues no all-to-all.
         self._real_collective_count = 0
+        # Number of hook calls SHIELDED from the emulated A2A delay because the
+        # comm-free local-routing path was active (no real collective issued ->
+        # no delay charged). Stays 0 on default paths and on the verify.
+        self._shielded_a2a_count = 0
+        # A/B revert knob (Phase 48): charge the emulated delay on the
+        # comm-free local-route path anyway, reproducing the pre-shielding
+        # (conservative) Phase 42/47 curves on the same binary.
+        self._charge_draft_a2a = bool(
+            int(os.environ.get("W7_CHARGE_DRAFT_A2A", "0"))
+        )
         # GPU-clock cycles per microsecond for torch.cuda._sleep injection.
         # Calibrated once here (eager, before any CUDA-graph capture) so the
         # delay can be enqueued on the stream and captured into the graph.
@@ -90,6 +101,17 @@ class AgRsAll2AllManager(All2AllManagerBase):
         active_file = envs.VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE
         if not active_file or Path(active_file).exists():
             self._active_emulated_a2a_count += 1
+        if self_spec_local_route_enabled() and not self._charge_draft_a2a:
+            # Comm-free local-routing forward (the self-spec draft): the
+            # dispatch/combine above issued NO real collective, so charge no
+            # emulated A2A delay either. Without this gate the draft pays the
+            # sleep for communication it never performs, understating the win
+            # (the Phase 42/47 curves were this conservative lower bound). The
+            # branch resolves at CUDA-graph capture time per model -- the draft
+            # and verify capture separate graphs, so the draft's graphs contain
+            # no sleep while the verify's keep it.
+            self._shielded_a2a_count += 1
+            return
         delay_us = envs.VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US
         if delay_us > 0 and self._cycles_per_us > 0:
             # Enqueue on the current stream; captured into the CUDA graph so it
@@ -254,10 +276,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
     def destroy(self):
         if envs.VLLM_SELF_SPEC_LOG_A2A_COUNTS:
             logger.info(
-                "Self-spec AgRs all2all count: total=%d active=%d real=%d",
+                "Self-spec AgRs all2all count: total=%d active=%d real=%d "
+                "shielded=%d",
                 self._emulated_a2a_count,
                 self._active_emulated_a2a_count,
                 self._real_collective_count,
+                self._shielded_a2a_count,
             )
 
 
