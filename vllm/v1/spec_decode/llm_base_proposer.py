@@ -282,6 +282,32 @@ class SpecDecodeBaseProposer:
         self._ahead_hits: torch.Tensor | None = None
         self._ahead_total = 0
         self._ahead_compared = 0
+        # OV1(b) (phase 49): CONSUME mode -- the free-running loop. The ahead
+        # chain re-anchors every cycle on the actual committed token and its
+        # drafts REPLACE the lockstep propose (skipped in steady state).
+        # Pending-token state machine (all per-row GPU tensors, no syncs):
+        #   _ahead_out         [bs, K]  drafts to serve at the next consume
+        #   _ahead_pending_tok [bs]     trailing guess token (KV pending; the
+        #                               next run's continuation anchor)
+        #   _ahead_pending_pos [bs]     its position
+        #   _ahead_anchor_used [bs]     the anchor the in-flight run consumed
+        #                               (the served drafts' bonus assumption;
+        #                               tested against the actual bonus)
+        #   _reanchor          stash from consume: fresh block-table snapshot
+        #                               (b1: all-hit gated, so continuation
+        #                               needs no per-row rewind state)
+        #   _ahead_dispatch / _ahead_cad  persistent dispatch keys + private
+        #                               metadata object (bootstrapped by propose)
+        self._consume_mode = (
+            self._ahead_chain and envs.VLLM_SELF_SPEC_CONSUME_AHEAD
+        )
+        self._ahead_out: torch.Tensor | None = None
+        self._ahead_pending_tok: torch.Tensor | None = None
+        self._ahead_pending_pos: torch.Tensor | None = None
+        self._ahead_anchor_used: torch.Tensor | None = None
+        self._reanchor: dict[str, Any] | None = None
+        self._ahead_dispatch: dict[str, Any] | None = None
+        self._ahead_cad: Any = None
         # Private caching-allocator pool for the shadow's TRANSIENT allocations
         # (eager attention outputs, forward-context temporaries). vLLM's
         # piecewise replay relies on allocator ADDRESS DETERMINISM for the
@@ -1097,6 +1123,20 @@ class SpecDecodeBaseProposer:
                 # per-layer metadata, reused verbatim by the ahead steps.
                 "per_layer_attn_metadata": per_layer_attn_metadata,
             }
+            if self._consume_mode:
+                # OV1(b) bootstrap: persist the dispatch keys + private
+                # metadata object for the steady-state re-anchor cycles
+                # (propose stops running), and seed the state machine: the
+                # chain's last draft d_K is KV-pending.
+                self._ahead_dispatch = {
+                    "input_batch_size": input_batch_size,
+                    "block_size": block_size,
+                    "mode": cudagraph_runtime_mode,
+                    "batch_size_across_dp": batch_size_across_dp,
+                    "batch_desc": self._last_batch_desc,
+                    "per_layer_attn_metadata": per_layer_attn_metadata,
+                }
+                self._ahead_cad = cad_priv
             if self._propose_done_event is None:
                 self._propose_done_event = torch.cuda.Event()
             self._propose_done_event.record()
@@ -1128,6 +1168,68 @@ class SpecDecodeBaseProposer:
             )
         return torch.cuda.use_mem_pool(self._shadow_mem_pool)
 
+    def consume_ahead(
+        self,
+        next_token_ids: torch.Tensor,
+        num_rejected_tokens_gpu: torch.Tensor | None,
+        common_attn_metadata,
+    ) -> torch.Tensor | None:
+        """OV1(b): return the ahead chain's drafts instead of running propose.
+
+        Called by the runner post-rejection-sampling. Returns None (caller
+        falls back to the real propose) when there are no ahead drafts
+        (bootstrap cycle / after a batch-boundary fence / batch-size change).
+        Otherwise stashes the re-anchor state for the next run_ahead_chain --
+        the actual bonus/corrected token, the committed lengths, the
+        2-pending mask (all-K accepted AND the last draft's KV is pending),
+        and a FRESH block-table snapshot (block tables grow every cycle; a
+        stale clone would map new positions to garbage pages) -- and returns
+        the drafts. Misses return garbage drafts by design: the verify
+        rejects them losslessly and the next re-anchor corrects the chain
+        (one low-accept cycle per miss).
+        """
+        bs = common_attn_metadata.batch_size()
+        if (
+            self._ahead_out is None
+            or num_rejected_tokens_gpu is None
+            or self._ahead_out.shape[0] != bs
+            or self._ahead_pending_tok is None
+            or self._ahead_anchor_used is None
+        ):
+            self._ahead_out = None
+            return None
+        # OV1(b1) all-hit gating: consume ONLY when every row on this rank
+        # fully hit -- all K drafts accepted AND the actual bonus equals the
+        # anchor token the in-flight ahead run already consumed (so its KV and
+        # context are exactly right). Any miss -> return None: the normal
+        # propose re-bootstraps the whole rank (per-row recovery is OV1(b2)).
+        # The .item() is a small per-cycle D2H sync, acceptable for b1.
+        rejected = num_rejected_tokens_gpu[:bs]
+        all_hit = bool(
+            (
+                (rejected == 0)
+                & (next_token_ids[:bs].long() == self._ahead_anchor_used[:bs])
+            )
+            .all()
+            .item()
+        )
+        if not all_hit:
+            self._ahead_out = None
+            self._ahead_pending_tok = None
+            self._reanchor = None
+            return None
+        self._reanchor = {
+            "block_table": common_attn_metadata.block_table_tensor.clone(),
+        }
+        # Order the next ahead run (side stream) after these main-stream
+        # clones (propose never runs in steady state, so re-record here).
+        if self._propose_done_event is None:
+            self._propose_done_event = torch.cuda.Event()
+        self._propose_done_event.record()
+        out = self._ahead_out
+        self._ahead_out = None
+        return out
+
     def fence_ahead_chain(self) -> None:
         """OV1(a): order the MAIN stream after the in-flight ahead chain.
 
@@ -1146,6 +1248,14 @@ class SpecDecodeBaseProposer:
             torch.cuda.current_stream().wait_event(self._shadow_done_event)
         self._ahead_tokens = None
         self._ahead_state = None
+        # Consume-mode state is void across batch boundaries: drop the drafts,
+        # the re-anchor stash, and the pending-token state so the next cycle
+        # bootstraps via propose.
+        self._ahead_out = None
+        self._reanchor = None
+        self._ahead_pending_tok = None
+        self._ahead_pending_pos = None
+        self._ahead_anchor_used = None
 
     def run_ahead_chain(self) -> None:
         """OV1(a) (phase 49): continue the draft chain K+1 steps on the side
@@ -1164,10 +1274,26 @@ class SpecDecodeBaseProposer:
         + dedicated draft MoE workspace); the next propose waits on the done
         event before touching shared buffers.
         """
-        state = self._ahead_state
-        if state is None or self.uses_mrope or self.supports_mm_inputs:
+        if self.uses_mrope or self.supports_mm_inputs:
             return
+        # Mode select: re-anchor (OV1(b) consume, steady state -- start from
+        # the ACTUAL committed token, per-row) vs continuation (post-propose
+        # bootstrap / OV1(a) validation -- continue the chain's own guess).
+        ra = self._reanchor if self._consume_mode else None
+        self._reanchor = None
+        state = self._ahead_state
         self._ahead_state = None
+        if (
+            ra is not None
+            and self._ahead_dispatch is not None
+            and self._ahead_pending_tok is not None
+        ):
+            disp = self._ahead_dispatch
+        elif state is not None:
+            ra = None
+            disp = None
+        else:
+            return
         mem_pool_ctx = self._side_stream_and_pool()
         n_ahead = int(
             os.environ.get(
@@ -1210,8 +1336,53 @@ class SpecDecodeBaseProposer:
                     label,
                 )
                 raise
-        bs = state["batch_size"]
-        ibs = state["input_batch_size"]
+        if disp is not None:
+            # CONTINUATION mode (OV1(b1), all-hit gated): every row fully hit,
+            # so the chain simply continues from its pending guess token at
+            # its tracked position. Consume [pending, d1..dK-1...] over K+1
+            # forwards, producing [d1..dK, next-guess].
+            bs = self._ahead_pending_tok.shape[0]
+            ibs = disp["input_batch_size"]
+            cad = self._ahead_cad
+            anchor = self._ahead_pending_tok
+            p1 = self._ahead_pending_pos
+            cad.block_table_tensor = ra["block_table"]
+            cad.seq_lens[:bs].copy_(p1)
+            cad._seq_lens_cpu = None
+            cad._num_computed_tokens_cpu = None
+            cad.max_seq_len = self.max_model_len
+            self.positions[:bs].copy_(p1 - 1)
+            positions = self.positions[:bs]
+            self._ahead_anchor_used = anchor
+            self._ahead_pending_pos = p1 + n_ahead
+            hidden_states = None
+            last_tokens = None
+            block_size = disp["block_size"]
+        else:
+            bs = state["batch_size"]
+            ibs = state["input_batch_size"]
+            cad = state["cad"]
+            positions = state["positions"]
+            hidden_states = state["hidden_states"]
+            last_tokens = state["last_tokens"]
+            block_size = state["block_size"]
+            disp = {
+                "mode": state["mode"],
+                "batch_size_across_dp": state["batch_size_across_dp"],
+                "batch_desc": state["batch_desc"],
+                "input_batch_size": ibs,
+                "block_size": block_size,
+                "per_layer_attn_metadata": state.get("per_layer_attn_metadata"),
+            }
+            if self._consume_mode:
+                # Bootstrap: one extra forward so the run ends on a pending
+                # GUESS token (outputs [b-guess, e1..eK, next-guess]), entering
+                # the steady-state shape. Record the first consumed position
+                # (d_K, one past the chain's current positions) for the
+                # pending-position tracker.
+                n_ahead += 1
+                boot_p1 = positions.long() + 1
+                self._ahead_pending_pos = boot_p1 + n_ahead
         # Allocated OUTSIDE the private pool: read by the next propose (main
         # stream, after the done-event wait) for the hit-rate check.
         tokens_out = torch.empty(
@@ -1229,19 +1400,23 @@ class SpecDecodeBaseProposer:
         # Start only after the real chain's device work completes; the verify
         # was enqueued after it on the main stream, so this still overlaps.
         ahead_stream.wait_event(self._propose_done_event)
-        positions = state["positions"]
-        cad = state["cad"]
-        hidden_states = state["hidden_states"]
-        last_tokens = state["last_tokens"]
         with mem_pool_ctx, torch.cuda.stream(ahead_stream):
             for j in range(n_ahead):
+                # Per-step input selection. Re-anchor mode: step 0 consumes
+                # the KV-pending last draft (2-pending rows) or the actual
+                # bonus token (1-pending rows); step 1 consumes the bonus
+                # (2-pending) or the step-0 output (1-pending); later steps
+                # consume their own previous output. Continuation mode: step 0
+                # consumes the chain's last token, later steps their output.
+                if ra is not None:
+                    last_tokens = anchor if j == 0 else tokens_out[:, j - 1]
                 input_ids = last_tokens.int()
                 if frozen_md:
-                    per_layer_attn_metadata = state["per_layer_attn_metadata"]
+                    per_layer_attn_metadata = disp["per_layer_attn_metadata"]
                     self._slot_mapping_buffer[:ibs].fill_(PADDING_SLOT_ID)
                 else:
                     positions = self._update_positions_dependent_metadata(
-                        positions, cad, bs, ibs, state["block_size"]
+                        positions, cad, bs, ibs, block_size
                     )
                     _ck("pos_slot_update", j)
                     if no_kv:
@@ -1254,7 +1429,8 @@ class SpecDecodeBaseProposer:
                     )
                     _ck("metadata_build", j)
                 self.input_ids[:bs] = input_ids
-                self.hidden_states[:bs] = hidden_states
+                if hidden_states is not None:
+                    self.hidden_states[:bs] = hidden_states
                 model_kwargs: dict[str, Any] = {
                     "input_ids": self.input_ids[:ibs],
                     "positions": self._get_positions(ibs),
@@ -1266,9 +1442,9 @@ class SpecDecodeBaseProposer:
                     per_layer_attn_metadata,
                     self.vllm_config,
                     num_tokens=ibs,
-                    num_tokens_across_dp=state["batch_size_across_dp"],
-                    cudagraph_runtime_mode=state["mode"],
-                    batch_descriptor=state["batch_desc"],
+                    num_tokens_across_dp=disp["batch_size_across_dp"],
+                    cudagraph_runtime_mode=disp["mode"],
+                    batch_descriptor=disp["batch_desc"],
                     slot_mapping=self._get_slot_mapping(ibs),
                     additional_kwargs=self._draft_forward_additional_kwargs,
                 ):
@@ -1290,6 +1466,21 @@ class SpecDecodeBaseProposer:
             self._shadow_done_event.record()
         self._ahead_tokens = tokens_out
         self._ahead_batch_size = bs
+        # OV1(b) consume mode. Steady (re-anchor) runs produce [d1..dK, guess]
+        # (K+1 outputs): drafts = [:K], the trailing guess is the next pending
+        # anchor (pending_pos already advanced above). Bootstrap runs produce
+        # [b-guess, e1..eK, next-guess] (K+2 outputs): drafts = [1:K+1].
+        if self._consume_mode:
+            k = self.num_speculative_tokens
+            if ra is not None and n_ahead == k + 1:
+                self._ahead_out = tokens_out[:, :k]
+                self._ahead_pending_tok = tokens_out[:, k]
+            elif ra is None and n_ahead == k + 2:
+                self._ahead_out = tokens_out[:, 1 : k + 1]
+                self._ahead_pending_tok = tokens_out[:, k + 1]
+                # The bootstrap's guess at the bonus position is outputs[0]:
+                # it is the anchor the served drafts are conditioned on.
+                self._ahead_anchor_used = tokens_out[:, 0]
 
     def shadow_replay_chain(self) -> None:
         """OV0b (phase 49): replay draft-chain decode-step forwards on a side
@@ -2613,7 +2804,23 @@ class SpecDecodeBaseProposer:
         # coordinate across ranks
         # TODO(Flechman): support DBO ubatching
         should_ubatch, num_tokens_across_dp = False, None
-        if self.vllm_config.parallel_config.data_parallel_size > 1:
+        if (
+            self._consume_mode
+            and self._draft_forward_additional_kwargs is not None
+            and self.vllm_config.parallel_config.data_parallel_size > 1
+        ):
+            # OV1(b): the comm-free draft issues NO collectives, so per-rank
+            # dispatch divergence is safe -- and MANDATORY: in consume mode,
+            # ranks independently decide consume-vs-propose (bootstrap/fence
+            # timing differs per DP engine), so a DP-coordination collective
+            # here deadlocks the ranks that propose against those that don't.
+            # Build a locally-uniform num_tokens_across_dp for the forward
+            # context (only comm paths read it; the draft has none).
+            dp_size = self.vllm_config.parallel_config.data_parallel_size
+            num_tokens_across_dp = torch.full(
+                (dp_size,), num_tokens_padded, dtype=torch.int32, device="cpu"
+            )
+        elif self.vllm_config.parallel_config.data_parallel_size > 1:
             should_ubatch, num_tokens_across_dp, synced_cudagraph_mode = (
                 coordinate_batch_across_dp(
                     num_tokens_unpadded=num_tokens,

@@ -5200,6 +5200,20 @@ class GPUModelRunner(
             else:
                 mm_embed_inputs = None
 
+            # Self-spec OV1(b) (phase 49): in consume mode, the drafts come
+            # from the previous cycle's ahead chain; propose is skipped in
+            # steady state (None -> bootstrap/fence fallback to propose).
+            consumed_ahead = None
+            if envs.VLLM_SELF_SPEC_CONSUME_AHEAD and hasattr(
+                self.drafter, "consume_ahead"
+            ):
+                consumed_ahead = self.drafter.consume_ahead(
+                    next_token_ids,
+                    num_rejected_tokens_gpu,
+                    common_attn_metadata,
+                )
+            if consumed_ahead is not None:
+                return consumed_ahead
             # Self-spec W7 micro-bench: time the whole draft chain (propose()).
             with _self_spec_profiler().region("draft_chain"):
                 draft_token_ids = self.drafter.propose(

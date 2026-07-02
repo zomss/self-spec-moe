@@ -262,6 +262,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_GRAPH_POOL: bool = False
     VLLM_SELF_SPEC_DRAFT_WORKSPACE: bool = False
     VLLM_SELF_SPEC_AHEAD_CHAIN: bool = False
+    VLLM_SELF_SPEC_CONSUME_AHEAD: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
@@ -1968,6 +1969,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # only. Default off.
     "VLLM_SELF_SPEC_AHEAD_CHAIN": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_AHEAD_CHAIN", "0"))
+    ),
+    # Self-spec OV1(b) (phase 49): CONSUME the ahead chain's drafts -- the
+    # full free-running mode. The lockstep propose is skipped in steady state;
+    # each verify's drafts come from the previous cycle's ahead chain, and the
+    # ahead chain RE-ANCHORS every cycle on the actual committed token
+    # (identical to continuation on hits; automatic correction on misses,
+    # which cost one low-accept cycle and are losslessly rejected by the
+    # verify). Requires VLLM_SELF_SPEC_AHEAD_CHAIN=1 and the phase-49
+    # isolation stack. Greedy only. Default off.
+    "VLLM_SELF_SPEC_CONSUME_AHEAD": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_CONSUME_AHEAD", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H
