@@ -42,10 +42,19 @@ capture divergent shape sequences around the node collectives (the exact
 deadlock class the OV1 consume-mode comment warns about). Flag combination
 unsupported until fixed.
 
-**Fix direction (next session):** amortize instead of skip -- ONE
-coordination per spec cycle (covering all chain steps + verify) instead of
-one per forward; or node-scoped coordination (the node group is the only
-consistency domain the node collective needs). Both keep capture coordinated.
+**Amortization TESTED (Phase 55, `VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD`):**
+memoize coordinate_batch_across_dp per distinct shape per propose() (dummy
+runs/capture always coordinate -- stable, unlike SKIP_DP_COORD). Verdict:
+accept parity everywhere (1.973/1.885/1.916), **+10.7% single-node
+(490->543 tok/s), ~0 cross-node** (270 vs 268 V2-Lite; 65 vs 68 @ 236B).
+Together with the SKIP result this FALSIFIES the rendezvous-count hypothesis:
+the wait relocates to the remaining sync points. The residual (~160 ms/cycle
+at 236B, ~2.7 ms/MoE-layer) is in the NODE-DISPATCH IMPLEMENTATION itself:
+per-layer 3-tensor all_gatherv + sizes plumbing executing outside the
+captured graph (the target's AgRs runs inside one captured graph; the
+draft's node collectives do not). Next lever: capture the draft chain's
+node collectives (or fuse the per-layer gathers) -- verify whether the
+draft-chain graph path excludes subgroup collectives at capture.
 
 ## 3. Open issue 2: mixed-step dp_metadata crash at b>=32 (see Phase 53 §3)
 

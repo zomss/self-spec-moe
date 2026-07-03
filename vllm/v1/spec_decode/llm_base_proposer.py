@@ -156,6 +156,13 @@ class SpecDecodeBaseProposer:
             else None
         )
 
+        # Phase 55: per-cycle memo for coordinate_batch_across_dp (see
+        # VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD). Cleared at propose() entry;
+        # consulted only inside a real propose (dummy runs always coordinate,
+        # keeping mixed steps and capture symmetric across ranks).
+        self._dp_coord_memo: dict = {}
+        self._in_propose = False
+
         self.device = device
         self.dtype = vllm_config.model_config.dtype
         self.max_model_len = vllm_config.model_config.max_model_len
@@ -698,6 +705,8 @@ class SpecDecodeBaseProposer:
             torch.cuda.current_stream().wait_event(self._shadow_done_event)
         self.num_speculative_tokens = num_speculative_tokens
         self._last_draft_probs = None
+        self._dp_coord_memo.clear()
+        self._in_propose = True
         batch_size = common_attn_metadata.batch_size()
 
         # OV1(a) hit-rate check: the previous cycle's ahead chain speculated
@@ -2741,6 +2750,9 @@ class SpecDecodeBaseProposer:
         slot_mappings: dict[str, torch.Tensor] | None = None,
         uniform_decode: bool = False,
     ) -> None:
+        # Phase 55: a dummy run means this rank is NOT in a real propose --
+        # disable the coordination memo so mixed steps stay rank-symmetric.
+        self._in_propose = False
         # FIXME: when using tree-based specdec, adjust number of forward-passes
         # according to the depth of the tree.
         only_one_forward_pass = is_graph_capturing or self.parallel_drafting
@@ -3033,15 +3045,44 @@ class SpecDecodeBaseProposer:
                 (dp_size,), num_tokens_padded, dtype=torch.int32, device="cpu"
             )
         elif self.vllm_config.parallel_config.data_parallel_size > 1:
-            should_ubatch, num_tokens_across_dp, synced_cudagraph_mode = (
-                coordinate_batch_across_dp(
-                    num_tokens_unpadded=num_tokens,
-                    parallel_config=self.vllm_config.parallel_config,
-                    allow_microbatching=False,
-                    num_tokens_padded=num_tokens_padded,
-                    cudagraph_mode=cudagraph_mode.value,
+            # Phase 55: amortize the per-forward DP rendezvous to ONE
+            # coordination per distinct shape per spec cycle. Lockstep ranks
+            # produce identical key sequences, so the collective still runs
+            # symmetrically on first occurrence; dummy runs and capture
+            # (not inside propose) always coordinate.
+            _memo_key = None
+            if envs.VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD and self._in_propose:
+                _memo_key = (
+                    num_tokens,
+                    num_tokens_padded,
+                    cudagraph_mode.value,
+                    uniform_decode,
                 )
-            )
+            if _memo_key is not None and _memo_key in self._dp_coord_memo:
+                should_ubatch, _ntad, synced_cudagraph_mode = (
+                    self._dp_coord_memo[_memo_key]
+                )
+                num_tokens_across_dp = (
+                    _ntad.clone() if _ntad is not None else None
+                )
+            else:
+                should_ubatch, num_tokens_across_dp, synced_cudagraph_mode = (
+                    coordinate_batch_across_dp(
+                        num_tokens_unpadded=num_tokens,
+                        parallel_config=self.vllm_config.parallel_config,
+                        allow_microbatching=False,
+                        num_tokens_padded=num_tokens_padded,
+                        cudagraph_mode=cudagraph_mode.value,
+                    )
+                )
+                if _memo_key is not None:
+                    self._dp_coord_memo[_memo_key] = (
+                        should_ubatch,
+                        num_tokens_across_dp.clone()
+                        if num_tokens_across_dp is not None
+                        else None,
+                        synced_cudagraph_mode,
+                    )
             assert not should_ubatch, "DBO ubatching not implemented for EAGLE"
 
             # Extract DP-synced values

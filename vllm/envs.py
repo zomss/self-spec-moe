@@ -265,6 +265,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_CONSUME_AHEAD: bool = False
     VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD: bool = False
     VLLM_SELF_SPEC_DRAFT_NODE_LOCAL: bool = False
+    VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD: bool = False
     VLLM_SELF_SPEC_NODE_LOCAL: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
@@ -1983,6 +1984,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # isolation stack. Greedy only. Default off.
     "VLLM_SELF_SPEC_CONSUME_AHEAD": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_CONSUME_AHEAD", "0"))
+    ),
+    # Self-spec Phase 55: memoize coordinate_batch_across_dp within a spec
+    # cycle -- ONE DP rendezvous per distinct draft shape per propose() instead
+    # of one per chain forward (the traced dominant wait, Phases 52/54). Safe
+    # for lockstep uniform batches; dummy runs and capture always coordinate.
+    # Default off.
+    "VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD", "0"))
     ),
     # Self-spec Phase 54: NODE-LOCAL draft routing (the Phase 11/19
     # hierarchical draft). The draft routes to any expert resident on its NODE
