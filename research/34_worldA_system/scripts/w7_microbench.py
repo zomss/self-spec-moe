@@ -120,7 +120,9 @@ def worker(rank, dp, tp, master_ip, master_port, mode, profile_dir, q):
     if spec:
         os.environ["VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE"] = "1"
         os.environ["VLLM_SELF_SPEC_LOCAL_ROUTE"] = "0"
-        os.environ["VLLM_SELF_SPEC_DRAFT_FULL_REPLICA"] = "1"
+        os.environ["VLLM_SELF_SPEC_DRAFT_FULL_REPLICA"] = os.environ.get(
+            "MB_FULL_REPLICA", "1"
+        )
 
     from vllm import LLM, SamplingParams
 

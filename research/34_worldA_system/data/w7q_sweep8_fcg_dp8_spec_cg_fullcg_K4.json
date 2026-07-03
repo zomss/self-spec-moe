@@ -1,0 +1,479 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "sweep8_fcg",
+  "dp": 8,
+  "ep": 8,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "full_cg": true,
+  "real_pcie": true,
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "suffix": "cg_fullcg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 7.889180922647938,
+        "short_s_mean": 2.4689542746637017,
+        "long_s_all": [
+          7.930869596078992,
+          7.896519026951864,
+          7.840154144912958
+        ],
+        "short_s_all": [
+          2.473632053937763,
+          2.4682244011200964,
+          2.4650063689332455
+        ],
+        "decode_s_mean": 5.4202266479842365,
+        "decode_s_std": 0.04163534108211797,
+        "tok_s_mean": 188.92943713396326,
+        "tok_s_std": 1.4544150574590111,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.0293453724604966,
+        "accept_rate_per_tok": 0.014672686230248307,
+        "num_accepted": 130.0,
+        "num_drafted": 8860.0,
+        "num_drafts": 4430.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 10.470078747564306,
+        "short_s_mean": 2.9963851486487934,
+        "long_s_all": [
+          10.610770721919835,
+          10.557625451823696,
+          10.241840068949386
+        ],
+        "short_s_all": [
+          3.0556334119755775,
+          2.973921905970201,
+          2.959600128000602
+        ],
+        "decode_s_mean": 7.473693598915513,
+        "decode_s_std": 0.1664178019928644,
+        "tok_s_mean": 548.2391533535996,
+        "tok_s_std": 12.361582692506728,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 1.0090728037176366,
+        "accept_rate_per_tok": 0.004536401858818323,
+        "num_accepted": 164.0,
+        "num_drafted": 36152.0,
+        "num_drafts": 18076.0
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 14.368783951348936,
+        "short_s_mean": 4.060026730333145,
+        "long_s_all": [
+          14.365936414105818,
+          14.254504102980718,
+          14.485911336960271
+        ],
+        "short_s_all": [
+          4.044406997971237,
+          4.079648744082078,
+          4.056024448946118
+        ],
+        "decode_s_mean": 10.30875722101579,
+        "decode_s_std": 0.12799459729560275,
+        "tok_s_mean": 794.7460029128484,
+        "tok_s_std": 9.886549018622734,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 1.0060392135234262,
+        "accept_rate_per_tok": 0.003019606761713041,
+        "num_accepted": 219.0,
+        "num_drafted": 72526.0,
+        "num_drafts": 36263.0
+      },
+      {
+        "batch": 128,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 30.928443462355062,
+        "short_s_mean": 7.474086472687001,
+        "long_s_all": [
+          30.82838494796306,
+          30.935656546149403,
+          31.021288892952725
+        ],
+        "short_s_all": [
+          7.437288973014802,
+          7.436521555064246,
+          7.548448889981955
+        ],
+        "decode_s_mean": 23.45435698966806,
+        "decode_s_std": 0.05634113583802151,
+        "tok_s_mean": 698.5509388282645,
+        "tok_s_std": 1.6798056289834258,
+        "out_tokens_decode": 16384,
+        "full_ntoks": 20480,
+        "suspect": false,
+        "accept_len": 1.0073305078896144,
+        "accept_rate_per_tok": 0.003665253944807212,
+        "num_accepted": 531.0,
+        "num_drafted": 144874.0,
+        "num_drafts": 72437.0
+      },
+      {
+        "batch": 256,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ],
+    "3": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 8.551892538787797,
+        "short_s_mean": 2.9330170556592443,
+        "long_s_all": [
+          8.535150161013007,
+          8.549059063196182,
+          8.571468392154202
+        ],
+        "short_s_all": [
+          2.805202797986567,
+          3.1754641979932785,
+          2.818384170997888
+        ],
+        "decode_s_mean": 5.618875483128552,
+        "decode_s_std": 0.2127340233684344,
+        "tok_s_mean": 182.42104068129592,
+        "tok_s_std": 7.058949432418721,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 13680.0,
+        "num_drafts": 4560.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 12.297075428068638,
+        "short_s_mean": 3.5904652716902397,
+        "long_s_all": [
+          12.300815642112866,
+          12.280957363080233,
+          12.309453279012814
+        ],
+        "short_s_all": [
+          3.586449373047799,
+          3.5953551980201155,
+          3.589591244002804
+        ],
+        "decode_s_mean": 8.706610156378398,
+        "decode_s_std": 0.018399799869892878,
+        "tok_s_mean": 470.4485598074307,
+        "tok_s_std": 0.9952995222096954,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 54720.0,
+        "num_drafts": 18240.0
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 17.329119721039508,
+        "short_s_mean": 5.354771278100088,
+        "long_s_all": [
+          17.379445344908163,
+          17.378462329041213,
+          17.22945148916915
+        ],
+        "short_s_all": [
+          4.917899141088128,
+          5.495697997044772,
+          5.650716696167365
+        ],
+        "decode_s_mean": 11.974348442939421,
+        "decode_s_std": 0.4484748976259862,
+        "tok_s_mean": 684.7626932426871,
+        "tok_s_std": 25.380798941294564,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 109440.0,
+        "num_drafts": 36480.0
+      },
+      {
+        "batch": 128,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 36.431880773666,
+        "short_s_mean": 8.882481510673339,
+        "long_s_all": [
+          36.66041498305276,
+          36.29088616697118,
+          36.344341170974076
+        ],
+        "short_s_all": [
+          8.955966365057975,
+          8.818597552133724,
+          8.872880614828318
+        ],
+        "decode_s_mean": 27.549399262992665,
+        "decode_s_std": 0.1342773185807243,
+        "tok_s_mean": 594.7229049553879,
+        "tok_s_std": 2.890578978364549,
+        "out_tokens_decode": 16384,
+        "full_ntoks": 20480,
+        "suspect": false,
+        "accept_len": 1.0046125461254614,
+        "accept_rate_per_tok": 0.0015375153751537515,
+        "num_accepted": 335.0,
+        "num_drafted": 217884.0,
+        "num_drafts": 72628.0
+      },
+      {
+        "batch": 256,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ],
+    "4": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 10.9281325340271,
+        "short_s_mean": 3.5803980397370956,
+        "long_s_all": [
+          10.920510828029364,
+          10.933550158049911,
+          10.930336616002023
+        ],
+        "short_s_all": [
+          3.581677688052878,
+          3.5729722920805216,
+          3.586544139077887
+        ],
+        "decode_s_mean": 7.3477344942900045,
+        "decode_s_std": 0.0113957405556292,
+        "tok_s_mean": 139.36290725915,
+        "tok_s_std": 0.2159876535061282,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 18240.0,
+        "num_drafts": 4560.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 14.912226942290241,
+        "short_s_mean": 4.364837724016979,
+        "long_s_all": [
+          14.902398064965382,
+          14.908708590082824,
+          14.925574171822518
+        ],
+        "short_s_all": [
+          4.3793849151115865,
+          4.36331029701978,
+          4.351817959919572
+        ],
+        "decode_s_mean": 10.547389218273262,
+        "decode_s_std": 0.025430049624912132,
+        "tok_s_mean": 388.34405219880887,
+        "tok_s_std": 0.9360475453766912,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 72960.0,
+        "num_drafts": 18240.0
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 21.228106759643804,
+        "short_s_mean": 5.732895689007516,
+        "long_s_all": [
+          21.22330928989686,
+          21.225859286030754,
+          21.235151703003794
+        ],
+        "short_s_all": [
+          5.726390195079148,
+          5.733492872910574,
+          5.738803999032825
+        ],
+        "decode_s_mean": 15.495211070636287,
+        "decode_s_std": 0.0024800562822028123,
+        "tok_s_mean": 528.6794805550647,
+        "tok_s_std": 0.084624135628161,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": null,
+        "accept_rate_per_tok": null,
+        "num_accepted": 0.0,
+        "num_drafted": 145920.0,
+        "num_drafts": 36480.0
+      },
+      {
+        "batch": 128,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  },
+  "this_k": 4,
+  "results": [
+    {
+      "batch": 8,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 10.9281325340271,
+      "short_s_mean": 3.5803980397370956,
+      "long_s_all": [
+        10.920510828029364,
+        10.933550158049911,
+        10.930336616002023
+      ],
+      "short_s_all": [
+        3.581677688052878,
+        3.5729722920805216,
+        3.586544139077887
+      ],
+      "decode_s_mean": 7.3477344942900045,
+      "decode_s_std": 0.0113957405556292,
+      "tok_s_mean": 139.36290725915,
+      "tok_s_std": 0.2159876535061282,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": null,
+      "accept_rate_per_tok": null,
+      "num_accepted": 0.0,
+      "num_drafted": 18240.0,
+      "num_drafts": 4560.0
+    },
+    {
+      "batch": 32,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 14.912226942290241,
+      "short_s_mean": 4.364837724016979,
+      "long_s_all": [
+        14.902398064965382,
+        14.908708590082824,
+        14.925574171822518
+      ],
+      "short_s_all": [
+        4.3793849151115865,
+        4.36331029701978,
+        4.351817959919572
+      ],
+      "decode_s_mean": 10.547389218273262,
+      "decode_s_std": 0.025430049624912132,
+      "tok_s_mean": 388.34405219880887,
+      "tok_s_std": 0.9360475453766912,
+      "out_tokens_decode": 4096,
+      "full_ntoks": 5120,
+      "suspect": false,
+      "accept_len": null,
+      "accept_rate_per_tok": null,
+      "num_accepted": 0.0,
+      "num_drafted": 72960.0,
+      "num_drafts": 18240.0
+    },
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 21.228106759643804,
+      "short_s_mean": 5.732895689007516,
+      "long_s_all": [
+        21.22330928989686,
+        21.225859286030754,
+        21.235151703003794
+      ],
+      "short_s_all": [
+        5.726390195079148,
+        5.733492872910574,
+        5.738803999032825
+      ],
+      "decode_s_mean": 15.495211070636287,
+      "decode_s_std": 0.0024800562822028123,
+      "tok_s_mean": 528.6794805550647,
+      "tok_s_std": 0.084624135628161,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": null,
+      "accept_rate_per_tok": null,
+      "num_accepted": 0.0,
+      "num_drafted": 145920.0,
+      "num_drafts": 36480.0
+    },
+    {
+      "batch": 128,
+      "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "mode": "nospec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "epscale",
+  "dp": 2,
+  "ep": 2,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "full_cg": true,
+  "real_pcie": true,
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "suffix": "cg",
+  "by_k": {
+    "0": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 3.267019892965133,
+        "short_s_mean": 0.881777802327027,
+        "long_s_all": [
+          3.355014933971688,
+          3.2246990869753063,
+          3.2213456579484046
+        ],
+        "short_s_all": [
+          0.9246948789805174,
+          0.876051144907251,
+          0.8445873830933124
+        ],
+        "decode_s_mean": 2.385242090638106,
+        "decode_s_std": 0.04149174441996406,
+        "tok_s_mean": 3435.1417156539446,
+        "tok_s_std": 59.45771588553737,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false
+      }
+    ]
+  },
+  "this_k": 0,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 3.267019892965133,
+      "short_s_mean": 0.881777802327027,
+      "long_s_all": [
+        3.355014933971688,
+        3.2246990869753063,
+        3.2213456579484046
+      ],
+      "short_s_all": [
+        0.9246948789805174,
+        0.876051144907251,
+        0.8445873830933124
+      ],
+      "decode_s_mean": 2.385242090638106,
+      "decode_s_std": 0.04149174441996406,
+      "tok_s_mean": 3435.1417156539446,
+      "tok_s_std": 59.45771588553737,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "epscale_fcg",
+  "dp": 8,
+  "ep": 8,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "full_cg": true,
+  "real_pcie": true,
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "suffix": "cg_fullcg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 14.23495708530148,
+        "short_s_mean": 4.107599861298998,
+        "long_s_all": [
+          14.16556225786917,
+          14.363425069022924,
+          14.175883929012343
+        ],
+        "short_s_all": [
+          4.152281729970127,
+          3.988255287054926,
+          4.182262566871941
+        ],
+        "decode_s_mean": 10.12735722400248,
+        "decode_s_std": 0.21483695821166565,
+        "tok_s_mean": 809.1379379999302,
+        "tok_s_std": 16.95898928987783,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 1.0077894097174267,
+        "accept_rate_per_tok": 0.003894704858713366,
+        "num_accepted": 282.0,
+        "num_drafted": 72406.0,
+        "num_drafts": 36203.0
+      }
+    ]
+  },
+  "this_k": 2,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 14.23495708530148,
+      "short_s_mean": 4.107599861298998,
+      "long_s_all": [
+        14.16556225786917,
+        14.363425069022924,
+        14.175883929012343
+      ],
+      "short_s_all": [
+        4.152281729970127,
+        3.988255287054926,
+        4.182262566871941
+      ],
+      "decode_s_mean": 10.12735722400248,
+      "decode_s_std": 0.21483695821166565,
+      "tok_s_mean": 809.1379379999302,
+      "tok_s_std": 16.95898928987783,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 1.0077894097174267,
+      "accept_rate_per_tok": 0.003894704858713366,
+      "num_accepted": 282.0,
+      "num_drafted": 72406.0,
+      "num_drafts": 36203.0
+    }
+  ]
+}

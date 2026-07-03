@@ -1,0 +1,49 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "diag_fp8_piecewise",
+  "dp": 2,
+  "ep": 2,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "full_cg": false,
+  "real_pcie": true,
+  "out_len": 96,
+  "short_len": 32,
+  "iters": 1,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 8,
+        "out_len": 96,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 9.203996506053954,
+        "short_s_mean": 4.483839330961928,
+        "long_s_all": [
+          9.203996506053954
+        ],
+        "short_s_all": [
+          4.483839330961928
+        ],
+        "decode_s_mean": 4.720157175092027,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 108.47096420894454,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 512,
+        "full_ntoks": 768,
+        "suspect": false,
+        "accept_len": 2.001968503937008,
+        "accept_rate_per_tok": 0.5009842519685039,
+        "num_accepted": 509.0,
+        "num_drafted": 1016.0,
+        "num_drafts": 508.0
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "mode": "spec",
+  "model": "/home/smcho/.cache/huggingface/hub/models--Qwen--Qwen3-30B-A3B/snapshots/ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
+  "tag": "epscale_pw",
+  "dp": 2,
+  "ep": 2,
+  "tp": 1,
+  "draft_quant": "fp8",
+  "full_cg": false,
+  "real_pcie": true,
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 19.36242255467611,
+        "short_s_mean": 4.770734434016049,
+        "long_s_all": [
+          19.47501991689205,
+          19.305780132999644,
+          19.306467614136636
+        ],
+        "short_s_all": [
+          4.779416362056509,
+          4.78014273615554,
+          4.752644203836098
+        ],
+        "decode_s_mean": 14.591688120660061,
+        "decode_s_std": 0.09109020767102617,
+        "tok_s_mean": 561.430047320321,
+        "tok_s_std": 3.4935535493450414,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 1.9152780670693605,
+        "accept_rate_per_tok": 0.4576390335346803,
+        "num_accepted": 17577.0,
+        "num_drafted": 38408.0,
+        "num_drafts": 19204.0
+      }
+    ]
+  },
+  "this_k": 2,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 19.36242255467611,
+      "short_s_mean": 4.770734434016049,
+      "long_s_all": [
+        19.47501991689205,
+        19.305780132999644,
+        19.306467614136636
+      ],
+      "short_s_all": [
+        4.779416362056509,
+        4.78014273615554,
+        4.752644203836098
+      ],
+      "decode_s_mean": 14.591688120660061,
+      "decode_s_std": 0.09109020767102617,
+      "tok_s_mean": 561.430047320321,
+      "tok_s_std": 3.4935535493450414,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 1.9152780670693605,
+      "accept_rate_per_tok": 0.4576390335346803,
+      "num_accepted": 17577.0,
+      "num_drafted": 38408.0,
+      "num_drafts": 19204.0
+    }
+  ]
+}

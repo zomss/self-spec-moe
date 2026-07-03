@@ -1,0 +1,29 @@
+{
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "fp8skip",
+  "config": "skip",
+  "skip_a2a": "1",
+  "nccl_p2p_disable": "1",
+  "nccl_shm_disable": "0",
+  "data_parallel_size": 8,
+  "tensor_parallel_size": 1,
+  "input_len": 4,
+  "output_len": 16,
+  "rows": [
+    {
+      "batch_per_rank": 8,
+      "batch_global": 64,
+      "step_ms": 21.2292
+    },
+    {
+      "batch_per_rank": 64,
+      "batch_global": 512,
+      "step_ms": 23.4571
+    },
+    {
+      "batch_per_rank": 256,
+      "batch_global": 2048,
+      "step_ms": 50.311
+    }
+  ]
+}
