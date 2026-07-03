@@ -50,10 +50,17 @@ K8 routes 9/1.68 = **5.4 all-to-all tokens per committed token**.
 1. EAGLE3 accept is depressed by off-distribution prompts; on-distribution
    ~2.3-2.5 softens but does not reverse the high-f conclusion (3/2.4 = 1.25
    tokens/token still loses to 1.03).
-2. This vLLM branch has no tree-attention drafting, so wide-tree EAGLE runs
-   stay composed per Phase 33's method — now improvable with the real-head
-   accept inputs above (replacing the local-routing stand-in). Engine tree
-   runs = one item for the upstream port / rental stack.
+2. **Literal tree-spec runs (the exact World B configuration) remain
+   unexecuted anywhere** — this vLLM branch has no tree-attention drafting.
+   SCOPING DECISION: accept the a-fortiori argument — a tree's marginal
+   (width) nodes have strictly worse acceptance than a chain's marginal
+   (depth) nodes, and this head's accept saturates at 1.67 even on chains,
+   so a wide tree is strictly worse per routed token than the measured K=8
+   chain (already 0.42-0.78x of K=1). The chain-volume sweep therefore
+   bounds the wide-tree conclusion; only the small-pruned-tree UPSIDE at low
+   batch (+8% with the Phase-27 stand-in) lacks a real-head number. Literal
+   in-engine tree runs = an explicit item for the upstream-vLLM port or the
+   multi-node rental stack.
 3. K\*=1 is head-specific (this head's accept saturates early); a stronger
    head shifts K\* up but the volume-cost slope is head-independent.
 

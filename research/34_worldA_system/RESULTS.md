@@ -1,8 +1,10 @@
 # World A — Training-Free, Comm-Free, Lossless Self-Speculative Decoding for Communication-Bound MoE-EP Serving
 
-**Consolidated results, Phases 34–48.** This document ties the system build and the
-debugging/optimization arc into one story, with the final measured numbers. Companion
-per-phase docs live under `research/34_worldA_system/` and `research/{35..48}_*/`.
+**Consolidated results, Phases 34–50.** This document ties the system build, the
+debugging/optimization arc, the draft-behind-verify overlap (Phase 49), and the
+cross-drafter validation with a real EAGLE3 head (Phase 50) into one story, with the
+final measured numbers. Companion per-phase docs live under
+`research/34_worldA_system/` and `research/{35..50}_*/`.
 
 ---
 
@@ -21,6 +23,14 @@ the comm-free self-spec is:
   multi-node band, now **measured** (Phase 48, shielded), no longer just projected.
 - **Meeting or beating the cost model** across the grid (b32/b64 exceed
   `accept_len/(K(1−f)+1)` by 20–28% at high `f`; the FP8 draft undercuts `T_compute`).
+
+Two follow-on arcs complete the single-node story (sections 7–8): the **free-running
+overlap** (draft hidden inside the verify's all-to-all; correct at a measured
+speculation tax, wins its K-column at the highest emulable `f`) and the
+**cross-drafter law** measured with a real EAGLE3 head — `accept/(K+1)` per committed
+token IS communication efficiency, yielding a fully measured single-node deployment
+map: EAGLE3-K1 at native, World A lockstep at comm-bound `f`, overlap-K4 at parity by
+`f≈0.7` and projected to win beyond.
 
 The central finding of the arc: **every "fundamental limit" we hit along the way turned out to
 be a fixable implementation artifact, not physics.** The honest negatives that survive are (a) the
@@ -203,11 +213,71 @@ DRAFT_CHAIN_PIECEWISE`, `K=2`.
 
 ---
 
-## 7. Limitations & future work
+## 7. The overlap arc (Phase 49) — the draft hidden inside the verify's all-to-all
+
+Implements Phase 32's model: run the comm-free draft chain on a side CUDA stream
+inside the verify's comm window. Stages, each measured:
+
+- **OV0a (physics):** 72–81% of a chain-sized load hides inside forced-PCIe
+  collectives.
+- **OV0b (engine):** concurrent draft/verify execution requires an isolation stack,
+  each piece root-caused: propose-done event ordering, a dedicated draft cudagraph
+  pool (`VLLM_SELF_SPEC_DRAFT_GRAPH_POOL`), and the **shared fused-MoE workspace fix**
+  (`VLLM_SELF_SPEC_DRAFT_WORKSPACE` — both models' graphs baked pointers into the same
+  `workspace13/2` scratch; concurrent replay corrupted the verify silently). With the
+  stack, the real chain hides at the physics ceiling (~60%/~71% at a2a 0/500).
+- **OV1(a) (validation mode):** the free-running chain speculates its own future —
+  measured hit rate **0.909–0.910** over 19,200 requests (vs β^(K+1)≈0.85 prior),
+  accept intact, output byte-identical.
+- **OV1(b) (consumption):** the lockstep propose is deleted from steady state. Final
+  design = **delta-slice**: each run anchors on ground truth (`b @ committed` from its
+  one-cycle-old stash) and produces 2K+1 predictions; consume serves
+  `outs[Δ : Δ+K]` where Δ is the live commit delta. Three concurrency defects
+  root-caused en route via a DP1 deterministic repro (side-stream preset race;
+  cross-stream allocator lifetime hazards ×2). Measured: **accept 2.68–2.70 = the
+  predicted speculation tax** (0.93× lockstep — the inherent price of drafting ahead
+  of the sampler), correctness clean.
+- **K-retune under overlap (the payoff):** at a2a=1000, the hidden chain turns K=4
+  from a −8% penalty (lockstep) into a **+51% gain**; overlap-K4 beats lockstep-K4 by
+  +5.7% and reaches **0.973× of the overall-best lockstep-K2** — parity at the highest
+  single-node-emulable `f`, trend favoring overlap as `f` grows.
+
+Verdict: the overlap is a **high-`f` instrument**. Single node `f≤0.6` → lockstep;
+`f≈0.7` → parity; real multi-node comm (SM-free, larger `f`) → overlap-K4+ projected
+to win outright. All env-gated, default-off, one stack serves both modes.
+
+## 8. The cross-drafter law (Phase 50) — real EAGLE3 on the same testbed
+
+A real trained head (`Tengyunw/qwen3_30b_moe_eagle3`) run on the identical testbed
+settles Phase 33's stand-in caveat and Phase 30's estimated-only comparison:
+
+| a2a µs | EAGLE3 best (K=1) | World A lockstep K2 | World A overlap best |
+|---:|---:|---:|---:|
+| 0    | **3022** (accept 1.46) | 2478 (2.91) | 1542 |
+| 500  | 1209 | **1710** | 1208 |
+| 1000 | 687  | **1306** | 1272 (K4) |
+
+- **The law:** the verify routes `(K+1)/accept` all-to-all tokens per committed token
+  — accept-per-verified-token IS comm efficiency (EAGLE3 1.88 vs self-spec 1.03). The
+  cheap-but-inaccurate head rules `f→0` and collapses as `f` grows; the
+  expensive-but-near-perfect self-spec owns the comm-bound regime — Phase 32's
+  inversion, measured with a real head.
+- **Draft volume (the World B claim, real acceptance):** EAGLE3 accept saturates at
+  ~1.67 by K=4 → the comm-aware optimum is **K\*=1 at every measured `f`**; K=8
+  routes 5.4 tokens per committed token. Literal tree-spec runs remain unexecuted
+  (no tree attention in this branch) — scoped by the a-fortiori argument (width
+  nodes are strictly worse than depth nodes; the chain sweep bounds the wide-tree
+  conclusion); an explicit rental-stack item.
+- **Distribution robustness, demonstrated:** the self-spec draft IS the model
+  (accept 2.91 on off-distribution text) while the trained head degrades (1.60 vs
+  ~2.3 on-distribution).
+
+## 9. Limitations & future work
 
 1. **Real multi-node validation.** The single node can only *emulate* the comm-bound regime (A2A
-   delay). The gold-standard number is a genuine inter-node IB run at `f≈0.6–0.8` (measured-emulated
-   1.3–2.6× there, Phase 48).
+   delay). The rental now tests a fully pre-registered prediction set: the Phase-48 shielded curve,
+   overlap-K4 winning outright at real `f≥0.7`, the cross-drafter inversion point, K\* staying
+   minimal, literal tree-spec runs, and the captured-`_sleep` emulation-fidelity question.
 2. ~~**Benchmark shielding.**~~ **DONE (Phase 48):** `_emulate_exposed_a2a_delay` is gated by the
    local-route flag; the measured curve now IS the shielded curve (headline above), with a
    `shielded` counter and an A/B revert knob (`W7_CHARGE_DRAFT_A2A=1`).
