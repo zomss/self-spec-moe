@@ -1,0 +1,85 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "q1n_skipdp0",
+  "dp": 8,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 7.226269057330986,
+        "short_s_mean": 2.3600399143372974,
+        "long_s_all": [
+          6.961418679915369,
+          7.183588555082679,
+          7.53379993699491
+        ],
+        "short_s_all": [
+          2.3300631628371775,
+          2.2439008029177785,
+          2.506155777256936
+        ],
+        "decode_s_mean": 4.866229142993689,
+        "decode_s_std": 0.20810645718312057,
+        "tok_s_mean": 1685.5361299937651,
+        "tok_s_std": 73.56403530902037,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 2.89315434134087,
+        "num_accepted": 24115.0,
+        "num_drafted": 25476.0,
+        "num_drafts": 12738.0
+      }
+    ]
+  },
+  "this_k": 2,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 7.226269057330986,
+      "short_s_mean": 2.3600399143372974,
+      "long_s_all": [
+        6.961418679915369,
+        7.183588555082679,
+        7.53379993699491
+      ],
+      "short_s_all": [
+        2.3300631628371775,
+        2.2439008029177785,
+        2.506155777256936
+      ],
+      "decode_s_mean": 4.866229142993689,
+      "decode_s_std": 0.20810645718312057,
+      "tok_s_mean": 1685.5361299937651,
+      "tok_s_std": 73.56403530902037,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 2.89315434134087,
+      "num_accepted": 24115.0,
+      "num_drafted": 25476.0,
+      "num_drafts": 12738.0
+    }
+  ]
+}

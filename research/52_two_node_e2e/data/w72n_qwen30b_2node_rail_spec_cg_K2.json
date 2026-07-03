@@ -1,0 +1,85 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "qwen30b_2node_rail",
+  "dp": 16,
+  "tp": 1,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 10.417525634945681,
+        "short_s_mean": 3.7535027023404837,
+        "long_s_all": [
+          10.23190707154572,
+          10.323841236997396,
+          10.696828596293926
+        ],
+        "short_s_all": [
+          3.7203609189018607,
+          4.020176065154374,
+          3.5199711229652166
+        ],
+        "decode_s_mean": 6.664022932605197,
+        "decode_s_std": 0.4561283538259835,
+        "tok_s_mean": 1233.0270031284892,
+        "tok_s_std": 81.97891567431988,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 2.898053680740857,
+        "num_accepted": 24185.0,
+        "num_drafted": 25484.0,
+        "num_drafts": 12742.0
+      }
+    ]
+  },
+  "this_k": 2,
+  "results": [
+    {
+      "batch": 64,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 10.417525634945681,
+      "short_s_mean": 3.7535027023404837,
+      "long_s_all": [
+        10.23190707154572,
+        10.323841236997396,
+        10.696828596293926
+      ],
+      "short_s_all": [
+        3.7203609189018607,
+        4.020176065154374,
+        3.5199711229652166
+      ],
+      "decode_s_mean": 6.664022932605197,
+      "decode_s_std": 0.4561283538259835,
+      "tok_s_mean": 1233.0270031284892,
+      "tok_s_std": 81.97891567431988,
+      "out_tokens_decode": 8192,
+      "full_ntoks": 10240,
+      "suspect": false,
+      "accept_len": 2.898053680740857,
+      "num_accepted": 24185.0,
+      "num_drafted": 25484.0,
+      "num_drafts": 12742.0
+    }
+  ]
+}

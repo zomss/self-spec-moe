@@ -1,0 +1,77 @@
+{
+  "mode": "spec",
+  "model": "deepseek-ai/DeepSeek-V2-Lite",
+  "tag": "v2lite_ep8",
+  "dp": 8,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 1,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "1": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 3.8544866191223264,
+        "short_s_mean": 1.6954132379032671,
+        "long_s_all": [
+          3.8544866191223264
+        ],
+        "short_s_all": [
+          1.6954132379032671
+        ],
+        "decode_s_mean": 2.1590733812190592,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 474.27753447723376,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.3613595706618962,
+        "num_accepted": 404.0,
+        "num_drafted": 1118.0,
+        "num_drafts": 1118.0
+      }
+    ]
+  },
+  "this_k": 1,
+  "results": [
+    {
+      "batch": 8,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 1,
+      "warmup": 1,
+      "long_s_mean": 3.8544866191223264,
+      "short_s_mean": 1.6954132379032671,
+      "long_s_all": [
+        3.8544866191223264
+      ],
+      "short_s_all": [
+        1.6954132379032671
+      ],
+      "decode_s_mean": 2.1590733812190592,
+      "decode_s_std": 0.0,
+      "tok_s_mean": 474.27753447723376,
+      "tok_s_std": 0.0,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": 1.3613595706618962,
+      "num_accepted": 404.0,
+      "num_drafted": 1118.0,
+      "num_drafts": 1118.0
+    }
+  ]
+}

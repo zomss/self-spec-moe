@@ -1,0 +1,82 @@
+{
+  "mode": "spec",
+  "model": "deepseek-ai/DeepSeek-V2",
+  "tag": "dsv2_2node",
+  "dp": 8,
+  "tp": 2,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "1": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 19.24984291335568,
+        "short_s_mean": 8.217738630482927,
+        "long_s_all": [
+          18.834769502747804,
+          19.664916323963553
+        ],
+        "short_s_all": [
+          8.137148837093264,
+          8.29832842387259
+        ],
+        "decode_s_mean": 11.032104282872751,
+        "decode_s_std": 0.4730312678616053,
+        "tok_s_mean": 92.90541046374643,
+        "tok_s_std": 3.983570402891889,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.0783687943262412,
+        "num_accepted": 221.0,
+        "num_drafted": 2820.0,
+        "num_drafts": 2820.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 34.855683964909986,
+        "short_s_mean": 11.20244598435238,
+        "long_s_all": [
+          35.297833354678005,
+          34.413534575141966
+        ],
+        "short_s_all": [
+          10.988562291953713,
+          11.416329676751047
+        ],
+        "decode_s_mean": 23.653237980557606,
+        "decode_s_std": 0.9277708821655513,
+        "tok_s_mean": 173.30199345963823,
+        "tok_s_std": 6.7975701037320135,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 1.0874698148645023,
+        "num_accepted": 978.0,
+        "num_drafted": 11181.0,
+        "num_drafts": 11181.0
+      },
+      {
+        "batch": 64,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  }
+}

@@ -263,6 +263,9 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_WORKSPACE: bool = False
     VLLM_SELF_SPEC_AHEAD_CHAIN: bool = False
     VLLM_SELF_SPEC_CONSUME_AHEAD: bool = False
+    VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD: bool = False
+    VLLM_SELF_SPEC_DRAFT_NODE_LOCAL: bool = False
+    VLLM_SELF_SPEC_NODE_LOCAL: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
@@ -1980,6 +1983,35 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # isolation stack. Greedy only. Default off.
     "VLLM_SELF_SPEC_CONSUME_AHEAD": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_CONSUME_AHEAD", "0"))
+    ),
+    # Self-spec Phase 54: NODE-LOCAL draft routing (the Phase 11/19
+    # hierarchical draft). The draft routes to any expert resident on its NODE
+    # and dispatches via AllGather+ReduceScatter over an INTRA-NODE subgroup
+    # (NVLink only), skipping the inter-node hop; the verify stays full-EP.
+    # Producer flag, draft_model method only; mutually exclusive with
+    # VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE (which wins if both are set). Note
+    # VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD is only safe with this when per-rank
+    # batches are uniform (the node collective needs real per-rank sizes).
+    # Default off.
+    "VLLM_SELF_SPEC_DRAFT_NODE_LOCAL": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_NODE_LOCAL", "0"))
+    ),
+    # Reader-side fallback for the node-local flag (mirrors
+    # VLLM_SELF_SPEC_LOCAL_ROUTE): applies node-local routing to EVERY forward
+    # when set. Research/debug only; the spec draft path uses the
+    # forward-context key set by the producer flag above. Default off.
+    "VLLM_SELF_SPEC_NODE_LOCAL": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_NODE_LOCAL", "0"))
+    ),
+    # Self-spec W7 (phase 52): skip coordinate_batch_across_dp for the LOCKSTEP
+    # comm-free draft chain (requires VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE). The
+    # coordination all_reduce + .item() readback is a DP-wide rendezvous per
+    # chain forward -- traced at 66% of the 2-node DP16 spec cycle -- and the
+    # comm-free draft has no collectives that need DP-consistent dispatch.
+    # Per-rank dispatch divergence is safe (same argument as CONSUME_AHEAD's
+    # skip); the verify's coordination is untouched. Default off.
+    "VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H

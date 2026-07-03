@@ -1375,6 +1375,23 @@ def get_dp_group() -> GroupCoordinator:
     return _DP
 
 
+_DP_NODE: GroupCoordinator | None = None
+_RANKS_PER_NODE: int | None = None
+
+
+def get_dp_node_group() -> GroupCoordinator:
+    assert _DP_NODE is not None, (
+        "dp-node group is not initialized; it is only created when "
+        "VLLM_SELF_SPEC_DRAFT_NODE_LOCAL or VLLM_SELF_SPEC_NODE_LOCAL is set"
+    )
+    return _DP_NODE
+
+
+def get_ranks_per_node() -> int:
+    assert _RANKS_PER_NODE is not None, "dp-node group is not initialized"
+    return _RANKS_PER_NODE
+
+
 _EP: GroupCoordinator | None = None
 
 
@@ -1867,6 +1884,36 @@ def initialize_model_parallel(
             group_ranks, get_world_group().local_rank, backend, group_name="dp"
         )
 
+    # Self-spec Phase 54 (node-local draft): an intra-node partition of each DP
+    # group, used by the AgRs all2all manager to dispatch/combine the draft's
+    # MoE tokens over NVLink only. Created symmetrically on all ranks, gated on
+    # the node-local envs so default behavior is untouched. Assumes homogeneous
+    # nodes and node-contiguous global ranks (rank r is on node r // rpn) --
+    # true for the standard one-process-per-GPU multi-node launch.
+    global _DP_NODE, _RANKS_PER_NODE
+    if (
+        envs.VLLM_SELF_SPEC_DRAFT_NODE_LOCAL or envs.VLLM_SELF_SPEC_NODE_LOCAL
+    ) and not enable_elastic_ep:
+        assert _DP_NODE is None, "dp-node group is already initialized"
+        n_nodes = _node_count(get_world_group().cpu_group)
+        ws = get_world_group().world_size
+        assert ws % n_nodes == 0, (
+            f"node-local draft needs homogeneous nodes: world={ws} nodes={n_nodes}"
+        )
+        _RANKS_PER_NODE = ws // n_nodes
+        node_group_ranks = []
+        for ranks in group_ranks:
+            for node in range(n_nodes):
+                sub = [r for r in ranks if r // _RANKS_PER_NODE == node]
+                if sub:
+                    node_group_ranks.append(sub)
+        _DP_NODE = init_model_parallel_group(
+            node_group_ranks,
+            get_world_group().local_rank,
+            backend,
+            group_name="dp_node",
+        )
+
     global _EP
     assert _EP is None, "expert parallel group is already initialized"
     # Don't create EP group for dense models.
@@ -2062,6 +2109,11 @@ def destroy_model_parallel():
     if _EPLB:
         _EPLB.destroy()
     _EPLB = None
+
+    global _DP_NODE
+    if _DP_NODE:
+        _DP_NODE.destroy()
+    _DP_NODE = None
 
 
 def destroy_distributed_environment():

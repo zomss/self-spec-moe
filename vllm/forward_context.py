@@ -223,6 +223,28 @@ def self_spec_local_route_enabled() -> bool:
     return envs.VLLM_SELF_SPEC_LOCAL_ROUTE
 
 
+# Self-spec Phase 54: signal-channel key for the NODE-LOCAL draft routing path
+# (hierarchical draft: intra-node EP dispatch over NVLink, no inter-node hop).
+# Distinct from SELF_SPEC_LOCAL_ROUTE_KEY because the two paths differ in the
+# collectives they issue (none vs intra-node), so every consumer must be able
+# to tell them apart.
+SELF_SPEC_NODE_LOCAL_KEY = "self_spec_node_local"
+
+
+def self_spec_node_local_enabled() -> bool:
+    """True if the node-local (intra-node EP) draft MoE path is active.
+
+    Reads ``ForwardContext.additional_kwargs[SELF_SPEC_NODE_LOCAL_KEY]`` if
+    present, otherwise falls back to ``VLLM_SELF_SPEC_NODE_LOCAL``. Off by
+    default; never changes any existing path when unset.
+    """
+    if _forward_context is not None:
+        val = _forward_context.additional_kwargs.get(SELF_SPEC_NODE_LOCAL_KEY)
+        if val is not None:
+            return bool(val)
+    return envs.VLLM_SELF_SPEC_NODE_LOCAL
+
+
 def create_forward_context(
     attn_metadata: Any,
     vllm_config: VllmConfig,

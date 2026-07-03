@@ -19,6 +19,33 @@ from vllm.model_executor.layers.fused_moe.experts.rocm_aiter_moe import (
 logger = init_logger(__name__)
 
 
+def determine_node_expert_mask(
+    ep_size: int,
+    node_ep_ranks: list[int],
+    global_num_experts: int,
+    expert_placement_strategy: ExpertPlacementStrategy = "linear",
+) -> torch.Tensor | None:
+    """Union residency mask over a node's EP ranks (self-spec Phase 54).
+
+    Returns a ``[global_num_experts]`` int32 tensor with ``0`` for experts
+    resident on ANY of ``node_ep_ranks`` and ``-1`` otherwise -- the shape
+    ``mask_router_logits_to_resident`` expects (it only tests ``>= 0``; the
+    local-slot values are not meaningful for a multi-rank union). Returns
+    ``None`` when ``ep_size == 1`` (all experts resident everywhere).
+    """
+    if ep_size == 1:
+        return None
+    mask = torch.full((global_num_experts,), -1, dtype=torch.int32)
+    for ep_rank in node_ep_ranks:
+        _, emap, _ = determine_expert_map(
+            ep_size, ep_rank, global_num_experts, expert_placement_strategy
+        )
+        if emap is None:
+            return None
+        mask[emap >= 0] = 0
+    return mask
+
+
 def determine_expert_map(
     ep_size: int,
     ep_rank: int,

@@ -21,6 +21,7 @@ from vllm.config import (
 from vllm.distributed.parallel_state import get_pp_group
 from vllm.forward_context import (
     SELF_SPEC_LOCAL_ROUTE_KEY,
+    SELF_SPEC_NODE_LOCAL_KEY,
     BatchDescriptor,
     set_forward_context,
 )
@@ -137,11 +138,20 @@ class SpecDecodeBaseProposer:
         # not VLLM_SELF_SPEC_LOCAL_ROUTE (the reader fallback) -- that one must
         # stay 0 so the verify forward does not inherit local routing. None when
         # inactive -> no change to the forward context.
+        # Phase 54: DRAFT_NODE_LOCAL selects the node-local (intra-node EP)
+        # draft instead; mutually exclusive with DRAFT_LOCAL_ROUTE (which wins
+        # if both are set). Note the node-local draft DOES issue intra-node
+        # collectives, unlike the comm-free device-local path.
         self._draft_forward_additional_kwargs: dict[str, Any] | None = (
             {SELF_SPEC_LOCAL_ROUTE_KEY: True}
             if (
                 self.method == "draft_model"
                 and envs.VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE
+            )
+            else {SELF_SPEC_NODE_LOCAL_KEY: True}
+            if (
+                self.method == "draft_model"
+                and envs.VLLM_SELF_SPEC_DRAFT_NODE_LOCAL
             )
             else None
         )
@@ -3002,7 +3012,7 @@ class SpecDecodeBaseProposer:
         # TODO(Flechman): support DBO ubatching
         should_ubatch, num_tokens_across_dp = False, None
         if (
-            self._consume_mode
+            (self._consume_mode or envs.VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD)
             and self._draft_forward_additional_kwargs is not None
             and self.vllm_config.parallel_config.data_parallel_size > 1
         ):
@@ -3011,6 +3021,11 @@ class SpecDecodeBaseProposer:
             # ranks independently decide consume-vs-propose (bootstrap/fence
             # timing differs per DP engine), so a DP-coordination collective
             # here deadlocks the ranks that propose against those that don't.
+            # W7 (phase 52): with DRAFT_SKIP_DP_COORD the same skip applies to
+            # the LOCKSTEP comm-free draft: coordinate_batch_across_dp's
+            # all_reduce + .item() is a per-chain-step DP-wide rendezvous
+            # (measured 66% of the 2-node spec cycle) that buys nothing the
+            # draft needs -- it has no collectives to keep consistent.
             # Build a locally-uniform num_tokens_across_dp for the forward
             # context (only comm paths read it; the draft has none).
             dp_size = self.vllm_config.parallel_config.data_parallel_size

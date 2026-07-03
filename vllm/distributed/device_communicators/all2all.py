@@ -13,7 +13,11 @@ import torch.distributed as dist
 import vllm.envs as envs
 from vllm.distributed import get_dp_group, get_ep_group
 from vllm.distributed.utils import StatelessProcessGroup
-from vllm.forward_context import get_forward_context, self_spec_local_route_enabled
+from vllm.forward_context import (
+    get_forward_context,
+    self_spec_local_route_enabled,
+    self_spec_node_local_enabled,
+)
 from vllm.logger import init_logger
 from vllm.utils.flashinfer import (
     has_flashinfer_nvlink_one_sided,
@@ -66,6 +70,11 @@ class AgRsAll2AllManager(All2AllManagerBase):
         self._charge_draft_a2a = bool(
             int(os.environ.get("W7_CHARGE_DRAFT_A2A", "0"))
         )
+        # Self-spec Phase 54 (node-local draft): cached positions of the
+        # intra-node subgroup's members within the DP group, for slicing the
+        # DP-shaped sizes vector down to the node subgroup.
+        self._node_dp_indices: list[int] | None = None
+        self._node_sizes_last: list[int] | None = None
         # GPU-clock cycles per microsecond for torch.cuda._sleep injection.
         # Calibrated once here (eager, before any CUDA-graph capture) so the
         # delay can be enqueued on the stream and captured into the graph.
@@ -101,7 +110,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
         active_file = envs.VLLM_SELF_SPEC_A2A_COUNT_ACTIVE_FILE
         if not active_file or Path(active_file).exists():
             self._active_emulated_a2a_count += 1
-        if self_spec_local_route_enabled() and not self._charge_draft_a2a:
+        if (
+            self_spec_local_route_enabled() or self_spec_node_local_enabled()
+        ) and not self._charge_draft_a2a:
+            # (Node-local draft: shielded too -- the emulated delay models the
+            # INTER-node hop, which node-local genuinely avoids; its real
+            # intra-node collective cost is paid natively above.)
             # Comm-free local-routing forward (the self-spec draft): the
             # dispatch/combine above issued NO real collective, so charge no
             # emulated A2A delay either. Without this gate the draft pays the
@@ -148,6 +162,30 @@ class AgRsAll2AllManager(All2AllManagerBase):
         off = sum(sizes[:rank])
         return t[off : off + sizes[rank]].contiguous()
 
+    def _node_group_and_sizes(self, sizes, own_len):
+        """Intra-node DP subgroup + node-sliced sizes (self-spec Phase 54).
+
+        The draft's forward context can carry stale dp_metadata in
+        prefill-adjacent steps (the comm-free path never consumed it, so this
+        was invisible before). When the sliced sizes disagree with the actual
+        input length, fall back to locally-uniform sizes -- correct for the
+        uniform lockstep batches this research path targets. The result is
+        stashed so combine() reuses the exact gather sizes.
+        """
+        from vllm.distributed.parallel_state import get_dp_node_group
+
+        node_group = get_dp_node_group()
+        if self._node_dp_indices is None:
+            dp_ranks = get_dp_group().ranks
+            self._node_dp_indices = [
+                dp_ranks.index(r) for r in node_group.ranks
+            ]
+        node_sizes = [sizes[i] for i in self._node_dp_indices]
+        if node_sizes[node_group.rank_in_group] != own_len:
+            node_sizes = [own_len] * len(node_group.ranks)
+        self._node_sizes_last = node_sizes
+        return node_group, node_sizes
+
     def dispatch_router_logits(
         self,
         hidden_states: torch.Tensor,
@@ -172,7 +210,18 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        if self_spec_local_route_enabled():
+        if self_spec_node_local_enabled() and not is_sequence_parallel:
+            # Self-spec Phase 54: node-local draft -- gather over the
+            # intra-node subgroup only (NVLink); router already masked to
+            # node-resident experts upstream.
+            node_group, node_sizes = self._node_group_and_sizes(
+                sizes, hidden_states.shape[0]
+            )
+            gathered_tensors = node_group.all_gatherv(
+                tensors_to_gather, dim=0, sizes=node_sizes
+            )
+            self._real_collective_count += 1
+        elif self_spec_local_route_enabled():
             # CORRECT comm-free local routing: no gather, use local tokens
             # as-is (router already masked to resident experts upstream).
             gathered_tensors = tensors_to_gather
@@ -218,7 +267,18 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if extra_tensors is not None:
             tensors_to_gather.extend(extra_tensors)
 
-        if self_spec_local_route_enabled():
+        if self_spec_node_local_enabled() and not is_sequence_parallel:
+            # Self-spec Phase 54: node-local draft -- gather over the
+            # intra-node subgroup only (NVLink); router already masked to
+            # node-resident experts upstream.
+            node_group, node_sizes = self._node_group_and_sizes(
+                sizes, hidden_states.shape[0]
+            )
+            gathered_tensors = node_group.all_gatherv(
+                tensors_to_gather, dim=0, sizes=node_sizes
+            )
+            self._real_collective_count += 1
+        elif self_spec_local_route_enabled():
             # CORRECT comm-free local routing: no gather, use local tokens
             # as-is (topk_ids already masked to resident experts upstream).
             gathered_tensors = tensors_to_gather
@@ -256,7 +316,19 @@ class AgRsAll2AllManager(All2AllManagerBase):
         assert sizes is not None
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
-        if self_spec_local_route_enabled():
+        if self_spec_node_local_enabled() and not is_sequence_parallel:
+            # Self-spec Phase 54: node-local draft -- reduce-scatter over the
+            # intra-node subgroup only (NVLink).
+            from vllm.distributed.parallel_state import get_dp_node_group
+
+            node_group = get_dp_node_group()
+            assert self._node_sizes_last is not None
+            node_sizes = self._node_sizes_last
+            hidden_states = node_group.reduce_scatterv(
+                hidden_states, dim=0, sizes=node_sizes
+            )
+            self._real_collective_count += 1
+        elif self_spec_local_route_enabled():
             # CORRECT comm-free local routing: no combine, output is already
             # local (each rank computed only its resident experts on its own
             # tokens, so there is nothing to reduce-scatter across ranks).

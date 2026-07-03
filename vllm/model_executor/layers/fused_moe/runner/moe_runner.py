@@ -31,6 +31,12 @@ from vllm.model_executor.layers.fused_moe.fused_moe_method_base import (
 from vllm.model_executor.layers.fused_moe.fused_moe_modular_method import (
     FusedMoEModularMethod,
 )
+from vllm.forward_context import (
+    self_spec_node_local_enabled as node_local_enabled,
+)
+from vllm.model_executor.layers.fused_moe.expert_map_manager import (
+    determine_node_expert_mask,
+)
 from vllm.model_executor.layers.fused_moe.local_route import (
     draft_topc,
     local_route_enabled,
@@ -597,6 +603,13 @@ class MoERunner(MoERunnerInterface):
             router_logits = mask_router_logits_to_resident(
                 router_logits, self.expert_map
             )
+        elif node_local_enabled():
+            # Self-spec Phase 54 (node-local draft): mask to the union of
+            # experts resident on ANY EP rank of this node; the AgRs manager
+            # dispatches/combines over the intra-node subgroup (NVLink only).
+            router_logits = mask_router_logits_to_resident(
+                router_logits, self._node_expert_map(router_logits)
+            )
 
         if self.routed_experts.quant_method.is_monolithic:
             # Self-spec W2b probe: the top-C prune lives on the modular
@@ -1011,6 +1024,43 @@ class MoERunner(MoERunnerInterface):
     @property
     def expert_map(self) -> torch.Tensor | None:
         return self.routed_experts.expert_map
+
+    # Self-spec Phase 54: node-resident expert mask, built once per layer.
+    _node_expert_map_cache: torch.Tensor | None = None
+    _node_expert_map_built: bool = False
+
+    def _node_expert_map(self, router_logits: torch.Tensor) -> torch.Tensor | None:
+        """Union residency mask over this node's EP ranks (node-local draft).
+
+        Built lazily on first use (normally the eager profile run, before any
+        CUDA-graph capture) and cached on the runner. None (=all resident,
+        mask no-op) when EP is off or the node spans the whole EP group.
+        """
+        if not self._node_expert_map_built:
+            from vllm.distributed.parallel_state import (
+                get_ep_group,
+                get_ranks_per_node,
+            )
+
+            ep = get_ep_group()
+            rpn = get_ranks_per_node()
+            my_node = ep.ranks[ep.rank_in_group] // rpn
+            node_ep_ranks = [
+                i for i, g in enumerate(ep.ranks) if g // rpn == my_node
+            ]
+            mask = determine_node_expert_mask(
+                self.moe_config.ep_size,
+                node_ep_ranks,
+                router_logits.shape[-1],
+                self.expert_placement_strategy,
+            )
+            if mask is not None and len(node_ep_ranks) == self.moe_config.ep_size:
+                mask = None  # single node: node-resident == all experts
+            if mask is not None:
+                mask = mask.to(router_logits.device)
+            self._node_expert_map_cache = mask
+            self._node_expert_map_built = True
+        return self._node_expert_map_cache
 
     def _expert_routing_tables(
         self,

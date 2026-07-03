@@ -1,0 +1,54 @@
+{
+  "mode": "spec",
+  "model": "deepseek-ai/DeepSeek-V2",
+  "tag": "ladder3_dsv2_2n",
+  "dp": 8,
+  "tp": 2,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "1": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 20.43686922546476,
+        "short_s_mean": 5.319401154993102,
+        "long_s_all": [
+          20.060023312922567,
+          20.813715138006955
+        ],
+        "short_s_all": [
+          5.339726770296693,
+          5.299075539689511
+        ],
+        "decode_s_mean": 15.11746807047166,
+        "decode_s_std": 0.5616853612679525,
+        "tok_s_mean": 67.78299685371516,
+        "tok_s_std": 2.518458573758748,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.9049405878674173,
+        "num_accepted": 1447.0,
+        "num_drafted": 1599.0,
+        "num_drafts": 1599.0
+      },
+      {
+        "batch": 32,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  }
+}
