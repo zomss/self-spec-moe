@@ -236,9 +236,27 @@ class SpecDecodeBaseProposer:
         # W7: opt-in FULL cudagraphs for the draft decode-step forwards (see
         # VLLM_SELF_SPEC_DRAFT_FULL_CG). Default off -> PIECEWISE as before.
         self.use_full_cudagraphs = envs.VLLM_SELF_SPEC_DRAFT_FULL_CG
-        # Phase 55: keepalive for step0 FULL-capture constants (strided
-        # query_start_loc tensors referenced by captured graphs).
-        self._step0_capture_keepalive: list = []
+        # Phase 55: cache of step0 FULL-capture constants (strided
+        # query_start_loc tensors referenced by captured graphs), keyed by
+        # (num_reqs, qlen); doubles as the keepalive.
+        self._step0_qsl_cache: dict = {}
+        # Phase 55: the step-0 FULL graph reads seq_lens through this
+        # proposer-owned buffer (extend_all_queries_by_N returns a fresh
+        # seq_lens tensor each cycle, so the runner's buffer can't be the
+        # captured pointer). Replay copies the live extended seq_lens in and
+        # zeroes the padded-request rows. _step0_captured records the FULL
+        # uniform shapes actually captured (guards against dispatching a
+        # keyed-but-never-captured shape at runtime).
+        self._step0_seq_lens: torch.Tensor | None = None
+        self._step0_captured: set[int] = set()
+        # Debug: per-dispatch shape/mode logging (W7_STEP0_DEBUG=1) and
+        # runtime force-piecewise bisect knob (W7_STEP0_FORCE_PW=1).
+        self._step0_debug = bool(os.environ.get("W7_STEP0_DEBUG"))
+        self._step0_force_pw = bool(os.environ.get("W7_STEP0_FORCE_PW"))
+        if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG:
+            self._step0_seq_lens = torch.zeros(
+                self.max_batch_size, dtype=torch.int32, device=device
+            )
         # W7-gqa: when True, the FULL-CG draft chain runs its attention EAGERLY
         # (per-step kernel launch) instead of replaying the captured decode
         # graph. Set in initialize_attn_backend for non-MLA (FA3 / GQA) draft
@@ -621,6 +639,20 @@ class SpecDecodeBaseProposer:
             and self.speculative_config.num_speculative_tokens == 1
         )
 
+    @property
+    def _step0_q(self) -> int:
+        """Phase 55: the step-0 batch's per-request query len. The padded
+        drafter batch keeps all K+1 verify tokens per request and
+        set_inputs_first_pass appends net_num_new_slots_per_request more
+        (draft_model: +1 -> q=3 at K=1), so steady-state step-0 batches are
+        already per-request uniform at this q (rejected slots are PAD-masked).
+        """
+        return (
+            self.speculative_config.num_speculative_tokens
+            + 1
+            + self.net_num_new_slots_per_request
+        )
+
     def initialize_cudagraph_keys(self, cudagraph_mode: CUDAGraphMode) -> None:
         """Initialize cudagraph dispatcher keys for the drafter.
 
@@ -654,13 +686,11 @@ class SpecDecodeBaseProposer:
         # 1 + num_speculative_tokens (the *verify* query len); override to 1
         # because each draft decode-step forward is a single token per seq.
         # Phase 55: at K=1 there are no q=1 chain forwards -- the only draft
-        # forward is step-0 at q=K+1. With STEP0_FULL_CG, key the draft's
-        # uniform-decode FULL graphs at q=K+1 instead so step-0 replays FULL.
-        _qlen = (
-            self.speculative_config.num_speculative_tokens + 1
-            if self._step0_full_cg
-            else 1
-        )
+        # forward is step-0, per-request uniform at q=_step0_q (=K+2 for
+        # draft_model: K+1 verify tokens + the appended sampled-token slot).
+        # With STEP0_FULL_CG, key the draft's uniform-decode FULL graphs at
+        # that q so steady-state step-0 batches replay FULL.
+        _qlen = self._step0_q if self._step0_full_cg else 1
         self.cudagraph_dispatcher.uniform_decode_query_len = _qlen
         self.cudagraph_dispatcher.initialize_cudagraph_keys(
             eagle_cudagraph_mode, uniform_decode_query_len=_qlen
@@ -796,19 +826,57 @@ class SpecDecodeBaseProposer:
             )
 
         with _self_spec_profiler().region("step0_determine_batch"):
-            # Phase 55: with STEP0_FULL_CG (K=1), the padded-uniform step-0
-            # batch (q=K+1) dispatches to the FULL graphs captured at that
-            # shape; non-uniform batches (mixed steps) fall back naturally.
+            # Phase 55: with STEP0_FULL_CG (K=1), the steady-state step-0
+            # batch is per-request uniform at q=_step0_q (=3: 2 verify tokens
+            # + the appended sampled-token slot; rejected slots PAD-masked by
+            # set_inputs_first_pass) and dispatches to the FULL graphs
+            # captured at that shape; mixed prefill/decode steps fall back
+            # naturally. The max_query_len check excludes mixed batches that
+            # only sum to batch*q.
+            _q = (
+                self.num_speculative_tokens
+                + 1
+                + self.net_num_new_slots_per_request
+            )
             _step0_uniform = (
                 self._step0_full_cg
-                and num_tokens
-                == batch_size * (self.num_speculative_tokens + 1)
+                and num_tokens == batch_size * _q
+                and common_attn_metadata.max_query_len == _q
             )
+            if _step0_uniform and self._step0_force_pw:
+                # Debug bisect knob (W7_STEP0_FORCE_PW=1): keep all capture
+                # machinery but never dispatch step-0 FULL at runtime.
+                _step0_uniform = False
+            if _step0_uniform:
+                # Pre-flight (pure, no DP collective): only claim uniform if
+                # the dispatch target is a FULL shape we actually captured;
+                # a keyed-but-uncaptured shape would fault in the wrapper.
+                _mode, _desc = self.cudagraph_dispatcher.dispatch(
+                    num_tokens, uniform_decode=True
+                )
+                if (
+                    _mode != CUDAGraphMode.FULL
+                    or _desc.num_tokens not in self._step0_captured
+                ):
+                    _step0_uniform = False
             cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
                 self._determine_batch_execution_and_padding(
                     num_tokens, uniform_decode=_step0_uniform
                 )
             )
+            if (
+                _step0_uniform
+                and cudagraph_runtime_mode == CUDAGraphMode.FULL
+            ):
+                # The captured step-0 graph reads seq_lens through the
+                # proposer-owned buffer (the live extended seq_lens is a
+                # fresh tensor each cycle); refresh it. Padded-request rows
+                # are zeroed so they attend over nothing.
+                assert self._step0_seq_lens is not None
+                self._step0_seq_lens[:batch_size].copy_(
+                    common_attn_metadata.seq_lens[:batch_size]
+                )
+                self._step0_seq_lens[batch_size:].zero_()
             _k = (num_tokens, batch_size, _step0_uniform)
             if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG and _k not in getattr(
                 self, "_step0_cg_logged", set()
@@ -2131,6 +2199,15 @@ class SpecDecodeBaseProposer:
         block_table_tensor = blk_table.get_device_tensor(num_reqs)
         seq_lens = runner.seq_lens[:num_reqs]
         seq_lens_cpu = runner.optimistic_seq_lens_cpu[:num_reqs]
+        if qlen > 1:
+            # Phase 55 (step0 FULL capture): capture reads seq_lens through
+            # the proposer-owned buffer -- the live step-0 metadata's
+            # seq_lens (extend_all_queries_by_N) is a fresh tensor each
+            # cycle, so replay refreshes this buffer instead (propose()).
+            assert self._step0_seq_lens is not None
+            self._step0_seq_lens[:num_reqs].copy_(seq_lens)
+            self._step0_seq_lens[num_reqs:].zero_()
+            seq_lens = self._step0_seq_lens[:num_reqs]
         # Bake a LARGE step-invariant max_seq_len upper bound into the captured
         # graph (mirrors V2's draft_max_seq_len). The runner's capture-time
         # seq_lens are tiny (= the verify query len) while replay seq_lens grow
@@ -2147,12 +2224,18 @@ class SpecDecodeBaseProposer:
             ).clone()
         else:
             # Phase 55 (step0 FULL capture): strided starts for uniform q>1.
-            # Constant per shape; kept alive for the captured graph's lifetime.
-            query_start_loc = (self.arange[: num_reqs + 1] * qlen).contiguous()
+            # Constant per shape; cached so capture and any later rebuild of
+            # the same shape share ONE tensor (kept alive for the captured
+            # graph's lifetime; runtime dummy rebuilds must not grow it).
+            _qsl_key = (num_reqs, qlen)
+            if _qsl_key not in self._step0_qsl_cache:
+                self._step0_qsl_cache[_qsl_key] = (
+                    self.arange[: num_reqs + 1] * qlen
+                ).contiguous()
+            query_start_loc = self._step0_qsl_cache[_qsl_key]
             query_start_loc_cpu = torch.from_numpy(
                 self.token_arange_np[: num_reqs + 1] * qlen
             ).clone()
-            self._step0_capture_keepalive.append(query_start_loc)
 
         common_attn_metadata = CommonAttentionMetadata(
             query_start_loc=query_start_loc,
@@ -2850,11 +2933,7 @@ class SpecDecodeBaseProposer:
                 # metadata (and the sample-in-graph capture below) for them.
                 and not self._draft_chain_force_eager_attn
             )
-            _capture_qlen = (
-                self.speculative_config.num_speculative_tokens + 1
-                if self._step0_full_cg
-                else 1
-            )
+            _capture_qlen = self._step0_q if self._step0_full_cg else 1
             draft_attn_metadata = (
                 self._build_draft_decode_capture_metadata(
                     num_input_tokens, qlen=_capture_qlen
@@ -2862,6 +2941,19 @@ class SpecDecodeBaseProposer:
                 if capture_full_attn
                 else None
             )
+            # Phase 55: keep idle-rank dummy REPLAYS of the step-0 FULL graph
+            # inert -- PAD slots (no KV writes) and zero seq_lens (no reads).
+            # Real propose() refreshes both buffers before its replay.
+            if (
+                self._step0_full_cg
+                and capture_full_attn
+                and not is_graph_capturing
+            ):
+                self._slot_mapping_buffer[:num_input_tokens].fill_(
+                    PADDING_SLOT_ID
+                )
+                assert self._step0_seq_lens is not None
+                self._step0_seq_lens.zero_()
 
             with set_forward_context(
                 draft_attn_metadata,
@@ -2891,8 +2983,22 @@ class SpecDecodeBaseProposer:
                 # W7 sampling-in-graph: on the draft FULL (uniform-decode)
                 # capture pass, also capture the combined forward+sample graph
                 # so its per-step replay in the decode loop finds the key.
-                if capture_full_attn and self._decode_fwd_sample is not None:
+                # Phase 55 (STEP0_FULL_CG, K=1): skip it entirely -- there is
+                # no chain, so the fws graph is never replayed by propose();
+                # and replaying TWO graphs in runtime idle-rank dummies while
+                # busy ranks replay ONE desyncs the in-graph collectives of
+                # the node-local draft across DP ranks (device deadlock at
+                # batch drain).
+                if (
+                    capture_full_attn
+                    and self._decode_fwd_sample is not None
+                    and not self._step0_full_cg
+                ):
                     self._decode_fwd_sample(**kwargs)
+            # Phase 55: record the step-0 FULL shapes actually captured;
+            # propose() only claims uniform for these (see pre-flight check).
+            if self._step0_full_cg and capture_full_attn and is_graph_capturing:
+                self._step0_captured.add(num_input_tokens)
 
     def _get_eagle3_use_aux_hidden_state_from_config(self) -> bool:
         """
@@ -3151,10 +3257,18 @@ class SpecDecodeBaseProposer:
                 dp_rank = self.dp_rank
                 num_tokens_padded = int(num_tokens_across_dp[dp_rank].item())
                 # Re-dispatch with DP padding so we have the correct
-                # batch_descriptor
+                # batch_descriptor.
+                # Phase 55: the DP-agreed padded size is final; keep the
+                # uniform claim only when the synced mode is FULL (all ranks
+                # uniform, sizes multiples of q) so the dispatcher's uniform
+                # bump cannot alter the agreed size and trip the assert.
+                _sync_uniform = (
+                    uniform_decode
+                    and synced_cudagraph_mode == CUDAGraphMode.FULL.value
+                )
                 cudagraph_mode, batch_desc = self.cudagraph_dispatcher.dispatch(
                     num_tokens_padded,
-                    uniform_decode=uniform_decode,
+                    uniform_decode=_sync_uniform,
                     valid_modes={CUDAGraphMode(synced_cudagraph_mode)},
                 )
                 # Assert to make sure the agreed upon token count is correct
@@ -3172,6 +3286,15 @@ class SpecDecodeBaseProposer:
             piecewise_only and cudagraph_mode == CUDAGraphMode.PIECEWISE
         ):
             self._last_batch_desc = batch_desc
+        if self._step0_debug:
+            logger.info(
+                "[draft-dbg] rank=%d src=%s ntok=%d padded=%d mode=%s "
+                "uniform=%s desc=%s",
+                self.dp_rank,
+                "propose" if self._in_propose else "dummy",
+                num_tokens, num_tokens_padded, cudagraph_mode,
+                uniform_decode, batch_desc,
+            )
         return cudagraph_mode, num_tokens_padded, num_tokens_across_dp
 
 

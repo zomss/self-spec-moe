@@ -3939,6 +3939,12 @@ class GPUModelRunner(
                 num_paddings=batch_descriptor.num_tokens - num_tokens,
                 runtime_mode=str(cudagraph_mode),
             )
+        if os.environ.get("W7_STEP0_DEBUG"):
+            logger.info(
+                "[main-dbg] rank=%d ntok=%d padded=%d mode=%s uniform=%s",
+                self.parallel_config.data_parallel_rank, num_tokens,
+                batch_descriptor.num_tokens, cudagraph_mode, uniform_decode,
+            )
 
         return (
             cudagraph_mode,
@@ -6163,12 +6169,18 @@ class GPUModelRunner(
                 # token per seq. Capture the draft at num_reqs tokens so the key
                 # matches the runtime draft batch (batch_size == num_reqs).
                 drafter_num_tokens = num_tokens
-                if capture_draft_full and not getattr(
-                    self.drafter, "_step0_full_cg", False
-                ):
-                    # (Phase 55: with STEP0_FULL_CG the draft captures at the
-                    # step-0 shape = the runner batch's num_tokens, q=K+1.)
-                    drafter_num_tokens = num_reqs_padded
+                if capture_draft_full:
+                    if getattr(self.drafter, "_step0_full_cg", False):
+                        # Phase 55: with STEP0_FULL_CG the draft's only
+                        # forward is step-0, per-request uniform at
+                        # q=_step0_q (K+1 verify tokens + appended slots).
+                        # Drive its capture at that shape so the captured
+                        # keys match the runtime step-0 batches.
+                        drafter_num_tokens = (
+                            num_reqs_padded * self.drafter._step0_q
+                        )
+                    else:
+                        drafter_num_tokens = num_reqs_padded
                 self.drafter.dummy_run(
                     drafter_num_tokens,
                     use_cudagraphs=use_cudagraphs,

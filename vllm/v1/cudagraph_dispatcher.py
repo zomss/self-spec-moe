@@ -79,6 +79,9 @@ class CudagraphDispatcher:
         assert capture_sizes is not None, (
             "Cudagraph capture sizes must be set when cudagraphs are enabled."
         )
+        # Phase 55: sorted sizes for uniform-decode padding (see
+        # _create_padded_batch_descriptor).
+        self._sorted_capture_sizes: list[int] = sorted(capture_sizes)
         self._bs_to_padded_graph_size: list[int] = [0] * (max_size + 1)
         for end, start in zip(
             capture_sizes + [max_size + 1],
@@ -139,6 +142,32 @@ class CudagraphDispatcher:
         max_num_seqs = self.vllm_config.scheduler_config.max_num_seqs
         uniform_decode_query_len = self.uniform_decode_query_len
         num_tokens_padded = self._bs_to_padded_graph_size[num_tokens]
+
+        # Phase 55: the drafter's uniform query len (step-0 q=K+2) need not
+        # divide every shared capture size; pad uniform batches up to the next
+        # capture size it divides, or drop the uniform claim (-> PIECEWISE
+        # fallback at dispatch). No-op for the runner: its sizes are already
+        # rounded to multiples of its uniform_decode_query_len.
+        if (
+            uniform_decode
+            and self.cudagraph_mode.has_mode(CUDAGraphMode.FULL)
+            and num_tokens_padded % uniform_decode_query_len != 0
+        ):
+            limit = uniform_decode_query_len * max_num_seqs
+            bumped = next(
+                (
+                    s
+                    for s in self._sorted_capture_sizes
+                    if s >= num_tokens_padded
+                    and s <= limit
+                    and s % uniform_decode_query_len == 0
+                ),
+                None,
+            )
+            if bumped is None:
+                uniform_decode = False
+            else:
+                num_tokens_padded = bumped
 
         if uniform_decode and self.cudagraph_mode.has_mode(CUDAGraphMode.FULL):
             num_reqs = min(num_tokens_padded // uniform_decode_query_len, max_num_seqs)
@@ -223,12 +252,15 @@ class CudagraphDispatcher:
             for bs, num_active_loras in product(
                 cudagraph_capture_sizes_for_decode, lora_cases
             ):
-                self.add_cudagraph_key(
-                    CUDAGraphMode.FULL,
-                    self._create_padded_batch_descriptor(
-                        bs, True, num_active_loras > 0, num_active_loras
-                    ),
+                batch_desc = self._create_padded_batch_descriptor(
+                    bs, True, num_active_loras > 0, num_active_loras
                 )
+                # Phase 55: sizes with no uniform-divisible padding target
+                # lose the uniform claim; skip them (a non-uniform FULL key
+                # would wrongly match mixed batches).
+                if not batch_desc.uniform:
+                    continue
+                self.add_cudagraph_key(CUDAGraphMode.FULL, batch_desc)
 
         self.keys_initialized = True
 

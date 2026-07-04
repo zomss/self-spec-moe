@@ -1432,6 +1432,46 @@ class CompilationConfig:
                 tensor_parallel_size,
             )
 
+        # Phase 55 (self-spec): with STEP0_FULL_CG at K=1 the drafter's step-0
+        # forward is uniform at q=K+2=3 tokens per request (verify q=2 plus the
+        # appended sampled-token slot). Inject capture sizes divisible by both
+        # the verify q (2) and the draft step-0 q (3) so the draft's uniform
+        # FULL graphs have shapes to land on (power-of-2 request ladder).
+        if (
+            envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG
+            and cudagraph_mode.decode_mode() == CUDAGraphMode.FULL
+            and uniform_decode_query_len == 2
+            and self.cudagraph_capture_sizes
+            and max_num_reqs is not None
+        ):
+            assert self.max_cudagraph_capture_size is not None
+            extra: set[int] = set()
+            # Optional override (comma list) -- graph pools are NOT under
+            # gpu_memory_utilization, so memory-tight configs (236B) can cap
+            # the injected ladder to just the shapes they need (e.g. "24").
+            import os
+
+            override = os.environ.get("W7_STEP0_CG_EXTRA_SIZES", "").strip()
+            if override:
+                for tok in override.split(","):
+                    size = round_up(int(tok), 6)
+                    if size <= self.max_cudagraph_capture_size:
+                        extra.add(size)
+            else:
+                r = 1
+                while r <= max_num_reqs:
+                    size = round_up(3 * r, 6)
+                    if size <= self.max_cudagraph_capture_size:
+                        extra.add(size)
+                    r *= 2
+            merged = sorted(set(self.cudagraph_capture_sizes) | extra)
+            if merged != self.cudagraph_capture_sizes:
+                logger.info(
+                    "STEP0_FULL_CG: added draft step-0 capture sizes %s",
+                    sorted(extra - set(self.cudagraph_capture_sizes)),
+                )
+                self.cudagraph_capture_sizes = merged
+
         # For Mamba models with FULL decode cudagraphs, each decode
         # sequence needs one Mamba cache block. The decode cudagraph
         # dispatcher already caps batch sizes at max_num_seqs, so we just

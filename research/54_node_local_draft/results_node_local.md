@@ -76,6 +76,91 @@ shapes, model-agnostic). (b) likely also fixes the Phase 52 verify anomaly
 for chunked-prefill shapes. Both are drafter/compile surgery -- the next
 session's task, now with exact shape evidence.
 
+**Phase 55 v2 (STEP0_FULL_CG ENGAGED -- keyed at q=K+2, LOSSLESS):** the
+shape evidence above was misread: (24,8)/(21,7)/(15,5) are exactly 3
+tokens/request -- steady-state step0 IS per-request uniform, just at
+q = K+2 = 3, not K+1. With the padded drafter batch, set_inputs_first_pass
+already pads every decode request to exactly K+1 verify slots + 1 appended
+sampled-token slot (rejected slots PAD-masked by compute_new_slot_mapping)
+-- i.e. the "pad per-request to fixed q" work of option (a) was ALREADY
+DONE by the existing kernel; only the FULL-CG keying was wrong (q=K+1=2).
+Fix (all under VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG):
+- key/capture/dispatch the draft's uniform FULL graphs at q=_step0_q=K+2
+  (llm_base_proposer: dispatcher qlen, capture qlen, uniform condition
+  `num_tokens == batch*q AND max_query_len == q`);
+- route the captured graph's seq_lens through a proposer-owned buffer
+  refreshed at each step-0 replay (extend_all_queries_by_N returns a FRESH
+  +1 seq_lens tensor each cycle, so the runner's buffer cannot be the
+  captured pointer; pad-request rows zeroed);
+- inject q-divisible capture sizes round_up(3*2^k, 6) (compilation.py) and
+  pad uniform dispatches up to the next q-divisible capture size
+  (cudagraph_dispatcher bump; no-op for the runner whose sizes are already
+  multiples of its q);
+- drive the draft capture at 3*num_reqs per runner uniform desc
+  (gpu_model_runner) + a captured-shape set guard in propose so a
+  keyed-but-never-captured shape can never dispatch FULL.
+Two latent bugs found and fixed on the way:
+1. DEVICE DEADLOCK at batch drain (100% GPU spin, all workers parked at the
+   next coordinate .item(); py-spy + per-dispatch logs): runtime idle-rank
+   draft dummies replayed TWO FULL graphs (model + forward-sample) while a
+   busy rank's propose replayed ONE -- with the node-local draft's
+   collectives captured in-graph, the second collective sequence has no
+   partner. Flag-off never hit it (busy step0 was PIECEWISE -> mode-min
+   downgraded idle dummies too). At K=1 the fws graph is never replayed at
+   all, so it is now skipped entirely under the flag.
+2. The post-DP-sync re-dispatch could bump the agreed padded size when the
+   synced mode was not FULL (assert); the uniform claim is now dropped
+   unless the synced mode is FULL.
+Numbers (V2-Lite DP8 1-node, b8, K=1, same binary same day):
+- STEP0CG=1: accept_len 1.975 (ref 1.977 -> LOSSLESS), tok/s 448.8.
+  [step0-cg] logs confirm engagement: `24/8 uniform=True -> FULL padded=24`
+  steady state; ALL clean decode batches engage down to (3,1)->FULL(6);
+  mixed prefill shapes stay PIECEWISE as designed.
+- STEP0CG=0 control: accept_len 1.974, tok/s 477.4 -- flag-off unchanged.
+- Single-node V2-Lite is ~6% SLOWER flag-on: at this scale the piecewise
+  glue the FULL graph removes is cheap, while ramp/drain batches pad up to
+  the 24-token graph. The fix targets the 236B 2-node node-local draft
+  where the glue costs ~60 ms/step0 (below).
+
+**236B 2-node profile (b8, K=1) -- ENGAGED but the win DOES NOT MATERIALIZE
+and accept DEGRADES (do not enable at 236B):**
+- Startup: flag-on inflates the CUDA-graph memory ESTIMATE (0.93 -> 4.56
+  GiB even with a single injected size; the estimator's per-graph
+  extrapolation now includes the drafter's FULL captures) -> KV sizing
+  fails at 0.90 -> the flag-on arm ran at util 0.95 with
+  W7_STEP0_CG_EXTRA_SIZES=24 (both knobs added this session).
+- Engagement confirmed: `[step0-cg] 24/8 uniform=True -> FULL padded=24`
+  on all ranks; profiler regions over 225 steps x 16 workers.
+- draft_forward_first: 71.9 ms (flag-off control, re-measured today;
+  matches yesterday's 72.3/74.7 reference) -> 65.9 ms flag-on. Only -6 ms,
+  NOT the hoped 15-25 ms. draft_chain 75.6 -> 69.3 ms; verify unchanged
+  (74.5 vs 75.8). CONCLUSION REVISION for section-2's root cause: the
+  step-0 cost is NOT primarily per-layer Python glue -- a single captured
+  FULL graph (collectives in-graph) still takes ~66 ms. The dominant term
+  is in-graph peer-wait (DP/EP rendezvous skew absorbed by the first
+  collective) which no dispatch-mode change removes.
+- LOSSLESSNESS FAILS at 236B (TP2, 2-node; V2-Lite TP1/1-node is clean).
+  Full accept bisect (same day, same binary):
+    flag-off @0.90:            1.905   (control)
+    flag-off @0.95:            1.924   (util is NOT the cause)
+    flag-on, FORCE_PW @0.95:   1.824   (captures alone, FULL never
+                                        dispatched -> capture-side effect)
+    flag-on, FULL @0.95:       1.675   (FULL replay adds the rest)
+  Suspect for the capture-side component: piecewise address-determinism
+  disturbed by the extra FULL captures sharing the global pool (the same
+  fragility class the OV0b shadow-pool comment documents). The FULL-replay
+  component is unexplained (TP2-specific; V2-Lite TP1 replay is exactly
+  lossless at 1.975 vs 1.974).
+- tok/s at 236B is uninformative single-iter fabric noise: flag-off gave
+  103.9 @0.90 and 66.0 @0.95 (identical config otherwise; reference 64.7).
+  At MATCHED util 0.95, flag-on 72.1 vs flag-off 66.0 -- consistent with
+  the -6 ms/cycle, but within noise.
+- VERDICT: keep VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG OFF for 236B/TP2. The
+  mechanism is validated lossless at V2-Lite (TP1); the 236B accept gap
+  (both components) and the ~66 ms in-graph rendezvous floor are the open
+  items -- the latter caps the best case at ~-6 ms/cycle even if accept is
+  fixed, so this direction alone cannot recover the 236B draft cost.
+
 ## 3. Open issue 2: mixed-step dp_metadata crash at b>=32 (see Phase 53 §3)
 
 `AssertionError: 1 != 203`: the draft proposes during mixed prefill/decode
