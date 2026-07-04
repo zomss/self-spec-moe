@@ -1,0 +1,100 @@
+{
+  "mode": "spec",
+  "model": "deepseek-ai/DeepSeek-V2-Lite",
+  "tag": "tp2_k2_b64guard_v2lite_2n",
+  "dp": 8,
+  "tp": 2,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 1,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "2": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 5.082951323129237,
+        "short_s_mean": 1.7776432200334966,
+        "long_s_all": [
+          5.082951323129237
+        ],
+        "short_s_all": [
+          1.7776432200334966
+        ],
+        "decode_s_mean": 3.30530810309574,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 309.804704451281,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 2.513911620294599,
+        "num_accepted": 925.0,
+        "num_drafted": 1222.0,
+        "num_drafts": 611.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 10.944395397789776,
+        "short_s_mean": 3.5322232809849083,
+        "long_s_all": [
+          10.944395397789776
+        ],
+        "short_s_all": [
+          3.5322232809849083
+        ],
+        "decode_s_mean": 7.412172116804868,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 552.6045449907394,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 2.552511415525114,
+        "num_accepted": 3740.0,
+        "num_drafted": 4818.0,
+        "num_drafts": 2409.0
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 11.485905543901026,
+        "short_s_mean": 3.86826202692464,
+        "long_s_all": [
+          11.485905543901026
+        ],
+        "short_s_all": [
+          3.86826202692464
+        ],
+        "decode_s_mean": 7.617643516976386,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 1075.3981834071947,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 2.5849136114622837,
+        "num_accepted": 7522.0,
+        "num_drafted": 9492.0,
+        "num_drafts": 4746.0
+      }
+    ]
+  }
+}

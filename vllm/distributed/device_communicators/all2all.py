@@ -45,6 +45,20 @@ if has_flashinfer_nvlink_one_sided():
 
 logger = init_logger(__name__)
 
+# Phase 55 (W7_A2A_DEBUG): source tag + per-rank ordinal for the [a2a-dbg]
+# lines so per-rank PYTHON-side collective sequences can be diffed for one
+# step (who issued which dispatch/combine: propose-step0 / chain / dummy<i>).
+# Set by the drafter around its forwards; "" elsewhere (e.g. the verify).
+# In-graph (FULL-replay) collectives never reach this code -- diff those at
+# graph-replay granularity via W7_STEP0_DEBUG's [draft-replay] lines.
+_w7_a2a_src = ""
+_w7_a2a_seq = 0
+
+
+def w7_set_a2a_src(src: str) -> None:
+    global _w7_a2a_src
+    _w7_a2a_src = src
+
 
 class AgRsAll2AllManager(All2AllManagerBase):
     """
@@ -272,21 +286,27 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 else:
                     tensors_to_gather.append(t)
 
-        if os.environ.get("W7_A2A_DEBUG") and (
-            os.environ.get("W7_A2A_DEBUG_ALL") or any(s != sizes[0] for s in sizes)
-        ):
-            fc = get_forward_context()
-            logger.info(
-                "[a2a-dbg] dispatch node_local=%s local_route=%s sp=%s "
-                "sizes=%s shapes=%s per_rank=%s kwargs=%s",
-                self_spec_node_local_enabled(),
-                self_spec_local_route_enabled(),
-                is_sequence_parallel,
-                sizes,
-                [tuple(t.shape) for t in tensors_to_gather],
-                [tuple(t.shape) for t in per_rank_tensors],
-                sorted(fc.additional_kwargs.keys()),
-            )
+        if os.environ.get("W7_A2A_DEBUG"):
+            global _w7_a2a_seq
+            _w7_a2a_seq += 1
+            if os.environ.get("W7_A2A_DEBUG_ALL") or any(
+                s != sizes[0] for s in sizes
+            ):
+                fc = get_forward_context()
+                logger.info(
+                    "[a2a-dbg] dispatch src=%s seq=%d node_local=%s "
+                    "local_route=%s sp=%s sizes=%s shapes=%s per_rank=%s "
+                    "kwargs=%s",
+                    _w7_a2a_src,
+                    _w7_a2a_seq,
+                    self_spec_node_local_enabled(),
+                    self_spec_local_route_enabled(),
+                    is_sequence_parallel,
+                    sizes,
+                    [tuple(t.shape) for t in tensors_to_gather],
+                    [tuple(t.shape) for t in per_rank_tensors],
+                    sorted(fc.additional_kwargs.keys()),
+                )
 
         if self_spec_node_local_enabled():
             # Self-spec Phase 54/55: node-local draft -- gather over the
@@ -390,18 +410,23 @@ class AgRsAll2AllManager(All2AllManagerBase):
         assert sizes is not None
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
-        if os.environ.get("W7_A2A_DEBUG") and (
-            os.environ.get("W7_A2A_DEBUG_ALL") or any(s != sizes[0] for s in sizes)
-        ):
-            logger.info(
-                "[a2a-dbg] combine node_local=%s local_route=%s sp=%s "
-                "sizes=%s shape=%s",
-                self_spec_node_local_enabled(),
-                self_spec_local_route_enabled(),
-                is_sequence_parallel,
-                sizes,
-                tuple(hidden_states.shape),
-            )
+        if os.environ.get("W7_A2A_DEBUG"):
+            global _w7_a2a_seq
+            _w7_a2a_seq += 1
+            if os.environ.get("W7_A2A_DEBUG_ALL") or any(
+                s != sizes[0] for s in sizes
+            ):
+                logger.info(
+                    "[a2a-dbg] combine src=%s seq=%d node_local=%s "
+                    "local_route=%s sp=%s sizes=%s shape=%s",
+                    _w7_a2a_src,
+                    _w7_a2a_seq,
+                    self_spec_node_local_enabled(),
+                    self_spec_local_route_enabled(),
+                    is_sequence_parallel,
+                    sizes,
+                    tuple(hidden_states.shape),
+                )
         if self_spec_node_local_enabled():
             # Self-spec Phase 54/55: node-local draft -- reduce-scatter over
             # the intra-node subgroup only (NVLink); node partition of the EP

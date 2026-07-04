@@ -249,10 +249,22 @@ class SpecDecodeBaseProposer:
         # keyed-but-never-captured shape at runtime).
         self._step0_seq_lens: torch.Tensor | None = None
         self._step0_captured: set[int] = set()
+        # Phase 55 (K>=2): FULL uniform-decode shapes actually captured for
+        # the chain graphs (model + fws). The capture pass drives the drafter
+        # at num_reqs of each runner uniform desc (= runner_size/(K+1)
+        # padded), so the dispatcher's largest FULL keys are never captured;
+        # the chain claims uniform only for captured shapes (pre-flight in
+        # propose) -- a keyed-but-uncaptured shape would attempt a forbidden
+        # runtime capture in the wrapper. Capture is lockstep on all ranks,
+        # so the claim stays rank-symmetric.
+        self._full_captured: set[int] = set()
         # Debug: per-dispatch shape/mode logging (W7_STEP0_DEBUG=1) and
         # runtime force-piecewise bisect knob (W7_STEP0_FORCE_PW=1).
         self._step0_debug = bool(os.environ.get("W7_STEP0_DEBUG"))
         self._step0_force_pw = bool(os.environ.get("W7_STEP0_FORCE_PW"))
+        # Phase 55 debug: tag the draft's Python-side collectives with their
+        # source (propose-step0 / chain / dummy<i>) for the [a2a-dbg] lines.
+        self._a2a_dbg = bool(os.environ.get("W7_A2A_DEBUG"))
         if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG:
             self._step0_seq_lens = torch.zeros(
                 self.max_batch_size, dtype=torch.int32, device=device
@@ -653,6 +665,16 @@ class SpecDecodeBaseProposer:
             + self.net_num_new_slots_per_request
         )
 
+    def _tag_a2a(self, src: str) -> None:
+        """Phase 55 debug (W7_A2A_DEBUG): tag the source of the draft's
+        Python-side collectives so [a2a-dbg] lines diff as sequences."""
+        if self._a2a_dbg:
+            from vllm.distributed.device_communicators.all2all import (
+                w7_set_a2a_src,
+            )
+
+            w7_set_a2a_src(src)
+
     def initialize_cudagraph_keys(self, cudagraph_mode: CUDAGraphMode) -> None:
         """Initialize cudagraph dispatcher keys for the drafter.
 
@@ -915,8 +937,10 @@ class SpecDecodeBaseProposer:
             # Self-spec W7 micro-bench: the first (step-0) draft forward. Timed
             # under a distinct label since its input shape can differ from the
             # subsequent decode-step loop forwards.
+            self._tag_a2a("propose-step0")
             with _self_spec_profiler().region("draft_forward_first"):
                 ret_hidden_states = self.model(**model_kwargs)
+            self._tag_a2a("")
             if not self.model_returns_tuple():
                 last_hidden_states = ret_hidden_states
                 hidden_states = last_hidden_states
@@ -927,6 +951,14 @@ class SpecDecodeBaseProposer:
         # and read the indices that step 0 just wrote into the shared buffer.
         if self._share_mtp_indices and hasattr(self.model.model, "set_skip_topk"):
             self.model.model.set_skip_topk(True)
+
+        if self._step0_debug:
+            logger.info(
+                "[draft-replay] rank=%d src=step0 mode=%s ntok=%d",
+                self.dp_rank,
+                cudagraph_runtime_mode,
+                num_input_tokens,
+            )
 
         sample_hidden_states = last_hidden_states[token_indices_to_sample]
 
@@ -1016,10 +1048,32 @@ class SpecDecodeBaseProposer:
             chain_use_cudagraphs = (
                 not self._draft_chain_force_eager_attn or chain_piecewise
             )
+            # Phase 55 (K>=2): pre-flight (pure, no DP collective) -- only
+            # claim uniform-decode FULL for the chain when the dispatch
+            # target is a FULL shape the capture pass actually drove (see
+            # _full_captured). The largest FULL keys (> max_runner_size/(K+1))
+            # are keyed but never captured; dispatching them would attempt a
+            # forbidden runtime capture in the wrapper. Fallback is the
+            # relaxed (PIECEWISE) claim; the DP sync (mode-min) then keeps
+            # busy/idle collective sequences aligned as usual.
+            chain_uniform = True
+            if (
+                self.use_full_cudagraphs
+                and chain_use_cudagraphs
+                and not chain_piecewise
+            ):
+                _mode, _desc = self.cudagraph_dispatcher.dispatch(
+                    batch_size, uniform_decode=True
+                )
+                if (
+                    _mode == CUDAGraphMode.FULL
+                    and _desc.num_tokens not in self._full_captured
+                ):
+                    chain_uniform = False
             cudagraph_runtime_mode, input_batch_size, batch_size_across_dp = (
                 self._determine_batch_execution_and_padding(
                     batch_size,
-                    uniform_decode=True,
+                    uniform_decode=chain_uniform,
                     use_cudagraphs=chain_use_cudagraphs,
                     piecewise_only=chain_piecewise,
                 )
@@ -1174,6 +1228,7 @@ class SpecDecodeBaseProposer:
                 # Self-spec W7 micro-bench: time a SINGLE draft model forward
                 # (one decode-step forward inside the K-step chain) so it can
                 # be compared against K of them and the whole chain.
+                self._tag_a2a("chain")
                 with _self_spec_profiler().region("draft_forward"):
                     if sample_in_graph:
                         last_hidden_states, hidden_states, draft_token_ids = (
@@ -1186,6 +1241,18 @@ class SpecDecodeBaseProposer:
                             hidden_states = ret_hidden_states
                         else:
                             last_hidden_states, hidden_states = ret_hidden_states
+
+            self._tag_a2a("")
+            if self._step0_debug:
+                logger.info(
+                    "[draft-replay] rank=%d src=chain step=%d mode=%s "
+                    "graph=%s ntok=%d",
+                    self.dp_rank,
+                    token_index,
+                    cudagraph_runtime_mode,
+                    "fws" if sample_in_graph else "model",
+                    input_batch_size,
+                )
 
             hidden_states = hidden_states[:batch_size]
             # W7 micro-bench region (c): draft sampling (compute_logits + argmax).
@@ -2979,6 +3046,7 @@ class SpecDecodeBaseProposer:
                 )
                 if self.pass_hidden_states_to_model:
                     kwargs["hidden_states"] = self.hidden_states[:num_input_tokens]
+                self._tag_a2a(f"dummy{fwd_idx}")
                 self.model(**kwargs)
                 # W7 sampling-in-graph: on the draft FULL (uniform-decode)
                 # capture pass, also capture the combined forward+sample graph
@@ -2989,16 +3057,44 @@ class SpecDecodeBaseProposer:
                 # busy ranks replay ONE desyncs the in-graph collectives of
                 # the node-local draft across DP ranks (device deadlock at
                 # batch drain).
-                if (
+                # Phase 55 (K>=2 dummy/chain replay symmetry): capture pass
+                # ONLY. A runtime idle-rank dummy must replay exactly ONE
+                # graph per draft forward, mirroring the busy propose (one
+                # graph per chain step -- fws or model, same in-graph
+                # node-collective sequence). Replaying model+fws here issued
+                # a second collective sequence with no partner on busy ranks
+                # -> device deadlock at batch drain (same class as the K=1
+                # incident above, resurfacing the first time the chain ran
+                # with real node-local collectives).
+                _run_fws = (
                     capture_full_attn
                     and self._decode_fwd_sample is not None
                     and not self._step0_full_cg
-                ):
+                    and is_graph_capturing
+                )
+                if _run_fws:
                     self._decode_fwd_sample(**kwargs)
+            self._tag_a2a("")
+            if self._step0_debug:
+                logger.info(
+                    "[draft-replay] rank=%d src=dummy fwd=%d mode=%s graph=%s "
+                    "ntok=%d capturing=%s",
+                    self.dp_rank,
+                    fwd_idx,
+                    cudagraph_runtime_mode,
+                    "model+fws" if _run_fws else "model",
+                    num_input_tokens,
+                    is_graph_capturing,
+                )
             # Phase 55: record the step-0 FULL shapes actually captured;
             # propose() only claims uniform for these (see pre-flight check).
             if self._step0_full_cg and capture_full_attn and is_graph_capturing:
                 self._step0_captured.add(num_input_tokens)
+            # Phase 55 (K>=2): record the chain FULL shapes actually captured
+            # (model + fws graphs); the chain pre-flight in propose() only
+            # claims uniform-decode FULL for these.
+            if capture_full_attn and is_graph_capturing:
+                self._full_captured.add(num_input_tokens)
 
     def _get_eagle3_use_aux_hidden_state_from_config(self) -> bool:
         """

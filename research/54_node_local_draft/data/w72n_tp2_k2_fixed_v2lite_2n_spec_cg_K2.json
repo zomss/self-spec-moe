@@ -1,10 +1,10 @@
 {
   "mode": "spec",
   "model": "deepseek-ai/DeepSeek-V2-Lite",
-  "tag": "ladder1_v2lite_1n",
+  "tag": "tp2_k2_fixed_v2lite_2n",
   "dp": 8,
-  "tp": 1,
-  "nodes": 1,
+  "tp": 2,
+  "nodes": 2,
   "node_rank": 0,
   "draft_quant": "fp8",
   "out_len": 160,
@@ -16,36 +16,36 @@
   "a2a_emulated_us": 0.0,
   "suffix": "cg",
   "by_k": {
-    "1": [
+    "2": [
       {
         "batch": 8,
         "out_len": 160,
         "short_len": 32,
         "iters": 1,
         "warmup": 1,
-        "long_s_mean": 3.1665426711551845,
-        "short_s_mean": 0.987937071826309,
+        "long_s_mean": 4.8534938879311085,
+        "short_s_mean": 1.5881333430297673,
         "long_s_all": [
-          3.1665426711551845
+          4.8534938879311085
         ],
         "short_s_all": [
-          0.987937071826309
+          1.5881333430297673
         ],
-        "decode_s_mean": 2.1786055993288755,
+        "decode_s_mean": 3.265360544901341,
         "decode_s_std": 0.0,
-        "tok_s_mean": 470.0254145658331,
+        "tok_s_mean": 313.59477335478704,
         "tok_s_std": 0.0,
         "out_tokens_decode": 1024,
         "full_ntoks": 1280,
         "suspect": false,
-        "accept_len": 1.9741935483870967,
-        "num_accepted": 755.0,
-        "num_drafted": 775.0,
-        "num_drafts": 775.0
+        "accept_len": 2.558139534883721,
+        "num_accepted": 938.0,
+        "num_drafted": 1204.0,
+        "num_drafts": 602.0
       }
     ]
   },
-  "this_k": 1,
+  "this_k": 2,
   "results": [
     {
       "batch": 8,
@@ -53,25 +53,25 @@
       "short_len": 32,
       "iters": 1,
       "warmup": 1,
-      "long_s_mean": 3.1665426711551845,
-      "short_s_mean": 0.987937071826309,
+      "long_s_mean": 4.8534938879311085,
+      "short_s_mean": 1.5881333430297673,
       "long_s_all": [
-        3.1665426711551845
+        4.8534938879311085
       ],
       "short_s_all": [
-        0.987937071826309
+        1.5881333430297673
       ],
-      "decode_s_mean": 2.1786055993288755,
+      "decode_s_mean": 3.265360544901341,
       "decode_s_std": 0.0,
-      "tok_s_mean": 470.0254145658331,
+      "tok_s_mean": 313.59477335478704,
       "tok_s_std": 0.0,
       "out_tokens_decode": 1024,
       "full_ntoks": 1280,
       "suspect": false,
-      "accept_len": 1.9741935483870967,
-      "num_accepted": 755.0,
-      "num_drafted": 775.0,
-      "num_drafts": 775.0
+      "accept_len": 2.558139534883721,
+      "num_accepted": 938.0,
+      "num_drafted": 1204.0,
+      "num_drafts": 602.0
     }
   ]
 }

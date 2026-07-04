@@ -271,8 +271,8 @@ collective (`logs/step3_k2_hang_dump.txt`). At K=2 the draft CHAIN
 replays its captured FULL graph (collectives in-graph) on busy ranks
 while drained ranks run idle dummies -- the exact graph-replay-count
 asymmetry class this phase already documented (section 2, latent bug 1;
-only the K=1/fws case was fixed). Chain-vs-dummy replay symmetry at K>=2
-is follow-up drafter work, independent of the scale-gather fix.
+only the K=1/fws case was fixed). **FIXED in Phase 55 -- see section 3c
+(K=2 unlocked: dummy/chain replay symmetry).**
 
 ## 3b. FIXED (Phase 55): node-local gather under SP/TP2 -- the comm saving finally lands
 
@@ -326,6 +326,93 @@ at b32/64 is the 2-iter cross-node fabric spread already seen in section
 of no-spec -- the section-2 draft-cost problem (PIECEWISE per-layer
 collectives + in-graph rendezvous floor) is still the binding constraint,
 but the comm term of the node-local design is now real at TP2.
+
+## 3c. FIXED (Phase 55): K=2 unlocked -- dummy/chain replay symmetry + chain capture pre-flight
+
+**Bug 1 root cause (the drain wedge), sequences diffed on the V2-Lite TP2
+repro (`scripts/run_tp2_k2.sh`, DBG=1 -> `[draft-replay]` per-graph logs +
+`[a2a-dbg] src=` tags).** Per-rank draft collective sequence at the first
+mixed busy/idle drain step, K=2:
+
+    busy ranks:  [coord#1] step0 PIECEWISE ntok=33 (python-side node
+                 collectives) [coord#2] chain FULL graph=fws ntok=9
+                 -> ONE graph replay per chain step
+    idle rank:   [coord#1] dummy fwd=0 PIECEWISE ntok=33 (mode-min'd, OK)
+                 [coord#2] dummy fwd=1 FULL graph=model+fws ntok=9
+                 -> TWO graph replays
+
+The idle dummy's second FULL replay (the fws graph, node collectives
+in-graph) has no partner on the busy ranks: streams wedge, every worker
+parks in the next `coordinate_batch_across_dp` `.item()` (py-spy:
+`logs/tp2_k2_wedge_dump.txt` -- same signature as the 236B
+`step3_k2_hang_dump.txt`). Flag-off K=1 never hit it because with no
+chain there is no FULL-synced round (busy step0 is PIECEWISE ->
+mode-min downgrades idle dummies too); the K=1/STEP0_FULL_CG incident
+(section 2, latent bug 1) was the same class with roles reversed.
+
+**Fix 1 (llm_base_proposer.dummy_run): the fws call is CAPTURE-ONLY
+(`is_graph_capturing`).** A runtime idle dummy now replays exactly ONE
+graph per draft forward -- the model graph -- mirroring the busy propose's
+one graph per chain step (fws or model: identical in-graph node-collective
+sequence, L x dispatch+combine). Config/capture-driven only; no new flags.
+
+**Bug 2, uncovered the moment the wedge was gone (b64 crash, pre-existing,
+first time K=2 reached b64):** `RuntimeError: CUDA graph capturing detected
+at an inappropriate time` in the chain's `_decode_fwd_sample`. The drafter's
+FULL captures are driven at num_reqs of each runner uniform desc
+(= runner_size/(K+1) padded: {9,18,33} for W7_CG_SIZES=8,16,32,64,128 at
+K=2), but the dispatcher KEYS all sizes ({...,66}); the b64 chain
+(batch 64 -> padded 66) dispatched a keyed-but-never-captured FULL desc and
+the wrapper attempted a (forbidden) runtime capture. K=1 never sees it (no
+chain); V2-Lite default size lists are dense enough to mask it.
+
+**Fix 2 (chain pre-flight, mirror of the step0 `_step0_captured` guard):**
+dummy_run records every FULL uniform shape actually captured
+(`_full_captured`); propose() claims uniform-decode FULL for the chain only
+when the dispatch target is captured, else the relaxed (PIECEWISE) claim.
+Capture is lockstep on all ranks and the claim feeds the existing DP
+mode-min sync, so busy/idle collective sequences stay aligned (verified: at
+the V2-Lite b64 A/B the drain under a PIECEWISE-synced chain is clean).
+
+**Repro A/B (V2-Lite 2-node TP2xDP4/node, the 236B topology, K=2 b8,
+~4 min/run):** unfixed = 100% GPU wedge at the first drain step (dump
+above); fixed = clean completion, 313.6 tok/s, accept 2.558. Guard A/B
+(b8/32/64 with the 236B's restricted W7_CG_SIZES): completes 309.8 / 552.6
+/ 1075.4 tok/s, accept 2.514 / 2.553 / 2.585; `[draft-replay]` shows chain
+FULL fws at 9/18/33 and the PIECEWISE fallback at 66 exactly as designed.
+
+**K=1 regressions (fix is idle-dummy/pre-flight only; K=1 semantics
+unchanged):** step1 accept 1.974 / 470.0 tok/s (ref 1.974-1.982); step2
+accept 1.870 / 404.3 tok/s (ref 1.877-1.878; tok/s above the ~268-270
+reference -- cross-node fabric day-to-day spread, accept is the gate).
+
+### THE benchmark: 2-node 236B, K=2 vs K=1, same session, gpu_mem 0.95
+
+(`K=2 bash scripts/run_step3_095.sh` then `K=1 ...`, 2 iters each, node
+SP gather active, both runs RC=0 -- b8/32/64 COMPLETE at K=2 for the
+first time.)
+
+| b/rank | no-spec | K=1 tok/s (paired) | K=2 tok/s | accept K=1 -> K=2 |
+|---:|---:|---:|---:|---|
+| 8  | 264  | 81.0 +- 1.0   | 56.6 +- 1.3   | 1.916 -> **2.569** |
+| 32 | 756  | 273.4 +- 47.0 | 103.1 +- 11.9 | 1.870 -> **2.475** |
+| 64 | 1130 | 378.6 +- 43.3 | 312.6 +- 13.2 | 1.881 -> **2.668** |
+
+The paired K=1 rerun reproduces the section-3b table (75.5/268.4/370.7 ->
+81.0/273.4/378.6, within the documented fabric spread), so the comparison
+is same-binary same-day. The acceptance side delivers exactly what the
+coverage curve predicted at K=2: 2.48-2.67 vs 1.87-1.92 (+29-42%
+tokens/cycle), flat across batch. Wall-clock, however, is LOWER at K=2 at
+every batch: the chain adds a second draft forward per cycle, and at 236B
+each draft forward pays the section-2 rendezvous floor (~66-75 ms), which
+the extra ~0.6 accepted tokens/cycle does not buy back (K=2 b64 also runs
+its chain on the PIECEWISE fallback -- captured-FULL coverage for the
+largest batch is a known follow-up). Cross-run K=2 spread is the usual
+fabric noise (the first, b64-crashed attempt measured b8 69.3 +- 17.3 /
+b32 155.4 +- 1.5). CONCLUSION: K=2 is UNLOCKED and correct end-to-end --
+accept 2.5-2.7 measured in-engine at 236B -- but K=1 remains the
+throughput-optimal spec config at this scale until the draft-cost floor
+(the binding constraint since section 2) is addressed.
 
 ## 4. Where this leaves the thesis
 
