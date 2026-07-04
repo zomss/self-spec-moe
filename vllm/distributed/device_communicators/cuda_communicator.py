@@ -494,6 +494,7 @@ class CudaCommunicator(DeviceCommunicatorBase):
         router_logits: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor]
         | tuple[torch.Tensor, torch.Tensor, list[torch.Tensor]]
@@ -504,11 +505,17 @@ class CudaCommunicator(DeviceCommunicatorBase):
         """
 
         assert self.all2all_manager is not None
+        # Phase 55: forward the per-rank marker only when set, so all2all
+        # managers without support keep their original signature.
+        kwargs = {}
+        if extra_tensors_per_rank is not None:
+            kwargs["extra_tensors_per_rank"] = extra_tensors_per_rank
         return self.all2all_manager.dispatch_router_logits(
             hidden_states,
             router_logits,
             is_sequence_parallel,
             extra_tensors,
+            **kwargs,
         )
 
     def dispatch(
@@ -518,6 +525,7 @@ class CudaCommunicator(DeviceCommunicatorBase):
         topk_ids: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         | tuple[torch.Tensor, torch.Tensor, torch.Tensor, list[torch.Tensor]]
@@ -527,12 +535,17 @@ class CudaCommunicator(DeviceCommunicatorBase):
         This is a no-op in the base class.
         """
         assert self.all2all_manager is not None
+        # Phase 55: see dispatch_router_logits.
+        kwargs = {}
+        if extra_tensors_per_rank is not None:
+            kwargs["extra_tensors_per_rank"] = extra_tensors_per_rank
         return self.all2all_manager.dispatch(
             hidden_states,
             topk_weights,
             topk_ids,
             is_sequence_parallel,
             extra_tensors=extra_tensors,
+            **kwargs,
         )
 
     def combine(

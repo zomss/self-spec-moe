@@ -1204,16 +1204,25 @@ class GroupCoordinator:
         router_logits: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor]
         | tuple[torch.Tensor, torch.Tensor, list[torch.Tensor]]
     ):
         if self.device_communicator is not None:
+            # Phase 55: extra_tensors_per_rank marks extras gathered
+            # one-per-rank (per-tensor quant scales) instead of with the
+            # token sizes; forwarded only when set so communicators without
+            # support keep their original signature.
+            kwargs = {}
+            if extra_tensors_per_rank is not None and any(extra_tensors_per_rank):
+                kwargs["extra_tensors_per_rank"] = extra_tensors_per_rank
             return self.device_communicator.dispatch_router_logits(
                 hidden_states,
                 router_logits,
                 is_sequence_parallel,
                 extra_tensors,
+                **kwargs,
             )
         else:
             return hidden_states, router_logits
@@ -1225,17 +1234,23 @@ class GroupCoordinator:
         topk_ids: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor, torch.Tensor, list[torch.Tensor]]
         | tuple[torch.Tensor, torch.Tensor, torch.Tensor]
     ):
         if self.device_communicator is not None:
+            # Phase 55: see dispatch_router_logits.
+            kwargs = {}
+            if extra_tensors_per_rank is not None and any(extra_tensors_per_rank):
+                kwargs["extra_tensors_per_rank"] = extra_tensors_per_rank
             return self.device_communicator.dispatch(
                 hidden_states,
                 topk_weights,
                 topk_ids,
                 is_sequence_parallel,
                 extra_tensors,
+                **kwargs,
             )
         else:
             return hidden_states, topk_weights, topk_ids

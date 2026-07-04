@@ -17,7 +17,16 @@ def _quantize_and_setup_dispatch(
     a1: torch.Tensor,
     quant_config: FusedMoEQuantConfig,
     defer_input_quant: bool = False,
-) -> tuple[torch.Tensor, list[torch.Tensor] | None, torch.Tensor | None]:
+) -> tuple[torch.Tensor, list[torch.Tensor] | None, torch.Tensor | None, bool]:
+    """Quantize a1 and set up the scale tensors for the dispatch gather.
+
+    Token-major scales (per-act-token or block/group quant: leading dim ==
+    num local tokens) ride the token-sized all-gather. Per-TENSOR dynamic
+    scales have shape (1,) and must instead be gathered one-per-rank (the
+    returned ``scales_per_rank`` flag): with non-uniform DP chunk sizes
+    (mixed prefill/decode steps) a token-sized gather of a (1,) tensor
+    asserts ``1 != num_tokens`` on every rank (Phase 55).
+    """
     # Defer input quantization to the MoE kernel.
     if defer_input_quant:
         a1q = a1
@@ -49,7 +58,19 @@ def _quantize_and_setup_dispatch(
     skip_gather_scales = a1q_scale is None or a1q_scale.ndim == 0
     scales = None if skip_gather_scales else [a1q_scale]
 
-    return a1q, scales, a1q_scale
+    # Phase 55: per-TENSOR dynamic scales (e.g. the on-the-fly FP8 draft)
+    # have shape (1,), not (num_tokens, ...): they must be gathered
+    # one-per-rank, NOT with the token-sized sizes vector. Uniform per-rank
+    # token counts masked this (equal sizes collapse to a plain all_gather);
+    # the first NON-uniform step (mixed prefill/decode at b>=32) asserted
+    # `1 != num_tokens` on every rank. The flag is config-driven, NOT
+    # shape-driven, so all ranks always agree (a rank with 1 actual token
+    # under per-act-token quant has a (1, 1) scale and still takes the
+    # token-sized gather). On uniform steps the one-per-rank gather yields
+    # the exact same (world,) scale tensor as before the fix.
+    scales_per_rank = scales is not None and quant_config.is_per_tensor
+
+    return a1q, scales, a1q_scale, scales_per_rank
 
 
 def _unwrap_scale_and_prepare_for_moe(
@@ -129,7 +150,7 @@ class MoEPrepareAndFinalizeNaiveDPEPModular(mk.FusedMoEPrepareAndFinalizeModular
             )
             a1 = a1 * topk_weights.to(a1.dtype)
 
-        a1q, scales, a1q_scale_orig = _quantize_and_setup_dispatch(
+        a1q, scales, a1q_scale_orig, scales_per_rank = _quantize_and_setup_dispatch(
             a1, quant_config, defer_input_quant
         )
 
@@ -148,12 +169,17 @@ class MoEPrepareAndFinalizeNaiveDPEPModular(mk.FusedMoEPrepareAndFinalizeModular
             )
 
         extra_tensors: list[torch.Tensor] | None = None
+        extra_tensors_per_rank: list[bool] | None = None
         if scales is not None:
             extra_tensors = list(scales)
+            extra_tensors_per_rank = [scales_per_rank] * len(scales)
         if local_token_lora_mapping is not None:
             if extra_tensors is None:
                 extra_tensors = []
+                extra_tensors_per_rank = []
+            assert extra_tensors_per_rank is not None
             extra_tensors.append(local_token_lora_mapping)
+            extra_tensors_per_rank.append(False)
 
         res = get_ep_group().dispatch(
             a1q,
@@ -161,6 +187,7 @@ class MoEPrepareAndFinalizeNaiveDPEPModular(mk.FusedMoEPrepareAndFinalizeModular
             topk_ids,
             is_sequence_parallel=self.is_sequence_parallel,
             extra_tensors=extra_tensors,
+            extra_tensors_per_rank=extra_tensors_per_rank,
         )
 
         if extra_tensors is None:
@@ -251,7 +278,7 @@ class MoEPrepareAndFinalizeNaiveDPEPMonolithic(mk.FusedMoEPrepareAndFinalizeMono
     ) -> mk.PrepareMonolithicResultType:
         """Quantize and Dispatch Router Logits."""
 
-        a1q, scales, a1q_scale_orig = _quantize_and_setup_dispatch(
+        a1q, scales, a1q_scale_orig, scales_per_rank = _quantize_and_setup_dispatch(
             a1, quant_config, defer_input_quant
         )
 
@@ -260,6 +287,9 @@ class MoEPrepareAndFinalizeNaiveDPEPMonolithic(mk.FusedMoEPrepareAndFinalizeMono
             router_logits,
             is_sequence_parallel=self.is_sequence_parallel,
             extra_tensors=scales,
+            extra_tensors_per_rank=(
+                [scales_per_rank] * len(scales) if scales is not None else None
+            ),
         )
 
         if scales is None:

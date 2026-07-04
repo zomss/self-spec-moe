@@ -192,6 +192,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
         router_logits: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor]
         | tuple[torch.Tensor, torch.Tensor, list[torch.Tensor]]
@@ -199,6 +200,37 @@ class AgRsAll2AllManager(All2AllManagerBase):
         """
         Gather hidden_states and router_logits from all dp ranks.
         """
+        gathered_tensors = self._dispatch_gather(
+            [hidden_states, router_logits],
+            is_sequence_parallel,
+            extra_tensors,
+            extra_tensors_per_rank,
+        )
+        if extra_tensors is not None:
+            return (gathered_tensors[0], gathered_tensors[1], gathered_tensors[2:])
+        return gathered_tensors[0], gathered_tensors[1]
+
+    def _dispatch_gather(
+        self,
+        head_tensors: list[torch.Tensor],
+        is_sequence_parallel: bool,
+        extra_tensors: list[torch.Tensor] | None,
+        extra_tensors_per_rank: list[bool] | None,
+    ) -> list[torch.Tensor]:
+        """Shared gather for dispatch/dispatch_router_logits.
+
+        head_tensors[0] is hidden_states; all head tensors and unmarked
+        extras are token-major and gather with the per-rank token sizes.
+        Phase 55: extras marked in extra_tensors_per_rank are per-RANK
+        tensors (per-tensor quant scales, shape (1,)); they gather with one
+        row per rank instead -- with uniform token sizes this produces the
+        exact same (group_world,) tensor that used to fall out of the plain
+        all_gather, and with NON-uniform sizes (mixed prefill/decode steps)
+        it no longer trips the `1 != num_tokens` size assert. The marking is
+        quant-config-driven on every rank, so the collective sequence stays
+        rank-symmetric (the DEADLOCK class to avoid here).
+        """
+        hidden_states = head_tensors[0]
         dp_metadata = get_forward_context().dp_metadata
         assert dp_metadata is not None
         sizes = dp_metadata.get_chunk_sizes_across_dp_rank()
@@ -206,9 +238,34 @@ class AgRsAll2AllManager(All2AllManagerBase):
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
         assert sizes[dist_group.rank_in_group] == hidden_states.shape[0]
 
-        tensors_to_gather = [hidden_states, router_logits]
+        num_head = len(head_tensors)
+        tensors_to_gather = list(head_tensors)
+        per_rank_tensors: list[torch.Tensor] = []
+        per_rank_positions: list[int] = []
+        gathered_per_rank: list[torch.Tensor] = []
         if extra_tensors is not None:
-            tensors_to_gather.extend(extra_tensors)
+            for i, t in enumerate(extra_tensors):
+                if extra_tensors_per_rank is not None and extra_tensors_per_rank[i]:
+                    per_rank_positions.append(num_head + i)
+                    per_rank_tensors.append(t)
+                else:
+                    tensors_to_gather.append(t)
+
+        if os.environ.get("W7_A2A_DEBUG") and (
+            os.environ.get("W7_A2A_DEBUG_ALL") or any(s != sizes[0] for s in sizes)
+        ):
+            fc = get_forward_context()
+            logger.info(
+                "[a2a-dbg] dispatch node_local=%s local_route=%s sp=%s "
+                "sizes=%s shapes=%s per_rank=%s kwargs=%s",
+                self_spec_node_local_enabled(),
+                self_spec_local_route_enabled(),
+                is_sequence_parallel,
+                sizes,
+                [tuple(t.shape) for t in tensors_to_gather],
+                [tuple(t.shape) for t in per_rank_tensors],
+                sorted(fc.additional_kwargs.keys()),
+            )
 
         if self_spec_node_local_enabled() and not is_sequence_parallel:
             # Self-spec Phase 54: node-local draft -- gather over the
@@ -220,14 +277,26 @@ class AgRsAll2AllManager(All2AllManagerBase):
             gathered_tensors = node_group.all_gatherv(
                 tensors_to_gather, dim=0, sizes=node_sizes
             )
+            if per_rank_tensors:
+                gathered_per_rank = node_group.all_gatherv(
+                    per_rank_tensors,
+                    dim=0,
+                    sizes=[1] * len(node_group.ranks),
+                )
             self._real_collective_count += 1
         elif self_spec_local_route_enabled():
             # CORRECT comm-free local routing: no gather, use local tokens
             # as-is (router already masked to resident experts upstream).
             gathered_tensors = tensors_to_gather
+            gathered_per_rank = per_rank_tensors
         elif envs.VLLM_SELF_SPEC_SKIP_A2A:
             gathered_tensors = self._skip_gatherv(
                 tensors_to_gather, sizes, dist_group.rank_in_group
+            )
+            gathered_per_rank = self._skip_gatherv(
+                per_rank_tensors,
+                [1] * dist_group.world_size,
+                dist_group.rank_in_group,
             )
         else:
             gathered_tensors = dist_group.all_gatherv(
@@ -235,12 +304,19 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 dim=0,
                 sizes=sizes,
             )
+            if per_rank_tensors:
+                gathered_per_rank = dist_group.all_gatherv(
+                    per_rank_tensors,
+                    dim=0,
+                    sizes=[1] * dist_group.world_size,
+                )
             self._real_collective_count += 1
         self._emulate_exposed_a2a_delay()
 
-        if extra_tensors is not None:
-            return (gathered_tensors[0], gathered_tensors[1], gathered_tensors[2:])
-        return gathered_tensors[0], gathered_tensors[1]
+        # Re-interleave the per-rank extras at their original positions.
+        for pos, g in zip(per_rank_positions, gathered_per_rank):
+            gathered_tensors.insert(pos, g)
+        return gathered_tensors
 
     def dispatch(
         self,
@@ -249,6 +325,7 @@ class AgRsAll2AllManager(All2AllManagerBase):
         topk_ids: torch.Tensor,
         is_sequence_parallel: bool = False,
         extra_tensors: list[torch.Tensor] | None = None,
+        extra_tensors_per_rank: list[bool] | None = None,
     ) -> (
         tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         | tuple[torch.Tensor, torch.Tensor, torch.Tensor, list[torch.Tensor]]
@@ -256,44 +333,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
         """
         Gather hidden_states and router_logits from all dp ranks.
         """
-        dp_metadata = get_forward_context().dp_metadata
-        assert dp_metadata is not None
-        sizes = dp_metadata.get_chunk_sizes_across_dp_rank()
-        assert sizes is not None
-        dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
-        assert sizes[dist_group.rank_in_group] == hidden_states.shape[0]
-
-        tensors_to_gather = [hidden_states, topk_weights, topk_ids]
-        if extra_tensors is not None:
-            tensors_to_gather.extend(extra_tensors)
-
-        if self_spec_node_local_enabled() and not is_sequence_parallel:
-            # Self-spec Phase 54: node-local draft -- gather over the
-            # intra-node subgroup only (NVLink); router already masked to
-            # node-resident experts upstream.
-            node_group, node_sizes = self._node_group_and_sizes(
-                sizes, hidden_states.shape[0]
-            )
-            gathered_tensors = node_group.all_gatherv(
-                tensors_to_gather, dim=0, sizes=node_sizes
-            )
-            self._real_collective_count += 1
-        elif self_spec_local_route_enabled():
-            # CORRECT comm-free local routing: no gather, use local tokens
-            # as-is (topk_ids already masked to resident experts upstream).
-            gathered_tensors = tensors_to_gather
-        elif envs.VLLM_SELF_SPEC_SKIP_A2A:
-            gathered_tensors = self._skip_gatherv(
-                tensors_to_gather, sizes, dist_group.rank_in_group
-            )
-        else:
-            gathered_tensors = dist_group.all_gatherv(
-                tensors_to_gather,
-                dim=0,
-                sizes=sizes,
-            )
-            self._real_collective_count += 1
-        self._emulate_exposed_a2a_delay()
+        gathered_tensors = self._dispatch_gather(
+            [hidden_states, topk_weights, topk_ids],
+            is_sequence_parallel,
+            extra_tensors,
+            extra_tensors_per_rank,
+        )
 
         hidden_states = gathered_tensors[0]
         topk_weights = gathered_tensors[1]
@@ -316,6 +361,18 @@ class AgRsAll2AllManager(All2AllManagerBase):
         assert sizes is not None
 
         dist_group = get_ep_group() if is_sequence_parallel else get_dp_group()
+        if os.environ.get("W7_A2A_DEBUG") and (
+            os.environ.get("W7_A2A_DEBUG_ALL") or any(s != sizes[0] for s in sizes)
+        ):
+            logger.info(
+                "[a2a-dbg] combine node_local=%s local_route=%s sp=%s "
+                "sizes=%s shape=%s",
+                self_spec_node_local_enabled(),
+                self_spec_local_route_enabled(),
+                is_sequence_parallel,
+                sizes,
+                tuple(hidden_states.shape),
+            )
         if self_spec_node_local_enabled() and not is_sequence_parallel:
             # Self-spec Phase 54: node-local draft -- reduce-scatter over the
             # intra-node subgroup only (NVLink).

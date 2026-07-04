@@ -161,15 +161,118 @@ and accept DEGRADES (do not enable at 236B):**
   items -- the latter caps the best case at ~-6 ms/cycle even if accept is
   fixed, so this direction alone cannot recover the 236B draft cost.
 
-## 3. Open issue 2: mixed-step dp_metadata crash at b>=32 (see Phase 53 §3)
+## 3. Open issue 2 RESOLVED (Phase 55): b>=32 unlocked -- the "1" was the FP8 per-tensor scale, not stale metadata
 
-`AssertionError: 1 != 203`: the draft proposes during mixed prefill/decode
-steps with stale DP-padded metadata; any GATHERING draft crashes (device-
-local is immune only because it skips the gather). A locally-uniform sizes
-fallback was added for the node branch (uniform-batch scope), but the crash
-site is the DEFAULT path inside `naive_dp_ep.prepare` (the FP8 modular
-draft), reached by a drafter sub-forward that lacks the spec context key.
-Proper fix: drafter forwards must carry their own coordinated sizes.
+**Root cause (repro'd at V2-Lite 1-node, `scripts/repro_mixed_step.py`,
+per-dispatch `W7_A2A_DEBUG=1` logging).** The Phase 53/54 diagnosis was
+wrong on both counts: the drafter's dp_metadata is CORRECT (the sizes
+vector [90, 64, ...] matches its own coordinated step-0 inputs exactly)
+and the draft's forward context DOES carry the node-local key in the
+crashing forward. The "1" in `1 != 203/90/64` is the on-the-fly FP8
+draft's per-TENSOR activation scale -- `dynamic_scaled_fp8_quant` returns
+a `(1,)` scale, and `naive_dp_ep._quantize_and_setup_dispatch` appended it
+to the token-sized all-gatherv (`skip_gather_scales` only exempted
+ndim==0 scalars). Uniform per-rank sizes MASK the bug: equal sizes
+collapse to a plain all_gather (no size assert) -- that is why b8 was
+clean and why the device-local draft is immune (it skips the gather
+entirely). The first step with NON-uniform per-rank token counts (mixed
+prefill/decode from scheduler stagger at b>=32) keeps the sizes vector and
+the communicator asserts `1 != num_tokens` on every rank. Debug capture of
+the crashing dispatch (V2-Lite, node branch, key present):
+`sizes=[147, 129, ...] shapes=[(129, 2048), (129, 8), (129, 8), (1,)]` ->
+`AssertionError: 1 != 129`.
+
+Side finding from the same per-dispatch logging (resolves the "why did the
+236B traceback show the DEFAULT branch" puzzle): at 236B/TP2 EVERY naive
+dispatch runs with `is_sequence_parallel=True` (SP-sliced tokens, EP-wide
+sizes vector of len DP*TP), so the Phase 54 node-local gather branch --
+gated on `... and not is_sequence_parallel` -- NEVER engages at TP2. The
+draft's node-local key only masks the ROUTER; its dispatch/combine are
+EP-wide (cross-node). The measured 236B "node-local" numbers are therefore
+node-masked ROUTING + full-EP comm; making the intra-node gather work
+under SP is an open Phase 54 item, not part of this fix.
+
+**Fix (not env-gated -- a genuine bug on any per-tensor-quant gathering
+path):** per-tensor scales are gathered ONE-PER-RANK
+(`extra_tensors_per_rank` marker: naive_dp_ep -> GroupCoordinator ->
+CudaCommunicator -> AgRs `_dispatch_gather`, which gathers marked extras
+with `sizes=[1] * group_world` in whichever branch is active -- node-local
+subgroup, full-DP default, comm-free passthrough, SKIP_A2A tile). On
+uniform steps this reproduces the previous gathered `(group_world,)` scale
+tensor exactly; on non-uniform steps it no longer trips the size assert.
+The marker is quant-CONFIG-driven, never shape-driven, so every rank makes
+the same decision every step: collective count and order stay
+rank-symmetric (the graph-replay deadlock class stays impossible), and a
+rank with 1 actual token under per-act-token quant still joins the
+token-sized gather.
+
+**Failed first attempt (recorded because the numerics are load-bearing):**
+keeping the per-tensor scale rank-LOCAL (skip the gather) is crash-free
+and lossless at V2-Lite TP1 (1.978), but collapses 236B/TP2 accept
+1.92 -> 1.22: dequanting the gathered fp8 tokens with rank-inconsistent
+scales distorts each token's cross-rank expert sum, while the old gathered
+vector (Triton per-tensor path reads element [0] = DP-rank0's scale on
+every rank) is a rank-CONSISTENT per-token scaling error that downstream
+norms largely absorb. The per-rank gather restores the old bytes exactly.
+
+**A/B on the V2-Lite mixed-step repro** (DP8, fp8 draft, node-local,
+rank-0 batch skew + 256-token prefill budget -> non-uniform mixed steps
+every cycle): unfixed = `1 != 129` on all ranks at the first mixed step-0;
+fixed = clean completion, same mixed step logs the scale in the per-rank
+gather (`per_rank=[(1,)]`). Step-1 ladder regression: accept 1.973
+(ref 1.974-1.982), 513 tok/s.
+
+**Second blocker uncovered once the crash was gone (SEPARATE, pre-existing,
+memory-regime): timing-dependent engine hang at b>=32 under KV thrash at
+gpu_mem 0.90.** On current HEAD the memory estimator leaves only 2.2-3.5k
+KV tokens/rank at 0.90 (rank-NONuniform; vs 34.4k at 0.95 and the Phase 53
+recipe's expectation) -- b32 needs ~6k, so the engine runs perpetual
+preemption/re-prefill. In that regime the run hangs (all 16 GPUs spinning
+in NCCL, CPUs in enqueue backpressure inside the TARGET forward --
+`logs/step3_hang_dump.txt`): reproduced twice at 0.90 without debug
+logging, did NOT reproduce under per-dispatch logging (b32 completed,
+accept 1.922, `dbg32` logs: every mixed step's 59x16 dispatch lines
+rank-CONSISTENT sizes) -- i.e. a race, not a deterministic collective
+mismatch, and the same class Phase 53 recorded at b64 with the COMM-FREE
+device-local draft ("engine hang, dequeue timeout" -- no draft collectives
+involved). Benchmarked below at gpu_mem 0.95 (the prof236b-validated
+recipe, KV 34.4k: no thrash); the 0.90-thrash hang is tracked as its own
+open issue.
+
+### THE benchmark unlocked: 2-node 236B b8/32/64 (K=1, node-local draft, gpu_mem 0.95)
+
+| b/rank | no-spec tok/s (P53, 0.90) | spec tok/s | accept @K=1 |
+|---:|---:|---:|---:|
+| 8  | 264  | 65.9 +- 1.0  | **1.904** |
+| 32 | 756  | 189.1 +- 0.4 | **1.931** |
+| 64 | 1130 | 264.3 +- 13.3 | **1.868** |
+
+b32 and b64 COMPLETE for the first time (previously: crash at b32 warmup),
+and accept is FLAT across batch at 1.87-1.93 -- the Phase 54 coverage
+curve holds at scale and at batch. Wall-clock stays ~0.23-0.25x of
+no-spec: that is the Phase 54 section-2 draft-cost problem (PIECEWISE
+per-layer collectives + the ~66 ms in-graph rendezvous floor), unchanged
+by this fix and still the binding constraint. At b8 the fix run matches
+the pre-fix reference exactly (65.9 vs 64.7-66.0 tok/s, 1.904 vs
+1.905/1.924 accept -- same binary semantics on uniform steps, as
+designed). The b32 debug run (per-dispatch logging, gpu_mem 0.90 thrash
+regime) independently measured accept 1.922 at b32. Reminder per the side
+finding above: at TP2 these numbers are node-masked ROUTING + EP-wide
+dispatch.
+
+**K=2 at 236B: BLOCKED by a separate pre-existing wedge (first-ever K=2
+attempt at this scale).** Acceptance itself confirms the coverage curve:
+live windows during b8 warmup read 2.41-2.48 (predicted 2.3-2.6). But the
+run wedges in the b8 warmup drain: all 16 workers park in
+`_dummy_run -> coordinate_batch_across_dp ->
+_post_process_cudagraph_mode` blocking on `.item()` of the device-side
+sync tensor -- the GPU streams are stuck on an earlier unmatched
+collective (`logs/step3_k2_hang_dump.txt`). At K=2 the draft CHAIN
+replays its captured FULL graph (collectives in-graph) on busy ranks
+while drained ranks run idle dummies -- the exact graph-replay-count
+asymmetry class this phase already documented (section 2, latent bug 1;
+only the K=1/fws case was fixed). Chain-vs-dummy replay symmetry at K>=2
+is follow-up drafter work, independent of the scale-gather fix.
 
 ## 4. Where this leaves the thesis
 

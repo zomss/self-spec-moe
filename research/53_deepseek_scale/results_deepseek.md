@@ -42,7 +42,7 @@ the same scale/fabric: accept 1.90 (Phase 54)** -- node-locality is worth
 +0.8 tokens/cycle and is the difference between a useless and a viable
 training-free draft at scale.
 
-## 3. Known issue found at this scale (affects any gathering draft)
+## 3. Known issue found at this scale (affects any gathering draft) -- FIXED (Phase 55)
 
 At b>=32, DeepSeek-V2's prefill is admitted in ~203-token chunks; the draft
 proposes for early-finished requests DURING mixed prefill/decode steps, and
@@ -50,6 +50,20 @@ the draft forward's dp_metadata (DP-padded to the prefill chunk) disagrees
 with its actual input (`AssertionError: 1 != 203` in AgRs all_gatherv via
 `naive_dp_ep.prepare`). The device-local draft skips the gather and is
 immune; any draft that actually dispatches (node-local, EP-full) crashes.
-Fix = make the drafter's forwards carry their own coordinated sizes in mixed
-steps (proposer surgery); until then gathering drafts are b8-clean only on
-this model.
+
+**FIXED (Phase 55) -- and the diagnosis above was wrong about the metadata.**
+The drafter's dp_metadata/coordinated sizes were CORRECT all along; the "1"
+in `1 != 203/90/64` is the on-the-fly FP8 draft's per-TENSOR activation
+scale (shape `(1,)` from dynamic_scaled_fp8_quant), which
+`naive_dp_ep._quantize_and_setup_dispatch` appended to the token-sized
+all-gatherv. Uniform per-rank sizes (b8) collapse to a plain all_gather and
+mask the bug; the first NON-uniform mixed prefill/decode step keeps the
+sizes vector and asserts on every rank. Fix: per-tensor scales are gathered
+ONE-PER-RANK (`extra_tensors_per_rank`, quant-config-driven so all ranks
+agree), which on uniform steps reproduces the previous gathered scale
+vector bit-for-bit -- keeping it rank-local instead was tried first and
+collapsed 236B accept 1.92 -> 1.22 (rank-inconsistent dequant of the
+gathered fp8 tokens), so the gathered vector semantics are load-bearing.
+b32/b64 now complete; see
+`research/54_node_local_draft/results_node_local.md` section 3 for the
+repro, A/B, and the unlocked b8/32/64 table.
