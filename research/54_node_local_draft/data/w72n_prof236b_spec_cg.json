@@ -1,9 +1,9 @@
 {
   "mode": "spec",
-  "model": "deepseek-ai/DeepSeek-V2-Lite",
-  "tag": "ladder2_v2lite_2n",
-  "dp": 16,
-  "tp": 1,
+  "model": "deepseek-ai/DeepSeek-V2",
+  "tag": "prof236b",
+  "dp": 8,
+  "tp": 2,
   "nodes": 2,
   "node_rank": 0,
   "draft_quant": "fp8",
@@ -23,25 +23,25 @@
         "short_len": 32,
         "iters": 1,
         "warmup": 1,
-        "long_s_mean": 5.097235543187708,
-        "short_s_mean": 1.304951820988208,
+        "long_s_mean": 20.412550506182015,
+        "short_s_mean": 5.444151556119323,
         "long_s_all": [
-          5.097235543187708
+          20.412550506182015
         ],
         "short_s_all": [
-          1.304951820988208
+          5.444151556119323
         ],
-        "decode_s_mean": 3.7922837221994996,
+        "decode_s_mean": 14.968398950062692,
         "decode_s_std": 0.0,
-        "tok_s_mean": 270.0219907085662,
+        "tok_s_mean": 68.41079018646221,
         "tok_s_std": 0.0,
         "out_tokens_decode": 1024,
         "full_ntoks": 1280,
         "suspect": false,
-        "accept_len": 1.8851851851851853,
-        "num_accepted": 717.0,
-        "num_drafted": 810.0,
-        "num_drafts": 810.0
+        "accept_len": 1.9134253450439147,
+        "num_accepted": 728.0,
+        "num_drafted": 797.0,
+        "num_drafts": 797.0
       }
     ]
   }

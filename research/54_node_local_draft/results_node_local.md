@@ -48,13 +48,21 @@ runs/capture always coordinate -- stable, unlike SKIP_DP_COORD). Verdict:
 accept parity everywhere (1.973/1.885/1.916), **+10.7% single-node
 (490->543 tok/s), ~0 cross-node** (270 vs 268 V2-Lite; 65 vs 68 @ 236B).
 Together with the SKIP result this FALSIFIES the rendezvous-count hypothesis:
-the wait relocates to the remaining sync points. The residual (~160 ms/cycle
-at 236B, ~2.7 ms/MoE-layer) is in the NODE-DISPATCH IMPLEMENTATION itself:
-per-layer 3-tensor all_gatherv + sizes plumbing executing outside the
-captured graph (the target's AgRs runs inside one captured graph; the
-draft's node collectives do not). Next lever: capture the draft chain's
-node collectives (or fuse the per-layer gathers) -- verify whether the
-draft-chain graph path excludes subgroup collectives at capture.
+the wait relocates to the remaining sync points. **ROOT CAUSE CONFIRMED (profiled 236B b8 node-local):**
+draft_forward_first (step0, the only draft forward at K=1) = 72.3 ms
+(~all of draft_chain 75.9) vs ~10-15 ms compute; verify = 73.3 ms vs ~30 ms
+no-spec step. Both are the SAME defect: q>1 / non-plain-decode shapes
+dispatch PIECEWISE, so per-layer collectives + prepare/finalize glue run in
+PYTHON between captured body pieces (~1 ms/MoE-layer x 59). The comm-free
+device-local draft dodges it (its collectives are no-ops); any dispatching
+draft AND the spec verify pay it. This unifies with the Phase 52
+fabric-independent verify overhead -- one fix serves both:
+**make padded-uniform spec forwards (draft step0, q=K+1 verify) eligible
+for FULL cudagraph capture** so collectives replay inside the graph like
+the plain decode step. The drafter batch is already padded-uniform
+(disable_padded_drafter_batch is required False), so the blocker is in the
+dispatch classification (_determine_batch_execution_and_padding /
+uniform_decode bucketing for spec shapes).
 
 ## 3. Open issue 2: mixed-step dp_metadata crash at b>=32 (see Phase 53 §3)
 

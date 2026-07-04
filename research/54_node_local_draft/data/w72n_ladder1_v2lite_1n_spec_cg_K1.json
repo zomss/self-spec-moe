@@ -19,7 +19,29 @@
     "1": [
       {
         "batch": 8,
-        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 2.9083068687468767,
+        "short_s_mean": 1.02384950267151,
+        "long_s_all": [
+          2.9083068687468767
+        ],
+        "short_s_all": [
+          1.02384950267151
+        ],
+        "decode_s_mean": 1.8844573660753667,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 543.3925003740553,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.9728682170542635,
+        "num_accepted": 753.0,
+        "num_drafted": 774.0,
+        "num_drafts": 774.0
       }
     ]
   },
@@ -27,7 +49,29 @@
   "results": [
     {
       "batch": 8,
-      "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 1,
+      "warmup": 1,
+      "long_s_mean": 2.9083068687468767,
+      "short_s_mean": 1.02384950267151,
+      "long_s_all": [
+        2.9083068687468767
+      ],
+      "short_s_all": [
+        1.02384950267151
+      ],
+      "decode_s_mean": 1.8844573660753667,
+      "decode_s_std": 0.0,
+      "tok_s_mean": 543.3925003740553,
+      "tok_s_std": 0.0,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": 1.9728682170542635,
+      "num_accepted": 753.0,
+      "num_drafted": 774.0,
+      "num_drafts": 774.0
     }
   ]
 }
