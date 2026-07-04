@@ -266,6 +266,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD: bool = False
     VLLM_SELF_SPEC_DRAFT_NODE_LOCAL: bool = False
     VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD: bool = False
+    VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG: bool = False
     VLLM_SELF_SPEC_NODE_LOCAL: bool = False
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
@@ -1992,6 +1993,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Default off.
     "VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD", "0"))
+    ),
+    # Self-spec Phase 55: capture the draft's STEP-0 forward as a FULL
+    # cudagraph (K=1 only; requires VLLM_SELF_SPEC_DRAFT_FULL_CG). At K=1 the
+    # step-0 forward (q=K+1 padded-uniform) is the ONLY draft forward, yet it
+    # dispatched PIECEWISE by design -- running per-layer collectives/glue in
+    # Python (~1 ms x layers; the measured 60 ms/cycle at 236B for dispatching
+    # drafts, and harmless only for comm-free ones). Repoints the draft
+    # dispatcher's uniform_decode_query_len to K+1 and captures step0-shaped
+    # FULL graphs. Default off.
+    "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG", "0"))
     ),
     # Self-spec Phase 54: NODE-LOCAL draft routing (the Phase 11/19
     # hierarchical draft). The draft routes to any expert resident on its NODE

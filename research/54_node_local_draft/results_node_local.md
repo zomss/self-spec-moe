@@ -57,12 +57,24 @@ PYTHON between captured body pieces (~1 ms/MoE-layer x 59). The comm-free
 device-local draft dodges it (its collectives are no-ops); any dispatching
 draft AND the spec verify pay it. This unifies with the Phase 52
 fabric-independent verify overhead -- one fix serves both:
-**make padded-uniform spec forwards (draft step0, q=K+1 verify) eligible
-for FULL cudagraph capture** so collectives replay inside the graph like
-the plain decode step. The drafter batch is already padded-uniform
-(disable_padded_drafter_batch is required False), so the blocker is in the
-dispatch classification (_determine_batch_execution_and_padding /
-uniform_decode bucketing for spec shapes).
+**make spec forwards eligible for FULL cudagraph capture** so collectives
+replay inside the graph like the plain decode step.
+
+**Phase 55 attempt (STEP0_FULL_CG, landed but NOT ENGAGING):** the full
+machinery is in (draft dispatcher keyed at q=K+1, q-aware capture-metadata
+builder, step0 uniform dispatch + descriptor forwarding, runner capture-size
+bypass; env-gated, accept parity everywhere, zero regressions). Per-shape
+dispatch logging then showed WHY it cannot engage yet: steady-state step0 is
+NOT per-request uniform -- shapes are (24 tok, 8 req)=3/req, (21,7), (15,5),
+... The drafter pads the TOTAL to a bucket, not each request to a fixed q,
+so no uniform-q FULL key ever matches. The real fix is one of:
+(a) pad step0 per-request to a fixed q (EAGLE padded-drafter-batch style;
+the landed capture machinery then engages as-is), or
+(b) move the MoE dispatch/combine INSIDE the compiled piecewise body so
+PIECEWISE replays the collectives on-graph (helps step0 AND all mixed
+shapes, model-agnostic). (b) likely also fixes the Phase 52 verify anomaly
+for chunked-prefill shapes. Both are drafter/compile surgery -- the next
+session's task, now with exact shape evidence.
 
 ## 3. Open issue 2: mixed-step dp_metadata crash at b>=32 (see Phase 53 §3)
 

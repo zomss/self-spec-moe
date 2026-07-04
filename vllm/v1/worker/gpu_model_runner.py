@@ -6163,7 +6163,11 @@ class GPUModelRunner(
                 # token per seq. Capture the draft at num_reqs tokens so the key
                 # matches the runtime draft batch (batch_size == num_reqs).
                 drafter_num_tokens = num_tokens
-                if capture_draft_full:
+                if capture_draft_full and not getattr(
+                    self.drafter, "_step0_full_cg", False
+                ):
+                    # (Phase 55: with STEP0_FULL_CG the draft captures at the
+                    # step-0 shape = the runner batch's num_tokens, q=K+1.)
                     drafter_num_tokens = num_reqs_padded
                 self.drafter.dummy_run(
                     drafter_num_tokens,

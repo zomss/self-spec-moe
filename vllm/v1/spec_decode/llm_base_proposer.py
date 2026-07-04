@@ -236,6 +236,9 @@ class SpecDecodeBaseProposer:
         # W7: opt-in FULL cudagraphs for the draft decode-step forwards (see
         # VLLM_SELF_SPEC_DRAFT_FULL_CG). Default off -> PIECEWISE as before.
         self.use_full_cudagraphs = envs.VLLM_SELF_SPEC_DRAFT_FULL_CG
+        # Phase 55: keepalive for step0 FULL-capture constants (strided
+        # query_start_loc tensors referenced by captured graphs).
+        self._step0_capture_keepalive: list = []
         # W7-gqa: when True, the FULL-CG draft chain runs its attention EAGERLY
         # (per-step kernel launch) instead of replaying the captured decode
         # graph. Set in initialize_attn_backend for non-MLA (FA3 / GQA) draft
@@ -609,6 +612,15 @@ class SpecDecodeBaseProposer:
         view = self._slot_mapping_buffer[:num_tokens]
         return {name: view for name in self._draft_attn_layer_names}
 
+    @property
+    def _step0_full_cg(self) -> bool:
+        """Phase 55: step-0 FULL cudagraph eligibility (K=1 only)."""
+        return (
+            envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG
+            and self.use_full_cudagraphs
+            and self.speculative_config.num_speculative_tokens == 1
+        )
+
     def initialize_cudagraph_keys(self, cudagraph_mode: CUDAGraphMode) -> None:
         """Initialize cudagraph dispatcher keys for the drafter.
 
@@ -641,9 +653,17 @@ class SpecDecodeBaseProposer:
         # The draft dispatcher's uniform_decode_query_len defaults to
         # 1 + num_speculative_tokens (the *verify* query len); override to 1
         # because each draft decode-step forward is a single token per seq.
-        self.cudagraph_dispatcher.uniform_decode_query_len = 1
+        # Phase 55: at K=1 there are no q=1 chain forwards -- the only draft
+        # forward is step-0 at q=K+1. With STEP0_FULL_CG, key the draft's
+        # uniform-decode FULL graphs at q=K+1 instead so step-0 replays FULL.
+        _qlen = (
+            self.speculative_config.num_speculative_tokens + 1
+            if self._step0_full_cg
+            else 1
+        )
+        self.cudagraph_dispatcher.uniform_decode_query_len = _qlen
         self.cudagraph_dispatcher.initialize_cudagraph_keys(
-            eagle_cudagraph_mode, uniform_decode_query_len=1
+            eagle_cudagraph_mode, uniform_decode_query_len=_qlen
         )
 
     def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -776,9 +796,32 @@ class SpecDecodeBaseProposer:
             )
 
         with _self_spec_profiler().region("step0_determine_batch"):
-            cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
-                self._determine_batch_execution_and_padding(num_tokens)
+            # Phase 55: with STEP0_FULL_CG (K=1), the padded-uniform step-0
+            # batch (q=K+1) dispatches to the FULL graphs captured at that
+            # shape; non-uniform batches (mixed steps) fall back naturally.
+            _step0_uniform = (
+                self._step0_full_cg
+                and num_tokens
+                == batch_size * (self.num_speculative_tokens + 1)
             )
+            cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
+                self._determine_batch_execution_and_padding(
+                    num_tokens, uniform_decode=_step0_uniform
+                )
+            )
+            _k = (num_tokens, batch_size, _step0_uniform)
+            if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG and _k not in getattr(
+                self, "_step0_cg_logged", set()
+            ):
+                self._step0_cg_logged = getattr(
+                    self, "_step0_cg_logged", set()
+                ) | {_k}
+                logger.info(
+                    "[step0-cg] num_tokens=%d batch=%d K=%d uniform=%s -> "
+                    "mode=%s padded=%d",
+                    num_tokens, batch_size, self.num_speculative_tokens,
+                    _step0_uniform, cudagraph_runtime_mode, num_input_tokens,
+                )
 
             model_kwargs, slot_mapping_size = self.build_model_inputs_first_pass(
                 num_tokens, num_input_tokens, mm_embed_inputs
@@ -795,6 +838,7 @@ class SpecDecodeBaseProposer:
             num_tokens=num_input_tokens,
             num_tokens_across_dp=num_tokens_across_dp,
             cudagraph_runtime_mode=cudagraph_runtime_mode,
+            batch_descriptor=self._last_batch_desc,
             slot_mapping=self._get_slot_mapping(
                 slot_mapping_size, common_attn_metadata.slot_mapping
             ),
@@ -2053,7 +2097,7 @@ class SpecDecodeBaseProposer:
         return per_group_attn_metadata, per_layer_attn_metadata
 
     def _build_draft_decode_capture_metadata(
-        self, batch_size: int
+        self, batch_size: int, qlen: int = 1
     ) -> dict[str, object]:
         """Build per-layer attention metadata for the draft's FULL-cudagraph
         capture pass (W7, VLLM_SELF_SPEC_DRAFT_FULL_CG).
@@ -2082,10 +2126,11 @@ class SpecDecodeBaseProposer:
         # Runner's persistent block table for the draft's kv-cache group; the
         # runner already populated seq_lens (= max_query_len) before calling
         # the draft dummy_run during capture.
+        num_reqs = batch_size // qlen
         blk_table = runner.input_batch.block_table[self.kv_cache_gid]
-        block_table_tensor = blk_table.get_device_tensor(batch_size)
-        seq_lens = runner.seq_lens[:batch_size]
-        seq_lens_cpu = runner.optimistic_seq_lens_cpu[:batch_size]
+        block_table_tensor = blk_table.get_device_tensor(num_reqs)
+        seq_lens = runner.seq_lens[:num_reqs]
+        seq_lens_cpu = runner.optimistic_seq_lens_cpu[:num_reqs]
         # Bake a LARGE step-invariant max_seq_len upper bound into the captured
         # graph (mirrors V2's draft_max_seq_len). The runner's capture-time
         # seq_lens are tiny (= the verify query len) while replay seq_lens grow
@@ -2095,10 +2140,19 @@ class SpecDecodeBaseProposer:
         # count at replay.
         max_seq_len = self.max_model_len
 
-        query_start_loc = self.arange[: batch_size + 1]
-        query_start_loc_cpu = torch.from_numpy(
-            self.token_arange_np[: batch_size + 1]
-        ).clone()
+        if qlen == 1:
+            query_start_loc = self.arange[: batch_size + 1]
+            query_start_loc_cpu = torch.from_numpy(
+                self.token_arange_np[: batch_size + 1]
+            ).clone()
+        else:
+            # Phase 55 (step0 FULL capture): strided starts for uniform q>1.
+            # Constant per shape; kept alive for the captured graph's lifetime.
+            query_start_loc = (self.arange[: num_reqs + 1] * qlen).contiguous()
+            query_start_loc_cpu = torch.from_numpy(
+                self.token_arange_np[: num_reqs + 1] * qlen
+            ).clone()
+            self._step0_capture_keepalive.append(query_start_loc)
 
         common_attn_metadata = CommonAttentionMetadata(
             query_start_loc=query_start_loc,
@@ -2106,9 +2160,9 @@ class SpecDecodeBaseProposer:
             seq_lens=seq_lens,
             _seq_lens_cpu=seq_lens_cpu,
             seq_lens_cpu_upper_bound=seq_lens_cpu,
-            num_reqs=batch_size,
+            num_reqs=num_reqs,
             num_actual_tokens=batch_size,
-            max_query_len=1,
+            max_query_len=qlen,
             max_seq_len=max_seq_len,
             block_table_tensor=block_table_tensor,
             slot_mapping=self._slot_mapping_buffer[:batch_size],
@@ -2796,8 +2850,15 @@ class SpecDecodeBaseProposer:
                 # metadata (and the sample-in-graph capture below) for them.
                 and not self._draft_chain_force_eager_attn
             )
+            _capture_qlen = (
+                self.speculative_config.num_speculative_tokens + 1
+                if self._step0_full_cg
+                else 1
+            )
             draft_attn_metadata = (
-                self._build_draft_decode_capture_metadata(num_input_tokens)
+                self._build_draft_decode_capture_metadata(
+                    num_input_tokens, qlen=_capture_qlen
+                )
                 if capture_full_attn
                 else None
             )
