@@ -1419,6 +1419,17 @@ def get_ep_group() -> GroupCoordinator:
     return _EP
 
 
+_EP_NODE: GroupCoordinator | None = None
+
+
+def get_ep_node_group() -> GroupCoordinator:
+    assert _EP_NODE is not None, (
+        "ep-node group is not initialized; it is only created for MoE models "
+        "when VLLM_SELF_SPEC_DRAFT_NODE_LOCAL or VLLM_SELF_SPEC_NODE_LOCAL is set"
+    )
+    return _EP_NODE
+
+
 _EPLB: GroupCoordinator | None = None
 
 
@@ -1957,6 +1968,31 @@ def initialize_model_parallel(
                 group_ranks, get_world_group().local_rank, backend, group_name="ep"
             )
 
+        # Self-spec Phase 55: intra-node partition of each EP group. Under
+        # sequence parallelism the naive MoE dispatch runs over the EP group
+        # (EP-shaped sizes vector), so the node-local draft needs the node
+        # partition of the EP group, not the DP group. Same gating and
+        # node-contiguity assumptions as _DP_NODE above.
+        global _EP_NODE
+        if (
+            envs.VLLM_SELF_SPEC_DRAFT_NODE_LOCAL or envs.VLLM_SELF_SPEC_NODE_LOCAL
+        ) and not enable_elastic_ep:
+            assert _EP_NODE is None, "ep-node group is already initialized"
+            assert _RANKS_PER_NODE is not None
+            n_nodes = get_world_group().world_size // _RANKS_PER_NODE
+            ep_node_group_ranks = []
+            for ranks in group_ranks:
+                for node in range(n_nodes):
+                    sub = [r for r in ranks if r // _RANKS_PER_NODE == node]
+                    if sub:
+                        ep_node_group_ranks.append(sub)
+            _EP_NODE = init_model_parallel_group(
+                ep_node_group_ranks,
+                get_world_group().local_rank,
+                backend,
+                group_name="ep_node",
+            )
+
         # Create EPLB group with the same ranks as EP if EPLB is enabled.
         # This is a separate process group to isolate EPLB communications
         # from MoE forward pass collectives and prevent deadlocks when
@@ -2119,6 +2155,11 @@ def destroy_model_parallel():
     if _EP:
         _EP.destroy()
     _EP = None
+
+    global _EP_NODE
+    if _EP_NODE:
+        _EP_NODE.destroy()
+    _EP_NODE = None
 
     global _EPLB
     if _EPLB:

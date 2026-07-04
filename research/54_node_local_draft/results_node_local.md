@@ -189,8 +189,8 @@ sizes vector of len DP*TP), so the Phase 54 node-local gather branch --
 gated on `... and not is_sequence_parallel` -- NEVER engages at TP2. The
 draft's node-local key only masks the ROUTER; its dispatch/combine are
 EP-wide (cross-node). The measured 236B "node-local" numbers are therefore
-node-masked ROUTING + full-EP comm; making the intra-node gather work
-under SP is an open Phase 54 item, not part of this fix.
+node-masked ROUTING + full-EP comm. **FIXED in Phase 55 -- see section 3b
+(node-local gather under SP/TP2).**
 
 **Fix (not env-gated -- a genuine bug on any per-tensor-quant gathering
 path):** per-tensor scales are gathered ONE-PER-RANK
@@ -258,7 +258,7 @@ the pre-fix reference exactly (65.9 vs 64.7-66.0 tok/s, 1.904 vs
 designed). The b32 debug run (per-dispatch logging, gpu_mem 0.90 thrash
 regime) independently measured accept 1.922 at b32. Reminder per the side
 finding above: at TP2 these numbers are node-masked ROUTING + EP-wide
-dispatch.
+dispatch -- they are the "before" column of the section-3b table.
 
 **K=2 at 236B: BLOCKED by a separate pre-existing wedge (first-ever K=2
 attempt at this scale).** Acceptance itself confirms the coverage curve:
@@ -273,6 +273,59 @@ while drained ranks run idle dummies -- the exact graph-replay-count
 asymmetry class this phase already documented (section 2, latent bug 1;
 only the K=1/fws case was fixed). Chain-vs-dummy replay symmetry at K>=2
 is follow-up drafter work, independent of the scale-gather fix.
+
+## 3b. FIXED (Phase 55): node-local gather under SP/TP2 -- the comm saving finally lands
+
+**The change** (same env gating as Phase 54, no new flags; TP1/DP path
+byte-identical):
+- `parallel_state.py`: new `_EP_NODE` subgroup + `get_ep_node_group()` --
+  the intra-node partition of each EP group (same node-contiguity
+  assumptions and env gating as `_DP_NODE`), created right after `_EP` for
+  MoE models; destroyed alongside the other groups.
+- `all2all.py` (AgRs manager): the node-local dispatch/combine branches
+  drop the `and not is_sequence_parallel` gate. `_node_group_and_sizes`
+  now picks the node partition of the EP group under SP (of the DP group
+  otherwise) and slices the EP-shaped sizes vector at the node members'
+  EP-group indices (same locally-uniform fallback + combine stash).
+  Per-rank-marked extras (the section-3 per-tensor FP8 scale) gather with
+  `sizes=[1] * node_world` -- one element per node member, so the Triton
+  per-tensor path still reads a node-CONSISTENT scale at element [0].
+  Group choice is config-driven (`is_sequence_parallel` is a per-layer
+  constant, identical on all ranks), so the collective sequence stays
+  rank-symmetric. Emulated-delay shield semantics unchanged: node-local
+  counts as shielded but increments `_real_collective_count` (plus a new
+  `node_sp` counter in the destroy-time A2A report).
+
+**Engagement proof.** One-shot log on every rank the first time the SP
+node branch fires:
+- V2-Lite 2-node TP2xDP4/node (DP8/EP16, the exact 236B group topology;
+  `scripts/run_tp2_engage.sh`): `node-local dispatch ENGAGED under SP:
+  node EP subgroup ranks=[0..7]` on h107 and `[8..15]` on h106;
+  accept 1.915, 281.8 tok/s (b8, K=1) -- the coverage curve's ~1.9 band,
+  now with intra-node-only dispatch.
+- 236B step3: same two ENGAGED lines on both nodes.
+- step2 TP1 control: ZERO ENGAGED lines (branch untouched off SP).
+
+**Regression (TP1/DP path unchanged):** ladder step2 (2-node V2-Lite
+DP16) accept 1.877 / 269.6 tok/s vs reference 1.878 / ~268-270.
+
+**THE benchmark rerun: 2-node 236B, K=1, gpu_mem 0.95
+(`scripts/run_step3_095.sh`, 2 iters):**
+
+| b/rank | no-spec tok/s | EP-wide gather (section 3) | node SP gather (this fix) | accept before -> after |
+|---:|---:|---:|---:|---|
+| 8  | 264  | 65.9 +- 1.0  | **75.5 +- 0.2**  (+15%) | 1.904 -> 1.904 |
+| 32 | 756  | 189.1 +- 0.4 | **268.4 +- 61.3** (+42%) | 1.931 -> 1.881 |
+| 64 | 1130 | 264.3 +- 13.3 | **370.7 +- 60.0** (+40%) | 1.868 -> 1.907 |
+
+Accept stays flat in the 1.88-1.91 coverage band (routing mask untouched,
+as designed) while tok/s improves at every batch: the draft's inter-node
+gather cost drops out exactly as the Phase 54 design intended. The +-60
+at b32/64 is the 2-iter cross-node fabric spread already seen in section
+3; even the LOW iters beat the old numbers. Wall-clock remains ~0.28-0.33x
+of no-spec -- the section-2 draft-cost problem (PIECEWISE per-layer
+collectives + in-graph rendezvous floor) is still the binding constraint,
+but the comm term of the node-local design is now real at TP2.
 
 ## 4. Where this leaves the thesis
 

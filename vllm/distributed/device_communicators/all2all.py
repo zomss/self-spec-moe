@@ -71,10 +71,14 @@ class AgRsAll2AllManager(All2AllManagerBase):
             int(os.environ.get("W7_CHARGE_DRAFT_A2A", "0"))
         )
         # Self-spec Phase 54 (node-local draft): cached positions of the
-        # intra-node subgroup's members within the DP group, for slicing the
-        # DP-shaped sizes vector down to the node subgroup.
+        # intra-node subgroup's members within the parent (DP or EP) group,
+        # for slicing the parent-shaped sizes vector down to the node subgroup.
         self._node_dp_indices: list[int] | None = None
+        self._node_ep_indices: list[int] | None = None
         self._node_sizes_last: list[int] | None = None
+        # Phase 55 engagement counter: node-local collectives issued on the
+        # sequence-parallel (EP-group) path, reported in destroy().
+        self._node_sp_collective_count = 0
         # GPU-clock cycles per microsecond for torch.cuda._sleep injection.
         # Calibrated once here (eager, before any CUDA-graph capture) so the
         # delay can be enqueued on the stream and captured into the graph.
@@ -162,8 +166,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
         off = sum(sizes[:rank])
         return t[off : off + sizes[rank]].contiguous()
 
-    def _node_group_and_sizes(self, sizes, own_len):
-        """Intra-node DP subgroup + node-sliced sizes (self-spec Phase 54).
+    def _node_group_and_sizes(self, sizes, own_len, is_sequence_parallel):
+        """Intra-node subgroup + node-sliced sizes (self-spec Phase 54/55).
+
+        Under sequence parallelism the naive dispatch runs over the EP group
+        with an EP-shaped sizes vector, so the node subgroup is the intra-node
+        partition of the EP group; otherwise it partitions the DP group.
 
         The draft's forward context can carry stale dp_metadata in
         prefill-adjacent steps (the comm-free path never consumed it, so this
@@ -172,15 +180,28 @@ class AgRsAll2AllManager(All2AllManagerBase):
         uniform lockstep batches this research path targets. The result is
         stashed so combine() reuses the exact gather sizes.
         """
-        from vllm.distributed.parallel_state import get_dp_node_group
+        from vllm.distributed.parallel_state import (
+            get_dp_node_group,
+            get_ep_node_group,
+        )
 
-        node_group = get_dp_node_group()
-        if self._node_dp_indices is None:
-            dp_ranks = get_dp_group().ranks
-            self._node_dp_indices = [
-                dp_ranks.index(r) for r in node_group.ranks
-            ]
-        node_sizes = [sizes[i] for i in self._node_dp_indices]
+        if is_sequence_parallel:
+            node_group = get_ep_node_group()
+            if self._node_ep_indices is None:
+                ep_ranks = get_ep_group().ranks
+                self._node_ep_indices = [
+                    ep_ranks.index(r) for r in node_group.ranks
+                ]
+            node_indices = self._node_ep_indices
+        else:
+            node_group = get_dp_node_group()
+            if self._node_dp_indices is None:
+                dp_ranks = get_dp_group().ranks
+                self._node_dp_indices = [
+                    dp_ranks.index(r) for r in node_group.ranks
+                ]
+            node_indices = self._node_dp_indices
+        node_sizes = [sizes[i] for i in node_indices]
         if node_sizes[node_group.rank_in_group] != own_len:
             node_sizes = [own_len] * len(node_group.ranks)
         self._node_sizes_last = node_sizes
@@ -267,13 +288,21 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 sorted(fc.additional_kwargs.keys()),
             )
 
-        if self_spec_node_local_enabled() and not is_sequence_parallel:
-            # Self-spec Phase 54: node-local draft -- gather over the
+        if self_spec_node_local_enabled():
+            # Self-spec Phase 54/55: node-local draft -- gather over the
             # intra-node subgroup only (NVLink); router already masked to
-            # node-resident experts upstream.
+            # node-resident experts upstream. Under SP (TP>1) the subgroup is
+            # the node partition of the EP group instead of the DP group.
             node_group, node_sizes = self._node_group_and_sizes(
-                sizes, hidden_states.shape[0]
+                sizes, hidden_states.shape[0], is_sequence_parallel
             )
+            if is_sequence_parallel:
+                logger.info_once(
+                    "Self-spec node-local dispatch ENGAGED under SP: node EP "
+                    "subgroup ranks=%s",
+                    str(node_group.ranks),
+                )
+                self._node_sp_collective_count += 1
             gathered_tensors = node_group.all_gatherv(
                 tensors_to_gather, dim=0, sizes=node_sizes
             )
@@ -373,12 +402,20 @@ class AgRsAll2AllManager(All2AllManagerBase):
                 sizes,
                 tuple(hidden_states.shape),
             )
-        if self_spec_node_local_enabled() and not is_sequence_parallel:
-            # Self-spec Phase 54: node-local draft -- reduce-scatter over the
-            # intra-node subgroup only (NVLink).
-            from vllm.distributed.parallel_state import get_dp_node_group
+        if self_spec_node_local_enabled():
+            # Self-spec Phase 54/55: node-local draft -- reduce-scatter over
+            # the intra-node subgroup only (NVLink); node partition of the EP
+            # group under SP, of the DP group otherwise.
+            from vllm.distributed.parallel_state import (
+                get_dp_node_group,
+                get_ep_node_group,
+            )
 
-            node_group = get_dp_node_group()
+            node_group = (
+                get_ep_node_group() if is_sequence_parallel else get_dp_node_group()
+            )
+            if is_sequence_parallel:
+                self._node_sp_collective_count += 1
             assert self._node_sizes_last is not None
             node_sizes = self._node_sizes_last
             hidden_states = node_group.reduce_scatterv(
@@ -406,11 +443,12 @@ class AgRsAll2AllManager(All2AllManagerBase):
         if envs.VLLM_SELF_SPEC_LOG_A2A_COUNTS:
             logger.info(
                 "Self-spec AgRs all2all count: total=%d active=%d real=%d "
-                "shielded=%d",
+                "shielded=%d node_sp=%d",
                 self._emulated_a2a_count,
                 self._active_emulated_a2a_count,
                 self._real_collective_count,
                 self._shielded_a2a_count,
+                self._node_sp_collective_count,
             )
 
 
