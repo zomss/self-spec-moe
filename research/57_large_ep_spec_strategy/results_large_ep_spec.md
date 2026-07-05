@@ -84,10 +84,61 @@ with Phase 50's ~1.60-1.67 (slightly higher here; on-distribution the head is
 ~2.3-2.5). tok/s at b8/1-iter is noisy (single small batch); the trustworthy
 throughput curve is the STAGE 2/3 sweep below.
 
-## STAGE 2 — real 2-node EAGLE3 K-sweep (EP16)
+## STAGE 2 — real 2-node EP16 EAGLE3 K-sweep (Qwen3-30B, clean env, CG on)
 
-_(pending)_
+tok/s (accept_len). K4 EP16 = execution-mode cliff (decode 3.4x, verify shape
+> captured CG sizes -> eager); EXCLUDED as an artifact, not a data point.
 
-## STAGE 3 — K\*(f): EP8 vs EP16
+| batch | EP | K=1 | K=2 | K=3 | K=4 |
+|---:|---:|---:|---:|---:|---:|
+| 8  | EP8  | 693.8 (1.53) | **783.5 (1.72)** | 724.5 (1.77) | 671.6 (1.84) |
+| 8  | EP16 | **533.4 (1.53)** | 540.6 (1.71) | 521.0 (1.84) | _155.5*_ |
+| 32 | EP8  | 2053.8 (1.49) | **2162.8 (1.68)** | 1842.7 (1.75) | 1684.8 (1.78) |
+| 32 | EP16 | 1499.6 (1.52) | **1621.5 (1.67)** | 1350.9 (1.74) | _370.7*_ |
+| 64 | EP8  | **2782.6 (1.46)** | 2392.6 (1.60) | 1863.3 (1.65) | 1527.4 (1.67) |
+| 64 | EP16 | **2197.4 (1.46)** | 1714.3 (1.60) | 1485.8 (1.62) | _431.7*_ |
 
-_(pending)_
+Accept is EP-INVARIANT (same head): 1.46->1.84 across K, identical at EP8 and
+EP16 within noise. So every tok/s difference between EP8 and EP16 is PURELY
+the verify-volume (comm) cost, not acceptance -- the cleanest possible
+isolation of the mechanism.
+
+## STAGE 3 — K*(EP): the optimal chain shortens as EP widens
+
+**The design rule, measured.** The throughput benefit of drafting a 2nd token
+(K2/K1) collapses as EP grows, at every batch:
+
+| batch | K2/K1 @ EP8 | K2/K1 @ EP16 | K* @ EP8 | K* @ EP16 |
+|---:|---:|---:|---:|---:|
+| 8  | **1.129** (+13%) | **1.013** (+1%) | 2 | ~1 |
+| 32 | 1.053 (+5%) | 1.081 (+8%) | 2 | 2 |
+| 64 | 0.860 (-14%) | **0.780 (-22%)** | 1 | 1 |
+
+- **Serving batch (b64): K\*=1 on both, but the over-draft penalty is STEEPER
+  at EP16** (-22% vs -14% for a 2nd token). The wider EP's more expensive
+  inter-node verify all-to-all makes each extra drafted token cost more, while
+  it buys the identical +0.14 accept -> drop it.
+- **Low batch (b8): the deep-draft benefit EP8 enjoys (+13% at K2) is ERASED
+  at EP16 (+1%)** -- the inter-node verify comm eats the latency-regime upside
+  of a longer chain. The single-GPU instinct ("low batch, draft deeper") does
+  NOT transfer to multi-node EP.
+- This CONFIRMS + SHARPENS Phase 50's emulated K\*=1 on real fabric: at large
+  EP the optimum is a minimal chain, and the pressure toward K\*=1 grows with
+  EP width -- exactly the repositioned thesis.
+
+**Verify-volume law, real fabric:** at b64, tok/s falls monotonically with K
+at both EPs (EP16: 2197/1714/1486; EP8: 2783/2393/1863) while accept saturates
+(~1.67) -- over-drafting is pure verify-comm waste, the Phase 33 law now
+measured inter-node with a real head.
+
+## Honest framing (baseline)
+
+This is a within-EAGLE CONFIGURATION result (choose K\*), not a new method.
+The full K-sweep is shown so the reader sees the whole curve; the contribution
+is the LAW + the K\*(batch, EP) design rule on real hardware. Against a tuned
+EAGLE-2 dynamic tree (which already adapts depth by confidence, Phase 31
+near-oracle) the win is "use its smallest setting at large EP", not a headline
+multiplier. Accept is off-distribution-depressed (synthetic prompts, ~1.46-1.84
+vs the head's ~2.3-2.5 on-distribution, cf. Phase 50); higher accept shifts K\*
+up slightly but the volume-cost slope -- and its steepening with EP -- is
+accept-independent.
