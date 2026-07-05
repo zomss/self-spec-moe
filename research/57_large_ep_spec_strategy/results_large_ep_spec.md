@@ -142,3 +142,30 @@ multiplier. Accept is off-distribution-depressed (synthetic prompts, ~1.46-1.84
 vs the head's ~2.3-2.5 on-distribution, cf. Phase 50); higher accept shifts K\*
 up slightly but the volume-cost slope -- and its steepening with EP -- is
 accept-independent.
+
+## Independent replication (retry-runner, self-consistent with the EP8 arm)
+
+An independent EP16 cg sweep via `run_ksweep.sh` (one K per invocation, hard
+`timeout`, GPU-pid force-kill + retry) -- the SAME runner and async-off cg
+settings as the EP8 arm -- reproduces the STAGE 2 table for the reliable K=1-3
+core (tok/s, accept_len):
+
+| K | EP16 b8 | EP16 b32 | EP16 b64 |
+|---:|---:|---:|---:|
+| 1 | 462.6 (1.52) | 1523.9 (1.52) | 2307.3 (1.46) |
+| 2 | 532.9 (1.65) | 1525.3 (1.67) | 1724.2 (1.60) |
+| 3 | 508.8 (1.76) | 1435.0 (1.75) | 1547.2 (1.62) |
+
+K2 b64 = 1724 here vs 1714 in the `fill` runs (0.6%); the K\*(EP) conclusion is
+identical: b64 falls monotonically (K\*=1), b32 K1≈K2 (K\* dropped from 2 at EP8),
+b8 K2 barely beats K1 (+1%). The mechanism (accept EP-invariant; every tok/s gap
+= verify volume) holds on both independent 2-node runs.
+
+**Reliability caveat on K≥4 @ EP16.** K=4-8 at EP16 did not complete cleanly in
+the retry-runner sweep: the DP16 EAGLE spec cycle wedges the first collective,
+and the wedge rate rises with K (more draft steps = more collectives) — plus
+these high-K attempts overlapped concurrent 2-node `fill` runs, so contention
+compounds the intrinsic fragility. K=1-3 (the K\* region) is the trustworthy
+core on both runs; the K≥4 tail (steep tok/s falloff) is anchored by the fully
+clean single-node EP8 sweep (b64: K8 = 0.38× K1). Net: the design rule rests on
+the well-measured K=1-3 EP8-vs-EP16 differential, not on the fragile K≥4 points.

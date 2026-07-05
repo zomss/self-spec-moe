@@ -52,5 +52,42 @@
         "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
       }
     ]
-  }
+  },
+  "this_k": 6,
+  "results": [
+    {
+      "batch": 8,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 3.017640228383243,
+      "short_s_mean": 0.7916904470572869,
+      "long_s_all": [
+        3.0277348239906132,
+        3.027987895067781,
+        2.997197966091335
+      ],
+      "short_s_all": [
+        0.7943198098801076,
+        0.7963505289517343,
+        0.7844010023400187
+      ],
+      "decode_s_mean": 2.2259497813259563,
+      "decode_s_std": 0.011425299370776774,
+      "tok_s_mean": 460.03645096956893,
+      "tok_s_std": 2.3680922462954435,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": 1.7227238525206923,
+      "num_accepted": 1921.0,
+      "num_drafted": 15948.0,
+      "num_drafts": 2658.0
+    },
+    {
+      "batch": 32,
+      "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+    }
+  ]
 }
