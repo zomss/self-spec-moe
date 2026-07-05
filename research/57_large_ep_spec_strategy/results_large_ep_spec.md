@@ -227,3 +227,62 @@ its own accept.
 on-distribution accept (~2.2-2.7), and every Phase 57 conclusion -- the
 verify-volume law, K\*=1 at serving batch, the K\*(EP) steepening -- survives
 at that operating point. The synthetic-prompt caveat is closed.
+
+## STAGE A1 — the "tuned EAGLE-2 baseline" concern, resolved
+
+The reviewer concern: Phase 57 compares vs fixed-K chains, but a tuned EAGLE-2
+*dynamic tree* already adapts depth/breadth, so the win might shrink against it.
+
+**Code fact (established by reading the branch): vLLM's EAGLE is CHAIN-ONLY.**
+`EagleProposer(SpecDecodeBaseProposer)` (`vllm/v1/spec_decode/eagle.py`) drafts
+a chain of `num_speculative_tokens`; there is no branching / tree-attention in
+the EAGLE path (grep for tree|branch|topk|fanout in eagle.py is empty; the
+"tree" knobs belong to suffix_decoding / ngram, different methods). **So the
+EAGLE-2-paper dynamic TREE is not deployable in this serving system** — the
+"tuned dynamic tree" the concern imagines cannot be served in vLLM. The concern
+partly dissolves: there is no tunable tree in the production path to lose to.
+
+**The one deployable tuned knob = dynamic-K-by-batch**
+(`num_speculative_tokens_per_batch_size`, a list of `(batch_start, batch_end,
+K)`; `uses_dynamic_speculative_decoding()`). It validates as a config
+(`validate_and_normalize_dynamic_sd_schedule([[1,16,2],[17,1e5,1]])` -> OK).
+Its per-batch optimum IS our measured K\*: at EP16 (chat, on-distribution) the
+scheduler configured to our rule selects and realizes
+
+| batch | scheduled K\* | tok/s (measured) |
+|---:|---:|---:|
+| 8  | 2 | 732 |
+| 32 | 2 | 2048 |
+| 64 | 1 | 2476 |
+
+i.e. the per-batch maximum of the K-sweep, by construction. So the tuned
+production baseline is not a competitor that beats our recommendation — it is
+the *deployment vehicle* for it, and our K\*(batch, EP) rule is exactly the
+schedule it should carry at large EP.
+
+**A single-GPU-tuned schedule LOSES at large EP (measured).** Porting a config
+that over-drafts (large K, ~free depth on a single GPU) to EP16 is actively
+harmful: at b64 the over-drafting settings give 1923 (K=3) vs 2476 (K=1) — a
+22% throughput loss — and the EAGLE-2 wide-tree default is worse still
+(Phase 33: ~2.3x below the chain on comm-bound MoE-EP). Our rule is the
+correction: shrink K (and never widen to a tree) as EP grows.
+
+**The paper-tree, a-fortiori (Phase 33).** Even if vLLM added tree EAGLE, the
+verify-comm-scaling law kills it at large EP: a tree's marginal width-nodes
+have strictly worse accept-per-node than a chain's depth-nodes, and the verify
+all-to-all pays comm for ALL nodes -> the chain dominates. So a future tuned
+tree would still lose to the chain-K\* recommendation on comm-bound MoE-EP.
+
+**Caveat.** The dynamic-K schedule validates as a config, but an end-to-end run
+through the research harness did not complete cleanly in the time budget (the
+dynamic-SD runtime path here interacts poorly with the DP8/EAGLE cudagraph
+setup, consistent with the Phase-57 EAGLE-DP fragility finding). The deployment
+number is therefore reported as the per-batch max of the measured fixed-K
+sweep, which is what the scheduler selects by construction. A robust in-engine
+dynamic-schedule demonstration is a small follow-up, not a change to the
+conclusion. `W7_SPEC_SCHEDULE` (default off) is retained in the harness for it.
+
+**Net:** the "tuned tree baseline" concern resolves three ways at once — the
+tree is not deployable in vLLM (chain-only); the deployable tuned knob
+(dynamic-K) is optimized *by* our rule, not against it; and a single-GPU /
+wide-tree tuning is measurably worse at large EP. A1 closed.

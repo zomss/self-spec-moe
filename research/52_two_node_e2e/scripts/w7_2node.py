@@ -148,6 +148,15 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             spec_cfg["draft_tensor_parallel_size"] = tp
             if DRAFT_QUANT:
                 spec_cfg["quantization"] = DRAFT_QUANT
+        # Phase 57-A1: W7_SPEC_SCHEDULE="s:e:k,s:e:k,..." activates vLLM's
+        # dynamic-K-by-batch scheduler (num_speculative_tokens_per_batch_size),
+        # the ONLY tuned EAGLE baseline the serving path supports (EAGLE here
+        # is chain-only; no branching tree). num_speculative_tokens is the cap.
+        _sched = os.environ.get("W7_SPEC_SCHEDULE", "").strip()
+        if _sched:
+            rows = [[int(x) for x in seg.split(":")] for seg in _sched.split(",")]
+            spec_cfg["num_speculative_tokens_per_batch_size"] = rows
+            spec_cfg["num_speculative_tokens"] = max(r[2] for r in rows)
         kwargs["speculative_config"] = spec_cfg
     llm = LLM(**kwargs)
 
