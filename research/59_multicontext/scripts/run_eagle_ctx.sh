@@ -37,7 +37,8 @@ for K in $KLIST; do
     OVR="W7_NODES=2 W7_LOCAL_WORLD=8 W7_KS=$K W7_BATCHES=$BATCHES \
 W7_ITERS=$ITERS W7_WARMUP=$WARMUP W7_GPU_MEM=0.90 W7_TAG=$TAG \
 W7_MASTER_PORT=$((PORT+try*20)) W7_CTX_TOKENS=$CTX W7_MAX_MODEL_LEN=$MAXLEN \
-W7_MAX_NUM_BATCHED=$MNB W7_PROMPT_FILE=$P57/data/prompts_ondist.txt W7_CHAT=1"
+W7_MAX_NUM_BATCHED=$MNB W7_OUT=$PHASE/data \
+W7_PROMPT_FILE=$P57/data/prompts_ondist.txt W7_CHAT=1"
     echo "[eagle-ctx] $TAG K=$K try=$try to=${TRY_TO}s ($(date +%H:%M:%S))"
     ssh h106 "bash -c 'source $ENV && export $OVR && W7_NODE_RANK=1 timeout $TRY_TO $PY $P52/scripts/w7_2node.py spec'" \
         > "$LOG6" 2>&1 &
