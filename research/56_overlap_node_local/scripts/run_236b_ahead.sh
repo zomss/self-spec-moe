@@ -12,7 +12,7 @@ PY=/h/v-sukmincho/self-spec-moe/.venv/bin/python
 mkdir -p "$PHASE/logs" "$PHASE/data"
 AHEAD="${AHEAD:-1}"
 PROFILE="${PROFILE:-0}"
-TAG="${TAG:-236b_a${AHEAD}${AHEAD_STEPS:+_s$AHEAD_STEPS}$( [ "$PROFILE" = 1 ] && echo _prof )}"
+TAG="${TAG:-236b_a${AHEAD}${AHEAD_STEPS:+_s$AHEAD_STEPS}${MAINSTREAM:+_ms}${NCCL_CTAS:+_ctas$NCCL_CTAS}$( [ "$PROFILE" = 1 ] && echo _prof )}"
 PROFDIR="$PHASE/data/prof_${TAG}"
 [ "$PROFILE" = 1 ] && { rm -rf "$PROFDIR"; mkdir -p "$PROFDIR"; ssh h106 "rm -rf $PROFDIR && mkdir -p $PROFDIR"; }
 
@@ -23,6 +23,8 @@ VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=0 \
 VLLM_SELF_SPEC_DRAFT_GRAPH_POOL=1 VLLM_SELF_SPEC_DRAFT_WORKSPACE=1 \
 VLLM_SELF_SPEC_AHEAD_CHAIN=$AHEAD \
 ${AHEAD_STEPS:+W7_AHEAD_STEPS=$AHEAD_STEPS} \
+${MAINSTREAM:+W7_SHADOW_MAIN_STREAM=$MAINSTREAM} \
+${NCCL_CTAS:+NCCL_MAX_CTAS=$NCCL_CTAS} \
 VLLM_SELF_SPEC_PROFILE=$PROFILE \
 $( [ "$PROFILE" = 1 ] && echo VLLM_SELF_SPEC_PROFILE_OUT=$PROFDIR ) \
 W7_MODEL=deepseek-ai/DeepSeek-V2 W7_TRC=1 \
@@ -40,6 +42,48 @@ kill_stragglers() {
 }
 
 kill_stragglers
+
+# Stall watcher: once decode has started (first Avg-generation log line),
+# a >30s quiet log while workers are alive = the wedge forming; py-spy dump
+# every worker on this node before the engine's 60s dequeue timeout kills it.
+stall_watch() {
+  local log="$1" out="$2"
+  local pyspy=/h/v-sukmincho/self-spec-moe/.venv/bin/py-spy
+  until grep -qE "ENGAGED" "$log" 2>/dev/null; do sleep 10; done
+  while pgrep -f 'w7_2node[.]py' >/dev/null; do
+    local age=$(( $(date +%s) - $(stat -c %Y "$log" 2>/dev/null || date +%s) ))
+    if [ "$age" -ge 30 ]; then
+      echo "=== stall dump $(date +%H:%M:%S) age=${age}s ===" >> "$out"
+      for pid in $(pgrep -f 'Worker_D[P]'); do
+        echo "--- PID $pid ---" >> "$out"
+        sudo -n timeout 20 "$pyspy" dump --pid "$pid" >> "$out" 2>&1
+      done
+      sleep 60
+    fi
+    sleep 10
+  done
+}
+stall_watch "$PHASE/logs/${TAG}_h107.log" "$PHASE/logs/${TAG}_stall_h107.txt" &
+WATCH_PID=$!
+ssh h106 "bash -s" > /dev/null 2>&1 <<EOF &
+log=$PHASE/logs/${TAG}_h106.log
+out=$PHASE/logs/${TAG}_stall_h106.txt
+pyspy=/h/v-sukmincho/self-spec-moe/.venv/bin/py-spy
+until grep -qE "ENGAGED" "$log" 2>/dev/null; do sleep 10; done
+while pgrep -f 'w7_2node[.]py' >/dev/null; do
+  age=\$(( \$(date +%s) - \$(stat -c %Y "\$log" 2>/dev/null || date +%s) ))
+  if [ "\$age" -ge 30 ]; then
+    echo "=== stall dump \$(date +%H:%M:%S) age=\${age}s ===" >> "\$out"
+    for pid in \$(pgrep -f 'Worker_D[P]'); do
+      echo "--- PID \$pid ---" >> "\$out"
+      sudo -n timeout 20 "\$pyspy" dump --pid "\$pid" >> "\$out" 2>&1
+    done
+    sleep 60
+  fi
+  sleep 10
+done
+EOF
+WATCH106_PID=$!
 
 ssh h106 "bash -c 'source $P52/scripts/env_2node.sh && export $OVR && W7_NODE_RANK=1 exec $PY $P52/scripts/w7_2node.py spec'" \
     > "$PHASE/logs/${TAG}_h106.log" 2>&1 &
@@ -59,6 +103,8 @@ if [ "$RC" = "124" ]; then
       >> "$PHASE/logs/${TAG}_wedge_h106.txt" 2>&1
 fi
 kill_stragglers
+kill "$WATCH_PID" "$WATCH106_PID" 2>/dev/null
+ssh h106 "pkill -f 'stall dump' 2>/dev/null; true" 2>/dev/null
 wait "$H106_PID" 2>/dev/null
 echo "236b AHEAD=$AHEAD PROFILE=$PROFILE done RC=$RC"
 grep -h 'W7-2N K' "$PHASE/logs/${TAG}_h107.log" | tail -4

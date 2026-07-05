@@ -142,9 +142,65 @@ ahead chain. This is the expected regime (V2-Lite verify is tens of ms
 with a small comm fraction); the physics question lives at 236B where
 the verify is ~75-90 ms at ~50% inter-node comm.
 
-## Stage A — 236B physics (pending)
+## Stage A — overlap PHYSICS, answered directly (microbench + the V2-Lite A/B)
 
-TBD.
+The 236B ahead-chain run wedged (the Phase-54/55 deadlock class resurfacing
+in the ahead loop's rank-local fences even with the DP-uniform gate; 3
+variant runs a1/ms/ctas16 all `EngineDeadError` at the first drain,
+`shm_broadcast` 60s-timeout hang signature, logs in `logs/236b_a1*`).
+Rather than sink further into that distributed wedge, the load-bearing
+question -- *does side-stream compute overlap with the verify's inter-node
+NCCL collectives on this fabric?* -- is a property of the fabric+NCCL, so it
+is measured DIRECTLY with a microbench (`scripts/overlap_microbench.py`, 16
+ranks = the real 2-node EP topology): a collective loop (inter-node
+all_gather, verify-comm stand-in) on one stream vs a matmul loop
+(draft-forward stand-in) on another, timed solo then concurrent.
+
+| regime (NC comm / NM compute iters) | T_comm | T_compute | T_concurrent | serial=sum | **conc/max** | full-serial line |
+|---|---:|---:|---:|---:|---:|---:|
+| NC30/NM40 | 3.52 | 7.14 | 11.39 | 10.66 | **1.59** | 1.49 |
+| NC60/NM30 | 6.81 | 5.43 | 14.63 | 12.24 | **2.15** | 1.80 |
+
+**Verdict: overlap NO-GO on this stack.** In BOTH regimes T_concurrent is
+*worse* than fully serial (fraction-hidden = -0.21, -0.44): running compute
+and inter-node collectives on separate streams is slower than back-to-back.
+Default NCCL collectives are SM-based (staging/copy kernels occupy SMs), so
+they CONTEND with the matmul rather than overlapping the network wait.
+Single-node NVLink shows the same (ratio 1.20 vs serial-line 1.16) -- this
+is an SM-contention property of NCCL, not RoCE-specific.
+
+This EXPLAINS the Stage-A-attempt-2 V2-Lite A/B above: ahead-on added
++47-65 ms/cycle = the full serialized side work (0.51-0.68x), never a hidden
+draft. The Phase-32 overlap thesis's core premise (draft hides behind the
+verify's comm -> draft ~free -> ~1.4x at f~0.5) does NOT hold with naive
+PyTorch stream overlap + default NCCL on this cluster.
+
+**Scope / caveats (what would change the verdict):** the negative is scoped
+to *default SM-based NCCL + naive stream overlap*. Production overlap
+(DeepEP low-latency, DBO, NVSHMEM) frees SMs from the collective and CAN
+overlap -- not installed here (the standing Phase-19/24 DBO-baseline gap).
+The compute stand-in is dense matmul; the real draft is BW-bound expert
+GEMMs, which contend differently with NCCL's copy kernels (could differ, but
+the sign of a -0.2 to -0.4 hidden-fraction is a wide margin to overturn).
+
+## Stage B — node-safe consumption: NOT PURSUED (Stage A NO-GO)
+
+The consume redesign only pays if overlap hides the draft. Stage A shows it
+does not on this stack, so consumption would at best recover the lockstep
+number (skip propose on all-hit) minus the host-sync gate cost (the OV1b1
+lesson) -- no path to the overlap win here. Revisit only with a
+SM-freeing comm backend (DeepEP/NVSHMEM). The DP-uniform ahead gate
+(committed `eacc20bdb`) stands as the reusable artifact for that future work.
+
+## Bottom line
+
+Overlap x node-local is a **measured NO-GO on this 2-node RoCE + default-NCCL
+stack**: inter-node collectives contend with compute rather than overlapping,
+so the Phase-32 ~1.4x is unreachable here. The honest lever for the overlap
+win is a comm backend that frees SMs (DeepEP/DBO) -- a hardware/stack
+dependency, not a spec-decode algorithm change. Node-local lockstep (Phase
+54/55: 81/273/379 tok/s K=1, the +40% comm-saving) remains the best
+real-fabric configuration.
 
 ## Stage B — node-safe consumption (gated on Stage A)
 
