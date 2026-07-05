@@ -4,6 +4,7 @@
 import torch
 import torch.distributed as dist
 
+import vllm.envs as envs
 from vllm.config import ParallelConfig
 from vllm.distributed.parallel_state import get_dp_group
 from vllm.logger import init_logger
@@ -13,6 +14,29 @@ from vllm.v1.worker.ubatch_utils import (
 )
 
 logger = init_logger(__name__)
+
+# Self-spec OV1/Phase 56: DP-uniform ahead-chain gate. With a COLLECTIVIZING
+# draft (VLLM_SELF_SPEC_DRAFT_NODE_LOCAL), the side-stream ahead chain issues
+# node-subgroup collectives, so the run/skip decision must be identical on
+# every rank of a step wave. The batch-boundary fence is rank-local (per-rank
+# scheduler steps diverge at generate tails: acceptance variance spreads
+# request finish cycles), which deadlocked validation mode at the first drain
+# (see research/56_overlap_node_local). Fix: piggyback one extra row on the
+# existing coordinate_batch_across_dp all-reduce -- the runner publishes
+# "I hold a live ahead stash" before its target-step coordination; the synced
+# AND is read back after it. Row count is env-keyed (process-uniform), so the
+# collective stays shape-symmetric on every path (busy, idle dummy, draft).
+_ss_ahead_local: int = 0
+_ss_ahead_synced: bool = False
+
+
+def set_self_spec_ahead_local(ok: bool) -> None:
+    global _ss_ahead_local
+    _ss_ahead_local = 1 if ok else 0
+
+
+def get_self_spec_ahead_synced() -> bool:
+    return _ss_ahead_synced
 
 
 def _get_device_and_group(parallel_config: ParallelConfig):
@@ -44,11 +68,16 @@ def _run_ar(
     dp_rank = parallel_config.data_parallel_rank
     device, group = _get_device_and_group(parallel_config)
     # Populate this rank's contribution on CPU to reduce GPU syncs.
-    tensor_cpu = torch.zeros(4, dp_size, dtype=torch.int32)
+    # Self-spec Phase 56: row 4 (ahead-chain gate) exists iff the env flag is
+    # set -- identical on all ranks, so the collective stays shape-symmetric.
+    rows = 5 if envs.VLLM_SELF_SPEC_AHEAD_CHAIN else 4
+    tensor_cpu = torch.zeros(rows, dp_size, dtype=torch.int32)
     tensor_cpu[0][dp_rank] = orig_num_tokens_per_ubatch
     tensor_cpu[1][dp_rank] = padded_num_tokens_per_ubatch
     tensor_cpu[2][dp_rank] = 1 if should_ubatch else 0
     tensor_cpu[3][dp_rank] = cudagraph_mode
+    if rows == 5:
+        tensor_cpu[4][dp_rank] = _ss_ahead_local
     tensor = tensor_cpu.to(device, non_blocking=True)
     dist.all_reduce(tensor, group=group)
     return tensor
@@ -135,6 +164,14 @@ def _synchronize_dp_ranks(
         cudagraph_mode=cudagraph_mode,
         parallel_config=parallel_config,
     )
+
+    # Self-spec Phase 56: publish the DP-wide AND of the ahead-chain bits.
+    # Every coordination refreshes it; the runner consumes the value computed
+    # by its own TARGET-step coordination (before any draft-side call of the
+    # same step can overwrite it).
+    if tensor.shape[0] == 5:
+        global _ss_ahead_synced
+        _ss_ahead_synced = bool(int(tensor[4].min().item()) == 1)
 
     # Synchronize cudagraph_mode across ranks first (take min).
     # This is needed before DP padding decision since we use the synced

@@ -1,0 +1,39 @@
+=== PID 2643407 ===
+Process 2643407: VLLM::Worker_DP5_TP0_EP10
+Python v3.12.13 (/h/v-sukmincho/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12)
+
+Thread 2643407 (active): "MainThread"
+    _post_process_cudagraph_mode (vllm/v1/worker/dp_utils.py:98)
+    _synchronize_dp_ranks (vllm/v1/worker/dp_utils.py:142)
+    coordinate_batch_across_dp (vllm/v1/worker/dp_utils.py:216)
+    _determine_batch_execution_and_padding (vllm/v1/spec_decode/llm_base_proposer.py:3333)
+    propose (vllm/v1/spec_decode/llm_base_proposer.py:885)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:5225)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:4579)
+    sample_tokens (vllm/v1/worker/gpu_model_runner.py:4617)
+=== PID 2643408 ===
+Process 2643408: VLLM::Worker_DP4_TP0_EP8
+Python v3.12.13 (/h/v-sukmincho/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12)
+
+Thread 2643408 (active): "MainThread"
+    _post_process_cudagraph_mode (vllm/v1/worker/dp_utils.py:98)
+    _synchronize_dp_ranks (vllm/v1/worker/dp_utils.py:142)
+    coordinate_batch_across_dp (vllm/v1/worker/dp_utils.py:216)
+    _determine_batch_execution_and_padding (vllm/v1/spec_decode/llm_base_proposer.py:3333)
+    propose (vllm/v1/spec_decode/llm_base_proposer.py:885)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:5225)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:4579)
+    sample_tokens (vllm/v1/worker/gpu_model_runner.py:4617)
+=== PID 2643409 ===
+Process 2643409: VLLM::Worker_DP5_TP1_EP11
+Python v3.12.13 (/h/v-sukmincho/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12)
+
+Thread 2643409 (active): "MainThread"
+    _post_process_cudagraph_mode (vllm/v1/worker/dp_utils.py:98)
+    _synchronize_dp_ranks (vllm/v1/worker/dp_utils.py:142)
+    coordinate_batch_across_dp (vllm/v1/worker/dp_utils.py:216)
+    _determine_batch_execution_and_padding (vllm/v1/spec_decode/llm_base_proposer.py:3333)
+    propose (vllm/v1/spec_decode/llm_base_proposer.py:885)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:5225)
+    propose_draft_token_ids (vllm/v1/worker/gpu_model_runner.py:4579)
+    sample_tokens (vllm/v1/worker/gpu_model_runner.py:4617)

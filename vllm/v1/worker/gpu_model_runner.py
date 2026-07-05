@@ -204,7 +204,11 @@ from vllm.v1.worker.cp_utils import (
     check_attention_cp_compatibility,
     get_total_cp_world_size,
 )
-from vllm.v1.worker.dp_utils import coordinate_batch_across_dp
+from vllm.v1.worker.dp_utils import (
+    coordinate_batch_across_dp,
+    get_self_spec_ahead_synced,
+    set_self_spec_ahead_local,
+)
 from vllm.v1.worker.ec_connector_model_runner_mixin import ECConnectorModelRunnerMixin
 from vllm.v1.worker.gpu.attn_utils import _reshape_attention_kv_cache
 from vllm.v1.worker.gpu.pool.late_interaction_runner import LateInteractionRunner
@@ -4132,6 +4136,15 @@ class GPUModelRunner(
             )
             if not uniform:
                 self.drafter.fence_ahead_chain()
+            # Phase 56: publish "I hold a live ahead stash" BEFORE this step's
+            # target-step DP coordination. The fence above is rank-local
+            # (per-rank finish cycles diverge at generate tails); with a
+            # collectivizing draft (NODE_LOCAL) the ahead run/skip decision
+            # must be wave-uniform, so the DP coordination ANDs these bits
+            # and run_ahead_chain below is gated on the synced result.
+            set_self_spec_ahead_local(
+                getattr(self.drafter, "_ahead_state", None) is not None
+            )
 
         num_scheduled_tokens = scheduler_output.total_num_scheduled_tokens
         with (
@@ -4404,6 +4417,14 @@ class GPUModelRunner(
             and self.speculative_config is not None
             and hasattr(self.drafter, "run_ahead_chain")
         ):
+            # Phase 56: only launch the ahead chain when EVERY DP rank of this
+            # wave holds a live stash (synced by the target-step coordination
+            # above). A rank-divergent launch wedges the node-local draft's
+            # side-stream collectives (measured: first V2-Lite drain tail).
+            # On a skipped cycle the stash is void -- fence drops it so the
+            # next propose re-stashes cleanly on all ranks together.
+            if not get_self_spec_ahead_synced():
+                self.drafter.fence_ahead_chain()
             with _self_spec_profiler().region("ahead_chain"):
                 self.drafter.run_ahead_chain()
             # Bound the overlap window to the verify only: the MAIN stream
@@ -5856,6 +5877,13 @@ class GPUModelRunner(
             # The current dummy run only covers LM execution, so we can skip it.
             # mm encoder dummy run may need to add in the future.
             return torch.tensor([]), torch.tensor([])
+
+        # Phase 56: an idle-wave dummy never runs an ahead chain; publish
+        # False so busy ranks' synced AND (see execute_model) skips theirs
+        # too -- otherwise their side-stream node collectives have no partner
+        # on this rank.
+        if envs.VLLM_SELF_SPEC_AHEAD_CHAIN:
+            set_self_spec_ahead_local(False)
 
         assert (
             cudagraph_runtime_mode is None
