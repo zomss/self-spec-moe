@@ -21,13 +21,12 @@ export GLOO_SOCKET_IFNAME=enmlx0
 # W7_SPEC_METHOD == draft_model.
 
 export W7_MODEL=Qwen/Qwen3-30B-A3B
-# W7_EAGER=1: EAGLE multi-step (K>1) spec decode deadlocks during CUDA-graph
-# capture under DP16 at batch>=32 (sample_tokens RPC hangs 5 min then dies).
-# enforce_eager removes graph capture and runs correctly at every K/batch. The
-# whole sweep (EP8 + EP16) is eager for internal consistency; absolute tok/s is
-# thus below Phase 50's cg numbers, but the K* trend and comm-scaling are eager-
-# invariant (the verify all-to-all volume scales with (K+1)*B regardless).
-export W7_TP=1 W7_TRC=0 W7_EAGER=1
+# W7_EAGER=0 (CUDA graphs): matches Phase 50 and keeps per-step overhead small
+# so the verify-comm signal is a large, visible fraction. The DP16 EAGLE spec
+# cycle wedges INTERMITTENTLY (first sample_tokens collective) under BOTH cg and
+# eager -- eager is not a fix -- so the mitigation is the retry+timeout runner
+# (run_ksweep.sh), not enforce_eager.
+export W7_TP=1 W7_TRC=0 W7_EAGER=0
 export W7_OUTLEN=160 W7_SHORTLEN=32 W7_ITERS=3 W7_WARMUP=2
 export W7_GPU_MEM=0.90
 export W7_OUT="$REPO/research/57_large_ep_spec_strategy/data"
@@ -44,3 +43,8 @@ export W7_SPEC_MODEL=Tengyunw/qwen3_30b_moe_eagle3
 # sample_tokens RPC under DP16 multi-step (K>1) on the 2-node fabric. Force it
 # off for a correct, internally-consistent K-sweep (applies to every K).
 export W7_ASYNC_SCHED=0
+
+# The EAGLE DP16 spec cycle occasionally deadlocks the first sample_tokens
+# collective (intermittent race; not fixed by async-off/eager). Fail fast so a
+# wedged run dies in ~120s and the runner retries, instead of the 300s default.
+export VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=120

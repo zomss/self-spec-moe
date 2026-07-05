@@ -1,0 +1,185 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "q30b_eagle_2n",
+  "dp": 16,
+  "tp": 1,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 3,
+  "warmup": 2,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "1": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 2.5580571703612804,
+        "short_s_mean": 0.6140620480291545,
+        "long_s_all": [
+          2.885472796857357,
+          2.4054352580569685,
+          2.383263456169516
+        ],
+        "short_s_all": [
+          0.6217286982573569,
+          0.6083217021077871,
+          0.6121357437223196
+        ],
+        "decode_s_mean": 1.943995122332126,
+        "decode_s_std": 0.2772153889737953,
+        "tok_s_mean": 533.4377576964649,
+        "tok_s_std": 70.35012878090531,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.526052104208417,
+        "num_accepted": 1575.0,
+        "num_drafted": 2994.0,
+        "num_drafts": 2994.0
+      },
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 3.5875229529726007,
+        "short_s_mean": 0.8556784602502981,
+        "long_s_all": [
+          3.5628283759579062,
+          3.630131375975907,
+          3.5696091069839895
+        ],
+        "short_s_all": [
+          0.8581889318302274,
+          0.8515008669346571,
+          0.8573455819860101
+        ],
+        "decode_s_mean": 2.7318444927223027,
+        "decode_s_std": 0.040696807547113655,
+        "tok_s_mean": 1499.573326052214,
+        "tok_s_std": 22.156551908412013,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 1.5222924638163366,
+        "num_accepted": 6279.0,
+        "num_drafted": 12022.0,
+        "num_drafts": 12022.0
+      },
+      {
+        "batch": 64,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 5.013545206127067,
+        "short_s_mean": 1.27588866573448,
+        "long_s_all": [
+          4.894255113322288,
+          4.937619741074741,
+          5.2087607639841735
+        ],
+        "short_s_all": [
+          1.285648356191814,
+          1.3431035932153463,
+          1.1989140477962792
+        ],
+        "decode_s_mean": 3.7376565403925874,
+        "decode_s_std": 0.23582886839192854,
+        "tok_s_mean": 2197.375417323086,
+        "tok_s_std": 133.79227583615776,
+        "out_tokens_decode": 8192,
+        "full_ntoks": 10240,
+        "suspect": false,
+        "accept_len": 1.4554199626346545,
+        "num_accepted": 11457.0,
+        "num_drafted": 25157.0,
+        "num_drafts": 25157.0
+      }
+    ],
+    "2": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 3,
+        "warmup": 2,
+        "long_s_mean": 2.6140098216322563,
+        "short_s_mean": 0.6761852355363468,
+        "long_s_all": [
+          2.5959235997870564,
+          2.626722244080156,
+          2.619383621029556
+        ],
+        "short_s_all": [
+          0.673489146400243,
+          0.6792427850887179,
+          0.6758237751200795
+        ],
+        "decode_s_mean": 1.9378245860959094,
+        "decode_s_std": 0.013471561909472811,
+        "tok_s_mean": 528.4446907155592,
+        "tok_s_std": 3.6871123384958557,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.6776315789473686,
+        "num_accepted": 1854.0,
+        "num_drafted": 5472.0,
+        "num_drafts": 2736.0
+      },
+      {
+        "batch": 32,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  },
+  "this_k": 2,
+  "results": [
+    {
+      "batch": 8,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 3,
+      "warmup": 2,
+      "long_s_mean": 2.6140098216322563,
+      "short_s_mean": 0.6761852355363468,
+      "long_s_all": [
+        2.5959235997870564,
+        2.626722244080156,
+        2.619383621029556
+      ],
+      "short_s_all": [
+        0.673489146400243,
+        0.6792427850887179,
+        0.6758237751200795
+      ],
+      "decode_s_mean": 1.9378245860959094,
+      "decode_s_std": 0.013471561909472811,
+      "tok_s_mean": 528.4446907155592,
+      "tok_s_std": 3.6871123384958557,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": 1.6776315789473686,
+      "num_accepted": 1854.0,
+      "num_drafted": 5472.0,
+      "num_drafts": 2736.0
+    },
+    {
+      "batch": 32,
+      "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+    }
+  ]
+}
