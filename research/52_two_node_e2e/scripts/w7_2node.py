@@ -128,6 +128,13 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     mnb = os.environ.get("W7_MAX_NUM_BATCHED", "").strip()
     if mnb:
         kwargs["max_num_batched_tokens"] = int(mnb)
+    # Phase 57: EAGLE spec methods auto-enable async scheduling, whose
+    # batch-queue path deadlocks the `sample_tokens` RPC under DP16 multi-step
+    # (K>1) on the 2-node fabric (self-spec draft_model runs it OFF already).
+    # W7_ASYNC_SCHED=0/1 forces it; unset -> vLLM default (self-spec unchanged).
+    async_sched = os.environ.get("W7_ASYNC_SCHED", "").strip()
+    if async_sched:
+        kwargs["async_scheduling"] = async_sched == "1"
     if spec:
         # Phase 57 (World B): W7_SPEC_METHOD/W7_SPEC_MODEL select the drafter
         # (e.g. a real EAGLE3 head) on the 2-node testbed. Default keeps the
