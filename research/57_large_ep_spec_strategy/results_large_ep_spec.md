@@ -286,3 +286,42 @@ conclusion. `W7_SPEC_SCHEDULE` (default off) is retained in the harness for it.
 tree is not deployable in vLLM (chain-only); the deployable tuned knob
 (dynamic-K) is optimized *by* our rule, not against it; and a single-GPU /
 wide-tree tuning is measurably worse at large EP. A1 closed.
+
+## MEASURED speedup over no-spec (EP16, on-distribution) — the honest ceiling
+
+No-spec Qwen3-30B baseline, real 2-node EP16, identical chat prompts (the
+apples-to-apples denominator): b8/b32/b64 = 521.6 / 1581.1 / 2611.1 tok/s.
+EAGLE speedup = EAGLE tok/s / no-spec tok/s:
+
+| batch | no-spec | K=1 | K=2 | K=3 | best-K speedup |
+|---:|---:|---:|---:|---:|---:|
+| 8  | 521.6  | 1.09x | **1.40x** | 1.36x | **1.40x** (K=2) |
+| 32 | 1581.1 | 1.16x | **1.30x** | 1.12x | **1.30x** (K=2) |
+| 64 | 2611.1 | **0.95x** | 0.86x | 0.74x | **0.95x** (K=1) -- a LOSS |
+
+**The headline, measured (not modeled): spec decoding on comm-bound multi-node
+MoE-EP is a LOW-BATCH win only.** At serving batch (b64) even the best config
+(K=1) is 0.95x -- break-even-to-loss (within ~1sigma of parity: 2476+-103 vs
+2611+-90) -- and any deeper drafting is a clear loss (K2 0.86x, K3 0.74x). The
+gain is confined to the latency regime (b8 1.40x, b32 1.30x).
+
+**Why (the accept-per-verified-token law, now end-to-end).** To commit
+accept_len tokens, spec routes (K+1) tokens of verify all-to-all vs no-spec's
+accept_len; accept/(K+1) < 1 always (0.86 at K=1), so spec routes ~1.16x MORE
+comm per committed token. Spec repays that only via the compute saving (one
+weight-read pass for accept_len tokens). At low batch the step is
+latency-bound and the compute saving dominates -> win. At serving batch the
+step is bandwidth-bound, no-spec is already weight-read-efficient, and the
+1.16x comm penalty + EAGLE draft/orchestration overhead exceed the shrinking
+compute saving -> net loss. K\* minimizes the damage (K=1 at b64) but cannot
+make speculation comm-efficient -- the cost is the VERIFY's all-to-all, which
+no draft choice touches.
+
+**Consequence for the design rule.** The Phase 57 rule sharpens: at large EP,
+speculative decoding is a **latency-regime tool** -- deploy it (chain, K\*=2)
+for low-batch/interactive serving, and **turn it OFF at throughput-serving
+batch**, where it is counterproductive. The only lever that would make it win
+at serving batch is a cheaper verify all-to-all (DeepEP/DBO/overlap); draft
+configuration (World A and World B alike) is necessary but not sufficient.
+This is the honest ceiling the paper should report -- a design rule plus the
+regime where the technique stops helping, measured on real fabric.
