@@ -45,7 +45,7 @@ for K in $KLIST; do
     LOGH="$PHASE/logs/ksweep_${TAG}_K${K}_try${try}.log"
     LOG6="$PHASE/logs/ksweep_${TAG}_K${K}_try${try}_h106.log"
     OVR="W7_NODES=$NODES W7_LOCAL_WORLD=8 W7_KS=$K W7_BATCHES=$BATCHES \
-W7_ITERS=3 W7_WARMUP=2 W7_GPU_MEM=0.90 W7_TAG=$TAG W7_MASTER_PORT=$((PORT+try*20))"
+W7_ITERS=3 W7_WARMUP=2 W7_GPU_MEM=0.90 W7_TAG=$TAG W7_MASTER_PORT=$((PORT+try*20)) ${PROMPTF:+W7_PROMPT_FILE=$PROMPTF} ${CHAT:+W7_CHAT=$CHAT}"
     echo "[ksweep] $TAG K=$K try=$try to=${TRY_TO}s ($(date +%H:%M:%S))"
     if [ "$TWO_NODE" = "1" ]; then
       ssh h106 "bash -c 'source $ENV && export $OVR && W7_NODE_RANK=1 timeout $TRY_TO $PY $P52/scripts/w7_2node.py spec'" \

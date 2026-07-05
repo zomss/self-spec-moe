@@ -169,3 +169,61 @@ compounds the intrinsic fragility. K=1-3 (the K\* region) is the trustworthy
 core on both runs; the K≥4 tail (steep tok/s falloff) is anchored by the fully
 clean single-node EP8 sweep (b64: K8 = 0.38× K1). Net: the design rule rests on
 the well-measured K=1-3 EP8-vs-EP16 differential, not on the fragile K≥4 points.
+
+## STAGE A2 — on-distribution acceptance (does the off-distribution caveat hold?)
+
+The Phase 50/57 accept numbers (~1.5-1.8) use synthetic prompts; the head's
+reputed on-distribution accept is ~2.3-2.5. Tested two "on-distribution"
+hypotheses on the identical EP8/EP16 K-sweep (only the prompts change):
+`W7_PROMPT_FILE` (80 diverse natural prompts) and `W7_CHAT=1` (each prompt
+wrapped in Qwen3's chat template -> the target emits an ASSISTANT response,
+the head's actual training distribution).
+
+**Accept vs prompt regime (EP8, ~batch-invariant; EP16 identical -> accept is
+EP-invariant, same head):**
+
+| K | synthetic (off) | natural-raw | chat (on-dist) |
+|--:|--:|--:|--:|
+| 1 | 1.49 | 1.45 | **1.72** |
+| 2 | 1.68 | 1.63 | **2.21** |
+| 3 | 1.75 | 1.68 | **2.53** |
+| 4 | 1.78 | 1.69 | **2.71** |
+
+- **Format, not content, was the lever.** Diverse natural prompts did NOT lift
+  accept (flat-to-slightly-lower vs synthetic -- the synthetic repetitive text
+  is actually low-entropy/easy). Chat-templating lifts it to **1.72->2.71**,
+  matching the head's ~2.3-2.5 reputation. Per-position beta ~0.72 (geometric
+  fit: K2 pred 2.24 vs 2.21, K3 2.61 vs 2.53). **The off-distribution caveat is
+  RESOLVED** -- the head's true operating point is measured.
+
+**K\* at the head's TRUE accept (chat), tok/s (accept ~EP-invariant):**
+
+| batch | EP | K=1 | K=2 | K=3 | K\* |
+|---:|---:|---:|---:|---:|---:|
+| 8  | EP8  | 879 | **1064** | 995 | 2 |
+| 8  | EP16 | 569 | **732** | 712 | 2 |
+| 32 | EP8  | 2557 | **2570** | 2238 | 2 |
+| 32 | EP16 | 1840 | **2048** | 1773 | 2 |
+| 64 | EP8  | **3482** | 3306 | 2805 | 1 |
+| 64 | EP16 | **2476** | 2235 | 1923 | 1 |
+
+**The design rule is ROBUST to accept level.** Despite accept nearly doubling
+(1.7->2.7), K\* is unchanged at the two ends: **K\*=1 at serving batch (b64)**
+and **K\*=2 at low batch (b8)**, on both EP8 and EP16. Higher accept makes
+larger K more competitive but does NOT flip K\* at serving batch: the b64
+K2/K1 ratio rises (off-dist EP8 0.86 / EP16 0.78 -> chat EP8 0.95 / EP16 0.90)
+yet K1 still wins. **The K\*(EP) trend also holds on-distribution**: the
+over-draft penalty stays steeper at EP16 than EP8 (0.90 < 0.95), same sign as
+off-distribution (0.78 < 0.86).
+
+**One accept-sensitive nuance (honest):** at the mid transition batch (b32),
+higher accept can bump K\* up by one (EP16 b32 went off-dist K\*~=1 -> chat
+K\*=2). So the exact K\* at the transition batch depends on accept; the
+qualitative rule (K\* small, K\*=1 at serving batch, shrinks/steepens with EP)
+is accept-robust, but a deployment should tune K near the transition batch to
+its own accept.
+
+**Net for the paper:** the World B numbers can be reported at the head's true
+on-distribution accept (~2.2-2.7), and every Phase 57 conclusion -- the
+verify-volume law, K\*=1 at serving batch, the K\*(EP) steepening -- survives
+at that operating point. The synthetic-prompt caveat is closed.

@@ -151,8 +151,35 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
         kwargs["speculative_config"] = spec_cfg
     llm = LLM(**kwargs)
 
+    # Phase 57-A2: W7_PROMPT_FILE (one prompt/line) supplies on-distribution
+    # natural-language prompts instead of the synthetic default (which depresses
+    # a trained EAGLE head's acceptance). Cycled to fill the batch. Default
+    # unset -> the synthetic BASE_PROMPT behavior is byte-identical.
+    _prompt_bank = None
+    _pf = os.environ.get("W7_PROMPT_FILE", "").strip()
+    if _pf:
+        with open(_pf) as _f:
+            _prompt_bank = [ln.strip() for ln in _f if ln.strip()]
+    # Phase 57-A2b: W7_CHAT=1 wraps each prompt in the model's chat template
+    # (add_generation_prompt) so the target produces an ASSISTANT response --
+    # the actual distribution a trained EAGLE3 instruct head predicts. Raw
+    # continuation of arbitrary text (W7_CHAT unset) is off-distribution.
+    _use_chat = os.environ.get("W7_CHAT", "0") == "1"
+    if _use_chat and _prompt_bank:
+        _tok = llm.get_tokenizer()
+        _prompt_bank = [
+            _tok.apply_chat_template(
+                [{"role": "user", "content": p}],
+                add_generation_prompt=True, tokenize=False,
+            )
+            for p in _prompt_bank
+        ]
+
     def run_batch(batch, out_len):
-        prompts = [f"{BASE_PROMPT} the year {1900 + i}." for i in range(batch)]
+        if _prompt_bank:
+            prompts = [_prompt_bank[i % len(_prompt_bank)] for i in range(batch)]
+        else:
+            prompts = [f"{BASE_PROMPT} the year {1900 + i}." for i in range(batch)]
         sp = SamplingParams(
             temperature=0.0, max_tokens=out_len, ignore_eos=True, seed=0,
         )
