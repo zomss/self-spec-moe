@@ -169,6 +169,47 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     if _pf:
         with open(_pf) as _f:
             _prompt_bank = [ln.strip() for ln in _f if ln.strip()]
+    # Phase 59: W7_CTX_TOKENS pads each prompt to ~that many tokens by PREPENDING
+    # natural-text filler INSIDE the user turn (chat template applied after), so
+    # the decode attends over a large per-request KV (the long-context / MagicDec
+    # regime). The filler is ROTATED per prompt + carries a unique doc marker, so
+    # every request has a DISTINCT long context (faithful per-request KV, no
+    # shared cached prefix / block-dedup). Default (unset/0) -> byte-identical.
+    _ctx_tokens = int(os.environ.get("W7_CTX_TOKENS", "0"))
+    if _ctx_tokens > 0 and _prompt_bank:
+        _tok = llm.get_tokenizer()
+        _filler_para = (
+            "In the broader study of natural language and machine reasoning, "
+            "researchers have long observed that context shapes meaning in subtle "
+            "and far-reaching ways, and that the surrounding passage a model reads "
+            "before it answers can change every prediction that follows. The city "
+            "sat at the edge of a wide river, and each morning the markets filled "
+            "with traders carrying grain, salt, cloth, and stories gathered from "
+            "distant provinces. Over the centuries, scholars debated the nature of "
+            "memory, the structure of language, the movement of the planets, and "
+            "the slow accumulation of knowledge that turns observation into theory. "
+            "A traveller who kept a careful journal recorded the weather, the price "
+            "of bread, the names of the ships in the harbour, and the arguments of "
+            "the philosophers who gathered in the shaded courtyards to reason about "
+            "cause and consequence, about what can be known and what must be "
+            "supposed. These records, though ordinary in their day, later became a "
+            "window into a vanished world of commerce, curiosity, and quiet labor. "
+        )
+        _corpus_ids = _tok(_filler_para, add_special_tokens=False).input_ids
+        while len(_corpus_ids) < 2 * _ctx_tokens + 64:
+            _corpus_ids = _corpus_ids + _corpus_ids
+        _padded = []
+        for _i, _p in enumerate(_prompt_bank):
+            _p_ids = _tok(_p, add_special_tokens=False).input_ids
+            _marker = f"Document #{_i}: "
+            _m_ids = _tok(_marker, add_special_tokens=False).input_ids
+            _need = max(0, _ctx_tokens - len(_p_ids) - len(_m_ids))
+            _off = (_i * 997) % (len(_corpus_ids) - _need) if _need > 0 else 0
+            _fill_txt = _tok.decode(_corpus_ids[_off:_off + _need])
+            _padded.append(
+                f"{_marker}{_fill_txt}\n\nNow answer this question. {_p}"
+            )
+        _prompt_bank = _padded
     # Phase 57-A2b: W7_CHAT=1 wraps each prompt in the model's chat template
     # (add_generation_prompt) so the target produces an ASSISTANT response --
     # the actual distribution a trained EAGLE3 instruct head predicts. Raw
@@ -183,6 +224,21 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             )
             for p in _prompt_bank
         ]
+
+    # Phase 59: verify the padded prompts actually reach the target length.
+    if _ctx_tokens > 0 and rank == 0 and _prompt_bank:
+        _tkz = llm.get_tokenizer()
+        _nchk = min(max(BATCHES), len(_prompt_bank))
+        _lens = [
+            len(_tkz(pp, add_special_tokens=False).input_ids)
+            for pp in _prompt_bank[:_nchk]
+        ]
+        print(
+            f"[W7-2N ctx] target={_ctx_tokens} final prompt_tokens "
+            f"min/mean/max={min(_lens)}/{sum(_lens) // len(_lens)}/{max(_lens)} "
+            f"over n={_nchk} (chat={_use_chat})",
+            flush=True,
+        )
 
     def run_batch(batch, out_len):
         if _prompt_bank:
