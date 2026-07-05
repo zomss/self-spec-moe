@@ -1,0 +1,54 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "q30b_eagle_2n_ctx32k",
+  "dp": 16,
+  "tp": 1,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "1": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 5.0500234416686,
+        "short_s_mean": 1.6910086930729449,
+        "long_s_all": [
+          4.9364240830764174,
+          5.163622800260782
+        ],
+        "short_s_all": [
+          1.6645611831918359,
+          1.7174562029540539
+        ],
+        "decode_s_mean": 3.359014748595655,
+        "decode_s_std": 0.12325132643308814,
+        "tok_s_mean": 305.0566533590634,
+        "tok_s_std": 11.193352806641512,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 1.6565382528486163,
+        "num_accepted": 1210.0,
+        "num_drafted": 1843.0,
+        "num_drafts": 1843.0
+      },
+      {
+        "batch": 32,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  }
+}

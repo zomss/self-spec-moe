@@ -57,20 +57,23 @@ multi-node MoE-EP?**
 | 16k |  8    | 348.5  | 463.4 (1.68)  | **1.33x** |
 | 16k |  32   | 367.9  | 665.0 (1.66)  | **1.81x** |
 | 32k |  8    | 210.6  | 305.1 (1.66)  | **1.45x** |
-| 32k |  32   | 225.0 (±53%) | _TBD (noisy, near-full pool)_ | _TBD_ |
+| 32k |  32   | 225.0 (±53%) | not obtained (thrash-limited) | -- |
 
-_(16k-b64 and 32k-b64 not reported as clean points: at those (ctx,batch) the KV
-is at/over the pool and the two-length method re-prefill-thrashes; see envelope.)_
+_(16k-b64, 32k-b32, 32k-b64 are NOT clean points: at those (ctx,batch) the KV is
+at/over the one-rank pool and the two-length method re-prefill-thrashes -> either
+very slow or 50%+ noise. The clean 32k point is b8; the clean serving-batch point
+is 16k-b32. See envelope + caveats.)_
 
 ## Headline — YES, the serving-batch speedup rises with context, and the loss is erased
 
-**Two clean speedup-vs-context curves, both monotonically rising:**
+**The clean speedup-vs-context curves both rise monotonically** (b8 across all
+three contexts; b32 across the two where it is clean):
 
 | batch | 2k | 16k | 32k |
 |------:|---:|----:|----:|
 | b8 (low)      | 1.09x | 1.33x | **1.45x** |
-| b32 (serving) | 1.16x | **1.81x** | _pending_ |
-| b64 (serving) | **0.95x (loss)** | (>1, KV-bound) | (KV-bound) |
+| b32 (serving) | 1.16x | **1.81x** | (pool-limited; thrash-noisy) |
+| b64 (serving) | **0.95x (loss)** | (fits but pool-thrash) | (exceeds one-rank pool) |
 
 - **The short-context serving-batch LOSS is a short-context phenomenon.** At 2k
   the speedup FALLS with batch and crosses below 1.0x at b64 (0.95x). By 16k the
@@ -78,10 +81,17 @@ is at/over the pool and the two-length method re-prefill-thrashes; see envelope.
   1.81x) — so there is no serving-batch loss at long context.
 - **At the fixed serving batch b32, the speedup rises 1.16x (2k) -> 1.81x (16k)**
   — a large gain from context alone.
-- **The crossover in the mechanism, not just one number:** the sign of
-  d(speedup)/d(batch) flips between 2k (negative -> loss at high batch) and 16k
-  (positive -> win grows with batch). The crossover context (where a batch that
-  lost at 2k returns to >1.0x) is **between 2k and 16k** for b64.
+- **The crossover is in the mechanism, not just one number:** the sign of
+  d(speedup)/d(batch) FLIPS between 2k (negative -> loss at high batch) and 16k
+  (positive -> the win grows with batch). This directly kills the "serving-batch
+  loss" as a general claim.
+- **On b64 specifically (the batch that lost 0.95x at 2k):** it is not cleanly
+  re-measurable at long ctx (16k b64 fits but pool-thrashes; 32k b64 exceeds the
+  one-rank pool). But it is inferable to a WIN at 16k: the 16k speedup rises with
+  batch (b8 1.33x -> b32 1.81x) and no-spec b64 is KV-bound (306.5, flat vs b32),
+  so EAGLE (~1.66 accept, KV-bound) is expected ~1.5x+ at 16k b64 -> the crossover
+  from the 2k b64 loss lies between 2k and 16k. Reported as an inference, not a
+  measured point.
 
 **Why (mechanism, measured).** No-spec decode is compute/weight-bound at 2k — its
 tok/s scales ~5x across batch (521 -> 1581 -> 2611: weight reads amortize over the

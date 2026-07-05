@@ -51,14 +51,26 @@ constraint — the native 40960 context ceiling is.** LONG is therefore set to
 
 ## Commands
 
-```bash
-# no-spec baseline at a context (CTX MAXLEN BATCHES PORT [ITERS WARMUP MNB])
-bash scripts/run_nospec_ctx.sh 16384 17408 8,32,64 13700 2 1 4096
-bash scripts/run_nospec_ctx.sh 32768 33792 8,32,64 13710 2 1 4096
+Run each stage as a SINGLE detached job (`setsid`, own process group) — NOT via a
+nesting orchestrator: a killed parent orphans the retry loop, which respawns
+engines. `MNB=8192`. `TRY_TO` for EAGLE must EXCEED the healthy long-ctx run time
+(~25 min at 16k b64), else a healthy run is false-wedge-killed and retried forever;
+real wedges still fail fast via `VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=120`.
 
-# EAGLE3 K-sweep at a context (CTX MAXLEN BATCHES "KLIST" PORT ...)
-bash scripts/run_eagle_ctx.sh 16384 17408 8,32,64 "1 2" 13760 2 1 4096 1200 4
-bash scripts/run_eagle_ctx.sh 32768 33792 8,32,64 "1 2" 13780 2 1 4096 1200 4
+```bash
+# no-spec baseline (CTX MAXLEN BATCHES PORT [ITERS WARMUP MNB])
+setsid bash scripts/run_nospec_ctx.sh 16384 17408 8,32,64 13700 2 1 8192 &
+setsid bash scripts/run_nospec_ctx.sh 32768 33792 8,32    13710 2 1 8192 &
+
+# EAGLE3 K1 (CTX MAXLEN BATCHES "KLIST" PORT ITERS WARMUP MNB TRY_TO RETRIES)
+setsid bash scripts/run_eagle_ctx.sh 16384 17408 8,32,64 "1" 13820 2 1 8192 3600 3 &
+setsid bash scripts/run_eagle_ctx.sh 32768 33792 8,32    "1" 13950 2 1 8192 3600 2 &
 ```
 
-Results and the memory/batch envelope: `results_multicontext.md`.
+**Batch envelope:** each rank runs the full batch; the one-rank KV pool is ~1.0-1.1M
+tokens. Batches whose KV (batch x ctx) approaches the pool re-prefill-thrash under
+the two-length method (slow / noisy): 32k is clean only to ~b8-b16; 16k to ~b32.
+Use b32 as the fixed serving-ish column (clean at 2k/16k). `scripts/analyze.py`
+assembles the ctx x mode speedup table.
+
+Results and the full memory/batch envelope: `results_multicontext.md`.
