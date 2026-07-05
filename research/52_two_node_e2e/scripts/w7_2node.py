@@ -80,9 +80,14 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     os.environ["VLLM_DP_MASTER_PORT"] = str(master_port)
 
     spec = mode == "spec"
+    # Phase 57 (World B): W7_SPEC_METHOD selects the drafter. The self-spec
+    # env stack (VLLM_SELF_SPEC_DRAFT_*) is ONLY valid for the draft_model
+    # (self-spec) path; for a real EAGLE head (method != draft_model) those
+    # flags are wrong and must not be set (cf. Phase 50 STACK=0).
+    spec_method = os.environ.get("W7_SPEC_METHOD", "draft_model")
     if A2A_US > 0:
         os.environ["VLLM_SELF_SPEC_EMULATE_A2A_DELAY_US"] = str(A2A_US)
-    if spec:
+    if spec and spec_method == "draft_model":
         # Phase 54: W7_DRAFT_LOCAL_ROUTE=0 + W7_DRAFT_NODE_LOCAL=1 -> the
         # node-local (intra-node EP over NVLink) draft instead of the
         # device-local comm-free draft.
@@ -124,14 +129,18 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     if mnb:
         kwargs["max_num_batched_tokens"] = int(mnb)
     if spec:
+        # Phase 57 (World B): W7_SPEC_METHOD/W7_SPEC_MODEL select the drafter
+        # (e.g. a real EAGLE3 head) on the 2-node testbed. Default keeps the
+        # self-spec draft_model path byte-identical.
         spec_cfg = {
-            "method": "draft_model",
-            "model": MODEL,
+            "method": spec_method,
+            "model": os.environ.get("W7_SPEC_MODEL", MODEL),
             "num_speculative_tokens": k,
-            "draft_tensor_parallel_size": tp,
         }
-        if DRAFT_QUANT:
-            spec_cfg["quantization"] = DRAFT_QUANT
+        if spec_method == "draft_model":
+            spec_cfg["draft_tensor_parallel_size"] = tp
+            if DRAFT_QUANT:
+                spec_cfg["quantization"] = DRAFT_QUANT
         kwargs["speculative_config"] = spec_cfg
     llm = LLM(**kwargs)
 

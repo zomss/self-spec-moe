@@ -843,7 +843,9 @@ class SpeculativeConfig:
 
                 self.draft_parallel_config = (
                     SpeculativeConfig.create_draft_parallel_config(
-                        self.target_parallel_config, self.draft_tensor_parallel_size
+                        self.target_parallel_config,
+                        self.draft_tensor_parallel_size,
+                        draft_is_moe=self.draft_model_config.is_moe,
                     )
                 )
         return self
@@ -986,6 +988,7 @@ class SpeculativeConfig:
     def create_draft_parallel_config(
         target_parallel_config: ParallelConfig,
         speculative_draft_tensor_parallel_size: int,
+        draft_is_moe: bool = True,
     ) -> ParallelConfig:
         """Create a parallel config for use by the draft worker.
 
@@ -998,7 +1001,12 @@ class SpeculativeConfig:
         # them (the W1 router mask is a no-op when expert_map is None). This is
         # comm-free by replication (non-EP MoE has no all-to-all). The draft stays
         # data-parallel when the target is DP. Default off -> W0 EP-shard draft.
-        draft_enable_expert_parallel = target_parallel_config.enable_expert_parallel
+        # Phase 57: a dense draft (e.g. an EAGLE3 head) has no experts; never
+        # enable EP on it or ModelConfig._verify_with_expert_parallelism rejects
+        # it. Self-spec drafts (the same MoE target) keep EP propagation.
+        draft_enable_expert_parallel = (
+            target_parallel_config.enable_expert_parallel and draft_is_moe
+        )
         if envs.VLLM_SELF_SPEC_DRAFT_FULL_REPLICA:
             draft_enable_expert_parallel = False
 
