@@ -1,41 +1,39 @@
-"""Phase 64: build the tok/s (accept_len) x batch table from data/*.json.
+"""Phase 65: stage table from data/*.json + fixed/marginal cycle solve.
 
-Split invocations of an arm (resident points vs the over-pool _b32 launch)
-are merged per arm. Usage: .venv/bin/python analyze.py
+For each stage (base = Phase 64 references, f1, f12, f123) prints
+tok/s (accept_len) per batch vs the Phase-64 no-spec references, and for
+b8 solves cycle_ms = F + K*D from the K=2 / K=4 points:
+  cycle_ms(K, b) = batch * accept_len / tok_s * 1000
+Usage: .venv/bin/python analyze.py
 """
 
 import json
 import os
 
 DATA = os.path.join(os.path.dirname(__file__), os.pardir, "data")
+P64DATA = os.path.join(
+    os.path.dirname(__file__), os.pardir, os.pardir, "64_window_e2e", "data"
+)
 
-ARMS = [
-    ("no-spec", [
-        "w72n_q30b_p64_nospec_nospec_cg_nospec.json",
-        "w72n_q30b_p64_nospec_b12_nospec_cg_nospec.json",
-    ]),
-    ("W512 K=2", [
-        "w72n_q30b_p64_w512_spec_cg_K2.json",
-        "w72n_q30b_p64_w512_b32_spec_cg_K2.json",
-    ]),
-    ("W512 K=4", [
-        "w72n_q30b_p64_w512_spec_cg_K4.json",
-        "w72n_q30b_p64_w512_b32_spec_cg_K4.json",
-    ]),
-    ("W256 K=4", [
-        "w72n_q30b_p64_w256_spec_cg_K4.json",
-        "w72n_q30b_p64_w256_b32_spec_cg_K4.json",
-    ]),
-    ("EAGLE3 K=1", [
-        "w72n_q30b_p64_eagle_spec_cg_K1.json",
-    ]),
+# Phase-64 references (results_window_e2e.md).
+NOSPEC = {8: 386.8, 12: 395.7, 32: 379.0}
+
+STAGES = [
+    ("base (P64)", {
+        2: [os.path.join(P64DATA, "w72n_q30b_p64_w512_spec_cg_K2.json")],
+        4: [os.path.join(P64DATA, "w72n_q30b_p64_w512_spec_cg_K4.json")],
+    }),
 ]
+for st in ("f1", "f12", "f123", "f123nl"):
+    STAGES.append((st, {
+        2: [os.path.join(DATA, f"w72n_q30b_p65_{st}_w512_spec_cg_K2.json")],
+        4: [os.path.join(DATA, f"w72n_q30b_p65_{st}_w512_spec_cg_K4.json")],
+    }))
 
 
-def load_arm(fnames):
+def load(fnames):
     by_batch = {}
-    for fname in fnames:
-        path = os.path.join(DATA, fname)
+    for path in fnames:
         if not os.path.exists(path):
             continue
         with open(path) as f:
@@ -51,31 +49,46 @@ def load_arm(fnames):
     return by_batch
 
 
+def cycle_ms(tps, al, batch):
+    # per cycle the engine emits batch*accept_len tokens at tps tok/s.
+    return batch * al / tps * 1000.0
+
+
 def main():
-    rows = [(label, load_arm(fnames)) for label, fnames in ARMS]
-    rows = [(label, bb) for label, bb in rows if bb]
-    base = dict(rows).get("no-spec", {})
-    batches = sorted({b for _, bb in rows for b in bb})
-    print("| arm |" + "".join(
-        f" b{b} tok/s (accept) | vs nospec |" for b in batches))
-    print("|---|" + "---|---|" * len(batches))
-    for label, bb in rows:
-        cells = []
-        for b in batches:
-            r = bb.get(b)
-            if not r or "err" in r:
-                cells += [(r or {}).get("err", "--")[:24], "--"]
+    print("| stage | K | b8 tok/s (accept) | x | b12 tok/s (accept) | x |")
+    print("|---|---|---|---|---|---|")
+    solves = {}
+    for label, by_k in STAGES:
+        pts = {}
+        for k, fnames in sorted(by_k.items()):
+            bb = load(fnames)
+            if not bb:
                 continue
-            al = f" ({r['al']:.3f})" if r.get("al") else ""
-            sus = "*" if r.get("suspect") else ""
-            cells.append(f"{r['tps']:.1f}+-{r['std']:.1f}{al}{sus}")
-            nb = base.get(b)
-            if label != "no-spec" and nb and "err" not in nb and nb.get("tps"):
-                cells.append(f"{r['tps'] / nb['tps']:.2f}x")
-            else:
-                cells.append("--")
-        print(f"| {label} | " + " | ".join(cells) + " |")
-    print("\n(*) = harness 'suspect' flag (noisy slope or tiny decode delta).")
+            cells = []
+            for b in (8, 12):
+                r = bb.get(b)
+                if not r or "err" in r:
+                    cells += ["--", "--"]
+                    continue
+                al = f" ({r['al']:.3f})" if r.get("al") else ""
+                sus = "*" if r.get("suspect") else ""
+                cells.append(f"{r['tps']:.1f}+-{r['std']:.1f}{al}{sus}")
+                cells.append(f"{r['tps'] / NOSPEC[b]:.2f}x")
+                if b == 8 and r.get("al"):
+                    pts[k] = cycle_ms(r["tps"], r["al"], b)
+            print(f"| {label} | K={k} | " + " | ".join(cells) + " |")
+        if 2 in pts and 4 in pts:
+            d = (pts[4] - pts[2]) / 2.0
+            f = pts[2] - 2 * d
+            solves[label] = (f, d, pts[2], pts[4])
+    if solves:
+        print("\n| stage | b8 cycle K2 ms | b8 cycle K4 ms | fixed F ms "
+              "| marginal D ms/draft-step |")
+        print("|---|---|---|---|---|")
+        for label, (f, d, c2, c4) in solves.items():
+            print(f"| {label} | {c2:.1f} | {c4:.1f} | {f:.1f} | {d:.1f} |")
+        print("\n(no-spec refs: b8 386.8 = 20.7 ms/step, b12 395.7 = "
+              "30.3 ms/step; verify ~ a no-spec step)")
 
 
 if __name__ == "__main__":
