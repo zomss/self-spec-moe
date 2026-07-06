@@ -8,13 +8,17 @@
 # with a bumped master port. Adds the Phase-62 foreign-GPU guard, on BOTH
 # nodes (shared nodes: never contend, never kill others' PIDs).
 # Usage: run_arm.sh {nospec|w512k2|w512k4|w256k4|eagle_k1} \
-#          [batches=8,32] [retries=2] [try_to_s=1200]
+#          [batches=8,32] [retries=2] [try_to_s=1200] [tag_suffix]
+# tag_suffix keeps split invocations of the same arm (e.g. the over-pool b32
+# point, which needs its own long-timeout engine launch) in separate JSONs
+# and logs.
 # Env: NCCLDBG=1 adds NCCL_DEBUG=INFO.
 set -u
 ARM="${1:?usage: run_arm.sh nospec|w512k2|w512k4|w256k4|eagle_k1}"
 BATCHES="${2:-8,32}"
 RETRIES="${3:-2}"
 TRY_TO="${4:-1200}"
+TAGSUF="${5:-}"
 PHASE=/h/v-sukmincho/self-spec-moe/research/64_window_e2e
 P52=/h/v-sukmincho/self-spec-moe/research/52_two_node_e2e
 P57=/h/v-sukmincho/self-spec-moe/research/57_large_ep_spec_strategy
@@ -54,6 +58,7 @@ case "$ARM" in
     OVR="$COMMON W7_KS=1" ;;
   *) echo "unknown arm $ARM"; exit 2 ;;
 esac
+TAG="$TAG$TAGSUF"
 
 kill_stragglers() {
   # Shared nodes -- cleanup is pkill of OUR bracket-escaped patterns only
@@ -104,8 +109,8 @@ for try in $(seq 1 "$RETRIES"); do
     sleep 120
   done
   kill_stragglers
-  LOGH="$PHASE/logs/${ARM}_try${try}.log"
-  LOG6="$PHASE/logs/${ARM}_try${try}_h106.log"
+  LOGH="$PHASE/logs/${ARM}${TAGSUF}_try${try}.log"
+  LOG6="$PHASE/logs/${ARM}${TAGSUF}_try${try}_h106.log"
   RUN="$OVR W7_BATCHES=$BATCHES W7_TAG=$TAG \
 W7_MASTER_PORT=$((PORT+try*7)) ${NCCLDBG:+NCCL_DEBUG=INFO}"
   echo "[p64] $ARM try=$try to=${TRY_TO}s ($(date +%H:%M:%S))"
