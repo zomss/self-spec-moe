@@ -51,6 +51,10 @@ esac
 SELFSPEC="$SELFSPEC_EP"
 [ "$STAGE" = "f123" ] && SELFSPEC="$SELFSPEC_REP"
 
+# Bonus-arm hook: P65_EXTRA="VLLM_...=1 ..." appends env (e.g. the f123
+# SKIP_DP_COORD A/B); pair it with a tag_suffix so JSONs stay separate.
+FIX="$FIX ${P65_EXTRA:-}"
+
 case "$ARM" in
   nospec)
     MODE=nospec; K=0; ENV=$ENVEA; PORT=15200; TAG=q30b_p65_${STAGE}_nospec

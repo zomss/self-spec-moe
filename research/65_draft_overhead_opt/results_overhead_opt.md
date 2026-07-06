@@ -34,7 +34,12 @@ TBD
 |---|---|---|---|
 | f1 | 2 | 2.850 | window engaged (win_seq 541 of ~2045) |
 | f12 | 4 | 4.365 | light-MD active on chain steps 2-3 |
-| f1 | 4 | TBD | A/B reference for f12 (greedy: must equal f12) |
+| f1 | 4 | **4.365** | == f12 EXACTLY (greedy A/B: light-MD is inert) |
+| f123 | 4 | 4.273 | fp8 replica loaded (use_ep=False), small accept cost |
+
+fp8-replica pool cost at DP4/EP4 gpu_mem 0.85: 142,896 -> 77,616
+tokens/rank (delta 65.3k tokens = 12.0 GiB) — smaller than the Phase-62
+EP8 delta (18.7 GiB); the EP16 number is read from the f123 run logs.
 
 ## Phase-66 groundwork — capping / sharing the drafter's KV
 

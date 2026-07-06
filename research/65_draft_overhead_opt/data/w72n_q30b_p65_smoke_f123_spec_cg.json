@@ -1,0 +1,48 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "q30b_p65_smoke_f123",
+  "dp": 4,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 64,
+  "short_len": 16,
+  "iters": 1,
+  "warmup": 1,
+  "gpu_mem": 0.85,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 4,
+        "out_len": 64,
+        "short_len": 16,
+        "iters": 1,
+        "warmup": 1,
+        "long_s_mean": 1.7019757772795856,
+        "short_s_mean": 1.5824335161596537,
+        "long_s_all": [
+          1.7019757772795856
+        ],
+        "short_s_all": [
+          1.5824335161596537
+        ],
+        "decode_s_mean": 0.11954226111993194,
+        "decode_s_std": 0.0,
+        "tok_s_mean": 1606.1265547535038,
+        "tok_s_std": 0.0,
+        "out_tokens_decode": 192,
+        "full_ntoks": 256,
+        "suspect": true,
+        "accept_len": 4.272727272727273,
+        "num_accepted": 252.0,
+        "num_drafted": 308.0,
+        "num_drafts": 77.0
+      }
+    ]
+  }
+}
