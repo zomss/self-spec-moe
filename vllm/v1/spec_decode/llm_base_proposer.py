@@ -302,6 +302,27 @@ class SpecDecodeBaseProposer:
         # data in place per step). FA backends only; see envs.py.
         self._chain_light_md = envs.VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD
         self._slot_mapping_dict_cache: dict[int, dict[str, torch.Tensor]] = {}
+        # Phase 66: shared-KV self-draft. The draft's attention layers bind to
+        # the TARGET layers' KV tensors (registered in load_model via the
+        # runner's shared_kv_cache_layers); the duplicate 48-layer allocation
+        # disappears and the pool is sized target-only. Write discipline: the
+        # step-0 slot mapping is PAD-masked down to the appended sampled-token
+        # slot (every other step-0 token was just verify-written -- the draft
+        # must not clobber target-exact KV); chain steps keep their writes
+        # (provisional, overwritten by the next verify pass over the same
+        # slots). draft_model (self-spec) method only.
+        self._shared_kv = (
+            envs.VLLM_SELF_SPEC_SHARED_KV and self.method == "draft_model"
+        )
+        if envs.VLLM_SELF_SPEC_SHARED_KV and self.method != "draft_model":
+            raise ValueError(
+                "VLLM_SELF_SPEC_SHARED_KV requires the draft_model "
+                f"(self-spec) method, got {self.method!r}: only a draft that "
+                "IS the target model has position-compatible KV."
+            )
+        # draft layer name -> target layer name (filled by
+        # _register_shared_kv_layers at load).
+        self._shared_kv_target_layer: dict[str, str] = {}
         self._kv_window_warned = False
         self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
         self._kv_window_calls = 0
@@ -2275,6 +2296,21 @@ class SpecDecodeBaseProposer:
                 max_model_len=self.max_model_len,
             )
 
+            if self._shared_kv:
+                # Shared-KV self-draft: every step-0 input token except the
+                # appended sampled-token slot was processed by the verify
+                # forward THIS step (prompt chunks included), so its slot
+                # already holds target-exact KV -- a draft rewrite would
+                # clobber it (fatal for the fp8-replica draft, ULP-noise for
+                # the bf16 self-draft). PAD-mask everything but the appended
+                # slots; those are not yet verified and the next verify pass
+                # overwrites them (the existing provisional-KV discipline).
+                keep = new_slot_mapping[token_indices_to_sample]
+                new_slot_mapping = torch.full_like(
+                    new_slot_mapping, PADDING_SLOT_ID
+                )
+                new_slot_mapping[token_indices_to_sample] = keep
+
             # 3. Update the common attention metadata with the new (meta)data
             new_cad = extend_all_queries_by_N(
                 cad,
@@ -2886,6 +2922,53 @@ class SpecDecodeBaseProposer:
             )
         return model
 
+    def _register_shared_kv_layers(
+        self,
+        all_attn_layers: dict[str, Any],
+        target_attn_layer_names: set[str],
+    ) -> None:
+        """Phase 66 shared-KV self-draft: map each draft attention layer to
+        its target twin and register the pairs in the runner's
+        shared_kv_cache_layers. The runner then skips the draft layers in
+        get_kv_cache_spec() (no duplicate allocation, pool sized
+        target-only), appends them to the target's KV cache group
+        (maybe_add_kv_sharing_layers_to_kv_cache_groups), and aliases the
+        TARGET tensors to the draft modules in initialize_kv_cache_tensors().
+        The draft modules' own kv_sharing_target_layer_name stays None so
+        their KV writes remain ENABLED: chain-drafted slots must be written
+        (the next verify pass overwrites them with target-exact KV).
+        """
+        assert self.runner is not None, "shared-KV drafting needs the runner"
+        mapping: dict[str, str] = {}
+        for draft_name in sorted(self._draft_attn_layer_names):
+            prefix, _, target_name = draft_name.partition(".")
+            if prefix != "draft_model" or target_name not in target_attn_layer_names:
+                raise ValueError(
+                    "VLLM_SELF_SPEC_SHARED_KV: no target twin for draft "
+                    f"attention layer {draft_name!r} (expected "
+                    f"{target_name!r} among the target layers)"
+                )
+            draft_spec = all_attn_layers[draft_name].get_kv_cache_spec(
+                self.vllm_config
+            )
+            target_spec = all_attn_layers[target_name].get_kv_cache_spec(
+                self.vllm_config
+            )
+            if draft_spec != target_spec:
+                raise ValueError(
+                    "VLLM_SELF_SPEC_SHARED_KV: KV cache spec mismatch: "
+                    f"{draft_name!r} {draft_spec} vs {target_name!r} "
+                    f"{target_spec}"
+                )
+            mapping[draft_name] = target_name
+        self._shared_kv_target_layer = mapping
+        self.runner.shared_kv_cache_layers.update(mapping)
+        logger.info(
+            "Self-spec shared-KV drafter: %d draft attention layers bind to "
+            "the target layers' KV cache (no draft-side KV allocation).",
+            len(mapping),
+        )
+
     def load_model(self, target_model: nn.Module) -> None:
         target_attn_layer_names = set(
             get_layers_from_vllm_config(
@@ -2907,6 +2990,9 @@ class SpecDecodeBaseProposer:
             for name in (set(all_attn_layers.keys()) - target_attn_layer_names)
             if all_attn_layers[name].get_kv_cache_spec(self.vllm_config) is not None
         }
+
+        if self._shared_kv:
+            self._register_shared_kv_layers(all_attn_layers, target_attn_layer_names)
 
         if self.supports_mm_inputs:
             # Even if the target model is multimodal, we can also use
@@ -3377,8 +3463,10 @@ class SpecDecodeBaseProposer:
                 if backend_key not in attention_groups:
                     layer_kv_cache_spec = kv_cache_spec
                     if isinstance(layer_kv_cache_spec, UniformTypeKVCacheSpecs):
+                        # Shared-KV draft layers have no own spec entry; use
+                        # the target twin's.
                         layer_kv_cache_spec = layer_kv_cache_spec.kv_cache_specs[
-                            layer_name
+                            self._shared_kv_target_layer.get(layer_name, layer_name)
                         ]
 
                     kernel_block_size = (

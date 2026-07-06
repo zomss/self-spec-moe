@@ -254,6 +254,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
+    VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
@@ -1879,6 +1880,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0.
     "VLLM_SELF_SPEC_DRAFT_KV_SINKS": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_KV_SINKS", "16")
+    ),
+    # Phase 66 shared-KV self-draft: the draft_model proposer's attention
+    # layers BIND to the target layers' KV cache tensors instead of
+    # registering their own (draft KV rode the same block tables already;
+    # this removes the duplicate 48-layer allocation, halving the per-token
+    # KV cost back to target-only). Draft KV writes are restricted to slots
+    # the verify pass has not yet written (the appended sampled-token slot +
+    # chain-drafted slots); those slots are overwritten with target-exact KV
+    # by the next verify forward. draft_model (self-spec) method only.
+    # Default off. See research/66_shared_kv.
+    "VLLM_SELF_SPEC_SHARED_KV": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_SHARED_KV", "0"))
     ),
     # Self-spec W2a FULL REPLICA opt-in: when set, the draft_model parallel
     # config is built with enable_expert_parallel=False (overriding the W0 EP

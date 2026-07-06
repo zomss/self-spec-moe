@@ -7001,7 +7001,12 @@ class GPUModelRunner(
                 full_cls_name = attn_backend.full_cls_name()
                 layer_kv_cache_spec = kv_cache_group_spec.kv_cache_spec
                 if isinstance(layer_kv_cache_spec, UniformTypeKVCacheSpecs):
-                    layer_kv_cache_spec = layer_kv_cache_spec.kv_cache_specs[layer_name]
+                    # KV-sharing layers (added to the group by
+                    # maybe_add_kv_sharing_layers_to_kv_cache_groups) have no
+                    # own spec entry; use their target layer's.
+                    layer_kv_cache_spec = layer_kv_cache_spec.kv_cache_specs[
+                        self.shared_kv_cache_layers.get(layer_name, layer_name)
+                    ]
                 # Non-Attention layer types (e.g. Mamba1, ShortConv) do not
                 # expose ``num_heads``; fall back to 0 so they cluster as
                 # before. Such layers never coexist with Attention in a
@@ -7690,6 +7695,15 @@ class GPUModelRunner(
         layer_type = cast(type[Any], AttentionLayerBase)
         attn_layers = get_layers_from_vllm_config(self.vllm_config, layer_type)
         for layer_name, attn_module in attn_layers.items():
+            if layer_name in self.shared_kv_cache_layers:
+                # Pre-registered for KV sharing (e.g. the self-spec shared-KV
+                # drafter, VLLM_SELF_SPEC_SHARED_KV): the layer binds to its
+                # target layer's allocation, so it must not contribute a spec
+                # (which would double-count the pool). Unlike the
+                # kv_sharing_target_layer_name path below, the layer's own KV
+                # writes stay ENABLED (the draft chain writes provisional KV
+                # that the next verify pass overwrites).
+                continue
             if isinstance(attn_module, Attention) and (
                 kv_tgt_layer := attn_module.kv_sharing_target_layer_name
             ):
