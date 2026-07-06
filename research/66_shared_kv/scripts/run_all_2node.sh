@@ -15,7 +15,11 @@ run() { echo "=== $* ($(date +%H:%M:%S)) ==="; bash "$S/run_arm.sh" "$@"; }
 run a_ep 4 12,24 2 2400 ""
 run a_ep 2 12,24 2 2400 ""
 run a_ep 4 32   1 3000 "_b32"
-run a_ep 2 32   1 3000 "_b32"
+# (a_ep K2 b32 only by hand if K4 b32 is clean -- same pool physics.)
+
+# no-spec b24 reference (P64 refs cover b8/b12/b32 only; b24 is the
+# predicted largest-resident fallback serving point).
+run nospec 0 24 2 1800 "_b24"
 
 # Arm B: fp8 full-replica comm-free draft (largest resident batch ~b12).
 run b_rep 4 12  2 2400 ""
