@@ -62,6 +62,10 @@ STAGES.append(("f12 @b6", 6, {
     2: [os.path.join(DATA, "w72n_q30b_p65_f12_w512_b6_spec_cg_K2.json")],
     4: [os.path.join(DATA, "w72n_q30b_p65_f12_w512_b6_spec_cg_K4.json")],
 }))
+STAGES.append(("f123+skip", 6, {
+    2: [os.path.join(DATA, "w72n_q30b_p65_f123_w512_b6s_spec_cg_K2.json")],
+    4: [os.path.join(DATA, "w72n_q30b_p65_f123_w512_b6s_spec_cg_K4.json")],
+}))
 
 
 def cycle_ms(tps, al, batch):
