@@ -284,6 +284,19 @@ class SpecDecodeBaseProposer:
         # NONE chain. See VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE.
         self._draft_chain_piecewise = envs.VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE
         self._logged_chain_pw = False
+        # Phase 62: window-KV drafting (StreamingLLM-style). When > 0, draft
+        # forward steps attend only over sink + trailing-window KV pages: each
+        # request's block-table row is compacted into proposer-owned buffers
+        # and the draft-side kv seq_len shrunk to the tokens present in the
+        # kept pages (see _apply_draft_kv_window). Verify metadata untouched.
+        self._kv_window = envs.VLLM_SELF_SPEC_DRAFT_KV_WINDOW
+        self._kv_window_sinks = envs.VLLM_SELF_SPEC_DRAFT_KV_SINKS
+        self._win_block_table: torch.Tensor | None = None
+        self._win_seq_lens: torch.Tensor | None = None
+        self._win_col_arange: torch.Tensor | None = None
+        self._kv_window_warned = False
+        self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
+        self._kv_window_calls = 0
         # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
         # runnable for the decode-step chain (set by the runner's wrap pass when
         # use_full_cudagraphs). None -> plain-forward path (sampling stays
@@ -843,8 +856,17 @@ class SpecDecodeBaseProposer:
             )
 
         with _self_spec_profiler().region("step0_build_attn_md"):
+            # Phase 62: window the step-0 draft attention (decode-shaped
+            # proposes only). The windowed view is a shallow copy over
+            # proposer-owned buffers; common_attn_metadata (used for slot
+            # mappings / per-step updates) keeps the TRUE block table.
+            md_cad = common_attn_metadata
+            if self._kv_window_step0_active(
+                common_attn_metadata, num_rejected_tokens_gpu
+            ):
+                md_cad = self._apply_draft_kv_window(common_attn_metadata)
             per_group_attn_metadata, per_layer_attn_metadata = (
-                self.build_per_group_and_layer_attn_metadata(common_attn_metadata)
+                self.build_per_group_and_layer_attn_metadata(md_cad)
             )
 
         with _self_spec_profiler().region("step0_determine_batch"):
@@ -868,6 +890,12 @@ class SpecDecodeBaseProposer:
             if _step0_uniform and self._step0_force_pw:
                 # Debug bisect knob (W7_STEP0_FORCE_PW=1): keep all capture
                 # machinery but never dispatch step-0 FULL at runtime.
+                _step0_uniform = False
+            if _step0_uniform and self._kv_window > 0:
+                # Phase 62: the captured step-0 FULL graph reads the full
+                # block table through capture-time pointers; window-KV
+                # drafting needs the live (windowed) metadata, so fall back
+                # to the relaxed (PIECEWISE) dispatch.
                 _step0_uniform = False
             if _step0_uniform:
                 # Pre-flight (pure, no DP collective): only claim uniform if
@@ -1166,10 +1194,29 @@ class SpecDecodeBaseProposer:
                 if not skip_rebuild_full_cg and (
                     not self.constant_draft_positions or token_index == 0
                 ):
+                    # Phase 62: window-KV drafting -- give the eager per-step
+                    # attention a compacted (sinks + trailing window) view.
+                    # Recomputed per step so the pages holding the chain's
+                    # newly appended KV are always in the kept set.
+                    md_cad = common_attn_metadata
+                    if self._kv_window > 0:
+                        md_cad = self._apply_draft_kv_window(
+                            common_attn_metadata, tokens_drafted=token_index + 1
+                        )
                     _, per_layer_attn_metadata = (
                         self.build_per_group_and_layer_attn_metadata(
-                            common_attn_metadata, draft_index=token_index + 1
+                            md_cad, draft_index=token_index + 1
                         )
+                    )
+                elif self._kv_window > 0 and not self._kv_window_warned:
+                    self._kv_window_warned = True
+                    logger.warning(
+                        "VLLM_SELF_SPEC_DRAFT_KV_WINDOW=%d is set but the "
+                        "draft chain skips the per-step metadata rebuild "
+                        "(FULL-CG replay reads capture-time pointers); the "
+                        "KV window is NOT applied to chain steps. Use the "
+                        "eager or PIECEWISE chain.",
+                        self._kv_window,
                     )
 
             # W7 micro-bench region (d): input buffering + forward-context setup
@@ -2216,6 +2263,107 @@ class SpecDecodeBaseProposer:
             model_kwargs["hidden_states"] = self.hidden_states[:num_input_tokens]
 
         return model_kwargs, num_input_tokens
+
+    def _kv_window_step0_active(
+        self,
+        cad: CommonAttentionMetadata,
+        num_rejected_tokens_gpu: torch.Tensor | None,
+    ) -> bool:
+        """Whether the step-0 draft forward should be windowed.
+
+        Only decode-shaped proposes are windowed: prompt-ingest (prefill)
+        passes stay full-KV so the draft's prompt KV is written exactly
+        (the window then only affects reads and tokens generated after it
+        engaged).
+        """
+        return (
+            self._kv_window > 0
+            and num_rejected_tokens_gpu is not None
+            and cad.max_query_len
+            <= self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request
+        )
+
+    def _apply_draft_kv_window(
+        self, cad: CommonAttentionMetadata, tokens_drafted: int = 0
+    ) -> CommonAttentionMetadata:
+        """Compact each request's page list to sinks + trailing window.
+
+        Keeps the first ceil(SINKS/block_size) blocks plus the last blocks
+        covering (window + tokens_drafted) tokens, and shrinks the draft-side
+        kv seq_len to the token count actually present in the kept pages
+        (partial last block included). Paged KV entries carry their true
+        RoPE'd positions and FA applies the causal mask aligned at the END of
+        the provided KV sequence, so the compacted view is exactly
+        sinks+window attention -- no position surgery.
+
+        Returns a shallow ``replace`` of ``cad`` pointing at proposer-owned
+        persistent buffers; ``cad`` itself (the TRUE state used for
+        slot-mapping/position updates) is not modified, so draft KV writes
+        still land in the correct global slots. Recomputed per draft step so
+        the newest pages (the KV the chain appends) are always in the kept
+        set. Same-stream ordering makes the in-place buffer rewrite safe
+        (data change, not shape change).
+        """
+        bs = cad.num_reqs
+        block_size = self.block_size
+        n_sink = -(-self._kv_window_sinks // block_size)
+        n_last = -(-(self._kv_window + tokens_drafted) // block_size)
+        src_bt = cad.block_table_tensor
+        n_cols = src_bt.shape[1]
+        if (
+            self._win_block_table is None
+            or self._win_block_table.shape[1] != n_cols
+            or self._win_block_table.shape[0] < bs
+        ):
+            rows = max(self.max_batch_size, bs)
+            self._win_block_table = torch.zeros(
+                (rows, n_cols), dtype=src_bt.dtype, device=self.device
+            )
+            self._win_seq_lens = torch.zeros(
+                rows, dtype=cad.seq_lens.dtype, device=self.device
+            )
+            self._win_col_arange = torch.arange(
+                n_cols, device=self.device
+            ).unsqueeze(0)
+        assert self._win_seq_lens is not None
+        assert self._win_col_arange is not None
+        seq_lens = cad.seq_lens[:bs].long()
+        n_total = (seq_lens + block_size - 1) // block_size
+        # First kept trailing block; rows with dropped == 0 stay uncompacted
+        # (short rows where sinks + window already cover every block).
+        start_last = torch.minimum(
+            torch.clamp(n_total - n_last, min=n_sink), n_total
+        )
+        dropped = torch.clamp(start_last - n_sink, min=0)
+        cols = self._win_col_arange
+        src_cols = cols + dropped.unsqueeze(1) * (cols >= n_sink)
+        src_cols.clamp_(max=n_cols - 1)
+        torch.gather(src_bt[:bs], 1, src_cols, out=self._win_block_table[:bs])
+        self._win_seq_lens[:bs] = (seq_lens - dropped * block_size).to(
+            self._win_seq_lens.dtype
+        )
+        if self._kv_window_debug:
+            self._kv_window_calls += 1
+            if self._kv_window_calls % 500 == 1:
+                logger.info(
+                    "[kv-window] call=%d bs=%d drafted=%d true_max_seq=%d "
+                    "win_seq(min/max)=%d/%d kept_blocks<=%d",
+                    self._kv_window_calls,
+                    bs,
+                    tokens_drafted,
+                    cad.max_seq_len,
+                    int(self._win_seq_lens[:bs].min()),
+                    int(self._win_seq_lens[:bs].max()),
+                    n_sink + n_last,
+                )
+        return cad.replace(
+            block_table_tensor=self._win_block_table[:bs],
+            seq_lens=self._win_seq_lens[:bs],
+            max_seq_len=min(cad.max_seq_len, (n_sink + n_last) * block_size),
+            _seq_lens_cpu=None,
+            _num_computed_tokens_cpu=None,
+            _num_computed_tokens_cache=None,
+        )
 
     def build_per_group_and_layer_attn_metadata(
         self, common_attn_metadata: CommonAttentionMetadata, draft_index: int = 0

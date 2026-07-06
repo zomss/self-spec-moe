@@ -252,6 +252,8 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
+    VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
+    VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
@@ -1854,6 +1856,27 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # the modular-kernel draft path (select_experts). Default off.
     "VLLM_SELF_SPEC_DRAFT_TOPC": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_TOPC", "0")
+    ),
+    # Self-spec W7 window-KV draft (Phase 62, StreamingLLM-style): when > 0,
+    # DRAFT forward steps attend only over the attention-sink pages (the first
+    # ceil(KV_SINKS/block_size) blocks) plus the trailing pages covering ~this
+    # many tokens. Per draft step, each request's block-table row is compacted
+    # into a proposer-owned buffer and the draft-side kv seq_len shrunk to the
+    # token count actually present in the kept pages. Paged KV entries carry
+    # their true RoPE'd positions and FA aligns the causal mask at the END of
+    # the provided KV sequence, so this is exactly sinks+window attention (no
+    # position surgery). The verify pass metadata is untouched (full-KV,
+    # lossless). Requires the eager/PIECEWISE draft chain (per-step metadata
+    # rebuild); under the FULL-CG skip-rebuild chain it is ignored with a
+    # warning. 0 -> off (default). See research/62_window_kv_draft.
+    "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_DRAFT_KV_WINDOW", "0")
+    ),
+    # Number of attention-sink tokens the window-KV draft keeps at the start
+    # of the KV sequence (rounded up to whole blocks). Only meaningful when
+    # VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0.
+    "VLLM_SELF_SPEC_DRAFT_KV_SINKS": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_DRAFT_KV_SINKS", "16")
     ),
     # Self-spec W2a FULL REPLICA opt-in: when set, the draft_model parallel
     # config is built with enable_expert_parallel=False (overriding the W0 EP
