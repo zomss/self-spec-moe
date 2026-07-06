@@ -17,7 +17,7 @@ TRY_TO="${4:-1800}"
 PHASE=/h/v-sukmincho/self-spec-moe/research/61_236b_one_rail
 P52=/h/v-sukmincho/self-spec-moe/research/52_two_node_e2e
 PY=/h/v-sukmincho/self-spec-moe/.venv/bin/python
-ENV="$PHASE/scripts/env_1rail_2node.sh"
+ENV="$PHASE/scripts/env_8rail_2node.sh"
 mkdir -p "$PHASE/logs" "$PHASE/data"
 
 # Phase 53/54 known-good 236B engine settings; default synthetic prompts
@@ -29,13 +29,13 @@ W7_MAX_NUM_BATCHED=2048 W7_OUT=$PHASE/data"
 
 case "$ARM" in
   nospec)
-    MODE=nospec; K=0; TAG=dsv2_1rail_nospec; PORT=13900
+    MODE=nospec; K=0; TAG=dsv2_8rail_nospec; PORT=13900
     OVR="$COMMON" ;;
   worldA)
     # Node-local draft (SP/TP2 node-gather branch), K=1, no full replica
     # (does not fit at 236B). Coord-skip/amortize/step0CG explicitly OFF
     # (= defaults; matches the 8-rail reference run_step3_095.sh).
-    MODE=spec; K=1; TAG=dsv2_1rail_worldA; PORT=13950
+    MODE=spec; K=1; TAG=dsv2_8rail_worldA; PORT=13950
     OVR="$COMMON W7_KS=1 W7_DRAFT_LOCAL_ROUTE=0 W7_DRAFT_NODE_LOCAL=1 \
 W7_DRAFT_FULL_REPLICA=0 VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD=0 \
 VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD=0 \
@@ -67,7 +67,7 @@ for try in $(seq 1 "$RETRIES"); do
   LOG6="$PHASE/logs/${ARM}_try${try}_h106.log"
   RUN="$OVR W7_BATCHES=$BATCHES W7_TAG=$TAG \
 W7_MASTER_PORT=$((PORT+try*7)) ${NCCLDBG:+NCCL_DEBUG=INFO}"
-  echo "[1rail-236b] $ARM try=$try to=${TRY_TO}s ($(date +%H:%M:%S))"
+  echo "[8rail-236b] $ARM try=$try to=${TRY_TO}s ($(date +%H:%M:%S))"
   ssh h106 "bash -c 'source $ENV && export $RUN && W7_NODE_RANK=1 timeout $TRY_TO $PY $P52/scripts/w7_2node.py $MODE'" \
       > "$LOG6" 2>&1 &
   H6=$!
@@ -75,10 +75,10 @@ W7_MASTER_PORT=$((PORT+try*7)) ${NCCLDBG:+NCCL_DEBUG=INFO}"
       > "$LOGH" 2>&1
   wait "$H6" 2>/dev/null
   got=$(grep -cE "$ROWPAT" "$LOGH" 2>/dev/null)
-  echo "[1rail-236b] $ARM try=$try -> ${got:-0}/$nb batch rows ($(date +%H:%M:%S))"
+  echo "[8rail-236b] $ARM try=$try -> ${got:-0}/$nb batch rows ($(date +%H:%M:%S))"
   grep -hE "W7-2N" "$LOGH" 2>/dev/null
   if [ "${got:-0}" -ge "$nb" ]; then ok=1; break; fi
 done
-[ "$ok" = "1" ] || echo "[1rail-236b] $ARM INCOMPLETE after $RETRIES tries"
+[ "$ok" = "1" ] || echo "[8rail-236b] $ARM INCOMPLETE after $RETRIES tries"
 kill_stragglers
-echo "[1rail-236b] $ARM done ($(date +%H:%M:%S))"
+echo "[8rail-236b] $ARM done ($(date +%H:%M:%S))"
