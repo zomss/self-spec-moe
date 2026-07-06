@@ -139,3 +139,35 @@ home. Direction A is alive: the next step is the comm-free / node-local draft
 (World A) in this long-context regime, where the draft's compute-backbone floor
 matters less (decode is KV-bound, not compute-bound) and comm-avoidance matters
 more.
+
+## K-sweep at long context (16k) — K* does NOT rise with context; the K-penalty flattens
+
+16k, EP16, chat/on-dist, vs no-spec (b8=348.5, b32=367.9). tok/s (accept):
+
+| batch | K=1 | K=2 | K=4 |
+|---:|---:|---:|---:|
+| b32 | 477 (1.67) = 1.30x | 315 (2.05) = 0.86x* | 482 (2.44) = 1.31x |
+| b8  | 341 (1.68, noisy) | 473 (2.16) = 1.36x | 461 (2.54) = 1.32x |
+
+*K2/b32=315 is a noise outlier (K1=477, K4=482 bracket it; long-ctx two-length
+slope thrashes near the KV pool).
+
+**Finding: throughput is ~FLAT across K at long context (~450-480 tok/s) while
+accept climbs 1.67->2.44.** The sharp short-context K*=1 penalty (K1->K4 halved
+throughput at 2k) FLATTENS at 16k: larger K is TOLERATED (extra draft tokens
+ride ~free on the KV-dominated step) but gives NO throughput gain (KV-capped).
+
+**Refined design rule (corrects the "K* rises with context" hypothesis):**
+K*~=1 for THROUGHPUT across all contexts; what changes with context is (a) the
+K-penalty vanishes (comm-bound -> KV-bound), and (b) the K=1 speedup rises
+(1.16x @2k -> 1.3-1.8x @16k). The long-context win is K=1 becoming more
+valuable, NOT deeper drafting.
+
+**Hierarchical verify: NO-GO confirmed.** No large-K throughput-winning regime
+exists anywhere: short ctx K*=1 (nothing to cheap-route); long ctx large-K
+tolerated but comm ~10% of the step (nothing worth cutting). Both method bets
+(draft-side, verify-side) are now exhaustively closed.
+
+**Caveat / to-do:** long-ctx magnitude is noisy (this K1/b32=1.30x vs earlier
+1.81x); a clean re-measurement (higher iters / serving benchmark avoiding
+re-prefill) is needed to pin the headline speedup precisely.
