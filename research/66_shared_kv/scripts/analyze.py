@@ -12,8 +12,12 @@ import os
 
 DATA = os.path.join(os.path.dirname(__file__), os.pardir, "data")
 
-# Phase-64 no-spec references (results_window_e2e.md); P65 b6.
-NOSPEC = {6: 287.6, 8: 386.8, 12: 395.7, 32: 379.0}
+# No-spec denominators measured THIS phase (same day/stack): b24 fresh,
+# b12 recheck 407.9 (P64's 395.7 holds), b32 recheck 496.5 (P64's 379.0
+# does NOT hold — stack drift since P64; today's numbers are the honest
+# denominators).
+NOSPEC = {12: 407.9, 24: 529.4, 32: 496.5}
+EXTRA_BATCHES = [13, 14]  # spec points without a direct no-spec ref
 
 ARMS = [
     ("A ep bf16", "w72n_q30b_p66_aep*_spec_cg_K{k}.json"),
@@ -43,7 +47,7 @@ def cycle_ms(tps, al, batch):
 
 
 def main():
-    batches = sorted(NOSPEC)
+    batches = sorted(set(NOSPEC) | set(EXTRA_BATCHES))
     hdr = " | ".join(f"b{b} tok/s (accept) | x" for b in batches)
     print(f"| arm | K | {hdr} |")
     print("|---|---|" + "---|---|" * len(batches))
@@ -79,7 +83,7 @@ def main():
         print("|---|---|---|---|---|---|")
         for label, b, f, d, c2, c4 in solves:
             print(f"| {label} | b{b} | {c2:.1f} | {c4:.1f} | {f:.1f} | {d:.1f} |")
-    print("\n(no-spec refs P64/P65: " +
+    print("\n(no-spec refs measured this phase: " +
           ", ".join(f"b{b} {v}" for b, v in sorted(NOSPEC.items())) + ")")
 
 

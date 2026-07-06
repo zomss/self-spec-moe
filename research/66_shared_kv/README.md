@@ -23,7 +23,11 @@ target KV with draft-computed values — fatal for the fp8-replica draft).
 3. `scripts/run_accept16k.sh` — single-node 16k W512 K4: accept ~4.58.
 4. `scripts/run_arm.sh` — 2-node EP16 16k, batches 12,32 (Phase 64/65
    protocol): arms A (EP-routed bf16, K4+K2), B (fp8 comm-free replica,
-   K4), C (node-local, stretch).
+   K4), C (node-local, stretch). DONE — b24 replaced b32 as the largest
+   resident point (b32 = 106% of the shared pool, still livelocks);
+   fresh same-day no-spec denominators (P64's b32 ref drifted +31%).
+   Verdict in `results_shared_kv.md`: best 0.86x (B, b12); no arm
+   crosses 1.0x.
 
 Results: `results_shared_kv.md`. Data: `data/` (w7_2node.py JSONs),
 `logs/` (engine logs, on disk only).
