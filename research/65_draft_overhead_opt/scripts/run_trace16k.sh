@@ -74,10 +74,10 @@ VLLM_SELF_SPEC_DRAFT_KV_SINKS=16 W7_KV_WINDOW_DEBUG=1"
 LOGH="$PHASE/logs/trace_${STAGE}_w512k${K}_b${BATCH}.log"
 LOG6="$PHASE/logs/trace_${STAGE}_w512k${K}_b${BATCH}_h106.log"
 echo "[p65-trace] stage=$STAGE K=$K b=$BATCH len=$TRACE_LEN to=${TRY_TO}s ($(date +%H:%M:%S))"
-ssh h106 "bash -c 'source $ENV && export $RUN && W7_NODE_RANK=1 timeout $TRY_TO $PY $P64/scripts/w7_trace16k.py'" \
+ssh h106 "bash -c 'source $ENV && export $RUN && W7_NODE_RANK=1 timeout $TRY_TO $PY $PHASE/scripts/w7_trace16k.py'" \
     > "$LOG6" 2>&1 &
 H6=$!
-( source "$ENV" && export $RUN && W7_NODE_RANK=0 timeout "$TRY_TO" $PY "$P64/scripts/w7_trace16k.py" ) \
+( source "$ENV" && export $RUN && W7_NODE_RANK=0 timeout "$TRY_TO" $PY "$PHASE/scripts/w7_trace16k.py" ) \
     > "$LOGH" 2>&1
 RC=$?
 for _ in $(seq 24); do kill -0 "$H6" 2>/dev/null || break; sleep 5; done
