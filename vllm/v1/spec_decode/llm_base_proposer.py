@@ -294,6 +294,14 @@ class SpecDecodeBaseProposer:
         self._win_block_table: torch.Tensor | None = None
         self._win_seq_lens: torch.Tensor | None = None
         self._win_col_arange: torch.Tensor | None = None
+        # Phase 65: persistent temporaries for the per-step compaction
+        # (avoids reallocating the [bs, n_cols] gather-index tensor per step).
+        self._win_src_cols: torch.Tensor | None = None
+        self._win_col_ge_sink: torch.Tensor | None = None
+        # Phase 65: lightweight chain metadata (build once per chain, update
+        # data in place per step). FA backends only; see envs.py.
+        self._chain_light_md = envs.VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD
+        self._slot_mapping_dict_cache: dict[int, dict[str, torch.Tensor]] = {}
         self._kv_window_warned = False
         self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
         self._kv_window_calls = 0
@@ -651,6 +659,17 @@ class SpecDecodeBaseProposer:
             self._slot_mapping_buffer[:num_actual].copy_(slot_mapping)
             if num_tokens > num_actual:
                 self._slot_mapping_buffer[num_actual:num_tokens].fill_(PADDING_SLOT_ID)
+
+        # Phase 65 (CHAIN_LIGHT_MD): the dict is {layer: buffer[:num_tokens]}
+        # -- deterministic per num_tokens over the persistent buffer, so cache
+        # it instead of rebuilding ~num_layers entries per chain step.
+        if self._chain_light_md:
+            cached = self._slot_mapping_dict_cache.get(num_tokens)
+            if cached is None:
+                view = self._slot_mapping_buffer[:num_tokens]
+                cached = {name: view for name in self._draft_attn_layer_names}
+                self._slot_mapping_dict_cache[num_tokens] = cached
+            return cached
 
         view = self._slot_mapping_buffer[:num_tokens]
         return {name: view for name in self._draft_attn_layer_names}
@@ -1145,6 +1164,9 @@ class SpecDecodeBaseProposer:
 
         block_size = self.block_size
         assert block_size > 0, "block_size has not been initialized."
+        # Phase 65 (CHAIN_LIGHT_MD): per-group metadata built on the first
+        # chain step, reused (data updated in place) by the later steps.
+        chain_md_groups: list | None = None
         for token_index in range(self.num_speculative_tokens - 1):
             # Update the inputs.
             # cast to int32 is crucial when eagle model is compiled.
@@ -1198,16 +1220,46 @@ class SpecDecodeBaseProposer:
                     # attention a compacted (sinks + trailing window) view.
                     # Recomputed per step so the pages holding the chain's
                     # newly appended KV are always in the kept set.
-                    md_cad = common_attn_metadata
-                    if self._kv_window > 0:
-                        md_cad = self._apply_draft_kv_window(
-                            common_attn_metadata, tokens_drafted=token_index + 1
+                    if chain_md_groups is not None:
+                        # Phase 65 (CHAIN_LIGHT_MD): every tensor field of the
+                        # step-1 FlashAttentionMetadata lives in a persistent
+                        # buffer the per-step updates rewrite IN PLACE
+                        # (seq_lens / block_table via the window compaction or
+                        # the fused eagle-step kernel; slot_mapping via
+                        # _slot_mapping_buffer; query_start_loc is constant).
+                        # Only the max_seq_len scalar changes value: run the
+                        # data updates and sync it, reuse the objects.
+                        if self._kv_window > 0:
+                            _win_cad = self._apply_draft_kv_window(
+                                common_attn_metadata,
+                                tokens_drafted=token_index + 1,
+                            )
+                            _new_max = _win_cad.max_seq_len
+                        else:
+                            _new_max = common_attn_metadata.max_seq_len
+                        for _md in chain_md_groups:
+                            _md.max_seq_len = _new_max
+                    else:
+                        md_cad = common_attn_metadata
+                        if self._kv_window > 0:
+                            md_cad = self._apply_draft_kv_window(
+                                common_attn_metadata,
+                                tokens_drafted=token_index + 1,
+                            )
+                        per_group_md, per_layer_attn_metadata = (
+                            self.build_per_group_and_layer_attn_metadata(
+                                md_cad, draft_index=token_index + 1
+                            )
                         )
-                    _, per_layer_attn_metadata = (
-                        self.build_per_group_and_layer_attn_metadata(
-                            md_cad, draft_index=token_index + 1
-                        )
-                    )
+                        # Phase 65: reuse is only valid for FA-style metadata
+                        # (all fields either persistent-buffer views or the
+                        # max_seq_len scalar synced above). Other backends
+                        # (e.g. MLA's CPU-derived decode splits) rebuild.
+                        if self._chain_light_md and all(
+                            type(_m).__name__ == "FlashAttentionMetadata"
+                            for _m in per_group_md
+                        ):
+                            chain_md_groups = per_group_md
                 elif self._kv_window > 0 and not self._kv_window_warned:
                     self._kv_window_warned = True
                     logger.warning(
@@ -2325,8 +2377,18 @@ class SpecDecodeBaseProposer:
             self._win_col_arange = torch.arange(
                 n_cols, device=self.device
             ).unsqueeze(0)
+            # Phase 65: persistent gather-index buffer + (col >= n_sink) mask
+            # (n_sink is constant for the proposer's lifetime).
+            self._win_src_cols = torch.zeros(
+                (rows, n_cols), dtype=torch.long, device=self.device
+            )
+            self._win_col_ge_sink = (
+                self._win_col_arange >= n_sink
+            ).to(torch.long)
         assert self._win_seq_lens is not None
         assert self._win_col_arange is not None
+        assert self._win_src_cols is not None
+        assert self._win_col_ge_sink is not None
         seq_lens = cad.seq_lens[:bs].long()
         n_total = (seq_lens + block_size - 1) // block_size
         # First kept trailing block; rows with dropped == 0 stay uncompacted
@@ -2335,8 +2397,9 @@ class SpecDecodeBaseProposer:
             torch.clamp(n_total - n_last, min=n_sink), n_total
         )
         dropped = torch.clamp(start_last - n_sink, min=0)
-        cols = self._win_col_arange
-        src_cols = cols + dropped.unsqueeze(1) * (cols >= n_sink)
+        src_cols = self._win_src_cols[:bs]
+        torch.mul(self._win_col_ge_sink, dropped.unsqueeze(1), out=src_cols)
+        src_cols += self._win_col_arange
         src_cols.clamp_(max=n_cols - 1)
         torch.gather(src_bt[:bs], 1, src_cols, out=self._win_block_table[:bs])
         self._win_seq_lens[:bs] = (seq_lens - dropped * block_size).to(
@@ -3484,6 +3547,13 @@ class SpecDecodeBaseProposer:
                         allow_microbatching=False,
                         num_tokens_padded=num_tokens_padded,
                         cudagraph_mode=cudagraph_mode.value,
+                        # Phase 65: on the CPU group the .item() readbacks
+                        # below never sync the GPU stream (the NCCL path's
+                        # chain coordination drains the whole step-0 draft
+                        # forward). Same result, no stream drain.
+                        force_cpu_group=(
+                            envs.VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU
+                        ),
                     )
                 )
                 if _memo_key is not None:

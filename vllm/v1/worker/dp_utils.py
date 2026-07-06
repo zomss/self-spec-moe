@@ -39,7 +39,9 @@ def get_self_spec_ahead_synced() -> bool:
     return _ss_ahead_synced
 
 
-def _get_device_and_group(parallel_config: ParallelConfig):
+def _get_device_and_group(
+    parallel_config: ParallelConfig, force_cpu_group: bool = False
+):
     # Use the actual device assigned to the DP group, not just the device type
     device = get_dp_group().device
     group = get_dp_group().device_group
@@ -48,7 +50,9 @@ def _get_device_and_group(parallel_config: ParallelConfig):
     # point that could adversely affect performance of vllm with asynch
     # scheduling. This environment variable exists to quickly disable
     # this optimization if we run into this case.
-    if parallel_config.disable_nccl_for_dp_synchronization:
+    # force_cpu_group (self-spec Phase 65): the draft path opts into the CPU
+    # group per-call so its coordination never syncs the GPU stream.
+    if parallel_config.disable_nccl_for_dp_synchronization or force_cpu_group:
         logger.info_once(
             "Using CPU all reduce to synchronize DP padding between ranks.",
         )
@@ -63,10 +67,11 @@ def _run_ar(
     padded_num_tokens_per_ubatch: int,
     cudagraph_mode: int,
     parallel_config: ParallelConfig,
+    force_cpu_group: bool = False,
 ) -> torch.Tensor:
     dp_size = parallel_config.data_parallel_size
     dp_rank = parallel_config.data_parallel_rank
-    device, group = _get_device_and_group(parallel_config)
+    device, group = _get_device_and_group(parallel_config, force_cpu_group)
     # Populate this rank's contribution on CPU to reduce GPU syncs.
     # Self-spec Phase 56: row 4 (ahead-chain gate) exists iff the env flag is
     # set -- identical on all ranks, so the collective stays shape-symmetric.
@@ -133,6 +138,7 @@ def _synchronize_dp_ranks(
     should_attempt_ubatching: bool,
     cudagraph_mode: int,
     parallel_config: ParallelConfig,
+    force_cpu_group: bool = False,
 ) -> tuple[bool, torch.Tensor | None, int]:
     """
     1. Decides if each DP rank is going to microbatch. Either all ranks
@@ -163,6 +169,7 @@ def _synchronize_dp_ranks(
         padded_num_tokens_per_ubatch=num_tokens_padded,
         cudagraph_mode=cudagraph_mode,
         parallel_config=parallel_config,
+        force_cpu_group=force_cpu_group,
     )
 
     # Self-spec Phase 56: publish the DP-wide AND of the ahead-chain bits.
@@ -205,6 +212,7 @@ def coordinate_batch_across_dp(
     num_tokens_padded: int | None = None,
     uniform_decode: bool | None = None,
     cudagraph_mode: int = 0,
+    force_cpu_group: bool = False,
 ) -> tuple[bool, torch.Tensor | None, int]:
     """
     Coordinates amongst all DP ranks to determine if and how the full batch
@@ -256,6 +264,7 @@ def coordinate_batch_across_dp(
             should_attempt_ubatching,
             cudagraph_mode,
             parallel_config,
+            force_cpu_group,
         )
     )
 

@@ -266,6 +266,8 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_AHEAD_CHAIN: bool = False
     VLLM_SELF_SPEC_CONSUME_AHEAD: bool = False
     VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD: bool = False
+    VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU: bool = False
+    VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD: bool = False
     VLLM_SELF_SPEC_DRAFT_NODE_LOCAL: bool = False
     VLLM_SELF_SPEC_DRAFT_AMORTIZE_DP_COORD: bool = False
     VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG: bool = False
@@ -2056,6 +2058,32 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # skip); the verify's coordination is untouched. Default off.
     "VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_SKIP_DP_COORD", "0"))
+    ),
+    # Self-spec W7 (phase 65): run the DRAFT path's coordinate_batch_across_dp
+    # all_reduce on the DP CPU (gloo) group instead of NCCL. The NCCL
+    # coordination's .item() readbacks are cudaStreamSynchronize points that
+    # drain all previously enqueued GPU work (the chain coordination drains
+    # the whole step-0 draft forward) -- traced at ~32 ms/step at 16k DP16
+    # (Phase 64). On the CPU group the readbacks are free and the rendezvous
+    # blocks only on rank skew, never on the GPU stream; the coordination
+    # RESULT is identical. Applies to every draft-proposer coordination
+    # (propose, dummy runs, capture) so busy/idle ranks stay collective-
+    # symmetric. The verify's coordination is untouched. Default off.
+    "VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU", "0"))
+    ),
+    # Self-spec W7 (phase 65): lightweight per-step attention metadata for the
+    # PIECEWISE/eager draft chain (FlashAttention backends only). The chain
+    # rebuilds the per-layer attn metadata every step, but every tensor field
+    # of the built FlashAttentionMetadata (seq_lens / block_table /
+    # slot_mapping / query_start_loc) already lives in proposer-owned
+    # persistent buffers that the per-step updates rewrite IN PLACE; only the
+    # max_seq_len scalar actually changes value. Build once on the first
+    # chain step, then per step run only the data updates (window compaction
+    # writes + max_seq_len scalar sync) and reuse the metadata objects.
+    # Non-FA backends and the FULL-CG chain fall back unchanged. Default off.
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD", "0"))
     ),
     # Self-spec W7 (phase 45): vectorized, non-blocking rejection-output parse.
     # Replaces the per-request Python list-comprehension + blocking .cpu() D2H
