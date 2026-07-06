@@ -1,0 +1,50 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "w62_C_fp8_w512",
+  "dp": 8,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 57.17139232298359,
+        "short_s_mean": 43.27823882526718,
+        "long_s_all": [
+          57.485715087968856,
+          56.85706955799833
+        ],
+        "short_s_all": [
+          43.64589409623295,
+          42.91058355430141
+        ],
+        "decode_s_mean": 13.893153497716412,
+        "decode_s_std": 0.07542355327297655,
+        "tok_s_mean": 73.70645477634109,
+        "tok_s_std": 0.40013973208453024,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 4.547445255474452,
+        "num_accepted": 2430.0,
+        "num_drafted": 2740.0,
+        "num_drafts": 685.0
+      }
+    ]
+  }
+}

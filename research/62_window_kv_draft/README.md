@@ -52,6 +52,11 @@ Harness: `research/52_two_node_e2e/scripts/w7_2node.py` (unchanged), env
 - B2 (W=512 at 16k): is per-token r >= ~0.85 on MoE?
 - C vs B2 x (D/A): do the window and FP8 factors compose multiplicatively?
 
-## Expected next artifact
+## Outcome (2026-07-06)
 
-`results_window_accept.md` + per-arm JSONs in `data/`.
+All gates passed; see `results_window_accept.md`. Canary: OFF 3.000 (=K+1),
+W=64@2k 2.540. 16k/K=4: A 5.000 (r=1.0); B1/B2/B3 (W=1024/512/256)
+4.559/4.584/4.581 (r ~ 0.954-0.957, flat in W); C (fp8 replica + W=512)
+4.547 (r=0.953); D (fp8 replica) 4.810 (r=0.981). Window-512 reads 30x less
+KV for ~4%/token accept cost; window x FP8 compose sub-multiplicatively
+(measured 4.547 vs 4.42 multiplicative prediction).

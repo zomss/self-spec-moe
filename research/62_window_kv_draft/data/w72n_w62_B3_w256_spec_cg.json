@@ -1,0 +1,50 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "w62_B3_w256",
+  "dp": 8,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 8.906928011914715,
+        "short_s_mean": 3.8912717865314335,
+        "long_s_all": [
+          8.920999914873391,
+          8.892856108956039
+        ],
+        "short_s_all": [
+          3.8964016819372773,
+          3.8861418911255896
+        ],
+        "decode_s_mean": 5.015656225383282,
+        "decode_s_std": 0.01264590835605818,
+        "tok_s_mean": 204.1613716575186,
+        "tok_s_std": 0.5147493926641402,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 4.5811209439528024,
+        "num_accepted": 2428.0,
+        "num_drafted": 2712.0,
+        "num_drafts": 678.0
+      }
+    ]
+  }
+}
