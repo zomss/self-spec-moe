@@ -28,6 +28,8 @@ Stages (cumulative):
 | base (P64) | K=4 | 148.2+-0.1 (4.673) | 0.38x | 202.9+-1.4 (4.695) | 0.51x |
 | f1 | K=2 | 132.7+-0.3 (2.869) | 0.34x | -- | -- |
 | f1 | K=4 | 150.5+-0.6 (4.670) | 0.39x | 204.4+-2.9 (4.723) | 0.52x |
+| f12 | K=2 | 132.1+-1.0 (2.869) | 0.34x | -- | -- |
+| f12 | K=4 | 148.7+-0.2 (4.670) | 0.38x | 203.1+-1.5 (4.723) | 0.51x |
 
 ## Fixed/marginal split (b8, cycle = F + K*D)
 
@@ -35,6 +37,7 @@ Stages (cumulative):
 |---|---|---|---|---|
 | base (P64) | 175.1 | 252.2 | 97.9 | 38.6 |
 | f1 | 172.9 | 248.2 | 97.6 | 37.7 |
+| f12 | 173.7 | 251.3 | 96.2 | 38.8 |
 
 ### Stage f1 reading — the sync storm was ABSORBING, not ADDING (EP-routed)
 
@@ -51,6 +54,26 @@ rendezvous"). Consequence: Fixes 1-2 are enablers that become load-
 bearing only once Fix 3 removes the draft's NCCL from the critical path
 — without them, a comm-free draft would immediately become CPU-bound on
 the very syncs/dispatch they remove.
+
+## Stage f123 — the fp8 replica hits the KV wall at protocol batches
+
+Measured pools (tokens/rank, gpu_mem 0.90, 16k):
+
+| engine | pool | b6 | b8 | b12 |
+|---|---|---|---|---|
+| no-spec (P64) | 567,136 | 17% | 23% | 35% |
+| self-spec EP-routed (f1/f12) | 236,512 | 42% | 56% | 84% |
+| self-spec fp8 replica (f123) | **115,968** | **85%** | **114%** | **171%** |
+
+The fp8 full replica costs 120.5k tokens = 22.1 GiB at EP16 on top of the
+draft-KV duplication, pushing BOTH protocol batches over-pool. Protocol
+b8 (114%): scheduler waves — 43.7+-4.8 tok/s (0.11x), accept_len
+**4.548** (== Phase 62 arm C's 4.547 exactly: the accept sanity PASSES;
+the tok/s is pool physics, not draft speed; 316 "Waiting:" scheduler
+lines, decode passes 23.6s vs 6.9s at f12). b12 (171%) not run to
+completion (same physics as P64's b32 livelock). The resident diagnostic
+point is b6 (85% pool), measured for f123 and re-measured for f12 +
+no-spec at the same batch for an apples-to-apples Fix-3 isolation.
 
 ## Smoke validation (single-node DP4/EP4, 2k ctx, b4)
 
