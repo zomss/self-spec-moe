@@ -176,6 +176,13 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     # every request has a DISTINCT long context (faithful per-request KV, no
     # shared cached prefix / block-dedup). Default (unset/0) -> byte-identical.
     _ctx_tokens = int(os.environ.get("W7_CTX_TOKENS", "0"))
+    # Phase 63: without W7_PROMPT_FILE the padding below silently no-opped.
+    # Synthesize the bank from the default synthetic prompts (the exact
+    # strings run_batch builds) so non-chat runs pad too. Unset/0 -> unchanged.
+    if _ctx_tokens > 0 and not _prompt_bank:
+        _prompt_bank = [
+            f"{BASE_PROMPT} the year {1900 + i}." for i in range(max(BATCHES))
+        ]
     if _ctx_tokens > 0 and _prompt_bank:
         _tok = llm.get_tokenizer()
         _filler_para = (
