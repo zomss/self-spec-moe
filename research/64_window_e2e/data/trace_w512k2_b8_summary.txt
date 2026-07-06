@@ -1,0 +1,72 @@
+# research/64_window_e2e/data/trace_w512k2_b8/dp0_pp0_tp0_dcp0_ep0_rank0.1783347046389748242.pt.trace.json.gz
+
+## runner span totals (rank 0, traced window)
+span                count  total_ms  mean_ms
+draft                2970    5915.6     1.99
+forward              2769    1481.3     0.53
+bookkeep               60     588.8     9.81
+preprocess             61     112.7     1.85
+postprocess            60      22.3     0.37
+sample                 60      14.3     0.24
+eplb                   30       0.4     0.01
+ModelRunnerOutput      30       0.3     0.01
+
+## runtime calls inside `draft` spans (n=2970 propose calls)
+    1891.9 ms  n=180    (   0.1/propose)  cudaStreamSynchronize
+     568.7 ms  n=477    (   0.2/propose)  cudaMemcpyAsync
+     489.2 ms  n=8047   (   2.7/propose)  cudaLaunchKernel
+     122.7 ms  n=2940   (   1.0/propose)  cudaGraphLaunch
+      19.1 ms  n=1      (   0.0/propose)  cudaEventSynchronize
+      12.9 ms  n=239    (   0.1/propose)  cuLaunchKernelEx
+      12.1 ms  n=2880   (   1.0/propose)  cudaLaunchKernelExC
+       4.5 ms  n=2880   (   1.0/propose)  cudaFuncSetAttribute
+       1.1 ms  n=3270   (   1.1/propose)  cudaStreamIsCapturing
+       0.7 ms  n=267    (   0.1/propose)  cudaEventQuery
+       0.4 ms  n=60     (   0.0/propose)  cudaMemsetAsync
+       0.2 ms  n=211    (   0.1/propose)  cudaEventRecord
+
+## top cpu ops inside `draft` spans (total ms)
+    1894.2 ms  n=358    aten::item
+    1893.9 ms  n=358    aten::_local_scalar_dense
+     592.5 ms  n=1014   aten::copy_
+     592.4 ms  n=736    aten::to
+     591.8 ms  n=475    aten::_to_copy
+     524.5 ms  n=2880   vllm::unified_kv_cache_update
+     464.7 ms  n=2880   _C_cache_ops::reshape_and_cache_flash
+     217.7 ms  n=2880   vllm::unified_attention_with_output
+      77.8 ms  n=2880   _vllm_fa3_C::fwd
+      26.2 ms  n=5760   aten::unbind
+      24.4 ms  n=9354   aten::empty
+      23.8 ms  n=120    aten::index
+      16.2 ms  n=12509  aten::select
+      12.7 ms  n=2880   aten::empty_like
+      11.9 ms  n=8669   aten::expand
+
+## top cpu ops overall (total ms)
+    2047.3 ms  n=538    aten::item
+    2046.7 ms  n=538    aten::_local_scalar_dense
+     603.0 ms  n=2190   aten::copy_
+     600.2 ms  n=1348   aten::to
+     599.1 ms  n=930    aten::_to_copy
+     563.2 ms  n=3024   vllm::unified_kv_cache_update
+     499.9 ms  n=3024   _C_cache_ops::reshape_and_cache_flash
+     229.5 ms  n=3024   vllm::unified_attention_with_output
+      82.1 ms  n=3024   _vllm_fa3_C::fwd
+      33.1 ms  n=298    aten::index
+      27.5 ms  n=6048   aten::unbind
+      26.3 ms  n=10047  aten::empty
+      17.6 ms  n=13629  aten::select
+      13.4 ms  n=3024   aten::empty_like
+      12.9 ms  n=4013   aten::empty_strided
+
+## longest individual cpu ops
+     43.07 ms  aten::item
+     43.07 ms  aten::_local_scalar_dense
+     42.94 ms  aten::item
+     42.94 ms  aten::_local_scalar_dense
+     42.94 ms  aten::item
+     42.93 ms  aten::_local_scalar_dense
+     42.87 ms  aten::item
+     42.87 ms  aten::_local_scalar_dense
+     42.79 ms  aten::item
+     42.79 ms  aten::item

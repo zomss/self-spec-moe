@@ -1,0 +1,137 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "q30b_p64_w512",
+  "dp": 16,
+  "tp": 1,
+  "nodes": 2,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 12.45036708842963,
+        "short_s_mean": 5.542001911671832,
+        "long_s_all": [
+          12.475928124040365,
+          12.424806052818894
+        ],
+        "short_s_all": [
+          5.564215494319797,
+          5.519788329023868
+        ],
+        "decode_s_mean": 6.908365176757798,
+        "decode_s_std": 0.004734013379356829,
+        "tok_s_mean": 148.22613081738248,
+        "tok_s_std": 0.10157316072702065,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 4.672672672672673,
+        "num_accepted": 2446.0,
+        "num_drafted": 2664.0,
+        "num_drafts": 666.0
+      },
+      {
+        "batch": 12,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 13.370730844559148,
+        "short_s_mean": 5.79864320368506,
+        "long_s_all": [
+          13.409926549065858,
+          13.331535140052438
+        ],
+        "short_s_all": [
+          5.80054116435349,
+          5.79674524301663
+        ],
+        "decode_s_mean": 7.572087640874088,
+        "decode_s_std": 0.05274697518201374,
+        "tok_s_mean": 202.85518879467247,
+        "tok_s_std": 1.4130842267510018,
+        "out_tokens_decode": 1536,
+        "full_ntoks": 1920,
+        "suspect": false,
+        "accept_len": 4.694779116465863,
+        "num_accepted": 3680.0,
+        "num_drafted": 3984.0,
+        "num_drafts": 996.0
+      }
+    ]
+  },
+  "this_k": 4,
+  "results": [
+    {
+      "batch": 8,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 2,
+      "warmup": 1,
+      "long_s_mean": 12.45036708842963,
+      "short_s_mean": 5.542001911671832,
+      "long_s_all": [
+        12.475928124040365,
+        12.424806052818894
+      ],
+      "short_s_all": [
+        5.564215494319797,
+        5.519788329023868
+      ],
+      "decode_s_mean": 6.908365176757798,
+      "decode_s_std": 0.004734013379356829,
+      "tok_s_mean": 148.22613081738248,
+      "tok_s_std": 0.10157316072702065,
+      "out_tokens_decode": 1024,
+      "full_ntoks": 1280,
+      "suspect": false,
+      "accept_len": 4.672672672672673,
+      "num_accepted": 2446.0,
+      "num_drafted": 2664.0,
+      "num_drafts": 666.0
+    },
+    {
+      "batch": 12,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 2,
+      "warmup": 1,
+      "long_s_mean": 13.370730844559148,
+      "short_s_mean": 5.79864320368506,
+      "long_s_all": [
+        13.409926549065858,
+        13.331535140052438
+      ],
+      "short_s_all": [
+        5.80054116435349,
+        5.79674524301663
+      ],
+      "decode_s_mean": 7.572087640874088,
+      "decode_s_std": 0.05274697518201374,
+      "tok_s_mean": 202.85518879467247,
+      "tok_s_std": 1.4130842267510018,
+      "out_tokens_decode": 1536,
+      "full_ntoks": 1920,
+      "suspect": false,
+      "accept_len": 4.694779116465863,
+      "num_accepted": 3680.0,
+      "num_drafted": 3984.0,
+      "num_drafts": 996.0
+    }
+  ]
+}

@@ -48,9 +48,11 @@ engagement evidence. Arms 1/5 use
 ## Commands
 
 ```bash
-bash scripts/run_all.sh                  # arms 1-4, sequential
-bash scripts/run_arm.sh eagle_k1 8,32 4 1500   # optional arm 5
+bash scripts/run_all.sh                  # all measured points, sequential
+bash scripts/run_arm.sh eagle_k1 8,32 4 1500   # optional arm 5 (dropped)
+bash scripts/run_trace16k.sh 2 8 60      # rank-0 torch trace, W512 K=2 b8
 .venv/bin/python scripts/analyze.py      # table from data/*.json
+.venv/bin/python scripts/analyze_trace16k.py data/trace_w512k2_b8/
 ```
 
 Runner: clone of the FIXED Phase 63 runner (bounded wait on the h106 ssh —
@@ -76,3 +78,19 @@ Phase-62 foreign-GPU guard extended to BOTH nodes.
 
 Expected next artifact: `results_window_e2e.md` with the tok/s (accept) x
 {b8,b32} table, speedups vs no-spec, and the headline verdict.
+
+## Outcome (2026-07-06)
+
+See `results_window_e2e.md`. Headline NEGATIVE: W512 self-draft = 0.34x
+(K=2 b8) / 0.38x (K=4 b8) / 0.51x (K=4 b12) of same-session no-spec at 16k
+EP16, with accept exactly reproducing Phase 62 (2.869 / 4.673-4.695) and
+the window engaged (draft reads ~530/16.4k KV tokens). The pre-run KV
+watch item confirmed: draft KV duplication (192 KiB/token) halves the pool
+to 228k tokens/rank, so b32 is 2.3x over-pool -> preemption livelock (no
+measurable point). Mid-phase scope re-cut with the coordinator: W256 +
+EAGLE arms dropped; added b12 resident points and a rank-0 torch trace
+(W512 K=2 b8) that names the draft-path overheads: per-cycle `.item()`
+DP-coord sync storm (~32 ms/step), per-draft-forward cross-node EP
+AllGather+ReduceScatter (~26 ms/forward, 45%+21% of window CUDA time),
+eager per-layer chain dispatch (~22 ms/step CPU). Phase 65 = draft-path
+optimization: shared-KV drafter, sync elimination, draft comm locality.
