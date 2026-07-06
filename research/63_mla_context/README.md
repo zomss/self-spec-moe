@@ -38,15 +38,16 @@ log). Per-rank KV demand at ~16.5k tokens/request:
 
 | batch | KV tokens | vs pool |
 |---:|---:|---|
-| 8  | ~132k | 31% — clean |
-| 16 | ~264k | 62% — clean (the serving-ish point) |
-| 32 | ~529k | **125% — EXCEEDS the pool** -> vLLM queues/preempts; reported with the Phase 59 near-pool caveat |
+| 8  | 130k | 31% — resident, clean |
+| 16 | 261k | 62% — resident, clean (the serving-ish point) |
+| 32 | 522k | **123% — can NEVER be resident** -> scheduler waves (~17-25 running + rest queued); NOT a measurable serving point (Phase 59 over-pool convention) |
 
-So b16 is the clean serving-ish point; b32 carries a pool caveat (same
-convention as Phase 59's 16k-b64 / 32k-b32 cells).
+So b16 is the clean serving-ish point; b32 is reported as structurally
+non-resident (measuring it would need smaller batch-per-rank or more ranks).
 
 ## Readout
 
-See `results_mla_context.md`: the 16k-vs-1k collapse table, the two hypothesis
-tests (collapse ratio at b8/b32; batch-scaling at 16k), and the verdict on
-whether the KV-bound long-context regime exists on MLA.
+See `results_mla_context.md`: the 16k-vs-1k collapse table (b8 1.57x drop;
+16k b8->b16 batch-FLAT at x1.04 vs 3.06x short-ctx scaling), the two
+hypothesis tests, and the verdict: the KV-bound long-context regime EXISTS on
+MLA at wide-EP attention-DP serving — MLA does not remove it.

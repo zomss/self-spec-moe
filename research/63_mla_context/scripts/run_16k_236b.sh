@@ -70,6 +70,11 @@ W7_MASTER_PORT=$((PORT+try*7)) ${NCCLDBG:+NCCL_DEBUG=INFO}"
   H6=$!
   ( source "$ENV" && export $RUN && W7_NODE_RANK=0 timeout "$TRY_TO" $PY "$P52/scripts/w7_2node.py" "$MODE" ) \
       > "$LOGH" 2>&1
+  # Bounded wait: orphaned remote engine children can hold the ssh pipe open
+  # past the remote timeout (observed: try killed at 900s -> engines idle on
+  # both nodes, ssh never exits, retry loop wedges). Give 120s, then kill.
+  for _ in $(seq 24); do kill -0 "$H6" 2>/dev/null || break; sleep 5; done
+  kill -9 "$H6" 2>/dev/null
   wait "$H6" 2>/dev/null
   got=$(grep -cE "$ROWPAT" "$LOGH" 2>/dev/null)
   echo "[16k-236b] $ARM try=$try -> ${got:-0}/$nb batch rows ($(date +%H:%M:%S))"

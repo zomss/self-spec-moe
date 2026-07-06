@@ -1,0 +1,12 @@
+# Phase 63 measured rows extracted from logs (rank-0 prints; the harness only
+# writes JSON on fully-completed invocations, so the clean b8/b16 rows come
+# from the killed-at-900s try log).
+# source: logs/nospec_b8_b16_try1.log (TRY_TO=900; b8+b16 completed resident,
+#   Running:8/Waiting:0 and Running:16/Waiting:0; killed mid-b32)
+[W7-2N ctx] target=16384 final prompt_tokens min/mean/max=16306/16307/16308 over n=32 (chat=False)
+[W7-2N nospec] batch=8 decode=5.678s tok/s=180.5+-6.9
+[W7-2N nospec] batch=16 decode=10.947s tok/s=187.1+-1.0
+# b32: structurally non-resident (522k KV tokens vs 424,624-token pool);
+#   two b32-only attempts (logs/nospec_b32_1800s_try1.log, TRY_TO=1800;
+#   logs/nospec_b32_3600s_aborted.log, TRY_TO=3600) ran as ~17-25 running +
+#   rest queued waves and were aborted; no b32 number by design.
