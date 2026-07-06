@@ -22,8 +22,8 @@ kill_stragglers() {
   for pat in 'w7_2node[.]py' 'EngineCor[e]' 'Worker_D[P]' 'VLLM[:]:'; do
     pkill -9 -f "$pat" 2>/dev/null; ssh h106 "pkill -9 -f '$pat'" 2>/dev/null
   done
-  for p in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sort -u); do kill -9 "$p" 2>/dev/null; done
-  ssh h106 'for p in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sort -u); do kill -9 "$p" 2>/dev/null; done' 2>/dev/null
+  # NOTE (2026-07-05): shared nodes -- cleanup is pkill of OUR patterns
+  # only (own-user). Never kill arbitrary GPU PIDs / other users' jobs.
   sleep 8
 }
 
