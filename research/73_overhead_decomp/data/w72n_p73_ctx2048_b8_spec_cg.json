@@ -1,0 +1,50 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-30B-A3B",
+  "tag": "p73_ctx2048_b8",
+  "dp": 8,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 2,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 8,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 2,
+        "warmup": 1,
+        "long_s_mean": 4.756889963988215,
+        "short_s_mean": 1.8343258309178054,
+        "long_s_all": [
+          4.734413893893361,
+          4.779366034083068
+        ],
+        "short_s_all": [
+          1.83156173909083,
+          1.8370899227447808
+        ],
+        "decode_s_mean": 2.9225641330704093,
+        "decode_s_std": 0.027876947007637192,
+        "tok_s_mean": 350.3931954988467,
+        "tok_s_std": 3.342233770759358,
+        "out_tokens_decode": 1024,
+        "full_ntoks": 1280,
+        "suspect": false,
+        "accept_len": 4.525473071324599,
+        "num_accepted": 2422.0,
+        "num_drafted": 2748.0,
+        "num_drafts": 687.0
+      }
+    ]
+  }
+}
