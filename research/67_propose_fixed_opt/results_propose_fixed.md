@@ -87,7 +87,17 @@ accept-losslessly compactable in the operating config.
 
 ### FINE re-decomposition (compaction ON, K4 b8)
 
-TODO(fill draft_forward_first after).
+| region | baseline | + compaction | delta |
+|---|---|---|---|
+| draft_forward_first (step-0 fwd) | 14.6 | **11.8** | -2.8 |
+| draft_forward (chain step) | 10.0 | 10.0 | ~0 |
+| propose-fixed (step0+gap) | 18.4 | 15.6 | -2.8 |
+
+The compaction works as designed: step-0 forward drops from 14.6 toward the
+chain-step cost (11.8; the residual >10.0 is the compact-cad build + step-0
+padding). -2.8 ms serialized == the ~2.4 ms exposed cycle drop. So the lever
+is real but small AND accept-changing -> not a productive accept-preserving
+optimization.
 
 ## 2-node projection (arm-B b12; 2-node DEFERRED, h106 off-limits)
 
@@ -97,9 +107,10 @@ Established (P66): 2-node arm-B b12 F = 117.1 ms, propose-fixed ~87.7 ms
 Single-node this phase pins the CODE-LOCAL propose-fixed at ~18 ms
 (step-0 fwd 14.6 + step0 glue 2.6 + gap cpu 1.2). The step-0 forward is
 comm-free (fp8 replica) so it is present at 2-node unchanged (~15 ms). The
-CPU/sync glue is ~4 ms single-node AND at 2-node (P65 crushed it). Therefore
-the 2-node propose-fixed's remaining **~70 ms is CROSS-NODE** and invisible
-single-node:
+CPU/sync glue is ~4 ms single-node AND at 2-node (P65 crushed it). Some of
+the 18->88 gap is b8->b12 batch scaling of the step-0 forward (a few ms;
+it is dispatch-bound, not FLOP-bound), but the dominant remainder
+(**~65-70 ms**) is CROSS-NODE and invisible single-node:
 
 - verify-side NCCL DP-coordination all_reduce (~8 ms, P65 trace);
 - the cycle-boundary DP rendezvous the propose path still runs at DP16
