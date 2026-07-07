@@ -126,12 +126,20 @@ at the DP4 b4 / W64 canary but not at DP8 b8 / W512 16k.
   is fixed.
 - The **FULL-CG win is demonstrated** where the draft FULL graph actually
   replays (DP4 canary: chain step effectively removed, +93% tok/s at K4).
-- The **16k serving-batch realization is BLOCKED** by the draft-FULL-CG
-  capture/replay shape coverage (`_full_captured` / batch-descriptor match in
-  `llm_base_proposer.py` `dummy_run` / `_determine_batch_execution_and_padding`):
-  the b8/DP8/cap544 chain descriptor claims FULL but the wrapper runs eager,
-  so D regresses 23 -> 52 ms. Root-causing/extending that coverage is the
-  remaining integration step; it was not cracked within this phase's budget.
+- The **16k serving-batch realization is BLOCKED**: the b1-per-rank chain
+  descriptor claims FULL but the wrapper runs the 48-layer forward EAGER, so D
+  regresses 23 -> 52 ms. Isolation:
+  - per-rank batch is b1 at BOTH DP4 b4 and DP8 b8 -> the descriptor is the same,
+    so it is not a plain batch-size coverage gap;
+  - **fp8-replica RULED OUT**: the arm-B fp8 comm-free replica draft REPLAYS and
+    wins at the DP4 canary (K4 1458 tok/s / accept 4.333, matching bf16's 1433 /
+    4.479) -- so the replica draft is FULL-CG-capturable;
+  - the remaining live variable is **scale/window**: FULL replays at 2k / W64 /
+    cap96 (DP4, +93%) but runs eager at 16k / W512 / cap544. The scratchpad graph
+    at cap544 (vs cap96) and/or the 16k KV pool is where the wrapper stops
+    matching a captured graph and falls to eager.
+  Extending that coverage (making the cap544 draft chain graph replay at 16k) is
+  the remaining integration step; it was not cracked within this phase's budget.
 - **Stage 4 (2-node E2E) not run**: single-node b8 regresses, so the 2-node
   arm cannot beat no-spec; measuring it would only burn the peer node. Warranted
   only once the b8 FULL replay lands.
