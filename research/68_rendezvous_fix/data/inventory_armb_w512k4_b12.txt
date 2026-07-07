@@ -1,0 +1,41 @@
+# research/68_rendezvous_fix/data/trace_armb_w512k4_b12/dp0_pp0_tp0_dcp0_ep0_rank0.1783395813731376459.pt.trace.json.gz
+
+## cycles=32 (coordinate AllReduce kernels)  wall=4207ms  cycle=131.5ms
+runner span totals (name count total_ms ms/cyc):
+  forward        319    3660.8   114.40
+  draft           84    3631.3   113.48
+  preprocess      57     854.8    26.71
+  bookkeep        56     798.5    24.95
+  postprocess     56      18.1     0.56
+  sample          56      13.8     0.43
+  ModelRunnerOutput    28       0.3     0.01
+  eplb            28       0.3     0.01
+
+## GPU NCCL collectives by class x span (correlation-attributed launch nesting)
+class         span             n   n/cyc        ms   ms/cyc
+AllGather     forward       1344   42.00     918.4    28.70
+AllGather     other          192    6.00     106.4     3.32
+AllReduce     preprocess      28    0.88     381.4    11.92
+AllReduce     other            4    0.12      67.5     2.11
+ReduceScatter forward       1344   42.00     431.2    13.47
+ReduceScatter other          192    6.00      43.5     1.36
+
+  => DRAFT-path NCCL: 0 kernels (0.00/cyc), 0.00 ms/cyc
+  => VERIFY-path NCCL: 2716 kernels (84.88/cyc), 54.09 ms/cyc
+
+## DP-coordination all-reduce (user_annotation gloo:/nccl:) by span
+  nccl:all_reduce           preprocess   n=56     1.75/cyc    383.9 ms
+  nccl:all_reduce           other        n=8      0.25/cyc     67.8 ms
+  c10d::allreduce_          preprocess   n=28     0.88/cyc      3.5 ms
+  c10d::allreduce_          other        n=4      0.12/cyc      0.5 ms
+
+## aggregate cross-node NCCL (draft==0 => all verify-side)
+  MoE AllGather     1024.7 ms   32.02 ms/cyc
+  MoE ReduceScat     474.7 ms   14.84 ms/cyc
+  coordinate AllR    448.9 ms   14.03 ms/cyc
+  TOTAL             1948.4 ms   60.89 ms/cyc
+
+## draft span wall vs GPU-busy (n=56 spans)
+  wall 3631.2 ms (113.48/cyc)  gpu-busy 2913.1 ms (91.03/cyc)  idle 718.1 ms (22.44/cyc)
+
+## verify coordinate AllReduce straggler: n=32 max=44.99 p50=14.09 min=0.43 ms  (sum/cyc=14.03)
