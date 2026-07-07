@@ -245,6 +245,27 @@ def self_spec_node_local_enabled() -> bool:
     return envs.VLLM_SELF_SPEC_NODE_LOCAL
 
 
+# Self-spec Phase 69: signal-channel key carrying the draft window-scratchpad
+# attention context (a DraftScratchpadCtx). When present on the draft chain
+# forward, unified_attention_with_output runs the fixed-shape dense scratchpad
+# attention instead of the paged FA3 decode kernel (so the whole per-step draft
+# forward is CUDA-graph-capturable). Absent on the verify forward -> unchanged.
+SELF_SPEC_DRAFT_SCRATCHPAD_KEY = "self_spec_draft_scratchpad"
+
+
+def self_spec_draft_scratchpad_ctx() -> Any:
+    """Return the active draft window-scratchpad attention context, or None.
+
+    Reads ``ForwardContext.additional_kwargs[SELF_SPEC_DRAFT_SCRATCHPAD_KEY]``
+    if present. Only set on the draft chain-step forwards under
+    ``VLLM_SELF_SPEC_DRAFT_FULLCG``; None everywhere else (verify, prompt,
+    step-0), so no existing attention path is affected.
+    """
+    if _forward_context is not None:
+        return _forward_context.additional_kwargs.get(SELF_SPEC_DRAFT_SCRATCHPAD_KEY)
+    return None
+
+
 def create_forward_context(
     attn_metadata: Any,
     vllm_config: VllmConfig,

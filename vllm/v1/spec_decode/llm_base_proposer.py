@@ -20,6 +20,7 @@ from vllm.config import (
 )
 from vllm.distributed.parallel_state import get_pp_group
 from vllm.forward_context import (
+    SELF_SPEC_DRAFT_SCRATCHPAD_KEY,
     SELF_SPEC_LOCAL_ROUTE_KEY,
     SELF_SPEC_NODE_LOCAL_KEY,
     BatchDescriptor,
@@ -340,6 +341,25 @@ class SpecDecodeBaseProposer:
         self._kv_window_warned = False
         self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
         self._kv_window_calls = 0
+        # Phase 69: window-scratchpad FULL-CG draft chain attention. Each chain
+        # step gathers the sinks+window KV into a FIXED-shape dense scratchpad
+        # and runs a masked SDPA-style attention (CUDA-graph-capturable) instead
+        # of the paged FA3 decode kernel. Composes with (requires) the KV window.
+        self._draft_fullcg = (
+            envs.VLLM_SELF_SPEC_DRAFT_FULLCG and self.method == "draft_model"
+        )
+        if self._draft_fullcg and self._kv_window <= 0:
+            raise ValueError(
+                "VLLM_SELF_SPEC_DRAFT_FULLCG requires "
+                "VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0 (the scratchpad materialises "
+                "the sinks+window key set)."
+            )
+        # Persistent [1, cap] slot arange for the scratchpad padding mask and the
+        # per-cycle scratchpad context (references the window buffers, updated in
+        # place each step). Built lazily in the chain.
+        self._sp_col_arange: torch.Tensor | None = None
+        self._sp_ctx = None
+        self._sp_logged = False
         # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
         # runnable for the decode-step chain (set by the runner's wrap pass when
         # use_full_cudagraphs). None -> plain-forward path (sampling stays
@@ -1411,6 +1431,17 @@ class SpecDecodeBaseProposer:
                 )
             )
 
+            # Phase 69: carry the window-scratchpad attention context on the
+            # chain forward so unified_attention_with_output runs the fixed-shape
+            # dense windowed attention (the KV window buffers were just refreshed
+            # by _apply_draft_kv_window above). Chain-only: step-0 / verify never
+            # see the key.
+            chain_add_kwargs = self._draft_forward_additional_kwargs
+            if self._draft_fullcg and self._kv_window > 0:
+                _sp_ctx = self._ensure_scratchpad_ctx(batch_size)
+                chain_add_kwargs = dict(self._draft_forward_additional_kwargs or {})
+                chain_add_kwargs[SELF_SPEC_DRAFT_SCRATCHPAD_KEY] = _sp_ctx
+
             with set_forward_context(
                 per_layer_attn_metadata,
                 self.vllm_config,
@@ -1419,7 +1450,7 @@ class SpecDecodeBaseProposer:
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
                 batch_descriptor=self._last_batch_desc,
                 slot_mapping=self._get_slot_mapping(input_batch_size),
-                additional_kwargs=self._draft_forward_additional_kwargs,
+                additional_kwargs=chain_add_kwargs,
             ):
                 # Self-spec W7 micro-bench: time a SINGLE draft model forward
                 # (one decode-step forward inside the K-step chain) so it can
@@ -2504,6 +2535,56 @@ class SpecDecodeBaseProposer:
             slot_mapping=appended_slots,
         )
         return compact, bs, self.arange[:bs], appended_slots
+
+    def _scratchpad_n_kept_blocks(self) -> int:
+        """Fixed number of kept (sink + trailing-window) pages per chain step.
+
+        Uses the MAX drafted count (num_speculative_tokens) so the gather shape
+        is cycle-constant even as the drafted suffix grows -- the padding mask
+        (col >= live seq_len) excludes the not-yet-filled slots. For a
+        block-multiple window this equals the paged per-step ``n_last``.
+        """
+        block_size = self.block_size
+        n_sink = -(-self._kv_window_sinks // block_size)
+        n_last = -(-(self._kv_window + self.num_speculative_tokens) // block_size)
+        return n_sink + n_last
+
+    def _ensure_scratchpad_ctx(self, bs: int):
+        """Build/refresh the per-cycle draft scratchpad context.
+
+        References the proposer's PERSISTENT window buffers (block table /
+        seq_lens), which ``_apply_draft_kv_window`` rewrites in place each step,
+        so a captured graph reads the live data through capture-time pointers.
+        """
+        from vllm.v1.spec_decode.scratchpad_attn import DraftScratchpadCtx
+
+        n_kept = self._scratchpad_n_kept_blocks()
+        cap = n_kept * self.block_size
+        if self._sp_col_arange is None or self._sp_col_arange.shape[1] != cap:
+            self._sp_col_arange = torch.arange(
+                cap, device=self.device
+            ).unsqueeze(0)
+        self._sp_ctx = DraftScratchpadCtx(
+            block_table=self._win_block_table,
+            seq_lens=self._win_seq_lens,
+            col_arange=self._sp_col_arange,
+            block_size=self.block_size,
+            n_kept_blocks=n_kept,
+            num_reqs=bs,
+        )
+        if self._draft_fullcg and not self._sp_logged:
+            self._sp_logged = True
+            logger.info(
+                "Draft window-scratchpad attention active: n_kept_blocks=%d "
+                "cap=%d (sinks=%d window=%d K=%d block=%d).",
+                n_kept,
+                cap,
+                self._kv_window_sinks,
+                self._kv_window,
+                self.num_speculative_tokens,
+                self.block_size,
+            )
+        return self._sp_ctx
 
     def _apply_draft_kv_window(
         self, cad: CommonAttentionMetadata, tokens_drafted: int = 0

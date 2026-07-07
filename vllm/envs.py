@@ -258,6 +258,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
+    VLLM_SELF_SPEC_DRAFT_FULLCG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
@@ -1935,6 +1936,21 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # FULL. Default off (draft eager, unchanged). See research/34_worldA_system.
     "VLLM_SELF_SPEC_DRAFT_FULL_CG": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULL_CG", "0"))
+    ),
+    # Self-spec Phase 69: window-scratchpad FULL cudagraph for the draft chain.
+    # Composes with VLLM_SELF_SPEC_DRAFT_KV_WINDOW (+ SHARED_KV): each chain-step
+    # attention gathers the sinks+window KV from the (shared) paged cache into a
+    # FIXED-shape dense scratchpad and runs a masked SDPA-style attention instead
+    # of the paged FA3 decode kernel. The paged FA3 decode kernel freezes its
+    # host-side work distribution at capture and is not replay-safe for the
+    # draft's growing sequence, forcing eager attention (_draft_chain_force_eager
+    # _attn) and PIECEWISE dispatch (~98 graph-piece launches/step). The dense
+    # scratchpad attention is pure shape-driven tensor ops (gather + matmul +
+    # softmax + matmul), fully CUDA-graph-capturable, so the whole per-step draft
+    # forward replays as ONE FULL graph. Bit-exact greedy (same window key set,
+    # same causal-at-end mask). Default off. See research/69_draft_fullcg.
+    "VLLM_SELF_SPEC_DRAFT_FULLCG": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_FULLCG", "0"))
     ),
     # Self-spec W7-piecewise: when the FA3 (GQA / non-MLA) draft chain runs its
     # attention eagerly (VLLM_SELF_SPEC_DRAFT_FULL_CG=1 -> _draft_chain_force_

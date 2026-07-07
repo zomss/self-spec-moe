@@ -10,7 +10,11 @@ import vllm.envs as envs
 from vllm.compilation.breakable_cudagraph import eager_break_during_capture
 from vllm.config import CacheConfig, get_current_vllm_config
 from vllm.config.vllm import VllmConfig
-from vllm.forward_context import ForwardContext, get_forward_context
+from vllm.forward_context import (
+    ForwardContext,
+    get_forward_context,
+    self_spec_draft_scratchpad_ctx,
+)
 from vllm.logger import init_logger
 from vllm.model_executor.layers.attention.kv_transfer_utils import (
     maybe_transfer_kv_layer,
@@ -763,6 +767,18 @@ def unified_attention_with_output(
     del kv_cache_dummy_dep
     layer_name = _resolve_layer_name(layer_name)
     attn_metadata, self, kv_cache, _ = get_attention_context(layer_name)
+
+    # Self-spec Phase 69: window-scratchpad FULL-cudagraph draft chain. When the
+    # draft chain forward carries a scratchpad context, run the fixed-shape dense
+    # windowed attention (gather + matmul + softmax + matmul) instead of the
+    # paged FA3 decode kernel -- pure shape-driven ops, CUDA-graph-capturable.
+    # The KV write already happened in the preceding unified_kv_cache_update.
+    _sp_ctx = self_spec_draft_scratchpad_ctx()
+    if _sp_ctx is not None:
+        from vllm.v1.spec_decode.scratchpad_attn import scratchpad_attention
+
+        scratchpad_attention(_sp_ctx, self, query, kv_cache, output)
+        return
 
     self.impl.forward(
         self,
