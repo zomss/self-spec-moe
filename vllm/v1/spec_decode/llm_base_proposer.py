@@ -324,9 +324,12 @@ class SpecDecodeBaseProposer:
         # of only the appended sampled token per request (the K+1 re-ingested
         # verify tokens are wasted FLOPs -- their KV writes are PAD-masked and
         # their hidden states are discarded). Only the appended token's hidden
-        # state feeds draft-1 sampling. Bit-exact: the compacted decode reuses
-        # the same windowed seq_lens/block_table so the appended token attends
-        # to an identical key set. Requires shared KV + decode-shaped propose.
+        # state feeds draft-1 sampling. The compacted decode reuses the same
+        # windowed seq_lens/block_table so the appended token attends to an
+        # identical (bf16 cached) key set; bit-exact at window=0, but the
+        # varlen->decode kernel switch perturbs accept in the windowed regime
+        # (see envs.py + research/67_propose_fixed_opt). Requires shared KV +
+        # decode-shaped propose. Default off.
         self._shared_kv_step0_decode = (
             self._shared_kv and envs.VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE
         )

@@ -1897,15 +1897,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Self-spec W7 (phase 67): with SHARED_KV, compact the step-0 draft forward
     # from a q=(K+2) query to a q=1 decode of only the appended sampled token
     # per request. Under shared KV the K+1 re-ingested verify tokens have their
-    # draft KV writes PAD-masked (the appended token reads the verify's
-    # target-exact cached KV, not in-kernel draft KV), so their forward is pure
-    # wasted FLOPs -- only the appended token's hidden state is consumed (to
-    # sample draft-1). The compacted decode reuses the SAME windowed seq_lens /
-    # block_table the q=(K+2) step-0 builds, so the appended token attends to an
-    # identical key set -> bit-exact for both the bf16 self-draft and the fp8
-    # replica. Requires SHARED_KV + draft_model + K>1 + a decode-shaped propose;
-    # prefill/prompt-ingest proposes fall back to the full path. Default off.
-    # See research/67_propose_fixed_opt.
+    # draft KV writes PAD-masked and their hidden states discarded, so their
+    # forward is wasted FLOPs -- only the appended token's hidden state is
+    # consumed (to sample draft-1). The compacted decode reuses the SAME
+    # windowed seq_lens/block_table so the appended token attends to an
+    # identical key set (the same bf16 cached KV). CAVEAT: this switches
+    # draft-1's FA3 kernel from the varlen (q=K+2) path to the decode (q=1)
+    # path; bit-exact only at window=0 (canary W0 K2 stays 3.000), but in the
+    # windowed regime the kernel-path change perturbs accept (measured W64 bf16
+    # -0.014, W512 fp8 -0.040 at ~93% draft-1 acceptance). The exposed cycle
+    # saving is small (~2.4 ms single-node) and the accept drop nearly cancels
+    # it. Requires SHARED_KV + draft_model + K>1 + a decode-shaped propose.
+    # Default off. See research/67_propose_fixed_opt.
     "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE", "0"))
     ),
