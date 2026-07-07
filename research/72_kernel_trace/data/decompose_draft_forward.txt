@@ -1,0 +1,61 @@
+reshape landmarks=7680  => forwards=160
+kinds: TTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTTDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDDTDDDD
+draft=115 target=45
+
+steady DRAFT forward walls (ms): 30.0, 31.1, 30.2, 30.5, 31.2, 31.4, 30.9, 31.6, 31.7, 31.4, 17.8, 17.8, 17.6, 13.9, 13.8, 13.8, 11.5, 11.5, 11.5, 14.0, 11.5, 11.5, 11.5, 13.3, 11.5, 11.5, 11.5, 12.9, 11.4, 11.3, 11.3, 13.2, 11.4, 11.3, 11.3, 14.0, 11.3, 11.3, 11.3, 13.9, 11.2, 11.2, 11.2, 14.3, 11.3, 11.2, 11.2, 14.9, 11.2, 11.2, 11.2, 14.7, 11.2, 11.2, 11.2, 15.4, 11.2, 11.2, 11.2, 16.3, 11.2, 11.2, 11.2, 15.3, 11.2, 11.2, 11.2, 15.4, 11.2, 11.2, 11.2, 15.4, 11.2, 11.2, 11.2, 15.4, 11.2, 11.2, 11.2, 15.6, 11.2, 11.2, 11.2, 15.7, 11.2, 11.2, 11.2, 16.7, 11.2, 11.2, 11.2, 11.1
+draft wall  ms: median=11.35 min=11.13 max=31.68
+
+================================================================
+SELECTED steady-state DRAFT forward  (forward #82)
+================================================================
+wall                :   11.346 ms
+GPU-active (union)  :    9.766 ms   (86.1% of wall)
+GPU-active (sum)    :    9.766 ms
+idle / gap fraction :    13.9 %   (idle 1.580 ms)
+# kernels           : 2403
+median kernel dur   :   1.888 us
+mean kernel dur     :   4.064 us
+# inter-kernel gaps : 2402
+median inter-gap    :   0.416 us
+mean inter-gap      :   0.658 us
+
+--- per-category split of the draft forward ---
+category           ms  % active   % wall    #k
+MoE             2.634     27.0%    23.2%   240
+attention       2.214     22.7%    19.5%   288
+dense_linear    0.944      9.7%     8.3%   144
+fp8_quant       0.693      7.1%     6.1%   336
+norm_rope       0.002      0.0%     0.0%     1
+kv_write        0.102      1.0%     0.9%    48
+misc            3.177     32.5%    28.0%  1346
+TOTAL(active)   9.766    100.0%    86.1%  2403
+
+--- top kernels by GPU-us in this draft forward ---
+    2.249ms x  96 [MoE        ] fused_moe_kernel
+    1.912ms x  96 [attention  ] bmm_kernel
+    0.944ms x 144 [dense_linear] void cutlass::device_kernel<vllm::cutlass_3x_gemm_sm90_fp8<cutlass::floa
+    0.920ms x 240 [misc       ] void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_
+    0.369ms x 144 [misc       ] void at::native::unrolled_elementwise_kernel<at::native::direct_copy_ker
+    0.342ms x  96 [misc       ] void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl<
+    0.303ms x  96 [misc       ] void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::n
+    0.267ms x  96 [misc       ] void at::native::vectorized_elementwise_kernel<4, at::native::AUnaryFunc
+    0.217ms x  96 [fp8_quant  ] void vllm::segmented_max_reduction_strided<c10::BFloat16, c10::Float8_e4
+    0.217ms x  48 [misc       ] void at::native::reduce_kernel<128, 4, at::native::ReduceOp<c10::BFloat1
+    0.202ms x  48 [MoE        ] void vllm::moe::topkGating<8, 128, 4, 16, 32, int, __nv_bfloat16, (vllm:
+    0.177ms x  96 [attention  ] void at::native::vectorized_gather_kernel<16, int>(char*, char*, int*, i
+    0.154ms x  47 [fp8_quant  ] triton_red_fused__to_copy_abs_clamp_cutlass_scaled_mm_div_fused_add_rms_
+    0.149ms x  48 [misc       ] void at::native::reduce_kernel<512, 1, at::native::ReduceOp<bool, at::na
+    0.148ms x  96 [fp8_quant  ] void vllm::scaled_fp8_quant_kernel_strided_dynamic<c10::BFloat16, c10::F
+    0.106ms x  96 [misc       ] void at::native::vectorized_elementwise_kernel<8, at::native::bfloat16_c
+    0.102ms x  48 [kv_write   ] void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, 
+    0.094ms x  48 [MoE        ] triton_red_fused_fused_add_rms_norm_moe_forward_1
+    0.092ms x  96 [misc       ] memcpy32_post
+    0.091ms x  98 [misc       ] void at::native::vectorized_elementwise_kernel<4, at::native::FillFuncto
+    0.090ms x  48 [MoE        ] void vllm::act_and_mul_kernel<c10::BFloat16, __nv_bfloat162, &(c10::BFlo
+    0.087ms x  96 [misc       ] Memset (Device)
+    0.086ms x  48 [fp8_quant  ] triton_red_fused__to_copy_abs_clamp_max_mul_reciprocal_unsqueeze_0
+    0.083ms x  48 [fp8_quant  ] triton_red_fused__to_copy_abs_clamp_cutlass_scaled_mm_div_max_mul_recipr
+    0.073ms x  47 [misc       ] triton_poi_fused_4
+    0.068ms x  48 [misc       ] void at::native::vectorized_elementwise_kernel<8, at::native::(anonymous
+    0.058ms x  47 [misc       ] triton_red_fused_3
+    0.057ms x  48 [attention  ] void at::native::vectorized_elementwise_kernel<4, at::native::exp_kernel
