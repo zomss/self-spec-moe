@@ -320,6 +320,17 @@ class SpecDecodeBaseProposer:
                 f"(self-spec) method, got {self.method!r}: only a draft that "
                 "IS the target model has position-compatible KV."
             )
+        # Phase 67: with shared KV, run the step-0 draft forward as a q=1 decode
+        # of only the appended sampled token per request (the K+1 re-ingested
+        # verify tokens are wasted FLOPs -- their KV writes are PAD-masked and
+        # their hidden states are discarded). Only the appended token's hidden
+        # state feeds draft-1 sampling. Bit-exact: the compacted decode reuses
+        # the same windowed seq_lens/block_table so the appended token attends
+        # to an identical key set. Requires shared KV + decode-shaped propose.
+        self._shared_kv_step0_decode = (
+            self._shared_kv and envs.VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE
+        )
+        self._step0_decode_logged = False
         # draft layer name -> target layer name (filled by
         # _register_shared_kv_layers at load).
         self._shared_kv_target_layer: dict[str, str] = {}
@@ -895,6 +906,11 @@ class SpecDecodeBaseProposer:
                 )
             )
 
+        # Phase 67: shared-KV step-0 decode compaction (q=1 over appended token).
+        step0_decode = self._step0_decode_active(
+            common_attn_metadata, num_rejected_tokens_gpu
+        )
+        step0_appended_slots: torch.Tensor | None = None
         with _self_spec_profiler().region("step0_build_attn_md"):
             # Phase 62: window the step-0 draft attention (decode-shaped
             # proposes only). The windowed view is a shallow copy over
@@ -905,81 +921,135 @@ class SpecDecodeBaseProposer:
                 common_attn_metadata, num_rejected_tokens_gpu
             ):
                 md_cad = self._apply_draft_kv_window(common_attn_metadata)
+            if step0_decode:
+                _orig_ntok = common_attn_metadata.num_actual_tokens
+                (
+                    md_cad,
+                    num_tokens,
+                    token_indices_to_sample,
+                    step0_appended_slots,
+                ) = self._compact_step0_decode(
+                    common_attn_metadata, md_cad, token_indices_to_sample
+                )
+                if not self._step0_decode_logged:
+                    self._step0_decode_logged = True
+                    logger.info(
+                        "[step0-decode] shared-KV step-0 compacted to q=1 "
+                        "decode: %d appended tokens (was %d)",
+                        num_tokens,
+                        _orig_ntok,
+                    )
             per_group_attn_metadata, per_layer_attn_metadata = (
                 self.build_per_group_and_layer_attn_metadata(md_cad)
             )
 
         with _self_spec_profiler().region("step0_determine_batch"):
-            # Phase 55: with STEP0_FULL_CG (K=1), the steady-state step-0
-            # batch is per-request uniform at q=_step0_q (=3: 2 verify tokens
-            # + the appended sampled-token slot; rejected slots PAD-masked by
-            # set_inputs_first_pass) and dispatches to the FULL graphs
-            # captured at that shape; mixed prefill/decode steps fall back
-            # naturally. The max_query_len check excludes mixed batches that
-            # only sum to batch*q.
-            _q = (
-                self.num_speculative_tokens
-                + 1
-                + self.net_num_new_slots_per_request
-            )
-            _step0_uniform = (
-                self._step0_full_cg
-                and num_tokens == batch_size * _q
-                and common_attn_metadata.max_query_len == _q
-            )
-            if _step0_uniform and self._step0_force_pw:
-                # Debug bisect knob (W7_STEP0_FORCE_PW=1): keep all capture
-                # machinery but never dispatch step-0 FULL at runtime.
-                _step0_uniform = False
-            if _step0_uniform and self._kv_window > 0:
-                # Phase 62: the captured step-0 FULL graph reads the full
-                # block table through capture-time pointers; window-KV
-                # drafting needs the live (windowed) metadata, so fall back
-                # to the relaxed (PIECEWISE) dispatch.
-                _step0_uniform = False
-            if _step0_uniform:
-                # Pre-flight (pure, no DP collective): only claim uniform if
-                # the dispatch target is a FULL shape we actually captured;
-                # a keyed-but-uncaptured shape would fault in the wrapper.
-                _mode, _desc = self.cudagraph_dispatcher.dispatch(
-                    num_tokens, uniform_decode=True
+            if step0_decode:
+                # Phase 67: the compacted step-0 is a uniform q=1 decode --
+                # dispatch it exactly like a chain step (PIECEWISE body + eager
+                # windowed attention under the window; FULL only when captured).
+                chain_piecewise = (
+                    self._draft_chain_force_eager_attn
+                    and self._draft_chain_piecewise
+                )
+                chain_use_cudagraphs = (
+                    not self._draft_chain_force_eager_attn or chain_piecewise
+                )
+                chain_uniform = True
+                if (
+                    self.use_full_cudagraphs
+                    and chain_use_cudagraphs
+                    and not chain_piecewise
+                ):
+                    _mode, _desc = self.cudagraph_dispatcher.dispatch(
+                        batch_size, uniform_decode=True
+                    )
+                    if (
+                        _mode == CUDAGraphMode.FULL
+                        and _desc.num_tokens not in self._full_captured
+                    ):
+                        chain_uniform = False
+                (
+                    cudagraph_runtime_mode,
+                    num_input_tokens,
+                    num_tokens_across_dp,
+                ) = self._determine_batch_execution_and_padding(
+                    num_tokens,
+                    uniform_decode=chain_uniform,
+                    use_cudagraphs=chain_use_cudagraphs,
+                    piecewise_only=chain_piecewise,
+                )
+            else:
+                # Phase 55: with STEP0_FULL_CG (K=1), the steady-state step-0
+                # batch is per-request uniform at q=_step0_q (=3: 2 verify tokens
+                # + the appended sampled-token slot; rejected slots PAD-masked by
+                # set_inputs_first_pass) and dispatches to the FULL graphs
+                # captured at that shape; mixed prefill/decode steps fall back
+                # naturally. The max_query_len check excludes mixed batches that
+                # only sum to batch*q.
+                _q = (
+                    self.num_speculative_tokens
+                    + 1
+                    + self.net_num_new_slots_per_request
+                )
+                _step0_uniform = (
+                    self._step0_full_cg
+                    and num_tokens == batch_size * _q
+                    and common_attn_metadata.max_query_len == _q
+                )
+                if _step0_uniform and self._step0_force_pw:
+                    # Debug bisect knob (W7_STEP0_FORCE_PW=1): keep all capture
+                    # machinery but never dispatch step-0 FULL at runtime.
+                    _step0_uniform = False
+                if _step0_uniform and self._kv_window > 0:
+                    # Phase 62: the captured step-0 FULL graph reads the full
+                    # block table through capture-time pointers; window-KV
+                    # drafting needs the live (windowed) metadata, so fall back
+                    # to the relaxed (PIECEWISE) dispatch.
+                    _step0_uniform = False
+                if _step0_uniform:
+                    # Pre-flight (pure, no DP collective): only claim uniform if
+                    # the dispatch target is a FULL shape we actually captured;
+                    # a keyed-but-uncaptured shape would fault in the wrapper.
+                    _mode, _desc = self.cudagraph_dispatcher.dispatch(
+                        num_tokens, uniform_decode=True
+                    )
+                    if (
+                        _mode != CUDAGraphMode.FULL
+                        or _desc.num_tokens not in self._step0_captured
+                    ):
+                        _step0_uniform = False
+                cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
+                    self._determine_batch_execution_and_padding(
+                        num_tokens, uniform_decode=_step0_uniform
+                    )
                 )
                 if (
-                    _mode != CUDAGraphMode.FULL
-                    or _desc.num_tokens not in self._step0_captured
+                    _step0_uniform
+                    and cudagraph_runtime_mode == CUDAGraphMode.FULL
                 ):
-                    _step0_uniform = False
-            cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
-                self._determine_batch_execution_and_padding(
-                    num_tokens, uniform_decode=_step0_uniform
-                )
-            )
-            if (
-                _step0_uniform
-                and cudagraph_runtime_mode == CUDAGraphMode.FULL
-            ):
-                # The captured step-0 graph reads seq_lens through the
-                # proposer-owned buffer (the live extended seq_lens is a
-                # fresh tensor each cycle); refresh it. Padded-request rows
-                # are zeroed so they attend over nothing.
-                assert self._step0_seq_lens is not None
-                self._step0_seq_lens[:batch_size].copy_(
-                    common_attn_metadata.seq_lens[:batch_size]
-                )
-                self._step0_seq_lens[batch_size:].zero_()
-            _k = (num_tokens, batch_size, _step0_uniform)
-            if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG and _k not in getattr(
-                self, "_step0_cg_logged", set()
-            ):
-                self._step0_cg_logged = getattr(
+                    # The captured step-0 graph reads seq_lens through the
+                    # proposer-owned buffer (the live extended seq_lens is a
+                    # fresh tensor each cycle); refresh it. Padded-request rows
+                    # are zeroed so they attend over nothing.
+                    assert self._step0_seq_lens is not None
+                    self._step0_seq_lens[:batch_size].copy_(
+                        common_attn_metadata.seq_lens[:batch_size]
+                    )
+                    self._step0_seq_lens[batch_size:].zero_()
+                _k = (num_tokens, batch_size, _step0_uniform)
+                if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG and _k not in getattr(
                     self, "_step0_cg_logged", set()
-                ) | {_k}
-                logger.info(
-                    "[step0-cg] num_tokens=%d batch=%d K=%d uniform=%s -> "
-                    "mode=%s padded=%d",
-                    num_tokens, batch_size, self.num_speculative_tokens,
-                    _step0_uniform, cudagraph_runtime_mode, num_input_tokens,
-                )
+                ):
+                    self._step0_cg_logged = getattr(
+                        self, "_step0_cg_logged", set()
+                    ) | {_k}
+                    logger.info(
+                        "[step0-cg] num_tokens=%d batch=%d K=%d uniform=%s -> "
+                        "mode=%s padded=%d",
+                        num_tokens, batch_size, self.num_speculative_tokens,
+                        _step0_uniform, cudagraph_runtime_mode, num_input_tokens,
+                    )
 
             model_kwargs, slot_mapping_size = self.build_model_inputs_first_pass(
                 num_tokens, num_input_tokens, mm_embed_inputs
@@ -998,7 +1068,10 @@ class SpecDecodeBaseProposer:
             cudagraph_runtime_mode=cudagraph_runtime_mode,
             batch_descriptor=self._last_batch_desc,
             slot_mapping=self._get_slot_mapping(
-                slot_mapping_size, common_attn_metadata.slot_mapping
+                slot_mapping_size,
+                step0_appended_slots
+                if step0_decode
+                else common_attn_metadata.slot_mapping,
             ),
             additional_kwargs=self._draft_forward_additional_kwargs,
         ):
@@ -2370,6 +2443,64 @@ class SpecDecodeBaseProposer:
             and cad.max_query_len
             <= self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request
         )
+
+    def _step0_decode_active(
+        self,
+        cad: CommonAttentionMetadata,
+        num_rejected_tokens_gpu: torch.Tensor | None,
+    ) -> bool:
+        """Whether to compact the step-0 draft forward to a q=1 decode.
+
+        Only for the shared-KV text draft_model path on decode-shaped proposes
+        (num_rejected_tokens_gpu present => not prompt-ingest). Restricted to
+        the plain text case (no M-RoPE / xdrope / mm / hidden-state passthrough)
+        so the compaction only has to gather input_ids/positions.
+        """
+        return (
+            self._shared_kv_step0_decode
+            and self.num_speculative_tokens > 1
+            and num_rejected_tokens_gpu is not None
+            and not self.uses_mrope
+            and self.uses_xdrope_dim == 0
+            and not self.supports_mm_inputs
+            and not self.pass_hidden_states_to_model
+            and cad.max_query_len
+            <= self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request
+        )
+
+    def _compact_step0_decode(
+        self,
+        cad: CommonAttentionMetadata,
+        md_cad: CommonAttentionMetadata,
+        token_indices_to_sample: torch.Tensor,
+    ) -> tuple[CommonAttentionMetadata, int, torch.Tensor, torch.Tensor]:
+        """Compact the step-0 draft forward to a q=1 decode of the appended
+        sampled token(s) under shared KV.
+
+        Gathers the appended input_ids/positions to the FRONT of the proposer
+        buffers and returns a q=1 CommonAttentionMetadata that reuses md_cad's
+        (windowed) per-request seq_lens/block_table -- so the appended token
+        attends to the identical key set the q=(K+2) step-0 would have used
+        (bit-exact), skipping the wasted forward over the K+1 re-ingested verify
+        tokens whose draft KV writes are PAD-masked anyway. Returns
+        (compact_cad, num_tokens=batch, token_indices=arange, appended_slots).
+        """
+        bs = cad.num_reqs
+        idx = token_indices_to_sample
+        # RHS advanced indexing returns a copy, so front-gather is aliasing-safe.
+        self.input_ids[:bs] = self.input_ids[idx]
+        self.positions[:bs] = self.positions[idx]
+        appended_slots = cad.slot_mapping[idx]
+        compact = md_cad.replace(
+            query_start_loc=self.arange[: bs + 1],
+            query_start_loc_cpu=torch.from_numpy(
+                self.token_arange_np[: bs + 1]
+            ).clone(),
+            num_actual_tokens=bs,
+            max_query_len=1,
+            slot_mapping=appended_slots,
+        )
+        return compact, bs, self.arange[:bs], appended_slots
 
     def _apply_draft_kv_window(
         self, cad: CommonAttentionMetadata, tokens_drafted: int = 0

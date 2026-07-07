@@ -42,6 +42,7 @@ GAP_CPU = [
     "cpu_reject_parse",
     "cpu_bookkeep_loop",
     "cpu_next_input_build",
+    "cpu_prepare_inputs_padded",
 ]
 
 

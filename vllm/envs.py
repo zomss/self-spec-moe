@@ -255,6 +255,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
     VLLM_SELF_SPEC_SHARED_KV: bool = False
+    VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
@@ -1892,6 +1893,21 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Default off. See research/66_shared_kv.
     "VLLM_SELF_SPEC_SHARED_KV": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_SHARED_KV", "0"))
+    ),
+    # Self-spec W7 (phase 67): with SHARED_KV, compact the step-0 draft forward
+    # from a q=(K+2) query to a q=1 decode of only the appended sampled token
+    # per request. Under shared KV the K+1 re-ingested verify tokens have their
+    # draft KV writes PAD-masked (the appended token reads the verify's
+    # target-exact cached KV, not in-kernel draft KV), so their forward is pure
+    # wasted FLOPs -- only the appended token's hidden state is consumed (to
+    # sample draft-1). The compacted decode reuses the SAME windowed seq_lens /
+    # block_table the q=(K+2) step-0 builds, so the appended token attends to an
+    # identical key set -> bit-exact for both the bf16 self-draft and the fp8
+    # replica. Requires SHARED_KV + draft_model + K>1 + a decode-shaped propose;
+    # prefill/prompt-ingest proposes fall back to the full path. Default off.
+    # See research/67_propose_fixed_opt.
+    "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE", "0"))
     ),
     # Self-spec W2a FULL REPLICA opt-in: when set, the draft_model parallel
     # config is built with enable_expert_parallel=False (overriding the W0 EP
