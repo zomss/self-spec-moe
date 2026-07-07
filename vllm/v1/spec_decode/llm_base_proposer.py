@@ -375,6 +375,17 @@ class SpecDecodeBaseProposer:
         self._disable_sample_in_graph = bool(
             int(os.environ.get("W7_DISABLE_SAMPLE_IN_CG", "0"))
         )
+        # Phase 69: the window-scratchpad chain uses the plain-forward FULL graph
+        # + EAGER sample, not the combined forward+compute_logits+argmax (fws)
+        # graph. The fws graph replayed K-1 times with the scratchpad collapses
+        # accept on chain steps 2+ (measured 16k K4 4.63 -> 1.97; DP4 canary K4
+        # recovers 1.97 -> 4.48 with the fws graph off) -- the sampled-token
+        # output of one fws replay does not correctly drive the next step's
+        # input under the scratchpad. The plain-forward FULL graph replays
+        # correctly (each step reads the in-place-refreshed window buffers) and
+        # is faster (no per-step fws capture; +93% tok/s at the DP4 canary).
+        if self._draft_fullcg:
+            self._disable_sample_in_graph = True
         # Last dispatched FULL batch descriptor (set by
         # _determine_batch_execution_and_padding) so callers can put it in the
         # forward context for the FULL CUDAGraphWrapper.

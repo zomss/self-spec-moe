@@ -26,6 +26,7 @@ attention modulo attention-kernel ULP (which does not flip argmax in practice).
 from dataclasses import dataclass
 
 import torch
+import torch.nn.functional as F
 
 
 @dataclass
@@ -80,31 +81,32 @@ def scratchpad_attention(
     n_kept = ctx.n_kept_blocks
     cap = n_kept * ctx.block_size
 
-    # Gather the kept (sink + trailing-window) pages into a dense scratchpad.
+    # Gather the kept (sink + trailing-window) pages into a dense scratchpad,
+    # [bs, num_kv_heads, cap, head_dim].
     idx = ctx.block_table[:bs, :n_kept].reshape(-1)
     k = key_cache.index_select(0, idx).view(bs, cap, num_kv_heads, head_dim)
     v = value_cache.index_select(0, idx).view(bs, cap, num_kv_heads, head_dim)
-    # [bs, num_kv_heads, cap, head_dim]
-    k = k.permute(0, 2, 1, 3)
-    v = v.permute(0, 2, 1, 3)
+    k = k.transpose(1, 2)
+    v = v.transpose(1, 2)
 
     num_heads = query.shape[1]
     # [bs, num_heads, 1, head_dim]
     q = query[:bs].to(k.dtype).unsqueeze(2)
-    rep = num_heads // num_kv_heads
-    if rep > 1:
-        k = k.repeat_interleave(rep, dim=1)
-        v = v.repeat_interleave(rep, dim=1)
 
-    scale = layer.impl.scale
-    scores = torch.matmul(q, k.transpose(-2, -1)) * scale  # [bs, num_heads, 1, cap]
-    # Padding mask: scratchpad slot >= valid seq_len -> -inf (masked out). The
+    # Additive padding mask [bs, 1, 1, cap] (-inf on padded slots). The
     # compaction lays sinks then trailing pages contiguously with padding only
-    # at the tail, so a simple (col >= seq_len) test is exact.
+    # at the tail, so a simple (col >= seq_len) test is exact. Every row keeps
+    # >= sinks valid slots, so no row is fully masked (no softmax NaN).
     invalid = ctx.col_arange[:, :cap] >= ctx.seq_lens[:bs].unsqueeze(1)  # [bs, cap]
-    scores = scores.masked_fill(invalid.unsqueeze(1).unsqueeze(1), float("-inf"))
-    probs = torch.softmax(scores, dim=-1, dtype=torch.float32).to(v.dtype)
-    out = torch.matmul(probs, v)  # [bs, num_heads, 1, head_dim]
+    attn_mask = torch.zeros(
+        (bs, 1, 1, cap), dtype=q.dtype, device=q.device
+    ).masked_fill_(invalid[:, None, None, :], float("-inf"))
+    # Fused GQA attention: no head materialisation (enable_gqa), fp32-accumulate
+    # softmax inside the kernel -> the paged windowed FA3's key set, done as a
+    # fixed-shape CUDA-graph-capturable op.
+    out = F.scaled_dot_product_attention(
+        q, k, v, attn_mask=attn_mask, scale=layer.impl.scale, enable_gqa=True
+    )  # [bs, num_heads, 1, head_dim]
     # Padded (num_reqs..num_tokens) rows have no valid window -> zero them so
     # their (discarded) logits stay finite; real rows get the attention output.
     if output.shape[0] > bs:
