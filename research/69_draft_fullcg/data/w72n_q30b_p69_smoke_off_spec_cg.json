@@ -1,7 +1,7 @@
 {
   "mode": "spec",
   "model": "Qwen/Qwen3-30B-A3B",
-  "tag": "q30b_p69_smoke_on",
+  "tag": "q30b_p69_smoke_off",
   "dp": 4,
   "tp": 1,
   "nodes": 1,
@@ -23,23 +23,23 @@
         "short_len": 16,
         "iters": 1,
         "warmup": 1,
-        "long_s_mean": 1.8509435599989956,
-        "short_s_mean": 1.6534524989983765,
+        "long_s_mean": 1.7940794690002804,
+        "short_s_mean": 1.551665293998667,
         "long_s_all": [
-          1.8509435599989956
+          1.7940794690002804
         ],
         "short_s_all": [
-          1.6534524989983765
+          1.551665293998667
         ],
-        "decode_s_mean": 0.19749106100061908,
+        "decode_s_mean": 0.24241417500161333,
         "decode_s_std": 0.0,
-        "tok_s_mean": 972.1959010559882,
+        "tok_s_mean": 792.0328916356569,
         "tok_s_std": 0.0,
         "out_tokens_decode": 192,
         "full_ntoks": 256,
-        "suspect": true,
-        "accept_len": 2.908256880733945,
-        "num_accepted": 208.0,
+        "suspect": false,
+        "accept_len": 2.926605504587156,
+        "num_accepted": 210.0,
         "num_drafted": 218.0,
         "num_drafts": 109.0
       }

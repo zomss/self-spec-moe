@@ -1,7 +1,7 @@
 {
   "mode": "spec",
   "model": "Qwen/Qwen3-30B-A3B",
-  "tag": "q30b_p69_smoke_on",
+  "tag": "q30b_p69_smoke_k4_nosig",
   "dp": 4,
   "tp": 1,
   "nodes": 1,
@@ -16,32 +16,32 @@
   "a2a_emulated_us": 0.0,
   "suffix": "cg",
   "by_k": {
-    "2": [
+    "4": [
       {
         "batch": 4,
         "out_len": 64,
         "short_len": 16,
         "iters": 1,
         "warmup": 1,
-        "long_s_mean": 1.8509435599989956,
-        "short_s_mean": 1.6534524989983765,
+        "long_s_mean": 3.2489539759990294,
+        "short_s_mean": 3.1149604089951026,
         "long_s_all": [
-          1.8509435599989956
+          3.2489539759990294
         ],
         "short_s_all": [
-          1.6534524989983765
+          3.1149604089951026
         ],
-        "decode_s_mean": 0.19749106100061908,
+        "decode_s_mean": 0.13399356700392673,
         "decode_s_std": 0.0,
-        "tok_s_mean": 972.1959010559882,
+        "tok_s_mean": 1432.9046109681772,
         "tok_s_std": 0.0,
         "out_tokens_decode": 192,
         "full_ntoks": 256,
         "suspect": true,
-        "accept_len": 2.908256880733945,
-        "num_accepted": 208.0,
-        "num_drafted": 218.0,
-        "num_drafts": 109.0
+        "accept_len": 4.479452054794521,
+        "num_accepted": 254.0,
+        "num_drafted": 292.0,
+        "num_drafts": 73.0
       }
     ]
   }

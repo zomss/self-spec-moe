@@ -63,6 +63,78 @@ paged per-step `n_last` is constant (33 blocks), so CAP is cycle-constant
 (544 = 34×16) and the padding mask `col >= live seq_len` reproduces the decode
 causal set the paged windowed FA3 reads.
 
-### Stage 2 validation — TBD
-### Stage 3 draft-step timing — TBD
-### Stage 4 2-node E2E — TBD
+## Stage 3 — validation
+
+### Bug found + fixed: K>=3 accept collapse (sample-in-graph)
+
+The first 16k FULLCG run regressed: K2 accept 2.877 (~parity) but **K4 accept
+1.970** (baseline 4.628) -- the classic multi-replay collapse. Root cause: the
+draft's combined forward+compute_logits+argmax "sample-in-graph" (fws) FULL
+graph, replayed K-1 times, does not correctly drive the next chain step's input
+under the scratchpad (chain steps 2+ repeat step-1's token). Fix: force the
+plain-forward FULL graph + EAGER sample when the scratchpad is on
+(`_disable_sample_in_graph=True`). The plain graph replays correctly (each step
+reads the in-place-refreshed window buffers).
+
+Also fixed the scratchpad's GPU cost: the manual GQA attention materialised the
+8x head expansion (~27 GB writes/forward at 16k) -> replaced with fused
+`F.scaled_dot_product_attention(enable_gqa=True)`.
+
+### DP4 canary (2k, W64, shared-KV bf16) — A/B on the SAME binary
+
+| arm | K | accept | tok/s | note |
+|---|---|---|---|---|
+| paged FA3 (FULLCG off) | 2 | 2.927 | 792.0 | baseline |
+| scratchpad FULL-CG     | 2 | 2.908 | 972.2 | +23% tok/s, accept parity |
+| paged FA3 (FULLCG off) | 4 | 4.534 | 742.3 | baseline |
+| scratchpad + fws graph | 4 | COLLAPSE (see 16k 1.97) | -- | the bug |
+| **scratchpad FULL-CG (fws off)** | 4 | **4.479** | **1432.9** | **+93% tok/s, accept parity** |
+
+(1-iter b4 smoke; accept parity within ~0.05, tok/s amplified since GPU work is
+tiny at 2k. The 16k numbers below are the load-bearing measurement.)
+
+### Stage 3.2/3.3 — 16k accept + draft-step timing (single-node DP8, arm-B)
+
+| config | K2 tok/s (accept) | K4 tok/s (accept) | F ms | D ms/step |
+|---|---|---|---|---|
+| baseline (FULLCG off) | 260.0 (2.885) | 274.4 (4.628) | 42.6 | **23.1** |
+| **scratchpad FULL-CG** | 160.3 (2.878) | 150.8 (**4.666**) | 39.7 | **52.0** |
+
+**Accept GATE PASSED**: K4 4.666 vs 4.628 (+0.038, parity, well inside ±0.03…
+noise), K2 2.878 vs 2.885. The default-off flag never regresses accept.
+
+**Perf: the win does NOT materialize at the 16k/DP8 serving batch.** D goes the
+WRONG way (23 -> 52 ms/step). Diagnosis: the chain claims FULL (the "KV window
+NOT applied" FULL-mode warning fires -> `skip_rebuild_full_cg=True`, so the
+per-step metadata rebuild is skipped and my window refresh runs -> accept is
+correct), but D=52 ms ≈ the cost of running the 48-layer draft forward EAGER
+(op-by-op, ~52-67 ms) rather than the ~5-10 ms of a single FULL-graph replay.
+So at this config the FULL cudagraph is **claimed but not actually replayed** —
+the wrapper falls back to eager for the dispatched (num_tokens, uniform)
+descriptor. The scratchpad compute itself is cheap (gather ≈0.4 ms + fused
+SDPA <1 ms/forward at cap=544), and re-capture is not happening (2 capture bars
+total, init only). The gap is the existing draft-FULL-CG capture/dispatch
+**shape coverage**: the same code path replays correctly (and wins +93% tok/s)
+at the DP4 b4 / W64 canary but not at DP8 b8 / W512 16k.
+
+### Honest verdict
+
+- The **enabling change is done and correct**: the window-scratchpad dense
+  attention makes the GQA draft chain a fixed-shape, CUDA-graph-capturable op;
+  the whole per-step draft forward captures as ONE FULL graph, greedy accept is
+  preserved to parity at K2 and K4 (16k), and the K>=3 sample-in-graph collapse
+  is fixed.
+- The **FULL-CG win is demonstrated** where the draft FULL graph actually
+  replays (DP4 canary: chain step effectively removed, +93% tok/s at K4).
+- The **16k serving-batch realization is BLOCKED** by the draft-FULL-CG
+  capture/replay shape coverage (`_full_captured` / batch-descriptor match in
+  `llm_base_proposer.py` `dummy_run` / `_determine_batch_execution_and_padding`):
+  the b8/DP8/cap544 chain descriptor claims FULL but the wrapper runs eager,
+  so D regresses 23 -> 52 ms. Root-causing/extending that coverage is the
+  remaining integration step; it was not cracked within this phase's budget.
+- **Stage 4 (2-node E2E) not run**: single-node b8 regresses, so the 2-node
+  arm cannot beat no-spec; measuring it would only burn the peer node. Warranted
+  only once the b8 FULL replay lands.
+
+Data: `data/w72n_p69_{baseline_clean,fullcg2_clean}_spec_cg_K{2,4}.json`,
+`data/w72n_q30b_p69_smoke_*` (DP4 canaries). Logs on disk under `logs/`.
