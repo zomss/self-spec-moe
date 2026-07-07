@@ -812,8 +812,83 @@ class SpecDecodeBaseProposer:
         # that q so steady-state step-0 batches replay FULL.
         _qlen = self._step0_q if self._step0_full_cg else 1
         self.cudagraph_dispatcher.uniform_decode_query_len = _qlen
-        self.cudagraph_dispatcher.initialize_cudagraph_keys(
-            eagle_cudagraph_mode, uniform_decode_query_len=_qlen
+        # W7[70] fullcg coverage: for the q=1 chain-decode FULL graphs the
+        # drafter keys by num_reqs (== num_tokens, since each step is one token
+        # per seq). But adjust_cudagraph_sizes_for_spec_decode rounded the shared
+        # cudagraph_capture_sizes UP to multiples of the verify query len
+        # (1 + num_speculative_tokens), so the SMALLEST draft FULL graph is
+        # num_reqs = (1+K) (e.g. 5). A per-rank draft batch of 1 then pads UP to
+        # a (1+K)-sequence forward -- (1+K)x the window-scratchpad gather (cap544
+        # at 16k) and MoE-expert work EVERY chain step, so the FULL graph
+        # replays but on 4 wasted padding rows (draft step 23 -> 52 ms at 16k).
+        # Augment the draft dispatcher's capture sizes with the small raw
+        # num_reqs values (< 1+K) the runner already drives during capture, so
+        # b1/b2/b4 chains replay a true bN graph. q=1 chain-decode FULL only;
+        # step-0 FULL-CG (q=_step0_q) keeps the shared sizes.
+        # Scoped to the window-scratchpad FULL-CG chain (_draft_fullcg): only
+        # there does the draft chain run FULL cudagraphs AND the warmup capture
+        # actually record the small num_reqs graphs. For the plain DRAFT_FULL_CG
+        # path (FA3 chain force-eager / PIECEWISE) the draft never FULL-captures,
+        # so adding uncaptured small FULL keys would fault a later FULL dispatch
+        # in the wrapper -- keep that path byte-identical.
+        if (
+            self._draft_fullcg
+            and eagle_cudagraph_mode == CUDAGraphMode.FULL_AND_PIECEWISE
+            and _qlen == 1
+        ):
+            self._augment_draft_capture_sizes_for_num_reqs(
+                eagle_cudagraph_mode, _qlen
+            )
+        else:
+            self.cudagraph_dispatcher.initialize_cudagraph_keys(
+                eagle_cudagraph_mode, uniform_decode_query_len=_qlen
+            )
+
+    def _augment_draft_capture_sizes_for_num_reqs(
+        self, eagle_cudagraph_mode: CUDAGraphMode, qlen: int
+    ) -> None:
+        """Initialize the draft dispatcher's keys with small num_reqs capture
+        sizes added (W7[70]).
+
+        The shared ``cudagraph_capture_sizes`` were rounded to multiples of the
+        verify query len ``vq = 1 + num_speculative_tokens``. Each draft
+        decode-step forward is one token per seq, so it keys by num_reqs; the
+        runner drives capture at num_reqs = size // vq for every shared size,
+        but the sub-``vq`` values (1..K) currently pad up to ``vq``. Add those
+        raw num_reqs values as draft capture sizes so a per-rank b1 chain
+        replays a b1 graph. Restores the shared config afterward (the runner's
+        dispatcher was already initialized).
+        """
+        cc = self.vllm_config.compilation_config
+        sizes = cc.cudagraph_capture_sizes
+        vq = 1 + self.num_speculative_tokens
+        extra = (
+            sorted({s // vq for s in sizes if 1 <= s // vq < vq})
+            if sizes and vq > 1
+            else []
+        )
+        if not extra:
+            self.cudagraph_dispatcher.initialize_cudagraph_keys(
+                eagle_cudagraph_mode, uniform_decode_query_len=qlen
+            )
+            return
+        augmented = sorted(set(sizes) | set(extra))
+        saved = cc.cudagraph_capture_sizes
+        cc.cudagraph_capture_sizes = augmented
+        try:
+            self.cudagraph_dispatcher.initialize_cudagraph_keys(
+                eagle_cudagraph_mode, uniform_decode_query_len=qlen
+            )
+        finally:
+            cc.cudagraph_capture_sizes = saved
+        logger.info(
+            "Draft FULL-CG (q=1) capture sizes augmented with small num_reqs "
+            "%s (verify query len=%d): per-rank b<%d chains now replay an "
+            "exact bN graph instead of padding up to b%d.",
+            extra,
+            vq,
+            vq,
+            vq,
         )
 
     def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -1261,6 +1336,32 @@ class SpecDecodeBaseProposer:
                     cudagraph_runtime_mode,
                     batch_size,
                     input_batch_size,
+                )
+            # W7[70] fullcg-coverage debug: one-time dump of the chain dispatch
+            # descriptor vs the drafter.model FULL wrapper's captured keys and
+            # the _full_captured num_tokens set. Gated by W7_FULLCG_DBG.
+            if os.environ.get("W7_FULLCG_DBG") and not getattr(
+                self, "_logged_fullcg_dbg", False
+            ):
+                self._logged_fullcg_dbg = True
+                _wrapper = getattr(self.model, "cudagraph_wrapper", None)
+                _caps = (
+                    sorted(
+                        (d.num_tokens, d.num_reqs, d.uniform)
+                        for d in _wrapper.concrete_cudagraph_entries
+                    )
+                    if _wrapper is not None
+                    else None
+                )
+                logger.info(
+                    "[fullcg-dbg] rank=%d chain dispatch: batch_size=%d mode=%s "
+                    "last_desc=%s full_captured=%s model_wrapper_captured=%s",
+                    self.dp_rank,
+                    batch_size,
+                    cudagraph_runtime_mode,
+                    self._last_batch_desc,
+                    sorted(self._full_captured),
+                    _caps,
                 )
 
             common_attn_metadata.num_actual_tokens = batch_size

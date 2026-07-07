@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 
 import dataclasses
+import os
 import weakref
 from collections import Counter
 from collections.abc import Callable
@@ -195,6 +196,9 @@ class CUDAGraphWrapper:
     """
 
     _all_instances: ClassVar[weakref.WeakSet["CUDAGraphWrapper"]] = weakref.WeakSet()
+    # W7[70] fullcg-coverage debug: dedup set for one-shot per-(wrapper,outcome,
+    # descriptor) logging when W7_FULLCG_DBG is set.
+    _dbg_seen: ClassVar[set] = set()
 
     @classmethod
     def clear_all_graphs(cls) -> None:
@@ -281,6 +285,35 @@ class CUDAGraphWrapper:
         forward_context = get_forward_context()
         batch_descriptor = forward_context.batch_descriptor
         cudagraph_runtime_mode = forward_context.cudagraph_runtime_mode
+
+        # W7[70] fullcg-coverage debug: trace replay/capture/passthrough outcome
+        # per FULL wrapper, deduped. Gated by W7_FULLCG_DBG (default off).
+        _dbg = os.environ.get("W7_FULLCG_DBG")
+        if _dbg and self.runtime_mode == CUDAGraphMode.FULL:
+            if cudagraph_runtime_mode == CUDAGraphMode.NONE:
+                _outcome = "PASSTHROUGH(ctx=NONE)"
+            elif cudagraph_runtime_mode != self.runtime_mode:
+                _outcome = f"PASSTHROUGH(ctx={cudagraph_runtime_mode.name}!=FULL)"
+            elif batch_descriptor in self.concrete_cudagraph_entries and (
+                self.concrete_cudagraph_entries[batch_descriptor].cudagraph
+                is not None
+            ):
+                _outcome = "REPLAY"
+            else:
+                _outcome = "CAPTURE/MISS"
+            _key = (id(self), _outcome, batch_descriptor)
+            if _key not in CUDAGraphWrapper._dbg_seen:
+                CUDAGraphWrapper._dbg_seen.add(_key)
+                logger.info(
+                    "[fullcg-dbg] wrapper=%x %s ctx_desc=%s captured_keys=%s",
+                    id(self) & 0xFFFFFF,
+                    _outcome,
+                    batch_descriptor,
+                    sorted(
+                        (d.num_tokens, d.num_reqs, d.uniform)
+                        for d in self.concrete_cudagraph_entries
+                    ),
+                )
 
         if (
             cudagraph_runtime_mode == CUDAGraphMode.NONE

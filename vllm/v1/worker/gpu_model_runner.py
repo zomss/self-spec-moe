@@ -6811,6 +6811,25 @@ class GPUModelRunner(
 
         start_time = time.perf_counter()
 
+        # W7[70]: force inductor's lazy pattern init (SFDP / pad_mm / misc) to
+        # run BEFORE the cudagraph capture context. It is init_once_fakemode
+        # (cached per input_device) and generates example tensors with an
+        # unpinned CPU->GPU copy -- illegal under CUDA graph capture. If a
+        # graph's FIRST joint-graph pass lands during capture (e.g. the small
+        # self-spec draft num_reqs scratchpad graphs, whose SDPA triggers the
+        # attention pattern pass) it raises "Cannot copy between CPU and CUDA
+        # tensors during CUDA graph capture". Priming it here (a no-op once
+        # cached) keeps capture copy-free. Best-effort: never block capture.
+        try:
+            from torch._inductor.fx_passes.joint_graph import (
+                lazy_init as _inductor_lazy_init,
+            )
+
+            _inductor_lazy_init()
+            _inductor_lazy_init(self.device)
+        except Exception as _e:  # pragma: no cover - defensive
+            logger.debug("inductor lazy_init prime skipped: %s", _e)
+
         # Trigger CUDA graph capture for specific shapes.
         # Capture the large shapes first so that the smaller shapes
         # can reuse the memory pool allocated for the large shapes.
