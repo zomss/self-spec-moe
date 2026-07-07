@@ -1325,6 +1325,19 @@ class SpecDecodeBaseProposer:
                     and cudagraph_runtime_mode == CUDAGraphMode.FULL
                     and not self._disable_skip_rebuild
                 )
+                # Phase 69: under FULL-CG the metadata rebuild is skipped (the
+                # replay reads capture-time pointers), but the window-scratchpad
+                # attention reads _win_block_table / _win_seq_lens -- refresh
+                # those buffers IN PLACE each step (data-only, graph-safe) so the
+                # captured gather sees the newest sinks+window+drafted pages.
+                if (
+                    self._draft_fullcg
+                    and self._kv_window > 0
+                    and skip_rebuild_full_cg
+                ):
+                    self._apply_draft_kv_window(
+                        common_attn_metadata, tokens_drafted=token_index + 1
+                    )
                 # When the FA (GQA) chain falls back to eager attention,
                 # cudagraph_runtime_mode is NONE here, so skip_rebuild_full_cg is
                 # False and the per-step build_for_drafting runs -- giving each
@@ -2586,6 +2599,45 @@ class SpecDecodeBaseProposer:
             )
         return self._sp_ctx
 
+    def _populate_dummy_scratchpad(self, n: int) -> None:
+        """Allocate + fill the window buffers with safe in-range dummy data for
+        the FULL-cudagraph CAPTURE of the scratchpad forward.
+
+        Matches ``_apply_draft_kv_window``'s allocation exactly (same n_cols =
+        the runner draft block-table width, same dtypes) so the real propose
+        reuses the buffers WITHOUT reallocation -> the captured gather pointers
+        stay live. Block 0 (always in-range) + all-valid seq_len avoids OOB /
+        all-masked-NaN during capture.
+        """
+        runner = self.runner
+        assert runner is not None
+        blk = runner.input_batch.block_table[self.kv_cache_gid].get_device_tensor(n)
+        n_cols = blk.shape[1]
+        block_size = self.block_size
+        n_sink = -(-self._kv_window_sinks // block_size)
+        rows = max(self.max_batch_size, n)
+        if (
+            self._win_block_table is None
+            or self._win_block_table.shape[1] != n_cols
+            or self._win_block_table.shape[0] < rows
+        ):
+            self._win_block_table = torch.zeros(
+                (rows, n_cols), dtype=blk.dtype, device=self.device
+            )
+            self._win_seq_lens = torch.zeros(
+                rows, dtype=runner.seq_lens.dtype, device=self.device
+            )
+            self._win_col_arange = torch.arange(
+                n_cols, device=self.device
+            ).unsqueeze(0)
+            self._win_src_cols = torch.zeros(
+                (rows, n_cols), dtype=torch.long, device=self.device
+            )
+            self._win_col_ge_sink = (self._win_col_arange >= n_sink).to(torch.long)
+        self._win_block_table[:n].zero_()
+        cap = self._scratchpad_n_kept_blocks() * block_size
+        self._win_seq_lens[:n] = cap
+
     def _apply_draft_kv_window(
         self, cad: CommonAttentionMetadata, tokens_drafted: int = 0
     ) -> CommonAttentionMetadata:
@@ -3534,6 +3586,23 @@ class SpecDecodeBaseProposer:
                 assert self._step0_seq_lens is not None
                 self._step0_seq_lens.zero_()
 
+            # Phase 69: carry the window-scratchpad ctx on the FULL-CG CAPTURE
+            # (and idle-rank replays) so the captured draft forward records the
+            # dense scratchpad attention kernels. Dummy window buffers are
+            # in-range + all-valid (no OOB / NaN); the real propose refreshes
+            # them before its replay.
+            dummy_add_kwargs = self._draft_forward_additional_kwargs
+            if (
+                self._draft_fullcg
+                and self._kv_window > 0
+                and capture_full_attn
+            ):
+                self._populate_dummy_scratchpad(num_input_tokens)
+                dummy_add_kwargs = dict(self._draft_forward_additional_kwargs or {})
+                dummy_add_kwargs[SELF_SPEC_DRAFT_SCRATCHPAD_KEY] = (
+                    self._ensure_scratchpad_ctx(num_input_tokens)
+                )
+
             with set_forward_context(
                 draft_attn_metadata,
                 self.vllm_config,
@@ -3542,7 +3611,7 @@ class SpecDecodeBaseProposer:
                 cudagraph_runtime_mode=cudagraph_runtime_mode,
                 batch_descriptor=self._last_batch_desc,
                 slot_mapping=slot_mapping_dict,
-                additional_kwargs=self._draft_forward_additional_kwargs,
+                additional_kwargs=dummy_add_kwargs,
             ):
                 if self.supports_mm_inputs:
                     input_ids = None
@@ -3742,10 +3811,14 @@ class SpecDecodeBaseProposer:
                 is_mla = isinstance(builder, MLACommonMetadataBuilder)
                 if is_mla and getattr(builder, "max_num_splits", 0):
                     builder.max_num_splits = draft_splits
-                elif not is_mla:
+                elif not is_mla and not self._draft_fullcg:
                     # FA3 / GQA (or any non-MLA backend): the captured decode
                     # graph cannot replay the draft's intra-loop growing
                     # sequence -> run the chain attention eagerly.
+                    # Phase 69: with the window-scratchpad attention
+                    # (VLLM_SELF_SPEC_DRAFT_FULLCG) the chain attention is a
+                    # fixed-shape dense op that IS replay-safe, so keep the FULL
+                    # graph (force_eager_attn stays False).
                     force_eager_attn = True
             # Env override for A/B (1 -> force eager, 0 -> force captured graph).
             _env = os.environ.get("W7_GQA_FORCE_EAGER_ATTN")
