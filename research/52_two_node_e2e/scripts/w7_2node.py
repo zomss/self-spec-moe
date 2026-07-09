@@ -109,7 +109,9 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     kwargs = dict(
         model=MODEL,
         tensor_parallel_size=tp,
-        enable_expert_parallel=True,
+        # Phase 75: EP is meaningless for a dense model (Qwen2.5-7B). Default "1"
+        # keeps every prior MoE phase byte-identical.
+        enable_expert_parallel=os.environ.get("W7_EP", "1") == "1",
         trust_remote_code=TRC,
         max_model_len=MAX_MODEL_LEN,
         gpu_memory_utilization=GPU_MEM,
@@ -264,7 +266,14 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
 
     def run_batch(batch, out_len):
         if _prompt_bank:
-            prompts = [_prompt_bank[i % len(_prompt_bank)] for i in range(batch)]
+            # Phase 75: W7_PROMPT_OFFSET rotates the bank. At batch=1 (the paper's
+            # tau measurement point) the un-rotated index would pin prompt[0] for
+            # every run, so tau would be one sample of one prompt. Default 0 keeps
+            # prior phases byte-identical.
+            _off = int(os.environ.get("W7_PROMPT_OFFSET", "0"))
+            prompts = [
+                _prompt_bank[(i + _off) % len(_prompt_bank)] for i in range(batch)
+            ]
         else:
             prompts = [f"{BASE_PROMPT} the year {1900 + i}." for i in range(batch)]
         # Phase 75: W7_TEMP/W7_TOPP expose RL-rollout sampling (EfficientRollout

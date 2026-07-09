@@ -228,20 +228,45 @@ Prefer an **A100** (H100 biases against reproduction — see the calibration tab
 git fetch && git checkout research/self-spec-moe && git pull
 cd research/75_efficient_rollout_repro
 
+huggingface-cli download Qwen/Qwen2.5-7B-Instruct   # once, needs network
+
 bash scripts/preflight.sh        # E0. HARD GATE: an int4 W4A16 kernel must execute
-bash scripts/make_ckpts.sh       # CPU, data-free RTN -> ~/ckpts/Qwen2.5-7B-Instruct-W{4,8}A16-*
-                                 #   (also: build the ASYMMETRIC W4 variant -- see its output)
+bash scripts/make_ckpts.sh       # CPU, data-free RTN, ~20 min, NO GPU. Builds
+                                 #   W4A16-INT4-sym | W8A16-INT8-sym | W4A16-INT4-asym
 
 bash scripts/run_e1_tqtp.sh      # KEY #1: measured Tq/Tp, bf16|W8|W4 x Machete|Marlin
                                  #   -> also fits F and BW_eff. STOP and read this.
-bash scripts/run_e2_tau.sh       # KEY #2: tau at gamma=3,5,7, T=1.0 (+greedy control)
-                                 #   -> includes the mandatory token-exactness gate
-bash scripts/run_e3_e2e.sh       # confirmation: real tok/s spec vs AR at b1
+E75_GAMMA=5 bash scripts/run_e2_tau.sh   # KEY #2: tau at gamma=3,5,7, T=1.0 (+controls)
+                                 #   -> refuses to report tau until the lossless gate passes
+E75_GAMMA=<tau-optimal> bash scripts/run_e3_e2e.sh   # confirmation: tok/s spec vs AR
 ```
 
-`run_e1/e2/e3` are not written yet — adapt `74_draft_step_cost/scripts/run_fp8_ceiling.sh`
-(same guardrails: per-arm kernel confirmation, per-iteration values, `suspect` flag).
-Read each stage's output before launching the next; E1's result sets E3's prediction.
+Read each stage's output before launching the next: **E1's `Tq/Tp` sets E3's prediction,
+and E2's τ-optimal γ is E3's `E75_GAMMA`.**
+
+Knobs (all optional): `E75_GPU` (default 0), `E75_MODEL`, `CKPT_ROOT` (default `~/ckpts`),
+`E75_GAMMA` (E3), `E75_ITERS` (E1).
+
+Guardrails wired into the scripts, and why each exists:
+- `which_kernel.py` — `choose_mp_linear_kernel()` returns **silently**, so a log-grep
+  guardrail would be vacuous. Every E1 arm asks the chooser directly and **aborts** if it
+  gets a kernel other than the one intended (Machete auto / Marlin forced).
+- `check_lossless.py` — E2 refuses to report τ until greedy spec output is
+  **token-identical** to greedy no-spec. This catches a weight-quantized draft corrupting
+  the target's KV pool under `SHARED_KV=1`.
+- E2 warns loudly if `Draft model quantization:` never appears in the load log — that
+  would mean the "quantized" draft silently loaded as bf16.
+- E1's analyzer fits `F` and `BW_eff` and prints **residuals**: a large positive W4
+  residual means the kernel is latency/tile-bound, i.e. halving bytes bought nothing —
+  the Phase-74 fp8 failure mode, distinguished from a mere overhead penalty.
+- Run scripts **by path**. `pkill -f` matches the invoking shell's own argv; inlining a
+  script body into `bash -c` or a heredoc makes it kill itself.
+
+Validated before shipping: `preflight.sh` executed on h106 (Machete **and** dense Marlin
+both run int4); `which_kernel.py` confirmed to flip Machete→Marlin under
+`VLLM_DISABLED_KERNELS`; `analyze_e1.py` recovers a known `F`=0.500 ms and `BW`=3.35 TB/s
+from synthetic timings with zero residual. The E1/E2/E3 GPU runs themselves are unrun —
+they need `Qwen2.5-7B-Instruct`, which is not cached on h106.
 
 Scripts follow Phase-74 conventions: run **by path** (never inline the body — `pkill -f`
 matches the invoking shell's own argv and kills it), each arm logs its engaged kernel,

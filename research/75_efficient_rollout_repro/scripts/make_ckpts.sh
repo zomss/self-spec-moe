@@ -1,61 +1,64 @@
 #!/bin/bash
 # Phase 75 -- build the RTN weight-only drafter checkpoints for Qwen2.5-7B-Instruct.
-# CPU, data-free RTN, NO GPU (safe to run while GPUs are reserved).
+# CPU, data-free RTN, NO GPU (safe to run while GPUs are reserved). ~15-25 min.
 #
-# EfficientRollout §4.1: "apply lightweight RTN quantization to the FFN and QKVO
-# projection layers" -> lm_head NOT quantized. `ignore=["lm_head"]` + targets=["Linear"]
-# is exactly that set for a dense model.
+# EfficientRollout 4.1 quantizes the FFN + QKVO projections and leaves lm_head alone;
+# targets=["Linear"] + ignore=["lm_head"] is exactly that set for a dense model.
 #
-# FIDELITY NOTE: the paper says "the simplest ASYMMETRIC RTN". Our Phase-74 script uses
-# symmetric=True. Asymmetric int4 needs zero-points, which changes the kernel path
-# (uint4 + zp vs uint4b8). We therefore build BOTH and let S3 report tau for each --
-# do not silently substitute one for the other.
+# Builds THREE checkpoints:
+#   W4A16-INT4-sym   -> uint4b8   (Machete/Marlin fast path)   <- E1/E2 primary
+#   W8A16-INT8-sym   -> uint8b128 (SAME kernel family as W4)    <- clean bit-width A/B
+#   W4A16-INT4-asym  -> uint4 + zero-points                     <- the paper's "asymmetric RTN"
 #
-# Reuses the isolated llmcompressor venv from Phase 74 (built on demand, CPU-only).
+# Why int8 (not fp8) for the W8 arm: it keeps W4 and W8 on ONE kernel family, so the
+# W4-vs-W8 comparison isolates bit-width. An fp8 W8A16 arm would route to FP8-Marlin
+# behind a separate gate and confound the comparison.
+#
 # Run BY PATH: `bash scripts/make_ckpts.sh`
 set -euo pipefail
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="$(cd "$PHASE/../.." && pwd)"
-P74="$REPO/research/74_draft_step_cost"
 LC_VENV="${LC_VENV:-$HOME/.cache/eff_lc_venv}"
 SRC="${SRC_MODEL:-Qwen/Qwen2.5-7B-Instruct}"
 CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+MK="$PHASE/scripts/make_wxa16_ckpt.py"
 mkdir -p "$CKPT_ROOT"
 
 if [ ! -x "$LC_VENV/bin/python" ]; then
   echo "[ckpt] creating isolated llmcompressor venv at $LC_VENV (needs uv + PyPI)"
   uv venv --python 3.12 "$LC_VENV"
-  "$LC_VENV/bin/python" -m ensurepip --upgrade >/dev/null 2>&1 || true
-  uv pip install --python "$LC_VENV/bin/python" llmcompressor transformers torch --torch-backend=cpu
+  uv pip install --python "$LC_VENV/bin/python" llmcompressor transformers --torch-backend=cpu
 fi
 PY="$LC_VENV/bin/python"
+NAME="$(basename "$SRC")"
 
-build(){  # <script> <out-name> [extra env]
-  local script=$1 out=$2
-  if [ -d "$CKPT_ROOT/$out" ]; then echo "[ckpt] exists, skip: $CKPT_ROOT/$out"; return; fi
-  echo "[ckpt] building $out from $SRC ..."
-  SRC_MODEL="$SRC" OUT_DIR="$CKPT_ROOT/$out" "$PY" "$script"
+build(){  # <bits> <sym:1|0>
+  local bits=$1 sym=$2
+  local tag="sym"; [ "$sym" = 0 ] && tag="asym"
+  local out="$CKPT_ROOT/${NAME}-W${bits}A16-INT${bits}-${tag}"
+  if [ -d "$out" ]; then echo "[ckpt] exists, skip: $out"; return; fi
+  SRC_MODEL="$SRC" BITS="$bits" SYM="$sym" OUT_DIR="$out" "$PY" "$MK"
 }
 
-# W4A16 int4, group128, SYMMETRIC (-> uint4b8 -> Machete/Marlin fast path)
-build "$P74/scripts/make_w4a16_int4_ckpt.py" "Qwen2.5-7B-Instruct-W4A16-INT4-sym"
+build 4 1     # primary
+build 8 1     # bit-width A/B on the same kernel
+build 4 0     # paper fidelity: asymmetric RTN
 
-# W8A16 fp8 weight-only (the paper's W8 comparison row in Tab.4)
-build "$P74/scripts/make_w8a16_fp8_ckpt.py" "Qwen2.5-7B-Instruct-W8A16-FP8"
-
+echo
+echo "[ckpt] built under $CKPT_ROOT:"
+ls -d "$CKPT_ROOT/${NAME}"-W*A16-* 2>/dev/null || true
 cat <<'EOF'
 
-[ckpt] DONE. Built (symmetric) checkpoints.
+VERIFY before trusting any number:
+  - config.json: quantization_config.quant_method == "compressed-tensors"
+  - "lm_head" present in the ignore list   (paper quantizes FFN + QKVO only)
+  - safetensors size ~= 1/4 (W4) or ~1/2 (W8) of the bf16 model
 
-STILL TO DO for full paper fidelity -- the ASYMMETRIC W4 variant:
-  The paper uses asymmetric RTN. To build it, copy make_w4a16_int4_ckpt.py and set
-      symmetric=False           # in QuantizationArgs
-  then verify vLLM still routes to an int4 kernel (asym -> zero-points; check the
-  engaged kernel in the load log). If asym does NOT route to Machete/Marlin, record
-  that and report tau for the symmetric variant, flagging the deviation explicitly.
+Then check the kernel each will actually use (the chooser logs NOTHING, so ask it):
+  python scripts/which_kernel.py --bits 4                 # expect MacheteLinearKernel
+  python scripts/which_kernel.py --bits 4 --zero-points   # asym -> may differ!
+  VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel \
+    python scripts/which_kernel.py --bits 4               # expect MarlinLinearKernel
 
-VERIFY each checkpoint before use:
-  - config.json  quantization_config.quant_method == "compressed-tensors"
-  - weights are ~1/4 (W4) or ~1/2 (W8) of the bf16 size
-  - "lm_head" appears in the ignore list  (paper quantizes FFN + QKVO only)
+If the ASYM variant reports KERNEL=NONE, say so explicitly in results_repro.md and fall
+back to sym -- do NOT silently substitute one for the other.
 EOF
