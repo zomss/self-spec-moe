@@ -92,3 +92,21 @@ informative lever.
 ## Next (GPU-gated)
 `scripts/run_quant_sweep.sh` — cells 3,4,5,6 (ready) across {dense, MoE} × regimes vs bf16.
 Each arm logs the engaged backend (must match the matrix) before the number is trusted.
+
+## Reproduce on another server (handoff)
+
+Checkpoints live in `~/ckpts/` and are **NOT in git** — rebuild them locally (CPU,
+data-free RTN, no GPU):
+
+```bash
+git fetch && git checkout research/self-spec-moe && git pull
+cd research/74_draft_step_cost
+bash scripts/make_ckpt.sh        # -> ~/ckpts/Qwen3-8B-W8A16-FP8  (also makes ~/.cache/eff_lc_venv)
+bash scripts/make_int4_ckpt.sh   # -> ~/ckpts/Qwen3-8B-W4A16-INT4 (reuses the venv)
+# then, when GPUs are free (edit CUDA_VISIBLE_DEVICES in the script if not 4-7):
+bash scripts/run_quant_sweep.sh  # Items 1-3 x {dense,MoE} x regimes vs bf16
+```
+
+Notes: needs `uv` + PyPI access for the isolated venv; `VLLM_TEST_FORCE_FP8_MARLIN=1`
+is set inside the script for the fp8 weight-only arms; each arm logs the engaged
+kernel — verify it matches the matrix before trusting a number.

@@ -3,7 +3,7 @@
 # the main vLLM env) on CPU (CUDA_VISIBLE_DEVICES="" -> no reserved-GPU contention).
 set -u
 PHASE=/data/smcho/self-spec-moe/research/74_draft_step_cost
-LCVENV=/tmp/claude-1001/-data-smcho-self-spec-moe/ce0c3688-a79b-4d56-8190-24141d0e2a99/scratchpad/lc_venv
+LCVENV=${LC_VENV:-$HOME/.cache/eff_lc_venv}   # portable across servers; override via LC_VENV
 OUT_DIR="$HOME/ckpts/Qwen3-8B-W8A16-FP8"
 LOG="$PHASE/logs/make_ckpt.log"
 : > "$LOG"

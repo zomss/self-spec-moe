@@ -3,7 +3,7 @@
 # reinstall). CPU / data-free RTN -> no reserved-GPU contention.
 set -u
 PHASE=/data/smcho/self-spec-moe/research/74_draft_step_cost
-LCVENV=/tmp/claude-1001/-data-smcho-self-spec-moe/ce0c3688-a79b-4d56-8190-24141d0e2a99/scratchpad/lc_venv
+LCVENV=${LC_VENV:-$HOME/.cache/eff_lc_venv}   # portable; must match make_ckpt.sh (run it first)
 OUT_DIR="$HOME/ckpts/Qwen3-8B-W4A16-INT4"
 LOG="$PHASE/logs/make_int4_ckpt.log"; : > "$LOG"
 [ -x "$LCVENV/bin/python" ] || { echo "[ckpt] lc_venv missing; run make_ckpt.sh first" | tee -a "$LOG"; exit 1; }
