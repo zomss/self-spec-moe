@@ -42,10 +42,15 @@ echo "[e2] GATE: greedy spec must be token-identical to greedy no-spec"
 if [ ! -d "$W4" ]; then echo "[e2] ABORT: missing $W4 (run make_ckpts.sh)"; exit 1; fi
 kill_mine
 ( source "$PHASE/scripts/env_e75.sh"
+  # Bit-exact greedy requires nospec-decode and spec-verify to use IDENTICAL kernels.
+  # COMPILE_CONSISTENT only reaches the spec arm (fires inside SpeculativeConfig), so it
+  # can never make nospec match. VLLM_BATCH_INVARIANT=1 applies to BOTH -> bit-exact.
+  export VLLM_BATCH_INVARIANT=1
   "$PY" "$PHASE/scripts/check_lossless.py" --mode nospec --out "$PHASE/data/lossless_nospec.json"
 ) > "$PHASE/logs/e2_gate_nospec.log" 2>&1 || { echo "[e2] gate nospec FAILED -> logs/e2_gate_nospec.log"; exit 1; }
 kill_mine
 ( source "$PHASE/scripts/env_e75.sh"
+  export VLLM_BATCH_INVARIANT=1
   "$PY" "$PHASE/scripts/check_lossless.py" --mode spec --draft "$W4" --gamma 5 \
         --out "$PHASE/data/lossless_spec.json"
 ) > "$PHASE/logs/e2_gate_spec.log" 2>&1 || { echo "[e2] gate spec FAILED -> logs/e2_gate_spec.log"; exit 1; }

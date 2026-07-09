@@ -151,13 +151,27 @@ Measure real tok/s, spec vs no-spec, at b1 / 2k, γ = γ\*. Check it matches
   and it is the single most likely outcome to misread.
 - **PASS:** E2E > 1.0x at b1, and within ~15% of the formula's prediction.
 
-### Verdict logic (the whole phase in four lines)
-| E1 (lever) | E2 (accept) | E3 (e2e) | conclusion |
-|---|---|---|---|
-| pass | pass | pass | **weight quant is available and effective in their setting** — Phase 74's "never a win" must be scoped to sparse-MoE/long-ctx, not stated universally |
-| pass | pass | fail | lever real, **our spec harness** eats it -> fix the harness, not the method |
-| pass | fail | — | W4 is cheap but too inaccurate at T=1.0 -> their τ doesn't transfer (suspect sym-vs-asym RTN first) |
-| fail | — | — | weight quant is not convertible on this stack even when weights dominate -> run D1 |
+### Verdict logic — E1×E2 decides the lever; E3 is a SEPARATE axis
+
+The scientific question ("is weight-quant a real self-spec lever in the dense
+small-batch regime?") is answered by **E1 × E2 alone** — a *cheap* draft (E1) that stays
+*accurate* (E2). E3 does **not** test the lever; it tests how much of it OUR PIECEWISE
+draft chain delivers — a variable we already know is lossy (Phase 74: ideal +6.5% ->
+measured -2%). So read E3 as **harness quality**, never as the method verdict. Do not
+gate the lever conclusion on E3.
+
+**Lever verdict (E1 × E2) — the result that matters:**
+| E1 (draft cheap?) | E2 (draft accurate?) | conclusion |
+|---|---|---|
+| pass | pass | **The lever IS available in their regime.** Phase 74's "never a win" is thereby SCOPED (true for a sparse-MoE draft at long ctx, not universal). The byte-budget model already predicted this; E1×E2 *confirms* it. This is the likely outcome. |
+| pass | fail | W4 is cheap but too inaccurate at T=1.0 -> their τ doesn't transfer. Exhaust deviations in order: sym-vs-asym RTN, then temperature/prompt distribution. |
+| fail | — | W4 does not convert bytes->time even where weights dominate -> run D1; prefer an A100 (H100 biases against, quantified above). |
+
+**Harness-delivery axis (E3) — read ONLY after the lever verdict, never instead of it:**
+| E3 e2e vs formula | meaning |
+|---|---|
+| ≥ 0.85 × `τ/(γ·Tq/Tp+1)` | our harness delivers the lever cleanly |
+| < that | the PIECEWISE draft chain eats it — a **systems bug on OUR side**, not a refutation of the paper. The *expected* H100 outcome (Phase-74 shape). Fix the harness, don't touch the verdict. |
 
 ---
 
@@ -186,9 +200,39 @@ Fill the 2x2 that explains both papers with one roofline:
 
 Both off-diagonal cells are predictions **we have not run**. Confirming them converts
 "our result contradicts theirs" into "one law, two operating points."
-Stretch: DeepSeek-V2-Lite (MLA, tiny KV) should behave like the *dense* row — under MLA
-the KV term collapses and weight-quant should start paying on an MoE too. That is the
-sharpest falsifiable prediction this phase can make.
+### E4 (promoted from "stretch") — the MLA crossover: KV-size IS the knob
+
+This is the sharpest falsifiable prediction in the phase, and the one result neither
+paper contains. The unifying law says *a draft-only lever wins iff it cuts the binding
+term, and which term binds is set by the KV-vs-weight byte ratio.* If that's right, then
+**shrinking KV while holding "MoE + sparse-active-weight" fixed should flip weight-quant
+from parity to a win** — with no change to the drafter, only to the attention that sets
+the KV term. **MLA is exactly that knob.**
+
+Controlled A/B, two MoEs at the SAME (ctx, batch), same W4 draft lever:
+
+| MoE | attention | KV/token | KV @ (16k, b8) | predicted weight-quant result |
+|---|---|---:|---:|---|
+| **Qwen3-30B-A3B** (P74) | GQA, 48L | ~96 KiB | ~12.9 GB (KV-bound) | **parity** (measured: fp8 0.98x; W4 ceiling ~+10%) |
+| **DeepSeek-V2-Lite** (cached) | **MLA**, 27L, kv_lora=512 | ~30 KiB (~3.3x smaller) | ~3.9 GB | **predict WIN** — KV no longer binds, weight-read rises to ~50% of the byte budget, so a 4x W4 cut moves the draft/verify ratio |
+
+- **Model**: `deepseek-ai/DeepSeek-V2-Lite` (already cached, P74 inventory). MLA MoE,
+  ~2.4B active — same activated-weight class as Qwen3-30B-A3B, so *only KV differs*.
+- **Arms**: W4A16 (Machete) draft vs bf16 base vs no-spec, DP4/EP4, (16k, b8), K=K*.
+  Reuse `make_w4a16_int4_ckpt.py` on DeepSeek-V2-Lite (targets Linear, ignore lm_head
+  + the MLA up-projections if they must stay bf16 — check the config's quantization
+  compatibility first; MLA absorbs KV proj into the attention, verify it quantizes).
+- **Isolation**: run BOTH MoEs in the same session/box so the within-box
+  draft/base ratio is the only quantity compared (never cross-box tok/s).
+- **PASS (law confirmed)**: `W4_draft / bf16_draft` > 1 on DeepSeek-V2-Lite while it is
+  ~parity on Qwen3-30B-A3B. **FAIL (law wrong or incomplete)**: still parity on the MLA
+  MoE -> KV-size is not the sole crossover variable; something else (EP comm, fixed
+  overhead floor from P72/73) also binds. Either outcome is publishable.
+
+Caveat: the byte estimate assumes MLA KV = `(kv_lora_rank + qk_rope_head_dim)·L·2B` in
+the absorbed form; confirm against the actual runtime KV spec before trusting the 3.3x.
+And DeepSeek-V2-Lite's smaller active weight may raise the fixed-overhead share (P73),
+which pushes AGAINST the win — so a null result is genuinely informative, not a bug.
 
 ### OUT OF SCOPE — C6, the end-to-end RL run (veRL + GRPO, 8 GPUs, days)
 Their -19.6% rollout / -12.7% step latency needs the full framework: veRL, SimpleRL-8k,

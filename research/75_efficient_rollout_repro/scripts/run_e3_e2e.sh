@@ -36,13 +36,17 @@ run(){
   kill_mine
   ( source "$PHASE/scripts/env_e75.sh"
     export VLLM_SELF_SPEC_SHARED_KV=0
+    # E1: Marlin beats Machete at b1 decode (Tq/Tp 0.58 vs 0.72), and Marlin is the
+    # paper's kernel + the one the 1.29x prediction assumed. Force it for the draft
+    # (bf16 target has no int4 kernel, so this only affects the spec arm).
+    e75_force_marlin
     [ "$arm" = spec ] && export W7_SPEC_MODEL="$W4"
     export W7_KS="$g" W7_TEMP="$t" W7_TOPP=1.0
     export W7_BATCHES="$b" W7_ITERS=4 W7_WARMUP=1 W7_TAG="p75_e3_${tag}"
     export W7_CTX_TOKENS=2048 W7_MAX_MODEL_LEN=4096
     export W7_PROMPT_FILE="$PROMPTS" W7_CHAT=1
     export W7_OUT="$PHASE/data" W7_MASTER_PORT=$((19400 + g + b + RANDOM % 30))
-    W7_NODE_RANK=0 timeout 2400 "$PY" "$P52/scripts/w7_2node.py" "$mode" ) > "$LOG" 2>&1
+    W7_NODE_RANK=0 timeout 700 "$PY" "$P52/scripts/w7_2node.py" "$mode" ) > "$LOG" 2>&1
   echo "[e3] ${tag}: $(grep -hE 'W7-2N (nospec|K=)' "$LOG" | tail -1)"
   grep -hE 'Traceback|out of memory' "$LOG" | tail -1 | sed 's/^/       ERR: /'
   kill_mine
