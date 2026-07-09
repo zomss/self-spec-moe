@@ -30,7 +30,7 @@ bytes (5.77 GB) than a 4x-smaller dense model (14 GB); (2) KV scales as `b*ctx` 
 (48 layers) vs Qwen2.5-7B's 56 KiB.
 
 **So this phase is not "check if they are right." It is: reproduce their number in their
-regime, then measure the transfer, and publish one roofline that predicts both.** If we
+regime (narrowed scope below), and optionally measure the transfer.** If we
 reproduce them and they reproduce our inversion, the two results merge into a single
 law: *a draft-only lever wins iff it cuts the term that binds, and which term binds is
 set by (dense|MoE) x (context x batch).*
@@ -61,10 +61,10 @@ because fixed overhead and kernel-count floors are exactly what a roofline omits
 |---|---|---|---|
 | GPU | A100-80GB SXM, FP16, TP=1 | H100 (SM90) unless an A100 is free | different machine balance; C1's *shares* should survive, `Tq/Tp` will not |
 | int4 kernel | **Marlin** W4A16 | vLLM auto-selects **Machete** (ahead of Marlin in `kernels/linear/__init__.py:353`). Both **verified working** on h106 by `preflight.sh`. | not a forced deviation: run **both** as a controlled A/B. Force the paper's kernel with `VLLM_DISABLED_KERNELS=MacheteLinearKernel` (or `--linear-backend`). Always LOG the engaged kernel. |
-| PTX | — | the `cudaErrorUnsupportedPtxVersion` seen in Phase 74 is confined to the **fp8 MoE** Marlin repack (`marlin_utils_fp8.py:270`); **dense int4 Marlin runs fine** | still gate with S0 on any new box — a different driver/torch pair may break more |
+| PTX | — | the `cudaErrorUnsupportedPtxVersion` seen in Phase 74 is confined to the **fp8 MoE** Marlin repack (`marlin_utils_fp8.py:270`); **dense int4 Marlin runs fine** | still gate with E0 on any new box — a different driver/torch pair may break more |
 | RTN | "simplest **asymmetric** RTN" | `make_w4a16_int4_ckpt.py` uses `symmetric=True` | asym needs zero-points; test both, report τ for each |
 | quantized layers | FFN + QKVO (LM-head NOT quantized) | script targets all `Linear`, `ignore=["lm_head"]` | equivalent for a dense model |
-| drafter refresh | RTN re-quantized every training step | static prebuilt ckpt | equivalent for a static benchmark; only matters in S6 |
+| drafter refresh | RTN re-quantized every training step | static prebuilt ckpt | equivalent for a static benchmark; only matters for the (out-of-scope) RL run |
 | draft KV | drafter computes its own KV | our `SHARED_KV=1` aliases the target's KV tensors | **changes τ** (draft attends exact target KV). Treat as a controlled knob, not a default |
 | sampling | rollout **temperature 1.0**, top-p 1.0, group 8, max 8k | harness was greedy | `W7_TEMP`/`W7_TOPP` added to `w7_2node.py` (default 0.0 = prior phases byte-identical) |
 
@@ -76,50 +76,107 @@ Measurement hygiene inherited from Phase 74 (non-negotiable):
 - Report per-iteration values. If a cell is bimodal or trips the harness `suspect` flag
   (rel-std > 15%), quote the median and explain the stall — never the bare mean.
 
-## Stages (cheap -> expensive; each gates the next)
+## SCOPE (narrowed) — is the weight-quant LEVER available in their setting?
 
-### S0 — Preflight (minutes, 1 GPU). **Hard gate.**
-`scripts/preflight.sh`. Verifies: uv venv + vllm import; driver/toolkit; downloads
-Qwen2.5-7B-Instruct; builds a tiny W4A16 layer and runs it, catching
-`cudaErrorUnsupportedPtxVersion`; prints the engaged MP-linear kernel.
-**GATE:** if no int4 W4A16 kernel runs on this box, STOP — the repro is impossible here.
-Report the driver/torch pair and move to a box whose driver matches the torch CUDA build.
+We are **not** reproducing the framework (no veRL, no RL training, no SD toggle, no
+adaptive γ). We are testing one thing: **does weight-only quantization actually make a
+self-draft cheap enough to win, in the dense small-batch regime where they claim it
+does?** Everything else in the paper only decides *when* to switch that lever on.
 
-### S1 — C1: decode-time breakdown (1 GPU, ~1h)
-Two independent estimates for Qwen2.5-7B, FP16, TP=1, full attention, at their exact
-cells `(2k,b8) (2k,b4) (4k,b2) (8k,b1)`:
-- **(a) analytic** byte model (reuse Phase-74's; it reproduced the README's 96 KiB/token
-  independently) -> should match Tab.3 nearly exactly, since Tab.3 *is* a simulation.
-- **(b) measured** kineto trace of one decode step, bucketed FFN / QKVO / Attn / LM-head
-  / **other (launch + nonlinear + overhead)**.
+Their own speedup model factors the claim into exactly two measurable quantities:
 
-**PASS (C1):** analytic reproduces Tab.3 within ±3 pts. **Finding either way:** the gap
-between (a) and (b) is the paper's blind spot; Phase 72 measured ~2400 tiny kernels at
-b1, so predict a large `other` bucket that the roofline assigns to nothing.
+```
+speedup = τ / (γ · (Tq/Tp) + 1)
+```
 
-### S2 — C2: the *real* `Tq/Tp` (1 GPU, ~2h)
-Build W4A16 + W8A16 RTN ckpts of Qwen2.5-7B-Instruct (CPU, data-free; `scripts/make_ckpts.sh`).
-Measure draft-forward `Tq` and target-forward `Tp` at (2k, b1) with the same clock.
-**PASS (C2):** we reproduce their *idealized* 0.360/0.573 from the roofline formula.
-**Expected finding:** measured `Tq/Tp` > idealized. Quantify the overhead gap — that is
-the honest cost of a W4 drafter and the direct analogue of Phase 74's fp8 result.
+- `Tq/Tp` — the **systems** half: does W4 really make the draft forward cheap?
+- `τ` — the **statistical** half: does W4 stay accurate enough to keep acceptance?
 
-### S3 — C3 + the deferred temperature question (1 GPU, ~3h). **The linchpin.**
-Self-spec: target = bf16 Qwen2.5-7B-Instruct, draft = W4A16 (then W8A16) ckpt, γ∈{3,5,7}.
-Prompts: SimpleRL-8k-hard-style math, chat template. **temperature 1.0, top_p 1.0**
-(`W7_TEMP=1.0`), and a greedy control (`W7_TEMP=0.0`) to isolate the temperature effect
-Phase 74 deferred. Cross with `SHARED_KV ∈ {0,1}` and `symmetric ∈ {sym,asym}`.
+So there are **two key experiments** (E1, E2), one confirmation (E3), and one gate (E0).
+The old S1/S4/S5/S6 are demoted to *diagnostics and optional contrasts* (D1-D3) — run only on
+mismatch, or for the cross-regime story.
+
+### Calibration: the byte model reproduces the paper, and predicts our number
+
+`T(arm) = F + bytes(arm)/BW`, quantizing FFN+QKVO only (lm_head stays fp16, per §4.1):
+
+| F (ms) | A100 W4 | **H100 W4** | A100 W8 | H100 W8 |
+|---:|---:|---:|---:|---:|
+| 0.0 (idealized) | 0.314 | 0.314 | 0.542 | 0.542 |
+| **0.5** | **0.359** | 0.386 | 0.572 | 0.590 |
+| 1.0 | 0.398 | 0.444 | 0.599 | 0.629 |
+| 2.0 | 0.464 | 0.533 | 0.643 | 0.689 |
+
+The paper's `Tq/Tp` = **0.360** (W4) / 0.573 (W8) and its 1.85x are reproduced by this
+model on **A100 at F ≈ 0.5 ms**. Note the asymmetry: **H100 is the HARDER test** —
+higher bandwidth shrinks the byte term, so the (GPU-independent) fixed overhead is a
+larger share and the ratio worsens. Prefer an A100. On H100 predict `Tq/Tp` ≈ 0.39-0.49
+and E2E ≈ 1.5-1.8x, not 1.85x. **Under-reproducing on H100 is expected and is not a
+refutation** — report F alongside the ratio.
+
+### E0 — Preflight (2 min). **Hard gate.** `scripts/preflight.sh`
+An int4 W4A16 kernel must execute on-device. Verified working on h106 (Machete **and**
+dense Marlin). If it fails, the box cannot run this phase; that is an environment
+result, not a scientific one.
+
+### E1 — KEY #1: measured `Tq/Tp` (1 GPU, ~1-2 h)
+Standalone decode-step latency, Qwen2.5-7B-Instruct, TP=1, **b1, ctx 2k** (their point),
+for **bf16 / W8A16 / W4A16**, x kernel ∈ {Machete (auto), Marlin (`VLLM_DISABLED_KERNELS=
+MacheteLinearKernel`, the paper's)}. This isolates the lever from the spec harness.
+- Also solve for **F and effective bandwidth** from the bf16/W8/W4 triple: three
+  measured times, known byte counts, two unknowns (`F`, `BW_eff`) — overdetermined, so
+  the residual tells you whether the W4 kernel is *converting bytes into time* at all.
+  That is precisely the Phase-74 failure mode (fp8 halved bytes and bought nothing).
+- **PASS:** `Tq/Tp(W4)` ≤ 0.50 on H100 (≤ 0.40 on A100) -> the lever exists.
+- **FAIL:** ≥ 0.70 -> weight quant is not available in practice on this stack, even in
+  their regime. That would be the headline, and it would need `D1` to explain it.
+
+### E2 — KEY #2: acceptance `τ` (1 GPU, ~2-3 h)
+Self-spec: target = bf16 Qwen2.5-7B-Instruct, draft = W4A16 ckpt (then W8A16),
+γ ∈ {3,5,7}, b1, 2k, **temperature 1.0, top_p 1.0** (`W7_TEMP=1.0`) on math prompts,
+plus a greedy control (`W7_TEMP=0.0`). This is also the accept-vs-temperature de-risk
+Phase 74 deferred — every prior accept number we have is greedy.
 - **Correctness gate (mandatory):** at `W7_TEMP=0`, spec output must be **token-identical**
-  to no-spec. Losslessness comes from rejection sampling, but this also catches a
-  `SHARED_KV` draft corrupting the target's KV pool.
-- **PASS (C3):** τ within ±0.3 of 3.59/5.18/6.70 (W4) and 3.94/5.87/7.79 (W8).
+  to no-spec. Catches a `SHARED_KV` draft corrupting the target's KV pool.
+- Controlled knobs: `SHARED_KV ∈ {0,1}`; RTN `sym` vs `asym` (paper uses **asymmetric**).
+- **PASS:** τ within ±0.3 of **3.59 / 5.18 / 6.70** (W4) and 3.94/5.87/7.79 (W8).
 
-### S4 — C5: the SD/AR crossover (1 GPU, ~2h)
-Sweep `B ∈ {1,2,4,8,16,32,64}` x `S ∈ {2k,8k}` at γ*, measuring SD vs AR.
-**PASS (C5):** SD wins at small B and loses at large B, with a crossover.
-Cross-check: Phase 74 independently measured 0.86x at b64 on the MoE. Same law.
+### E3 — Confirmation: end-to-end spec vs AR (1 GPU, ~1-2 h)
+Measure real tok/s, spec vs no-spec, at b1 / 2k, γ = γ\*. Check it matches
+`τ / (γ·(Tq/Tp) + 1)` using the **measured** E1 ratio.
+- **The trap:** E1 measures a standalone, CUDA-graphed forward. The real self-spec draft
+  chain runs PIECEWISE/eager (Phase 35/72), so E1's `Tq/Tp` is a **lower bound** —
+  optimistic. If **E1 passes but E3 fails**, the lever exists in the kernel but the spec
+  harness eats it. That is exactly the Phase-74 fp8 story (ideal +6.5% -> measured -2%),
+  and it is the single most likely outcome to misread.
+- **PASS:** E2E > 1.0x at b1, and within ~15% of the formula's prediction.
 
-### S5 — the transfer (the payoff; 4 GPUs, ~4h)
+### Verdict logic (the whole phase in four lines)
+| E1 (lever) | E2 (accept) | E3 (e2e) | conclusion |
+|---|---|---|---|
+| pass | pass | pass | **weight quant is available and effective in their setting** — Phase 74's "never a win" must be scoped to sparse-MoE/long-ctx, not stated universally |
+| pass | pass | fail | lever real, **our spec harness** eats it -> fix the harness, not the method |
+| pass | fail | — | W4 is cheap but too inaccurate at T=1.0 -> their τ doesn't transfer (suspect sym-vs-asym RTN first) |
+| fail | — | — | weight quant is not convertible on this stack even when weights dominate -> run D1 |
+
+---
+
+## Optional / diagnostic (do NOT run by default)
+
+### D1 — decode-time breakdown. **Run only if E1 misses its prediction.**
+The debug tool for a failed E1, not a headline. Kineto-trace one decode step of
+Qwen2.5-7B at (2k,b1) and bucket into FFN / QKVO / Attn / LM-head / **other (launch +
+nonlinear)**. Compare to their Tab.3 (`FFN 78.0 / QKVO 11.2 / Attn 3.2 / LMhead 7.5` at
+8k,b1). Their table is captioned **"Simulation-based"**, so the analytic side is
+arithmetic and will match; the *measured* `other` bucket is what a roofline omits and is
+where a failed E1 will be hiding (Phase 72: ~2400 tiny kernels at b1).
+
+### D2 — SD/AR crossover vs batch. **Only if you want their toggle rationale.**
+Sweep `B ∈ {1,2,4,8,16,32,64}` at γ\*. Expect SD to win small-B and lose large-B.
+Phase 74 already measured 0.86x at b64 on the MoE, independently — same law, so this
+mostly re-confirms known physics. Out of scope for "is the lever available."
+
+### D3 — the transfer (4 GPUs, ~4h). **Optional, but this is the paper-grade result.**
 Fill the 2x2 that explains both papers with one roofline:
 
 | | weight-quant (W4) | window (sparse-attn) |
@@ -133,46 +190,58 @@ Stretch: DeepSeek-V2-Lite (MLA, tiny KV) should behave like the *dense* row — 
 the KV term collapses and weight-quant should start paying on an MoE too. That is the
 sharpest falsifiable prediction this phase can make.
 
-### S6 — C6: end-to-end RL (8 GPUs, days). **Gate on S1-S4.**
-veRL + GRPO, SimpleRL-8k-hard, Qwen2.5-7B, train batch 128, group 8, T=1.0, max response
-8k, ~50-100 steps, with the SD toggle (S4 crossover) and adaptive γ. Without the toggle
-you will not see the gain.
-**PASS (C6):** rollout latency -19.6%, step latency -12.7%, quant overhead 1.3-2.6 s/step.
-Note their gain is modest — the idealized 1.85x becomes ~1.24x on rollout once overheads
-and the toggle are real. Budget accordingly; do not start S6 to "see if SD is good."
+### OUT OF SCOPE — C6, the end-to-end RL run (veRL + GRPO, 8 GPUs, days)
+Their -19.6% rollout / -12.7% step latency needs the full framework: veRL, SimpleRL-8k,
+the SD toggle, adaptive γ. **We are not reproducing this.** Note for context: the
+idealized 1.85x becomes ~1.24x on rollout once overheads and the toggle are real, so the
+E2E number tests the *framework*, not the lever. E1-E3 test the lever.
 
 ## Decision criteria
 
-- **Reproduced:** S1-S3 land within tolerance -> EfficientRollout stands, and Phase 74's
-  "quant is never a win" must be **scoped** to "on a sparse-MoE draft at long context,"
-  not stated universally. Update `74/results_draft_cost.md` accordingly.
-- **Reproduced + transfer confirmed (S5):** publish the unified roofline. This is the
-  strongest outcome and the intended paper contribution.
-- **Not reproduced (τ or Tq/Tp far off):** first suspect *our* deviations, in this order:
-  Machete-vs-Marlin, sym-vs-asym RTN, SHARED_KV, temperature, prompt distribution. Only
-  after all five are controlled is a discrepancy with the paper reportable.
-- **S0 fails:** the box cannot run int4; this is an environment result, not a scientific
-  one. Do not report any number from it.
+- **E1+E2+E3 pass:** the weight-quant lever **is** available and effective in their
+  setting. Then Phase 74's "quant is never a self-spec win" must be **scoped** — it is
+  true for a sparse-MoE draft at long context, not universally. Update
+  `74/results_draft_cost.md` and `74/README.md`, which currently state it too broadly.
+- **E1 passes, E3 fails:** the lever is real; our self-spec harness eats it (PIECEWISE
+  draft chain). That is a *systems* bug on our side, not a refutation of the paper.
+- **E1 fails:** weight quant does not convert bytes into time on this stack even when
+  weights dominate. Run D1 before saying a word about it — and prefer an A100 first,
+  since H100 biases against reproduction.
+- **Before reporting ANY discrepancy with the paper**, exhaust our five deviations in
+  this order: (1) H100-vs-A100 (predicted, quantified above), (2) Machete-vs-Marlin,
+  (3) sym-vs-asym RTN, (4) `SHARED_KV`, (5) temperature + prompt distribution.
+- **E0 fails:** the box cannot run int4; an environment result, not a scientific one.
+  Report no number from it.
 
 ## Expected next artifact
 
-`results_repro.md`: the C1-C6 table (paper value | our value | verdict | deviation),
-the measured-vs-simulated breakdown gap, and the S5 2x2. Then either the unified-roofline
-paper section, or a scoping correction to Phase 74.
+`results_repro.md`: an E1/E2/E3 table (paper value | predicted-for-our-GPU | measured |
+verdict | deviation), the fitted `F` and `BW_eff`, and the verdict-logic row we landed
+on. Then either a scoping correction to Phase 74, or — if D3 is run — the unified
+roofline figure.
 
 ## Runbook (fresh server)
+
+Prefer an **A100** (H100 biases against reproduction — see the calibration table).
 
 ```bash
 git fetch && git checkout research/self-spec-moe && git pull
 cd research/75_efficient_rollout_repro
-bash scripts/preflight.sh                 # HARD GATE. reads: int4 kernel + PTX + models
-bash scripts/make_ckpts.sh                # CPU, data-free RTN -> ~/ckpts/Qwen2.5-7B-{W4A16,W8A16}*
-# then S1..S4, one stage at a time, reading results before launching the next:
-bash scripts/run_s1_breakdown.sh
-bash scripts/run_s2_tqtp.sh
-bash scripts/run_s3_tau.sh                # the linchpin; includes the token-exactness gate
-bash scripts/run_s4_crossover.sh
+
+bash scripts/preflight.sh        # E0. HARD GATE: an int4 W4A16 kernel must execute
+bash scripts/make_ckpts.sh       # CPU, data-free RTN -> ~/ckpts/Qwen2.5-7B-Instruct-W{4,8}A16-*
+                                 #   (also: build the ASYMMETRIC W4 variant -- see its output)
+
+bash scripts/run_e1_tqtp.sh      # KEY #1: measured Tq/Tp, bf16|W8|W4 x Machete|Marlin
+                                 #   -> also fits F and BW_eff. STOP and read this.
+bash scripts/run_e2_tau.sh       # KEY #2: tau at gamma=3,5,7, T=1.0 (+greedy control)
+                                 #   -> includes the mandatory token-exactness gate
+bash scripts/run_e3_e2e.sh       # confirmation: real tok/s spec vs AR at b1
 ```
+
+`run_e1/e2/e3` are not written yet — adapt `74_draft_step_cost/scripts/run_fp8_ceiling.sh`
+(same guardrails: per-arm kernel confirmation, per-iteration values, `suspect` flag).
+Read each stage's output before launching the next; E1's result sets E3's prediction.
 
 Scripts follow Phase-74 conventions: run **by path** (never inline the body — `pkill -f`
 matches the invoking shell's own argv and kills it), each arm logs its engaged kernel,
