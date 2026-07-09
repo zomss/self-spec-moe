@@ -9,6 +9,7 @@ from typing_extensions import override
 
 from vllm import envs
 from vllm.config import VllmConfig
+from vllm.config.quantization import resolve_quantization_config
 from vllm.config.utils import replace
 from vllm.logger import init_logger
 from vllm.model_executor.model_loader import get_model
@@ -75,6 +76,15 @@ class DraftModelProposer(SpecDecodeBaseProposer):
             quant_model_config = copy.copy(spec.draft_model_config)
             if not isinstance(quant_model_config.hf_overrides, dict):
                 quant_model_config.hf_overrides = {}
+            # Online-quant shorthands ("fp8_per_block", "fp8_per_channel", ...)
+            # carry no checkpoint config; they must be desugared into
+            # quantization_config, which EngineArgs only does for the TARGET.
+            # Returns None for checkpoint-based names ("fp8"), leaving those
+            # unchanged.
+            quant_model_config.quantization_config = resolve_quantization_config(
+                quant_model_config.quantization,
+                quant_model_config.quantization_config,
+            )
             quant_config = VllmConfig.get_quantization_config(
                 quant_model_config, load_config
             )
