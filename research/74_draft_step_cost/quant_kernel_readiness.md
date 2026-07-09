@@ -44,9 +44,17 @@ the W8A16 config, `oracle/fp8.py:511-522`; all other backends are W8A8). Inheren
 > MoE backend`, on-the-fly from bf16, no checkpoint. Two caveats for anyone using this
 > matrix: (1) reaching it from a *speculative* draft required a fix — online-quant
 > shorthands were never desugared for the draft's ModelConfig (`draft_model.py`); (2)
-> **cells 1-2 (FP8-Marlin) are UNRUNNABLE on h106**: `cudaErrorUnsupportedPtxVersion`
-> (driver 580.65.06 vs CUDA-13.0 torch build). bf16 and FI-CUTLASS ship SM90 cubins and
-> run. Result: native fp8 is **bf16 parity**, not a win — see `results_draft_cost.md`.
+> **cell 2 (MoE FP8-Marlin) is UNRUNNABLE on h106**: `cudaErrorUnsupportedPtxVersion`
+> raised at load in `marlin_utils_fp8.py:270 repack_weight` →
+> `prepare_fp8_moe_layer_for_marlin` (driver 580.65.06 vs CUDA-13.0 torch build). bf16
+> and FI-CUTLASS ship SM90 cubins and run. Result: native fp8 is **bf16 parity**, not a
+> win — see `results_draft_cost.md`.
+>
+> **Correction to an earlier draft of this note**, which said "cells 1-2 are unrunnable":
+> the PTX failure is confined to the **fp8 MoE** Marlin repack. **Dense Marlin works on
+> h106** — a dense int4 W4A16 `marlin_gemm` executes cleanly (Phase-75 `preflight.sh`),
+> as does Machete. Cell 1 (dense weight-only fp8 Marlin) was never actually run here, so
+> no claim should have been made about it.
 
 ## Readiness summary
 

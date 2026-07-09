@@ -267,8 +267,15 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             prompts = [_prompt_bank[i % len(_prompt_bank)] for i in range(batch)]
         else:
             prompts = [f"{BASE_PROMPT} the year {1900 + i}." for i in range(batch)]
+        # Phase 75: W7_TEMP/W7_TOPP expose RL-rollout sampling (EfficientRollout
+        # measures block efficiency at temperature 1.0, not greedy). Default 0.0
+        # keeps every prior phase's greedy measurement byte-identical.
         sp = SamplingParams(
-            temperature=0.0, max_tokens=out_len, ignore_eos=True, seed=0,
+            temperature=float(os.environ.get("W7_TEMP", "0.0")),
+            top_p=float(os.environ.get("W7_TOPP", "1.0")),
+            max_tokens=out_len,
+            ignore_eos=os.environ.get("W7_IGNORE_EOS", "1") == "1",
+            seed=0,
         )
         t0 = time.perf_counter()
         outs = llm.generate(prompts, sp, use_tqdm=False)
