@@ -39,6 +39,15 @@ the dequant tax (η_d). There is **no native weight-only fp8 kernel on SM90** �
 (only FP8-Marlin, `__init__.py:337-340`; Machete is int-only) or MoE (only MARLIN maps to
 the W8A16 config, `oracle/fp8.py:511-522`; all other backends are W8A8). Inherent, expected.
 
+> **UPDATE (measured, h106).** Cell 4 (MoE W8A8 block-fp8 → FlashInfer-CUTLASS) is now
+> **verified engaged at runtime** on the self-spec DRAFT: `Using FLASHINFER_CUTLASS Fp8
+> MoE backend`, on-the-fly from bf16, no checkpoint. Two caveats for anyone using this
+> matrix: (1) reaching it from a *speculative* draft required a fix — online-quant
+> shorthands were never desugared for the draft's ModelConfig (`draft_model.py`); (2)
+> **cells 1-2 (FP8-Marlin) are UNRUNNABLE on h106**: `cudaErrorUnsupportedPtxVersion`
+> (driver 580.65.06 vs CUDA-13.0 torch build). bf16 and FI-CUTLASS ship SM90 cubins and
+> run. Result: native fp8 is **bf16 parity**, not a win — see `results_draft_cost.md`.
+
 ## Readiness summary
 
 - **Items 2 & 3 (cells 3,4,5,6) = READY NOW.** Native fp8, on-the-fly from bf16, **no
@@ -86,6 +95,14 @@ informative lever.
   on MoE** (sparse → weight not binding). Dequant tax caps it; W4 > fp8.
 - Item 2 (W8A8): **wins compute-bound** (prefill / large batch) on both; in memory-bound
   decode reduces to the read cut only.
+    - **SCORED on the MoE self-spec draft (h106): prediction FAILED.** Native block-fp8
+      W8A8 (FI-CUTLASS) is bf16 **parity** at the compute-bound cell (2k, b64: 0.99x of
+      the bf16 draft), not a win. Why the prediction missed: the *machine* is
+      compute-bound at b64, but the **draft's MoE is not** — 64 tokens × top-8 over 128
+      experts ≈ 4 tokens/expert, i.e. many tiny latency-bound GEMMs, so 2× MAC peak buys
+      nothing. Regime labels must be applied to the *kernel that runs*, not the engine.
+      Untested for the plain (non-spec) forward and for dense Qwen3-8B, where the GEMMs
+      are large and the prediction may still hold.
 - Item 3 (KV fp8): **wins KV-bound** (small-batch long-ctx decode), more on MoE (bigger KV
   share) than dense; helps the *system* globally (not a self-spec ratio lever).
 

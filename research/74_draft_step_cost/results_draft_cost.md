@@ -22,6 +22,115 @@ fallback + "between-forward overhead" were red herrings (trace: gap overhead ~4%
 Caveats: b8, single-node NVLink, ~3-5% slope noise on some cells; higher batch
 and the exact K*(ctx) curve still to map.
 
+## RESOLVED — the true fp8 ceiling (native FI-CUTLASS) is measured: still PARITY, never a win
+
+This settles the CORRECTION block below. That block was **right that the fp8 ceiling
+had never been measured, and wrong about why.** Two independent findings:
+
+**(a) The experiment was impossible as written, for a code reason.** `W7_DRAFT_QUANT=
+fp8_per_block` crashed at load: `OnlineQuantizationConfig.__init__() missing 1
+required positional argument: 'args'`. Online-quant shorthands must be desugared by
+`resolve_quantization_config`, which `EngineArgs` runs **only for the target**; the
+draft's `ModelConfig` (built by `SpeculativeConfig`) never did, so `get_quant_config`
+fell through to the no-arg `quant_cls()`. Fixed in `draft_model.py::
+_create_draft_vllm_config` (one call). No-op for checkpoint names like `fp8` (the
+resolver returns `None`, and the field was already `None`), so every per-tensor number
+in this doc is unaffected.
+
+**(b) With that fixed, native fp8 engages — and lands at bf16 parity-or-worse in ALL
+THREE regimes** (memory-bound 16k, KV-bound 32k, compute-bound b64).
+`quantization=fp8_per_block` → `Using FLASHINFER_CUTLASS Fp8 MoE backend` (confirmed in
+every fp8 log; target stays bf16, so it remains a strictly **draft-only, lossless**
+lever). Measured **on h106** (NOT the cloud-9ezI3Q box of the rows below — cross-box
+tok/s is not comparable, so nospec + bf16 base were re-measured in-session; they
+reproduce the old box to ~3%). Qwen3-30B-A3B, DP4/EP4, b8 (b64 for the compute cell),
+K per cell (K*=3 at 32k), greedy, clean (batch-invariant OFF, profiler OFF):
+
+| cell | arm | tok/s | vs nospec | vs bf16 base | accept |
+|---|---|---:|---:|---:|---:|
+| 16k, b8, K=2 (mem-bound) | nospec | 614.5 ±10.2 | 1.00x | — | — |
+| 16k, b8 | base bf16 | 620.6 ±9.0 | 1.01x | 1.00x | 2.993 |
+| 16k, b8 | **fp8_per_block** | **611 (median, ITERS=8)** | 0.99x | **0.98x** | 2.927 |
+| 32k, b8, K=3 (more KV-bound) | nospec | 464.9 ±7.4 | 1.00x | — | — |
+| 32k, b8 | base bf16 | 430.1 ±7.7 | 0.93x | 1.00x | 3.999 |
+| 32k, b8 | **fp8_per_block** | **415.1 ±1.4** | 0.89x | **0.97x** | 3.885 |
+| 2k, b64, K=2 (compute-bound) | nospec | 4036.7 ±14.2 | 1.00x | — | — |
+| 2k, b64 | base bf16 | 3459.9 ±35.0 | 0.86x | 1.00x | 2.999 |
+| 2k, b64 | **fp8_per_block** | **3413.7 ±58.8** | 0.85x | **0.99x** | 2.927 |
+
+Three cells, three regimes, one answer: `fp8/bf16` = **0.98 / 0.97 / 0.99** — never above
+parity. **The long-context escape hatch fails here too.** At 32k the draft is *more*
+KV-bound and *less* fixed-overhead-bound, so if weight-read or MACs were ever going to
+bind, this is where fp8 would show it; instead fp8 is slightly *worse* (0.97x, and with
+a 0.3% rel-std it is outside noise), and accept slips 3.999→3.885. This is the same
+shape as the global KV-quant result (0.95x@16k → 0.89x@32k), reached by a different
+mechanism: a draft-only lever on a non-binding axis cannot buy a ratio, and its small
+accept cost then makes it a net negative as K grows.
+
+Statistic convention: unimodal arms are `mean ±std` over iters; the fp8 16k arm is
+**bimodal** (see caveat) so it is quoted as a **median**, and its two ratios are
+computed median-vs-median (base median 623.0, nospec median 615.2) so the comparison is
+like-for-like. Quoting its mean instead (552.3) gives 0.89x vs base — still a non-win,
+so the verdict does not depend on the choice.
+
+**Verdict: "fp8 ≤ bf16" SURVIVES, now tested against the real ceiling** — native
+fp8×fp8 tensor-core MoE is parity at the memory-bound and compute-bound cells and
+slightly *worse* at 32k. The CORRECTION block's hope ("could turn parity→a modest win
+at low batch") is refuted, in the one configuration that could have delivered it.
+
+**But the mechanism section below ("WHY fp8 ≤ bf16") is now WRONG on its key premise.**
+It claims *"No in-tree fp8×fp8 MoE path is reachable here: ... FlashInfer TRTLLM/CUTLASS
+SM100-only."* **False.** FI-CUTLASS supports `(kFp8Static128BlockSym, kFp8Dynamic128Sym)`
+on **exactly SM90** (`flashinfer_cutlass_moe.py:168-175`), and the oracle front-loads it
+for Hopper block-fp8 with `ep_size>1` (`oracle/fp8.py:160-170`). No checkpoint, no
+DeepGEMM. It ran. So Marlin's deficit was a **kernel artifact** (dequant tax + bf16
+MACs), NOT evidence that fp8 cannot help. Within-box `fp8_draft / bf16_draft` ratios
+(box-independent to first order) isolate the kernel:
+
+| fp8 kernel | cell | fp8/bf16 | note |
+|---|---|---:|---|
+| TRITON per-tensor W8A8 | 16k b8 | 0.65 | activation-quant + a2a scale-gather tax |
+| MARLIN W8A16 (dequant) | 2k b64 | 0.88 | bf16 MACs + dequant tax, no compute gain |
+| **FI-CUTLASS block-fp8 (native)** | 16k b8 | **0.98** | real fp8 MACs, no dequant |
+| **FI-CUTLASS block-fp8 (native)** | 32k b8 | **0.97** | real fp8 MACs, no dequant |
+| **FI-CUTLASS block-fp8 (native)** | 2k b64 | **0.99** | real fp8 MACs, no dequant |
+
+(TRITON/MARLIN rows are cloud-9ezI3Q; FI-CUTLASS rows are h106. Only the *within-box*
+spec-vs-its-own-bf16-base ratio is compared, never raw tok/s across boxes. Marlin could
+not be re-measured on h106 — see caveat.)
+
+**The corrected mechanism (and it STRENGTHENS the unifying principle):** native fp8
+halves the weight bytes *and* doubles MAC peak, and buys ~0 in every regime. So fp8's
+failure is not "H100 has no reachable fp8 MoE kernel" — it is that **the draft is bound
+by neither weight-read nor MAC throughput**, exactly the "wrong axis" row of the
+unifying table. Sharper still: at b64/2k the *machine* is compute-bound, but the
+**draft's** MoE is not — 64 tokens × top-8 over 128 experts ≈ 4 tokens/expert, i.e.
+many tiny latency-bound GEMMs. "Compute-bound" described the **verify** (b·(K+1) = 192
+tokens), never the draft. That is why doubling MAC peak changes nothing.
+
+**Caveat — a real artifact, reported not averaged away.** fp8_per_block at 16k is
+**bimodal**, not noisy: per-iter tok/s `[611, 449, 614, 449, 616, 452, 610, 616]`
+(ITERS=8), `long_s` snapping to 2.67s or 3.28s — a discrete ~0.60s stall on ~40% of
+long decodes; `short_s` steady ~1.0s. Decode is greedy over identical prompts each
+iter, so the work is identical → this is a **systems stall** (suspect FlashInfer
+autotune / workspace realloc), not accept variance. bf16 base at the same cell is
+unimodal `[628, 619, 609, 627]`; fp8 at b64 is unimodal too, and **fp8 at 32k is
+razor-flat** `[417, 416, 414, 414, 415, 414]` (±1.4). So the stall is **specific to the
+16k cell, not a property of the FI-CUTLASS path** — which makes an autotune/workspace
+trigger keyed to that shape the leading hypothesis. Hence the table quotes the
+**median (611)**; the mean (552.3 ±84.7) is a mixture of two modes, and the ITERS=4 run
+tripped the harness's own `suspect` guardrail (rel-std 15.5%). Either statistic — 0.98x
+or 0.89x — is a non-win, so the verdict is robust to the stall. Open item.
+
+**Caveat — Marlin could not be re-measured here.** On h106 the Marlin MoE kernel dies
+with `cudaErrorUnsupportedPtxVersion` ("PTX compiled with an unsupported toolchain";
+driver 580.65.06 vs a CUDA-13.0 torch build). bf16 and FI-CUTLASS ship SM90 cubins and
+run fine. So the Marlin rows stay cross-box and are compared only as within-box ratios
+(above), never as raw tok/s.
+
+Data: `data/w72n_p74_fc*`, logs `logs/fc*`, runners `scripts/run_fp8_ceiling{,2}.sh`,
+table: `scripts/analyze_fp8_ceiling.py`.
+
 ## QUANT OPTIMIZATION (pre-experiment): weight-quant ceiling = Marlin, and it's PARITY not a win
 
 > **CORRECTION (later, agent-verified): Marlin was NOT the fp8 ceiling.** All the fp8
@@ -37,9 +146,15 @@ and the exact K*(ctx) curve still to map.
 > batch. `fp8_per_channel` (llm-compressor FP8_DYNAMIC shape) is a second native option.
 > DeepGEMM is redundant. A calibrated block-fp8 checkpoint only marginally improves
 > draft ACCEPT (better scales) + load time. `--quantization fp8` = per-tensor = the
-> taxed path (what "Marlin ceiling" below measured). NEXT (when GPUs free): measure
-> `W7_DRAFT_QUANT=fp8_per_block` at 16k/32k b8 vs bf16 base. The rows below stand as
+> taxed path (what "Marlin ceiling" below measured). The rows below stand as
 > the *per-tensor* fp8 story; they are NOT the fp8 ceiling.
+>
+> **DONE — see "RESOLVED: the true fp8 ceiling" above.** `fp8_per_block` →
+> FLASHINFER_CUTLASS measured at 16k/b8 and 2k/b64: **parity with bf16 in both**
+> (0.98x / 0.99x of the bf16 draft). This block's routing analysis was correct; its
+> prediction ("could turn parity→a modest win at low batch") was **wrong**. Running it
+> first required fixing a plumbing bug (online-quant shorthands were never desugared
+> for the draft model config).
 
 Before running the quant-only K×context map, optimize each quant draft strategy to
 its max. **Weight-quant (fp8) is now done.** All @ 16k, b8, K=2, no window, clean
@@ -224,14 +339,25 @@ for cap≥90) — the load-time "GPU does not have native support for FP8" is a 
 generic Marlin string, NOT literally true here. The auto **TRITON W8A8** path *does*
 hit fp8 tensor cores (`tl.dot` on fp8 a & b) — but it pays per-forward activation
 quant (`scaled_fp8_quant`) + an extra EP a2a **scale all-gather** (`naive_dp_ep.py:55`),
-which at the low-batch draft dwarf the tiny GEMM → **0.65× (383)**. No in-tree
+which at the low-batch draft dwarf the tiny GEMM → **0.65× (383)**. ~~No in-tree
 fp8×fp8 MoE path is reachable here: VLLM_CUTLASS stripped (`allow_vllm_cutlass=False`),
-DeepGEMM off + needs block-fp8 ckpt, FlashInfer TRTLLM/CUTLASS SM100-only.
+DeepGEMM off + needs block-fp8 ckpt, FlashInfer TRTLLM/CUTLASS SM100-only.~~
 
-**Net:** on H100-no-DeepGEMM there is no fp8 config that gives the draft native-fp8
-compute AND avoids the activation-quant/comm tax. Marlin trades the tax for zero
-compute speedup (bf16 MACs); Triton gets the compute speedup but pays the tax. Either
-way fp8 ≤ bf16.
+> **RETRACTED (measured).** The struck sentence is FALSE. **FlashInfer-CUTLASS supports
+> block-fp8 on exactly SM90** (`flashinfer_cutlass_moe.py:168-175`) and the oracle
+> auto-selects it for Hopper block-fp8 at `ep_size>1` (`oracle/fp8.py:160-170`); it
+> needs no checkpoint and no DeepGEMM. It was measured (see "RESOLVED" at top) and gives
+> the draft genuine fp8×fp8 MACs with no dequant tax and no per-tensor scale a2a. It is
+> still only **parity** with bf16 — but for a different reason than this section argues.
+
+**Net (superseded — see "RESOLVED" at top):** this section concluded "no fp8 config
+gives native-fp8 compute AND avoids the tax." A config that does both exists
+(`fp8_per_block`→FI-CUTLASS) and is *still* parity. So the operative reason fp8 ≤ bf16
+is **not** kernel availability but **binding axis**: the draft is bound by neither
+weight-read nor MAC throughput, so neither halving weight bytes (Marlin) nor doubling
+MAC peak (FI-CUTLASS) moves it. Marlin's extra deficit at high batch (bf16 MACs +
+dequant tax) remains correctly diagnosed below; it was a kernel artifact, not the
+reason fp8 fails.
 
 ### Empirical GEMM microbench (benchmark_marlin_p74.py, Qwen expert/dense shapes)
 

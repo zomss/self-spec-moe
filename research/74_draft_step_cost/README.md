@@ -1,5 +1,14 @@
 # Phase 74 — make the self-spec DRAFT step cheap enough to be useful
 
+> **STATUS (see `results_draft_cost.md`).** The plan below predicted weight-quant and
+> KV-quant would be the "direct fixes" for sub-problem A. **Both are now measured and
+> neither is a self-spec win.** Weight-quant: tested to its true ceiling (native fp8
+> tensor-core MoE, `fp8_per_block`→FlashInfer-CUTLASS) — parity or worse at 16k / 32k /
+> b64. KV-quant: global under SHARED_KV, so it lifts the no-spec baseline more than the
+> draft (0.95x@16k → 0.89x@32k). The win lever is **window** (draft-only KV cut), which
+> is the only lever that is both draft-only *and* on the binding axis. Read the
+> sub-problem table below as the phase's original hypothesis, not its conclusion.
+
 Source phases: 62 (window-KV draft), 64 (16k E2E LOSS = pure propose-path cost),
 65 (per-step overhead fixes), 66 (shared-KV / batch residency), 72 (kernel trace
 = latency floor), 73 (draft forward is FIXED-OVERHEAD-dominated, amortizes with
