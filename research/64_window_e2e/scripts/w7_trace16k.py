@@ -69,13 +69,18 @@ def worker(rank, local_rank):
         enforce_eager=False,
         disable_log_stats=False,
         max_num_batched_tokens=MNB,
-        speculative_config={
+    )
+    # W7_NOSPEC=1 -> plain decode (no draft) for a same-harness no-spec trace.
+    if os.environ.get("W7_NOSPEC", "0") != "1":
+        kwargs["speculative_config"] = {
             "method": "draft_model",
             "model": MODEL,
             "num_speculative_tokens": K,
             "draft_tensor_parallel_size": 1,
-        },
-    )
+        }
+        if os.environ.get("W7_DRAFT_QUANT", "").strip():
+            kwargs["speculative_config"]["quantization"] = \
+                os.environ["W7_DRAFT_QUANT"].strip()
     if rank == 0:
         kwargs["profiler_config"] = {
             "profiler": "torch",

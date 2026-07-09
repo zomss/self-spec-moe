@@ -128,6 +128,12 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
     mnb = os.environ.get("W7_MAX_NUM_BATCHED", "").strip()
     if mnb:
         kwargs["max_num_batched_tokens"] = int(mnb)
+    # Phase 74: optional KV-cache quant (residency lever / arm 2). Default unset
+    # -> "auto" (bf16 KV), byte-identical to prior phases. Bounded-lossy: this
+    # quantizes the pool that verify reads too.
+    kvq = os.environ.get("W7_KV_CACHE_DTYPE", "").strip()
+    if kvq:
+        kwargs["kv_cache_dtype"] = kvq
     # Phase 57: EAGLE spec methods auto-enable async scheduling, whose
     # batch-queue path deadlocks the `sample_tokens` RPC under DP16 multi-step
     # (K>1) on the 2-node fabric (self-spec draft_model runs it OFF already).
@@ -148,6 +154,15 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             spec_cfg["draft_tensor_parallel_size"] = tp
             if DRAFT_QUANT:
                 spec_cfg["quantization"] = DRAFT_QUANT
+            # Phase 74: fused vocab-parallel local argmax draft sampling (avoids
+            # full-vocab logits materialization between chain forwards).
+            if os.environ.get("W7_LOCAL_ARGMAX", "0") == "1":
+                spec_cfg["use_local_argmax_reduction"] = True
+            # Phase 74: force the DRAFT's fp8 MoE backend (auto picks TRITON w/o
+            # DeepGEMM; flashinfer_* may be faster).
+            _mb = os.environ.get("W7_DRAFT_MOE_BACKEND", "").strip()
+            if _mb:
+                spec_cfg["moe_backend"] = _mb
         # Phase 57-A1: W7_SPEC_SCHEDULE="s:e:k,s:e:k,..." activates vLLM's
         # dynamic-K-by-batch scheduler (num_speculative_tokens_per_batch_size),
         # the ONLY tuned EAGLE baseline the serving path supports (EAGLE here

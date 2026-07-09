@@ -3,6 +3,15 @@
 
 WEIGHT_SHAPES = {
     "ideal": [[4 * 256 * 32, 256 * 32]],
+    # Qwen3-30B-A3B [K, N]: hidden 2048, moe_intermediate 768, 32 q-heads x128,
+    # 4 kv-heads. expert-w13 [2048,1536], expert-w2 [768,2048] (the MoE GEMMs),
+    # qkv [2048,5120], o [4096,2048] (dense attn projections). Phase 74.
+    "Qwen/Qwen3-30B-A3B/TP1": [
+        [2048, 1536],
+        [768, 2048],
+        [2048, 5120],
+        [4096, 2048],
+    ],
     "mistralai/Mistral-7B-v0.1/TP1": [
         [4096, 6144],
         [4096, 4096],
