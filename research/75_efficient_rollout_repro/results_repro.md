@@ -173,6 +173,69 @@ at long context,"** not universally — the dense small-batch cell is a clean wi
 
 **Deviations from the paper (all recorded above):** H100 not A100; Marlin forced (beats
 Machete at b1); W4-sym not asym (asym won't load); PIECEWISE harness; filler-prose 2k
-context. **Open:** W8-sym near-zero accept (int8 Machete suspect); E4/MLA crossover
-(DeepSeek-V2-Lite, KV 30 KiB/token = 3.2× smaller — predicts weight-quant starts paying
-on an MLA MoE); the asym-RTN vLLM unpack bug.
+context. **Open:** W8-sym near-zero accept (int8 Machete suspect); the asym-RTN vLLM unpack bug.
+
+## E4 — MLA crossover: strong prediction REFUTED, law REFINED (the interesting outcome)
+
+Test: does shrinking KV (MLA) flip weight-only quant from parity (GQA MoE) to a win?
+Metric = decode-step ratio `fp8-marlin / bf16` (weight-only fp8 = pure read cut, dequant),
+via slope, EP4. `ninja` must be on PATH (MLA JIT-compiles a kernel; Qwen3 didn't).
+
+**b8, 16k:**
+
+| MoE | attention | KV/tok | fp8/bf16 ratio |
+|---|---|---:|---:|
+| DeepSeek-V2-Lite | **MLA** | 30 KiB | **0.962** |
+| Qwen3-30B-A3B | GQA | 96 KiB | 0.971 |
+
+MLA is lower — **directionally** as predicted — but the gap is **0.9% (within noise)** and
+BOTH are near-parity. The strong prediction (MLA → clear win) is **refuted at b8**.
+
+**Why (the refinement):** at 16k b8 EP4 the decode step (~5.7 ms) is ~8× the actual
+weight+KV read (~0.7 ms) — it is dominated by **EP a2a comm + fixed overhead + the small
+active-weight compute**, NOT memory read. So halving the (intrinsically small, 2.4–3.3 B
+active) weight barely helps, and shrinking KV doesn't change that. **The unified law needs
+a third term:** weight-quant wins only where weight-read is a LARGE ABSOLUTE fraction of the
+step — true for DENSE (14 GB weight read, no EP comm → E1–E3 win 1.21×), false for a SPARSE
+MoE (small active weight + EP comm dominates), **MLA or not**. KV-size is *a* variable, not
+*the* crossover variable; active-weight-magnitude and EP-comm also bind.
+
+**b1, 16k (memory-bound regime — the fairer test):**
+
+| MoE | attention | fp8/bf16 ratio |
+|---|---|---:|
+| DeepSeek-V2-Lite | **MLA** | **1.081** |
+| Qwen3-30B-A3B | GQA | 1.122 |
+
+At b1 BOTH ratios are **> 1 (fp8 is SLOWER)**: per-expert M ≈ 0.06 tokens, so the MoE
+decode is deeply latency/launch-bound and Marlin's dequant/align overhead dominates the
+tiny (~4 ms) step, swamping the (minuscule) weight-read saving. MLA is again lower than
+GQA (1.081 < 1.122).
+
+### E4 verdict — strong prediction REFUTED, direction confirmed, law sharpened
+
+**Across BOTH regimes, MLA < GQA (0.962<0.971 at b8, 1.081<1.122 at b1) — a robust but
+tiny ~1–4% directional signal — yet weight-quant NEVER wins on the MoE** (b8 parity, b1
+loss). Shrinking KV 3.2× (MLA) does *not* flip weight-quant to a win.
+
+**The sharpened law:** weight-quant self-spec wins iff the **weight-read is a LARGE fraction
+of the draft's decode step**. That fraction is set by **active-weight magnitude**, and only
+secondarily by KV. DENSE 7B reads 14 GB/step (the whole model) → weight-read dominates at
+low batch → **WIN 1.21× (E1–E3)**. SPARSE MoE reads only its ~2.4–3.3 B active weight →
+weight-read is a *small* slice regardless of KV (the step is dominated by KV, EP a2a comm,
+and fixed/dequant overhead) → **no win, MLA or not (E4)**. So KV-size is *a* variable, not
+*the* crossover variable; **active-weight magnitude is the real one**, and MLA cannot
+rescue a sparse MoE because its active weight is intrinsically small. The lever that *does*
+win on the MoE is **window** (cuts the KV term that actually binds) — P74's 1.16–1.34×.
+
+**Unified picture (final):**
+
+| draft | weight-read share | binding term | weight-quant | winning lever |
+|---|---|---|---|---|
+| dense 7B, b1 (E1–E3) | **large** (14 GB) | weight-read | **WIN 1.21×** | weight-quant |
+| MLA MoE, b8/b1 (E4) | small | KV + comm + overhead | 0.96 / 1.08 (no) | (window) |
+| GQA MoE, b8 (P74) | small | KV-read | 0.97 (no) | **window** (1.16–1.34×) |
+
+One law, three operating points: *a draft-only quant lever wins iff it cuts a term that is
+both binding AND a large fraction of the step.* Weight-quant satisfies this only on dense;
+on sparse MoE the winning lever is window (KV), and MLA does not change that.
