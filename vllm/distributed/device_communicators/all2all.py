@@ -336,9 +336,11 @@ class AgRsAll2AllManager(All2AllManagerBase):
         elif self_spec_local_route_enabled():
             # CORRECT comm-free local routing: no gather, use local tokens
             # as-is (router already masked to resident experts upstream).
+            logger.info_once("SELF_SPEC LOCAL_ROUTE engaged: dispatch gather skipped")
             gathered_tensors = tensors_to_gather
             gathered_per_rank = per_rank_tensors
         elif envs.VLLM_SELF_SPEC_SKIP_A2A:
+            logger.info_once("SELF_SPEC SKIP_A2A engaged: dispatch gather tiled locally")
             gathered_tensors = self._skip_gatherv(
                 tensors_to_gather, sizes, dist_group.rank_in_group
             )
