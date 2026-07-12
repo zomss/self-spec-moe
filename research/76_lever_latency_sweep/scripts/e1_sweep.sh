@@ -135,6 +135,11 @@ dense)
   run_arm d_kvq       tp1 "$E76_DENSE" --kv-cache-dtype fp8_e4m3
   run_arm d_win       tp1 "$E76_DENSE" --hf-overrides "$DWIN"
   run_arm d_win128    tp1 "$E76_DENSE" --hf-overrides "$DWIN128"
+  if [ -e "$E76_W4" ]; then    # 80-E1 combo arms
+    A_ENV="VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel" \
+      run_arm d_w4win tp1 "$E76_W4" --hf-overrides "$DWIN"
+  fi
+  run_arm d_kvqwin    tp1 "$E76_DENSE" --kv-cache-dtype fp8_e4m3 --hf-overrides "$DWIN"
   run_arm d_bf16dummy tp1 "$E76_DENSE" --load-format dummy
   run_arm d_skip50    tp1 "$E76_DENSE" --load-format dummy --hf-overrides '{"num_hidden_layers": 14}'
   A_CELLS="1:2048 1:32512 32:2048 32:32512" \
@@ -147,6 +152,9 @@ moe)
   run_arm m_kvq       dp4 "$E76_MOE" --kv-cache-dtype fp8_e4m3
   run_arm m_win       dp4 "$E76_MOE" --hf-overrides "$MWIN"
   run_arm m_win128    dp4 "$E76_MOE" --hf-overrides "$MWIN128"
+  A_ENV="VLLM_SELF_SPEC_LOCAL_ROUTE=1" run_arm m_winlr dp4 "$E76_MOE" --hf-overrides "$MWIN"   # 80-E1
+  A_ENV="VLLM_SELF_SPEC_LOCAL_ROUTE=1" \
+    run_arm m_winlrq dp4 "$E76_MOE" --quantization fp8 --moe-backend marlin --hf-overrides "$MWIN"
   run_arm m_bf16dummy dp4 "$E76_MOE" --load-format dummy
   run_arm m_skip50    dp4 "$E76_MOE" --load-format dummy --hf-overrides '{"num_hidden_layers": 24}'
   A_ENV="VLLM_SELF_SPEC_LOCAL_ROUTE=1" run_arm m_localroute dp4 "$E76_MOE"
@@ -158,6 +166,8 @@ mla)
   run_arm ds_fp8block  dp4 "$E76_MLA" --trust-remote-code --quantization fp8_per_block
   run_arm ds_win       dp4 "$E76_MLA" --trust-remote-code --hf-overrides "$SWIN"
   run_arm ds_bf16dummy dp4 "$E76_MLA" --trust-remote-code --load-format dummy
+  run_arm ds_skip125q dp4 "$E76_MLA" --trust-remote-code --load-format dummy \
+      --hf-overrides '{"num_hidden_layers": 24}' --quantization fp8 --moe-backend marlin   # 80-E1
   run_arm ds_skip50    dp4 "$E76_MLA" --trust-remote-code --load-format dummy --hf-overrides '{"num_hidden_layers": 14}'
   # L1c pair: BOTH arms pinned to FLASHMLA (fp8-KV flips the backend, E0 finding 2)
   A_ENV="VLLM_ATTENTION_BACKEND=FLASHMLA" run_arm ds_bf16fmla dp4 "$E76_MLA" --trust-remote-code
