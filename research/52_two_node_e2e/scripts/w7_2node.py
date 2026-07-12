@@ -156,6 +156,12 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             spec_cfg["draft_tensor_parallel_size"] = tp
             if DRAFT_QUANT:
                 spec_cfg["quantization"] = DRAFT_QUANT
+            # Phase 81: per-draft attention backend (e.g. TRITON_ATTN, whose
+            # seq-len-independent decode grid may be CG-replay-safe where FA3
+            # freezes -- the chain-CG A/B).
+            _ab = os.environ.get("W7_SPEC_ATTN_BACKEND", "").strip()
+            if _ab:
+                spec_cfg["attention_backend"] = _ab
             # Phase 74: fused vocab-parallel local argmax draft sampling (avoids
             # full-vocab logits materialization between chain forwards).
             if os.environ.get("W7_LOCAL_ARGMAX", "0") == "1":
