@@ -35,3 +35,30 @@ H2 (win×skip destructive) architecture-conditional (MLA only); H3
 (composition portability tracks 77) CONFIRMED in an unexpected direction —
 MLA is the MOST skip-tolerant single-lever arch AND the most destructive
 composer at long ctx.
+
+## E1 — combo cost: gate FAIL (15.6%) with a clean decomposition; measured combos are GOLD
+
+`data/e1_combo_predictions.json` (registered) vs measured (runner combo arms):
+
+| cell | R̂ | R measured | err | reading |
+|---|---|---|---|---|
+| d_kvqwin b8/16k, b32/16k | 0.799 / 0.521 | 0.772 / 0.548 | **+3.5% / −4.9%** | **falsification cell PASSES**: the model correctly priced kvq+win as cost-moot (≈ window alone) — matching E0's accept-only rescue |
+| d_w4win b8/16k, b32/16k | 0.505 / 0.353 | **0.435 / 0.311** | +14-16% | the dense combo bet CONFIRMED and exceeded — measured R 0.311; composed with β 0.917 → ~1.76× roofline at b32/16k |
+| m_winlr / m_winlrq b32/32k | 0.740 / 0.696 | **0.357 / 0.353** | ~+100% | model refinement found: for SWA arms the h (KV-management) term should scale with ATTENDED length, not allocated ctx (FA3 sliding window skips out-of-window block-table work). winlr ≈ win alone at NVLink — the comm term is too small here; the triple's value stays parked at the comm-bound fabric |
+| ds_skip125q b8/16k, b32/32k | 0.978 / 0.892 | 1.003 / 1.304 | −2.5% / −32% | MLA quant-combo cost DOESN'T deliver (fp8-Marlin κ on MLA at scale — V3's per-arch κ lesson again); MLA's OFF region survives its best challenger |
+
+**Also found: the over-capacity detector false-positives on fresh big-batch
+arms** — admission queueing during the COLD warm-pass prefill trips the
+"Waiting:" grep (d_w4win/d_kvqwin b32/16k flagged with visibly clean, tight
+decode TPOTs). Detector should only inspect the measured-run segments.
+Runner-backlog item; the two cells were kept by manual inspection.
+
+**Consequences for E2 (the search):**
+1. Use MEASURED combo R where available; the term-edit R̂ stays the default
+   for unmeasured combos on dense (validated ±16%) but is conservative for
+   windowed MoE combos pending the h-term refinement.
+2. Strategy insight already visible: at NVLink, window-ALONE beats the
+   comm-free triple (β 0.98 vs 0.83 at ~equal R) — the triple's regime is
+   the deferred comm-bound fabric, exactly as the original thesis said.
+3. The dense map gains its first composed winner: **w4win at b32/16k,
+   measured R 0.311, composed ~1.76× roofline** (vs 1.56× single-lever v3).
