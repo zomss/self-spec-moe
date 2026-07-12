@@ -1,0 +1,89 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "tag": "e1_spcoas_b32_c16k",
+  "dp": 1,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 4,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "6": [
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 4,
+        "warmup": 1,
+        "long_s_mean": 2.70021561475005,
+        "short_s_mean": 1.517940411256859,
+        "long_s_all": [
+          2.6834845900302753,
+          2.769545732997358,
+          2.683666759985499,
+          2.664165375987068
+        ],
+        "short_s_all": [
+          1.5293374650646,
+          1.5008036030922085,
+          1.5325198229402304,
+          1.5091007539303973
+        ],
+        "decode_s_mean": 1.182275203493191,
+        "decode_s_std": 0.05766889074404985,
+        "tok_s_mean": 3470.411930898901,
+        "tok_s_std": 161.42733798866354,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 5.679774011299435,
+        "num_accepted": 20708.0,
+        "num_drafted": 26550.0,
+        "num_drafts": 4425.0
+      }
+    ]
+  },
+  "this_k": 6,
+  "results": [
+    {
+      "batch": 32,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 4,
+      "warmup": 1,
+      "long_s_mean": 2.70021561475005,
+      "short_s_mean": 1.517940411256859,
+      "long_s_all": [
+        2.6834845900302753,
+        2.769545732997358,
+        2.683666759985499,
+        2.664165375987068
+      ],
+      "short_s_all": [
+        1.5293374650646,
+        1.5008036030922085,
+        1.5325198229402304,
+        1.5091007539303973
+      ],
+      "decode_s_mean": 1.182275203493191,
+      "decode_s_std": 0.05766889074404985,
+      "tok_s_mean": 3470.411930898901,
+      "tok_s_std": 161.42733798866354,
+      "out_tokens_decode": 4096,
+      "full_ntoks": 5120,
+      "suspect": false,
+      "accept_len": 5.679774011299435,
+      "num_accepted": 20708.0,
+      "num_drafted": 26550.0,
+      "num_drafts": 4425.0
+    }
+  ]
+}

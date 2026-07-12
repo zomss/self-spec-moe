@@ -1,0 +1,107 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  execute_context_6(88)_generation_1(7)         0.00%       0.000us         0.00%       0.000us       0.000us     108.490ms        24.91%     108.490ms     108.490ms             1  
+                                       _vllm_fa3_C::fwd         3.72%      26.620ms         6.02%      43.100ms      90.545us      90.098ms        20.68%      90.098ms     189.281us           476  
+void cutlass::device_kernel<flash::enable_sm90_or_la...         0.00%       0.000us         0.00%       0.000us       0.000us      84.443ms        19.39%      84.443ms     215.416us           392  
+                  execute_context_1(13)_generation_0(0)         0.00%       0.000us         0.00%       0.000us       0.000us      70.892ms        16.28%      70.892ms      70.892ms             1  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      43.071ms         9.89%      43.071ms      69.921us           616  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      40.401ms         9.28%      40.401ms      17.814us          2268  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      29.699ms         6.82%      29.699ms      39.284us           756  
+                                               aten::mm         2.03%      14.532ms         2.84%      20.321ms     290.303us      25.712ms         5.90%      26.874ms     383.917us            70  
+               execute_context_12(174)_generation_7(49)         0.00%       0.000us         0.00%       0.000us       0.000us      25.272ms         5.80%      25.272ms      25.272ms             1  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      24.982ms         5.74%      24.982ms      22.305us          1120  
+               execute_context_3(44)_generation_23(161)         0.00%       0.000us         0.00%       0.000us       0.000us      23.439ms         5.38%      23.439ms      23.439ms             1  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      19.151ms         4.40%      19.151ms      17.099us          1120  
+               execute_context_5(73)_generation_19(133)         0.00%       0.000us         0.00%       0.000us       0.000us      18.393ms         4.22%      18.393ms      18.393ms             1  
+               execute_context_2(30)_generation_21(147)         0.00%       0.000us         0.00%       0.000us       0.000us      17.930ms         4.12%      17.930ms      17.930ms             1  
+void flash::flash_fwd_splitkv_kernel<Flash_fwd_kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      17.340ms         3.98%      17.340ms      12.386us          1400  
+                execute_context_3(43)_generation_12(84)         0.00%       0.000us         0.00%       0.000us       0.000us      15.639ms         3.59%      15.639ms      15.639ms             1  
+                  execute_context_0(0)_generation_9(63)         0.00%       0.000us         0.00%       0.000us       0.000us      12.994ms         2.98%      12.994ms      12.994ms             1  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      11.964ms         2.75%      11.964ms      30.520us           392  
+                  execute_context_0(0)_generation_6(42)         0.00%       0.000us         0.00%       0.000us       0.000us      11.014ms         2.53%      11.014ms      11.014ms             1  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us      10.584ms         2.43%      10.584ms      23.624us           448  
+                  execute_context_0(0)_generation_3(21)         0.00%       0.000us         0.00%       0.000us       0.000us       9.571ms         2.20%       9.571ms       9.571ms             1  
+                      nvjet_tst_384x8_64x4_2x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       9.015ms         2.07%       9.015ms     360.616us            25  
+void cutlass::device_kernel<flash::enable_sm90_or_la...         0.00%       0.000us         0.00%       0.000us       0.000us       8.216ms         1.89%       8.216ms      48.904us           168  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us       7.990ms         1.83%       7.990ms      17.835us           448  
+void at::native::elementwise_kernel<128, 4, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us       7.019ms         1.61%       7.019ms       2.785us          2520  
+                     nvjet_tst_384x24_64x4_2x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       6.982ms         1.60%       6.982ms     367.481us            19  
+                    nvjet_tst_192x112_64x5_1x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       5.801ms         1.33%       5.801ms     103.594us            56  
+void vllm::reshape_and_cache_flash_kernel<__nv_bfloa...         0.00%       0.000us         0.00%       0.000us       0.000us       5.293ms         1.22%       5.293ms       2.700us          1960  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us       5.198ms         1.19%       5.198ms      20.626us           252  
+                     nvjet_tst_384x16_64x4_2x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       4.745ms         1.09%       4.745ms     364.981us            13  
+          triton_poi_fused_marlin_gemm_mul_silu_slice_1         0.00%       0.000us         0.00%       0.000us       0.000us       4.209ms         0.97%       4.209ms       2.505us          1680  
+      triton_red_fused_fused_add_rms_norm_marlin_gemm_2         0.00%       0.000us         0.00%       0.000us       0.000us       4.129ms         0.95%       4.129ms       2.549us          1620  
+void cutlass::device_kernel<flash::FlashAttnFwdCombi...         0.00%       0.000us         0.00%       0.000us       0.000us       4.082ms         0.94%       4.082ms       7.290us           560  
+void marlin::Marlin<1125899906909960l, 1125899907892...         0.00%       0.000us         0.00%       0.000us       0.000us       4.047ms         0.93%       4.047ms      48.182us            84  
+                                     triton_poi_fused_3         0.00%       0.000us         0.00%       0.000us       0.000us       3.807ms         0.87%       3.807ms       2.014us          1890  
+      triton_red_fused_fused_add_rms_norm_marlin_gemm_0         0.00%       0.000us         0.00%       0.000us       0.000us       3.797ms         0.87%       3.797ms       2.260us          1680  
+              nvjet_tst_256x72_64x5_2x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       3.295ms         0.76%       3.295ms      58.833us            56  
+              nvjet_tst_192x128_64x5_1x2_h_bz_coopB_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.998ms         0.69%       2.998ms     107.062us            28  
+              nvjet_tst_144x192_64x5_2x1_v_bz_coopB_TNN         0.00%       0.000us         0.00%       0.000us       0.000us       2.847ms         0.65%       2.847ms     101.668us            28  
+              nvjet_tst_192x144_64x5_4x1_v_bz_coopB_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.828ms         0.65%       2.828ms     101.015us            28  
+              nvjet_tst_384x104_64x3_4x1_v_bz_coopA_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.801ms         0.64%       2.801ms     100.030us            28  
+void flash::flash_fwd_splitkv_combine_kernel<Flash_f...         0.00%       0.000us         0.00%       0.000us       0.000us       2.763ms         0.63%       2.763ms       4.934us           560  
+                     nvjet_tst_192x72_64x6_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.725ms         0.63%       2.725ms      97.307us            28  
+                     nvjet_tst_192x48_64x7_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.718ms         0.62%       2.718ms      97.067us            28  
+                     nvjet_tst_192x16_64x8_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.691ms         0.62%       2.691ms      96.120us            28  
+                     nvjet_tst_192x24_64x7_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.671ms         0.61%       2.671ms      95.389us            28  
+                     nvjet_tst_384x32_64x4_2x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       2.211ms         0.51%       2.211ms     368.426us             6  
+void flash::flash_fwd_splitkv_combine_kernel<Flash_f...         0.00%       0.000us         0.00%       0.000us       0.000us       1.945ms         0.45%       1.945ms       4.631us           420  
+void flash::flash_fwd_splitkv_combine_kernel<Flash_f...         0.00%       0.000us         0.00%       0.000us       0.000us       1.876ms         0.43%       1.876ms       4.466us           420  
+             nvjet_tst_128x16_64x11_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.726ms         0.40%       1.726ms      30.829us            56  
+                                            aten::copy_         0.77%       5.483ms        23.90%     171.070ms     213.837us       1.666ms         0.38%       1.672ms       2.090us           800  
+             nvjet_tst_112x128_64x7_2x1_v_bz_splitK_TNN         0.00%       0.000us         0.00%       0.000us       0.000us       1.644ms         0.38%       1.644ms      58.712us            28  
+              nvjet_tst_256x64_64x5_2x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.640ms         0.38%       1.640ms      58.566us            28  
+             nvjet_tst_128x136_64x6_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.602ms         0.37%       1.602ms      57.222us            28  
+             nvjet_tst_128x104_64x7_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.595ms         0.37%       1.595ms      56.958us            28  
+              nvjet_tst_128x72_64x8_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.510ms         0.35%       1.510ms      53.943us            28  
+                  _C_cache_ops::reshape_and_cache_flash         4.05%      29.011ms         4.61%      33.031ms      69.392us       1.470ms         0.34%       1.470ms       3.088us           476  
+              nvjet_tst_128x48_64x9_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.436ms         0.33%       1.436ms      51.278us            28  
+             nvjet_tst_128x24_64x11_4x1_v_bz_splitK_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.407ms         0.32%       1.407ms      50.267us            28  
+                      triton_poi_fused_mul_silu_slice_1         0.00%       0.000us         0.00%       0.000us       0.000us       1.333ms         0.31%       1.333ms       4.760us           280  
+                                  cudaStreamIsCapturing         0.11%     807.292us         0.11%     807.292us       1.028us       1.293ms         0.30%       1.293ms       1.648us           785  
+                                  Lazy Function Loading         0.02%     158.020us         0.02%     158.020us      52.673us       1.162ms         0.27%       1.162ms     387.316us             3  
+                nvjet_tst_128x72_64x8_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us       1.155ms         0.27%       1.155ms      20.620us            56  
+                                           aten::argmax         1.07%       7.655ms         1.25%       8.956ms     113.363us       1.151ms         0.26%       1.151ms      14.566us            79  
+void cublasLt::splitKreduce_kernel<32, 16, int, floa...         0.00%       0.000us         0.00%       0.000us       0.000us       1.114ms         0.26%       1.114ms       3.615us           308  
+                  triton_red_fused_fused_add_rms_norm_2         0.00%       0.000us         0.00%       0.000us       0.000us     990.942us         0.23%     990.942us       2.915us           340  
+void flash::prepare_varlen_num_blocks_kernel<1, fals...         0.00%       0.000us         0.00%       0.000us       0.000us     899.613us         0.21%     899.613us       3.102us           290  
+                     nvjet_tst_128x72_64x8_2x4_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     868.063us         0.20%     868.063us      15.501us            56  
+                  triton_red_fused_fused_add_rms_norm_0         0.00%       0.000us         0.00%       0.000us       0.000us     772.734us         0.18%     772.734us       2.760us           280  
+               nvjet_tst_384x64_64x3_2x1_v_bz_coopB_TNN         0.00%       0.000us         0.00%       0.000us       0.000us     757.310us         0.17%     757.310us     378.655us             2  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     713.695us         0.16%     713.695us      11.895us            60  
+                                        cudaGraphLaunch         6.43%      46.014ms         6.43%      46.014ms      84.274us     621.951us         0.14%     621.951us       1.139us           546  
+                nvjet_tst_128x80_64x8_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     573.503us         0.13%     573.503us      20.482us            28  
+                                       cuLaunchKernelEx         0.78%       5.586ms         0.80%       5.744ms      34.191us     552.928us         0.13%       1.715ms      10.208us           168  
+                nvjet_tst_112x64_64x9_2x1_v_bz_bias_TNN         0.00%       0.000us         0.00%       0.000us       0.000us     545.631us         0.13%     545.631us      19.487us            28  
+                         Memcpy DtoD (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     532.544us         0.12%     532.544us       2.636us           202  
+                nvjet_tst_64x136_64x8_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     519.456us         0.12%     519.456us      18.552us            28  
+                     nvjet_tst_96x64_64x10_4x1_v_bz_TNN         0.00%       0.000us         0.00%       0.000us       0.000us     476.832us         0.11%     476.832us      17.030us            28  
+               nvjet_tst_64x104_64x10_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     466.047us         0.11%     466.047us      16.645us            28  
+                nvjet_tst_64x72_64x12_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     439.741us         0.10%     439.741us      15.705us            28  
+                nvjet_tst_64x48_64x15_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     421.407us         0.10%     421.407us      15.050us            28  
+                                            aten::index         0.31%       2.202ms         0.77%       5.523ms      52.103us     417.119us         0.10%     553.310us       5.220us           106  
+void at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us     413.471us         0.09%     413.471us      14.767us            28  
+                nvjet_tst_64x24_64x16_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     411.423us         0.09%     411.423us      14.694us            28  
+                nvjet_tst_64x16_64x16_4x1_v_bz_bias_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     405.920us         0.09%     405.920us      14.497us            28  
+              nvjet_tst_192x176_64x4_2x1_v_bz_coopB_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     395.679us         0.09%     395.679us     395.679us             1  
+              nvjet_tst_192x160_64x4_2x1_v_bz_coopB_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     392.672us         0.09%     392.672us     392.672us             1  
+                                              aten::sub         0.27%       1.964ms         0.49%       3.510ms      13.986us     389.278us         0.09%     389.278us       1.551us           251  
+              nvjet_tst_192x144_64x5_2x1_v_bz_coopB_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     387.647us         0.09%     387.647us     387.647us             1  
+                     nvjet_tst_64x112_64x9_4x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     385.472us         0.09%     385.472us      13.767us            28  
+               nvjet_tst_384x88_64x3_2x1_v_bz_coopA_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     384.735us         0.09%     384.735us     384.735us             1  
+                     nvjet_tst_384x48_64x3_2x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     373.375us         0.09%     373.375us     373.375us             1  
+                     nvjet_tst_64x56_64x14_4x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     370.560us         0.09%     370.560us      13.234us            28  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     359.647us         0.08%     359.647us      18.929us            19  
+                     nvjet_tst_64x72_64x12_4x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     359.456us         0.08%     359.456us      12.838us            28  
+void at::native::vectorized_elementwise_kernel<2, at...         0.00%       0.000us         0.00%       0.000us       0.000us     353.631us         0.08%     353.631us       1.668us           212  
+                     nvjet_tst_64x40_64x16_4x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     352.287us         0.08%     352.287us      12.582us            28  
+                                           aten::gather         0.12%     849.220us         0.20%       1.418ms      22.877us     344.415us         0.08%     344.415us       5.555us            62  
+                     nvjet_tst_64x24_64x16_4x2_h_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     343.936us         0.08%     343.936us      12.283us            28  
+                     nvjet_tst_64x24_64x16_4x1_v_bz_TNT         0.00%       0.000us         0.00%       0.000us       0.000us     331.392us         0.08%     331.392us      11.835us            28  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 715.908ms
+Self CUDA time total: 435.584ms
+

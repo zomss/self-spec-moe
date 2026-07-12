@@ -138,3 +138,41 @@ idea landed at the cycle boundary, and the same design point SparseSpec's
 the paper headline in one step. Implementation surface: proposer step-0
 input plumbing (GPU token feed) + deferred output processing in the
 harness/runner path.
+
+## E2b (in progress) — the wall is the RAGGED STEP-0, and the fix exists but doesn't engage
+
+Fine-profiler (regions, VLLM_SELF_SPEC_PROFILE_OUT — note: earlier "CPU
+orchestration" attribution was WRONG in detail; the region profile names it):
+
+| region | ms/cycle (taxed) | note |
+|---|---|---|
+| **draft_forward_first (step-0)** | **52.9** | THE wall (~20 ms clean): ragged K+1-token re-ingest, mode=PIECEWISE, uniform=False |
+| verify | 34.6 | |
+| draft_forward (chain step) | 3.73 | the E1b fix holding |
+| cpu_reject_parse | 0.09 | CPU_ORCH's fast parse engaged — parse SOLVED |
+| everything else | ≤1.5 | |
+
+Knob results: CPU_ORCH alone 3265 (wash — parse was only part of the
+boundary); +async 3470 ±161 (≈ baseline). So the earlier "cycle-boundary CPU"
+reading conflated parse (real, now fixed) with THE step-0 forward cost.
+
+**The pre-built fix**: P67's compacted step-0
+(`VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE`) — under shared KV, step-0 needs
+only a q=1 decode of the appended token (accepted tokens' KV already written
+by verify). P67 shelved it (saving ~2.4 ms vs accept −0.04 in THEIR config);
+here it would turn a ~20 ms ragged forward into a ~3.7 ms captured chain step
+→ cycle ≈ 41 ms ≈ 4,400 tok/s ≈ 1.98×.
+
+**Measured attempt (spsd): 3196 tok/s, accept 5.108 — REGRESSION, and the
+log proves the compaction NEVER ENGAGED** (decode-phase step-0 still
+`uniform=False mode=PIECEWISE`, 224 tokens/27 reqs). Two findings:
+1. `_step0_decode_active` requires `num_rejected_tokens_gpu is not None` —
+   not plumbed on our harness path → inactive.
+2. The flag STILL dropped accept by 0.57 while inactive — a side effect
+   (something else keys on `_shared_kv_step0_decode`); bug to isolate.
+
+**Next (exact target)**: (a) plumb `num_rejected_tokens_gpu` through the
+sync/W7 propose path (it exists GPU-side from the rejection sampler);
+(b) isolate + fix the inactive-flag accept side effect; (c) route the
+compacted q=1 step-0 through the SAME scratchpad FULL graph as chain steps
+(it is exactly a chain step); (d) accept gate ≥ 5.6 and the 1.75× check.
