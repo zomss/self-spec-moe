@@ -55,3 +55,22 @@ measured window TPOT still growing with ctx at fixed window.
 ## Next: V2 (win128 R + b16/8k interpolation, one ~30-min E1 run), then V3
 (predict the deferred MLA tier from config, run `e1_sweep.sh mla` as ground
 truth), then `selector.py` → strategy map v3.
+
+## V2 forward predictions: PASS (registered before measurement)
+
+`data/v2_predictions.json` (registered) vs `data/v2_verify.json` (measured):
+
+| family | cells | median |err| | gate |
+|---|---|---|---|
+| win128 R (cost of a never-costed arm) | 17 | **2.9%** | PASS @10% |
+| b16×8k interpolation (never-swept cell) | 4 | **8.0%** | PASS @10% |
+
+Dense is clean throughout (max 7.3%). The three MoE outliers are the known
+suspects: b4/32k (+42%) and b32/32k (+25%) are S4 placement-noise cells;
+b32/2k (−16%) is the short-ctx parity band where the model over-credits the
+KV cut (measured ≈ parity) — same structure as the V0 residuals. The
+dense b32/32k cell is correctly MISSING (bf16 denominator over-capacity).
+
+With V1 (held-out arm) + V2 (forward, off-grid), the model predicts R for
+unswept levers AND unswept cells. Next: V3 — predict the deferred MLA cost
+tier from config constants, then one confirmation sweep (`e1_sweep.sh mla`).
