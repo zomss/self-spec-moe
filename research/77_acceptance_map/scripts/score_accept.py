@@ -140,31 +140,47 @@ class LayerSkip:
 
 
 class RouterMask:
-    """Mask MoE router logits to the contiguous shard [0 : n_keep)."""
+    """Mask MoE routing to the contiguous expert shard [0 : n_keep).
+
+    transformers 5.x routers (Qwen3MoeTopKRouter) do logits->softmax->topk
+    INSIDE forward, so the hook RECOMPUTES routing from masked logits --
+    exactly P25's semantics: non-resident logits to -inf, topk over survivors,
+    renorm per norm_topk_prob. Duck-typed on (top_k, num_experts, weight)."""
+
     def __init__(self, model, frac: float):
         self.hooks = []
         self.model = model
         self.frac = frac
 
     def __enter__(self):
-        def mk(n_exp):
-            n_keep = max(1, int(n_exp * self.frac))
+        import torch.nn.functional as F
+
+        def mk(router):
+            n_keep = max(1, int(router.num_experts * self.frac))
 
             def hook(mod, inp, out):
-                out = out.clone()
-                out[..., n_keep:] = torch.finfo(out.dtype).min
-                return out
+                hidden = inp[0].reshape(-1, mod.hidden_dim)
+                logits = F.linear(hidden, mod.weight)
+                logits[..., n_keep:] = float("-inf")
+                probs = torch.nn.functional.softmax(logits, dtype=torch.float, dim=-1)
+                val, idx = torch.topk(probs, mod.top_k, dim=-1)
+                if mod.norm_topk_prob:
+                    val = val / val.sum(-1, keepdim=True)
+                return probs, val.to(probs.dtype), idx
             return hook
+
         for mod in self.model.modules():
             gate = getattr(mod, "gate", None)
-            if gate is not None and hasattr(mod, "experts"):
-                self.hooks.append(gate.register_forward_hook(mk(len(mod.experts))))
-        assert self.hooks, "no MoE gate modules found for RouterMask"
+            if gate is not None and all(hasattr(gate, a) for a in
+                                        ("top_k", "num_experts", "weight")):
+                self.hooks.append(gate.register_forward_hook(mk(gate)))
+        assert self.hooks, "no MoE router modules found for RouterMask"
         return self
 
     def __exit__(self, *a):
         for h in self.hooks:
             h.remove()
+        self.hooks = []
 
 
 def fake_quant_(model, kind: str):
@@ -277,9 +293,16 @@ def main() -> int:
     stage_a(model, tok, cfg, args, refdir)
 
     out = PHASE / "data/beta.csv"
-    rows = []
+    done = set()
+    if out.exists():  # resume: skip (model, ctx, arm) rows already recorded
+        done = {(r["model"], r["ctx"], r["arm"])
+                for r in csv.DictReader(out.open())}
     mutated = False
+    n_written = 0
     for arm in arms:
+        if (args.model, str(args.ctx), arm) in done:
+            print(f"[B] skip {arm} (already in beta.csv)", flush=True)
+            continue
         if arm.startswith("q_"):
             if mutated:
                 del model
@@ -288,16 +311,17 @@ def main() -> int:
             fake_quant_(model, arm[2:])
             mutated = True
         r = score_arm(model, cfg, arm, refdir, args)
-        rows.append(r)
         print(f"[B] RESULT {json.dumps(r)}", flush=True)
-
-    exists = out.exists()
-    with out.open("a", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-        if not exists:
-            w.writeheader()
-        w.writerows(rows)
-    print(f"[B] appended {len(rows)} rows -> {out}")
+        # write IMMEDIATELY: a later arm's crash must not lose earlier arms
+        # (the first MoE run lost 3 ctx x 7 arms to the lr25 TypeError)
+        exists = out.exists()
+        with out.open("a", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(r.keys()))
+            if not exists:
+                w.writeheader()
+            w.writerow(r)
+        n_written += 1
+    print(f"[B] appended {n_written} rows -> {out}")
     return 0
 
 
