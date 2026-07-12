@@ -42,3 +42,31 @@ cycle arithmetic vs the 1.75× target:**
 
 **E0 verdict: PROCEED to E1** (TRITON_ATTN chain-CG A/B first, accept-gate
 mandatory per P35).
+
+## E1 — chain-CG A/B: all three routes fail AS-IS; the live path is a scoped fix
+
+Dense b32/16k, composed draft, K=6 (`scripts/run_e1.sh`, logs/e1_*):
+
+| arm | tok/s | accept (ref 5.685) | verdict |
+|---|---|---|---|
+| pw (PIECEWISE baseline) | 3442 ±236 (1.56×) | 5.685 | reference (reproduces 80-E3) |
+| sp (P69 window-scratchpad FULL-CG) | **952 (0.43×)** | **5.692 — bit-exact holds** | accept PASS, speed FAIL |
+| tr (TRITON_ATTN + captured chain) | 527 | **1.954 — collapsed** | **P74's TRITON hypothesis REFUTED** — its decode is not replay-safe either |
+| fa3cg (control: FA3 + captured) | 1138 | 1.930 — collapsed | the P35 trap on cue — **gate sensitivity validated** |
+
+**sp anatomy** (`data/trace_sp_K6_b32`): chain step 15.1 ms, **87% GPU-ACTIVE,
+950 kernels/step** (vs eager 6.5 ms / 362 kernels) — the graph is not
+launch-bound, it does ~2× the GPU work. Root cause read from the kernel table
+(9,555 elementwise + 2,380 gemv + 4,760 gathers per trace): the scratchpad
+DOES call F.scaled_dot_product_attention, but at q_len=1 with an additive
+mask torch dispatches the MEM-EFFICIENT backend → gemv/elementwise
+decomposition, ~0.25 ms/layer ≈ 7-9 ms/step, where FA3's fused decode kernel
+does the same work in ~30 µs. This also retro-explains P70's MoE result.
+
+**The scoped fix (E1b)**: the P35 freeze breaks on a GROWING sequence; the
+scratchpad's KV length is CONSTANT (sinks+window = 528). FA3's host-side
+schedule over a fixed-shape dense scratchpad is capture-stable → swap the
+scratchpad SDPA for a fixed-shape flash call (flash_attn_with_kvcache on the
+dense scratchpad, seq len constant). Expected: ~30 µs/layer attention inside
+ONE replayable graph → chain step ≈ 4-4.5 ms → past the 5.1 ms gate.
+Accept re-validation mandatory (same A/B harness).
