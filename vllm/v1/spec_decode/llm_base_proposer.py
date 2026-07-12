@@ -1038,7 +1038,10 @@ class SpecDecodeBaseProposer:
                     token_indices_to_sample,
                     step0_appended_slots,
                 ) = self._compact_step0_decode(
-                    common_attn_metadata, md_cad, token_indices_to_sample
+                    common_attn_metadata,
+                    md_cad,
+                    token_indices_to_sample,
+                    num_rejected_tokens_gpu,
                 )
                 if not self._step0_decode_logged:
                     self._step0_decode_logged = True
@@ -2615,7 +2618,7 @@ class SpecDecodeBaseProposer:
         the plain text case (no M-RoPE / xdrope / mm / hidden-state passthrough)
         so the compaction only has to gather input_ids/positions.
         """
-        return (
+        active = (
             self._shared_kv_step0_decode
             and self.num_speculative_tokens > 1
             and num_rejected_tokens_gpu is not None
@@ -2626,12 +2629,29 @@ class SpecDecodeBaseProposer:
             and cad.max_query_len
             <= self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request
         )
+        # Phase 81 E2b: engagement debug (first calls only) -- the compaction
+        # engaged intermittently on the composed stack; log WHICH condition
+        # gates each decode-shaped propose.
+        if self._shared_kv_step0_decode and os.environ.get("W7_STEP0_DEBUG"):
+            n = getattr(self, "_step0_dbg_n", 0)
+            if n < 12:
+                self._step0_dbg_n = n + 1
+                logger.info(
+                    "[step0-gate] active=%s max_query_len=%s limit=%s(K=%s+1+net=%s) "
+                    "rej_gpu=%s",
+                    active, cad.max_query_len,
+                    self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request,
+                    self.num_speculative_tokens, self.net_num_new_slots_per_request,
+                    num_rejected_tokens_gpu is not None,
+                )
+        return active
 
     def _compact_step0_decode(
         self,
         cad: CommonAttentionMetadata,
         md_cad: CommonAttentionMetadata,
         token_indices_to_sample: torch.Tensor,
+        num_rejected_tokens_gpu: torch.Tensor,
     ) -> tuple[CommonAttentionMetadata, int, torch.Tensor, torch.Tensor]:
         """Compact the step-0 draft forward to a q=1 decode of the appended
         sampled token(s) under shared KV.
@@ -2639,9 +2659,17 @@ class SpecDecodeBaseProposer:
         Gathers the appended input_ids/positions to the FRONT of the proposer
         buffers and returns a q=1 CommonAttentionMetadata that reuses md_cad's
         (windowed) per-request seq_lens/block_table -- so the appended token
-        attends to the identical key set the q=(K+2) step-0 would have used
-        (bit-exact), skipping the wasted forward over the K+1 re-ingested verify
-        tokens whose draft KV writes are PAD-masked anyway. Returns
+        attends to the identical key set the q=(K+2) step-0 would have used,
+        skipping the wasted forward over the K+1 re-ingested verify tokens
+        whose draft KV writes are PAD-masked anyway.
+
+        seq_lens from the padded path span the FULL padded query (rejected
+        slots included): correct for the causal ragged forward, but a q=1
+        decode has no causal mask and would attend the stale KV of this
+        step's rejected draft tokens -- fatal under a KV window, where those
+        slots sit among the ~window most-recent keys. Trim per-request
+        seq_lens by num_rejected so the appended token attends exactly the
+        keys its causal counterpart would have. Returns
         (compact_cad, num_tokens=batch, token_indices=arange, appended_slots).
         """
         bs = cad.num_reqs
@@ -2650,7 +2678,18 @@ class SpecDecodeBaseProposer:
         self.input_ids[:bs] = self.input_ids[idx]
         self.positions[:bs] = self.positions[idx]
         appended_slots = cad.slot_mapping[idx]
+        if md_cad is not cad:
+            # Windowed view: seq_lens is a proposer-owned buffer rewritten by
+            # _apply_draft_kv_window each step -- trim in place (captured
+            # graphs read it through capture-time pointers).
+            md_cad.seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
+            compact_seq_lens = md_cad.seq_lens
+        else:
+            # Full-KV: seq_lens is the runner's shared buffer -- copy.
+            compact_seq_lens = md_cad.seq_lens.clone()
+            compact_seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
         compact = md_cad.replace(
+            seq_lens=compact_seq_lens,
             query_start_loc=self.arange[: bs + 1],
             query_start_loc_cpu=torch.from_numpy(
                 self.token_arange_np[: bs + 1]
