@@ -47,7 +47,9 @@ from anchor_gate import FILLER, PROMPTS, build_prompts, cache_kv  # noqa: E402
 MODELS = {
     "dense": dict(hf="Qwen/Qwen2.5-7B-Instruct", trust=False, moe=False, layers=28),
     "moe": dict(hf="Qwen/Qwen3-30B-A3B", trust=False, moe=True, layers=48),
-    "mla": dict(hf="deepseek-ai/DeepSeek-V2-Lite", trust=True, moe=True, layers=27),
+    # trust=False: transformers 5.x has NATIVE deepseek_v2 (standard cache,
+    # decompressed K/V; kv_a_layernorm on the KV path -> "normed-KV" family)
+    "mla": dict(hf="deepseek-ai/DeepSeek-V2-Lite", trust=False, moe=True, layers=27),
 }
 DEFAULT_ARMS = {
     False: "win128,win512,win2048,skip125,skip25,skip375,skip50,kvq_fp8,q_int4,q_fp8",
@@ -169,18 +171,39 @@ class RouterMask:
                 return probs, val.to(probs.dtype), idx
             return hook
 
+        self.patched = []
         for mod in self.model.modules():
             gate = getattr(mod, "gate", None)
             if gate is not None and all(hasattr(gate, a) for a in
                                         ("top_k", "num_experts", "weight")):
                 self.hooks.append(gate.register_forward_hook(mk(gate)))
-        assert self.hooks, "no MoE router modules found for RouterMask"
+            elif hasattr(mod, "route_tokens_to_experts"):
+                # DeepSeek-V2 style: the block calls F.linear on gate.weight
+                # directly (a gate hook never fires) and routes in
+                # route_tokens_to_experts(raw_logits). Masking the ROUTED
+                # logits to -inf pre-softmax IS the resident renorm (softmax
+                # denominator covers residents only); SHARED experts are added
+                # outside routing and stay always-on (P25 anchor semantics).
+                n_keep = max(1, int(mod.gate.out_features * self.frac))
+                orig = mod.route_tokens_to_experts
+
+                def patched(router_logits, _orig=orig, _n=n_keep):
+                    router_logits = router_logits.clone()
+                    router_logits[..., _n:] = float("-inf")
+                    return _orig(router_logits)
+
+                mod.route_tokens_to_experts = patched
+                self.patched.append((mod, orig))
+        assert self.hooks or self.patched, "no MoE router found for RouterMask"
         return self
 
     def __exit__(self, *a):
         for h in self.hooks:
             h.remove()
         self.hooks = []
+        for mod, orig in self.patched:
+            mod.route_tokens_to_experts = orig
+        self.patched = []
 
 
 def fake_quant_(model, kind: str):

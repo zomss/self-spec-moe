@@ -1,5 +1,53 @@
 # Phase 77 results
 
+## THREE-ARCHITECTURE β TABLE COMPLETE (dense + MoE + MLA, 102 cells)
+
+`data/beta.csv`; MLA = DeepSeek-V2-Lite via transformers-NATIVE deepseek_v2
+(decompressed-KV cache; DeepSeek's block routes via `route_tokens_to_experts`,
+never calling the gate module — RouterMask patches that method; pre-softmax
+-inf masking IS the resident renorm, shared experts stay always-on).
+
+### The QK-norm hypothesis: CONFIRMED across all three architectures
+
+| model | KV-path normalization | K amax | K max/rms | kvq_fp8 β (draft-only) |
+|---|---|---|---|---|
+| dense Qwen2.5-7B | **none** | 426 (≈e4m3 saturation) | 206 | **0.60-0.84, unstable** |
+| MoE Qwen3-30B | QK-norm | 150 | 70 | 0.97-0.98 |
+| MLA V2-Lite | kv_a_layernorm | **28** | **16** | **0.996-0.999** |
+
+K outlier magnitude anti-correlates monotonically with fp8-K viability.
+**Rule: KV-path normalization decides whether a draft-only fp8-K read is a
+lever or a wound.** (On un-normed models: quantize V only — β 0.99.)
+
+### The portability verdict (prediction 4, final): almost NOTHING is portable
+
+| lever | dense → MoE → MLA (β at 16k) | verdict |
+|---|---|---|
+| q_fp8 | .978 → .993 → 1.000 | **the ONLY portable lever** |
+| q_int4 | .924 → .972 → .997 | rises with arch (+0.07) |
+| kvq_fp8 | .841 → .971 → .997 | inverted (normalization) |
+| win512 | .978 → .971 → **.922** | **REFUTED on MLA** — and ctx-decaying there (.97→.92→.81) |
+| win128 | .976 → .969 → **.576** | window SIZE matters enormously on MLA (irrelevant elsewhere) |
+| skip125 | .448 → .695 → **.966** | swings +0.5 across archs |
+| skip50 | .029 → .154 → **.000** | MLA has a skip CLIFF between 37.5% (.32) and 50% (dead) |
+| lr50 | — → .826 → **.975** | shared-expert anchor (+0.15, P25 confirmed by this method) |
+
+- **Window's portability (held dense↔MoE) breaks on MLA**: β decays with ctx
+  and window size becomes decisive (win128 collapses to 0.49 at 32k). Combined
+  with 76-E4's cost finding (MLA KV small → window cuts little), window is
+  DOUBLY disadvantaged on MLA — a coherent architecture story for the map.
+- **local-route on MLA**: lr25 = 0.88-0.95, lr50 = 0.95-0.99 — the P25
+  shared-expert anchor (~48% mass) delivering under the sweep method; the
+  comm-free draft's acceptance problem is architecture-solvable.
+- **skip on MLA**: 12.5% skip keeps β = 0.90-0.97 (!), then cliffs to 0.000 at
+  50%. Shallow skip on MLA is the first skip setting in the study whose β
+  could survive composition — but MLA COST data (E1 mla group) was deferred,
+  so the composition awaits it.
+
+**Selector consequence (the phase's thesis, now measured)**: β must be
+measured per architecture — of 12 levers × 3 architectures, only fp8
+weight-quant is regime- AND architecture-portable.
+
 ## β sweep complete: dense (30 cells) + MoE (36 cells), 1152 positions each
 
 `data/beta.csv`. β_greedy at 2k / 16k / 32k:
