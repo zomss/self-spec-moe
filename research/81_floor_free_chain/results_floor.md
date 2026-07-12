@@ -107,3 +107,34 @@ verification" does; substantial engineering, separate decision.
 component of delivery is now REMOVABLE (measured), and the residual is
 generic serving overhead — quantified at ~2.5 ms/token here, with the
 production remedy known and citable.
+
+## E2 — the cycle-boundary sync IS the wall (diagnosis complete)
+
+Orchestration knob A/B on top of the fixed chain (sp0 = chain+step0 FULL-CG):
+
+| arm | tok/s | accept | note |
+|---|---|---|---|
+| sp0 | 3281 ±44 | 5.683 | reference |
+| + async_scheduling | 3383 ±90 | 5.661 | +3% — scheduler is not the wall |
+| + local_argmax | INIT FAIL | — | `Qwen2ForCausalLM has no get_top_tokens` (P74 path is MoE-class-only; TP1 rationale moot anyway) |
+
+**With-stack trace attribution of the copy storm** (`trace_stack_K6_b32`):
+`rejection_sampler.parse_output` = **469 ms / 32 calls ≈ 14.7 ms PER CYCLE**
+— single-handedly the CPU wall. Everything else is noise (window compaction
+8 ms total, h2d staging ~5 ms). Mechanism: `output_token_ids.cpu()` is a
+SYNCHRONOUS D2H that drains the whole GPU queue each cycle; the CPU then
+parses/schedules while the GPU idles — the per-cycle serialization point.
+The GPU-idle 29% and this 469 ms are the same phenomenon from two sides.
+
+**E2b — the fix (scoped, next)**: the cycle boundary is NOT semantically
+serial on the critical path — the ACCEPTED tokens already exist ON GPU (the
+rejection sampler wrote them); the next cycle's step-0 can consume them
+device-side, and the CPU parse (stop checks, detokenize, streaming) can LAG
+one cycle behind (safe under ignore_eos + preallocated blocks; general case
+needs a late-abort). This is device-side cycle chaining — the P32 overlap
+idea landed at the cycle boundary, and the same design point SparseSpec's
+"delayed verification" engineering occupies. Expected recovery: most of
+~14.7 ms/cycle → cycle ~40 ms → ~4,500 tok/s ≈ 2.0× — the phase gate and
+the paper headline in one step. Implementation surface: proposer step-0
+input plumbing (GPU token feed) + deferred output processing in the
+harness/runner path.
