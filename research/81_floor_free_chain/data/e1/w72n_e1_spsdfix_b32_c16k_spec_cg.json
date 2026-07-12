@@ -1,0 +1,54 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "tag": "e1_spsdfix_b32_c16k",
+  "dp": 1,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 4,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "6": [
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 4,
+        "warmup": 1,
+        "long_s_mean": 2.4935061782889534,
+        "short_s_mean": 1.50549959478667,
+        "long_s_all": [
+          2.4792874470585957,
+          2.4611669750884175,
+          2.551519791013561,
+          2.482050499995239
+        ],
+        "short_s_all": [
+          1.5016923500224948,
+          1.500252238009125,
+          1.5306282780366018,
+          1.4894255130784586
+        ],
+        "decode_s_mean": 0.9880065835022833,
+        "decode_s_std": 0.025463146111559434,
+        "tok_s_mean": 4147.77268654888,
+        "tok_s_std": 106.14436976797639,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 5.672312556458898,
+        "num_accepted": 20689.0,
+        "num_drafted": 26568.0,
+        "num_drafts": 4428.0
+      }
+    ]
+  }
+}

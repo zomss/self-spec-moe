@@ -139,7 +139,7 @@ the paper headline in one step. Implementation surface: proposer step-0
 input plumbing (GPU token feed) + deferred output processing in the
 harness/runner path.
 
-## E2b (in progress) — the wall is the RAGGED STEP-0, and the fix exists but doesn't engage
+## E2b — the wall is the RAGGED STEP-0; compacting it delivers 1.88× (gate PASSED)
 
 Fine-profiler (regions, VLLM_SELF_SPEC_PROFILE_OUT — note: earlier "CPU
 orchestration" attribution was WRONG in detail; the region profile names it):
@@ -163,16 +163,56 @@ by verify). P67 shelved it (saving ~2.4 ms vs accept −0.04 in THEIR config);
 here it would turn a ~20 ms ragged forward into a ~3.7 ms captured chain step
 → cycle ≈ 41 ms ≈ 4,400 tok/s ≈ 1.98×.
 
-**Measured attempt (spsd): 3196 tok/s, accept 5.108 — REGRESSION, and the
-log proves the compaction NEVER ENGAGED** (decode-phase step-0 still
-`uniform=False mode=PIECEWISE`, 224 tokens/27 reqs). Two findings:
-1. `_step0_decode_active` requires `num_rejected_tokens_gpu is not None` —
-   not plumbed on our harness path → inactive.
-2. The flag STILL dropped accept by 0.57 while inactive — a side effect
-   (something else keys on `_shared_kv_step0_decode`); bug to isolate.
+**First attempt (spsd): 3196 tok/s, accept 5.108 — REGRESSION.** The initial
+"never engaged" reading was WRONG (the `[step0-cg]` uniform=False lines were
+prefill-ramp proposes; the `[step0-gate]` debug shows the plumbing is fine —
+`prepare_inputs_padded` produces `num_rejected_tokens_gpu` on every steady
+decode step and the once-log fired). The compaction engaged AND cost ~0.57
+accept:
 
-**Next (exact target)**: (a) plumb `num_rejected_tokens_gpu` through the
-sync/W7 propose path (it exists GPU-side from the rejection sampler);
-(b) isolate + fix the inactive-flag accept side effect; (c) route the
-compacted q=1 step-0 through the SAME scratchpad FULL graph as chain steps
-(it is exactly a chain step); (d) accept gate ≥ 5.6 and the 1.75× check.
+| arm | config | tok/s | accept |
+|---|---|---|---|
+| spsd | scratchpad + compaction (broken) | 3196 ±148 | 5.108 |
+| spsd2 | piecewise + compaction (broken) | 2972 ±279 | 5.073 |
+
+Same drop without the scratchpad → the defect is IN the compaction, not a
+graph interplay.
+
+**Root cause (semantic, found by reading `prepare_inputs_padded`)**: the
+padded path deliberately keeps FULL-SPAN `seq_lens` ("does not consider the
+rejected tokens") — correct for the ragged step-0, whose sampled position
+sits mid-span and whose CAUSAL mask hides the rejected tail. The compacted
+q=1 decode has no causal structure: the appended token attended the stale KV
+of this cycle's REJECTED draft tokens. Under the 512-token draft window those
+are up to 6 wrong keys among the ~528 MOST RECENT keys (max attention mass)
+→ −0.55 accept; at full context they are 6 keys in 16k → noise. This
+reconciles P67's own note (−0.04, "windowed regime only", "bit-exact at
+window=0") — P67 measured the same bug diluted.
+
+**Fix** (`_compact_step0_decode`): trim per-request `seq_lens` by
+`num_rejected_tokens_gpu` — in place on the proposer-owned windowed buffer
+(graph-safe; `_apply_draft_kv_window` rewrites it fresh next step), cloned on
+the full-KV path.
+
+**Validation (b32/16k K=6)**:
+
+| arm | config | tok/s | accept (ref 5.685) |
+|---|---|---|---|
+| spw0 | window=0, no compaction | 1638 ±18 | 5.718 |
+| spw0sd | window=0 + compaction (fixed) | 1813 ±5 | 5.687 — parity ✓ |
+| **spsdfix** | **window+scratchpad+compaction (fixed)** | **4148 ±106** | **5.672 ✓** |
+
+**spsdfix = 4148 tok/s = 1.88× vs nospec (2206) — the 1.75× phase gate
+PASSES** (94% of the 1.98× full-floor-removal ceiling; prediction was
+~4,400). Accept fully recovered (5.672 vs 5.685 reference). The composed
+dense draft chain is now floor-free end to end: paged-FA3 scratchpad chain
+steps (E1b) + compacted q=1 step-0 riding the same graphs + CPU_ORCH fast
+parse + async scheduling.
+
+Env stack of record (spsdfix): `VLLM_SELF_SPEC_DRAFT_FULLCG=1
+VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_SELF_SPEC_CPU_ORCH=1
+W7_ASYNC_SCHED=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1` on top of the
+window (512/16) composed draft.
+
+Remaining headroom (not gating): verify forward still idles 31% (4.8 ms);
+the ~250 tok/s to the ceiling is step-0's residual cost vs a pure chain step.
