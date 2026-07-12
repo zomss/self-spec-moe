@@ -1,5 +1,33 @@
 # Phase 77 results
 
+## Strategy map v2 (measured R × measured β) — `data/strategy_map_v2.md`
+
+`scripts/recompose_map.py`. What changed vs v1 (76 E2, borrowed β):
+
+1. **v2 lands ON the E3 ground truth where v1 missed**: dense b32/16k window
+   v1 1.40× → E3 measured 1.54× → **v2 1.55×**. Measuring β closed the gap.
+2. **local-route DEMOTED on NVLink everywhere** (composed 0.88-0.97, never a
+   winner). v1 used P24's half-cache-with-anchor β=0.85; the honest pairing
+   for E1's cost arm is the EP4 quarter-shard (lr25, β≈0.70). Local-route's
+   viable regime narrows to comm-bound fabrics AND/OR shared-expert
+   architectures (MLA lr25 β=0.88-0.95 — its composition awaits MLA cost).
+3. **Window strengthens at long ctx** (measured β > borrowed): MoE b32/32k
+   2.22× (γ8) vs v1 1.90×; dense b8/32k 1.37×. CAVEAT: deep-γ cells are
+   rooflines — measured delivery shrinks with γ (P75 ~90% @γ3, E3 86% @γ6),
+   and the geometric model itself is ~0.97 at k≥6 (P24). Read γ≥6 cells
+   with that discount.
+4. **Skip formally composed and dead in-map**: 0.61-0.80 in every cell on
+   both models (was break-even-analysis-only in v1).
+5. **Three winner flips, all razor-thin toss-ups** (margins ≤0.03: dense
+   b8/16k win 1.20 vs w4 1.19; dense b32/2k fp8w8a8 1.17 vs w4 1.17; MoE
+   b4/2k fp8marlin 1.02 vs localroute ~1.0). The robust structure (W4 region /
+   window region / MoE short-ctx OFF region) is UNCHANGED — borrowed β got the
+   regions right and the values wrong; measured β fixes the values.
+6. **kvq reference column, now honest**: a draft-only fp8-KV pool would buy
+   1.25-1.27× on QK-normed MoE at long ctx but ≤0.98 on the un-normed dense —
+   the pool is worth building ONLY for normed-KV architectures (the K-outlier
+   rule, composed).
+
 ## THREE-ARCHITECTURE β TABLE COMPLETE (dense + MoE + MLA, 102 cells)
 
 `data/beta.csv`; MLA = DeepSeek-V2-Lite via transformers-NATIVE deepseek_v2
