@@ -74,3 +74,36 @@ dense b32/32k cell is correctly MISSING (bf16 denominator over-capacity).
 With V1 (held-out arm) + V2 (forward, off-grid), the model predicts R for
 unswept levers AND unswept cells. Next: V3 — predict the deferred MLA cost
 tier from config constants, then one confirmation sweep (`e1_sweep.sh mla`).
+
+## V3 (MLA tier from config): registered transfer FAILED → refined to a one-anchor law
+
+Registered predictions (`data/v3_predictions_mla.json`) vs the confirmation
+sweep: TPOT median 22.2% / R 15.5% — **FAIL at 15%**. The residuals decompose
+into two specific transfer errors (the E4-pattern refinement):
+
+1. **The floor does not transfer by layer ratio** — every small MLA cell
+   under-predicts by ~3 ms (bf16 b4/2k: 3.84 vs 6.85), and the skip arms PROVE
+   the floor needs a step-fixed vs per-layer split: measured skip R is
+   0.58-0.92, not the 0.50 a layer-proportional floor implies (scheduler/
+   sampler/DP-coord costs don't halve with layers).
+2. **κ_kernel is architecture-specific at tiny M** (fp8block measured up to
+   1.9× on DeepSeek at b4/2k vs the transferred 1.7 ms — E4's latency-bound
+   dequant story again).
+
+**V3b (`verify_v3b.py`) — pre-declared refinement, no new measurements**:
+floor = f_step + f_layer·ls, with f_step calibrated from ONE bf16 cell
+(b4/2k) and everything else transferred:
+
+| gate (53 held-out cells) | result |
+|---|---|
+| R median \|err\| | **9.3% PASS @15%** |
+| TPOT median \|err\| | 18.3% FAIL (h/BW are stack constants, not config-derivable) |
+
+**The refined claim the paper can make**: the R-SELECTOR transfers to an
+unswept architecture with a single anchor measurement (~5 min); absolute
+latency prediction additionally needs per-stack calibration of 2-3 constants.
+Registered claim "window weak on MLA": measured window R 0.73-1.14 (median
+≈0.98) — CONFIRMED as weak (never near GQA-MoE's 0.35-0.65), with one
+DP-noise cell below the registered band. MLA's measured cost tier is now in
+76's dataset; composing it with 77's β completes the MLA strategy column
+(selector.py, V4).
