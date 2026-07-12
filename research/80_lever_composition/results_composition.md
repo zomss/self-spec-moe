@@ -62,3 +62,32 @@ Runner-backlog item; the two cells were kept by manual inspection.
    the deferred comm-bound fabric, exactly as the original thesis said.
 3. The dense map gains its first composed winner: **w4win at b32/16k,
    measured R 0.311, composed ~1.76× roofline** (vs 1.56× single-lever v3).
+
+## E3 — e2e: composition CONFIRMED at b8 (91% delivery); the b32 miss exposes delivery(γ, R)
+
+Real spec-vs-nospec tok/s, composed draft = W4 ckpt (draft_model, Marlin) +
+window-KV over shared target KV — both levers running together e2e for the
+first time (`scripts/e3_combo.sh`, `logs/e3c_*`):
+
+| cell | registered | measured | accept | delivery |
+|---|---|---|---|---|
+| dense b8/16k K=4 | 1.55× | **1.41×** (1327/943 tok/s) | 4.39/5 | **91% — CONFIRMED** |
+| dense b32/16k K=6 | 1.91× | 1.48× (3266/2219) | 5.70/7 | 77% |
+| dense b32/16k K=4 | — | 1.48× (3290/2219) | 4.30/5 | (flat vs K=6) |
+
+- **The composition LAW passed e2e**: implied β ≈ 0.90 at both cells vs the
+  measured-combo 0.917 — the accept side of the composed draft delivered.
+- **The b32 miss is a NEW systems law, not a composition failure**:
+  delivery is a function of (γ, R), not γ alone. The composed lever cut
+  draft BYTES to R=0.31, but each PIECEWISE draft step still pays the fixed
+  launch floor (P72), which now dominates a much-cheaper step — so delivery
+  decays exactly when composition succeeds (K=4 ≈ K=6 measured is the
+  floor's signature). Composition shifts the draft bottleneck from bytes to
+  LAUNCH — P74's "CUDA-graph the chain" conclusion resurfaces as the
+  binding constraint at the composed frontier.
+- Consequence: measured composed best at b32/16k (1.48×) lands BELOW the
+  measured single-window 1.54× (76-E3) despite far lower R. On the CURRENT
+  harness, the map's composed cells must be read through delivery(γ, R);
+  the composed configs' full value is gated on a CUDA-graphed (or otherwise
+  floor-free) draft chain — the next systems lever, now with a measured
+  payoff attached (~1.9× available at b32/16k).
