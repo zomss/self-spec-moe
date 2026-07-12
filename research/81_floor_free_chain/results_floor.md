@@ -70,3 +70,40 @@ scratchpad SDPA for a fixed-shape flash call (flash_attn_with_kvcache on the
 dense scratchpad, seq len constant). Expected: ~30 µs/layer attention inside
 ONE replayable graph → chain step ≈ 4-4.5 ms → past the 5.1 ms gate.
 Accept re-validation mandatory (same A/B harness).
+
+## E1b — the fused capture-safe chain WORKS; the wall moves to CPU orchestration
+
+Implementation (`vllm/v1/spec_decode/scratchpad_attn.py`): the scratchpad SDPA
+(mem-efficient soup) replaced by PAGED FA3 varlen over the compacted window
+block table — no gather at all; constant geometry (max_seqlen_k=cap=544,
+fixed table width); live lengths/pages device-read from the persistent
+buffers. Fallback env `VLLM_SELF_SPEC_SCRATCHPAD_SDPA=1`. (First attempt
+hit `cu_seqlens_k and seqused_k cannot be provided at the same time` — the
+paged form is the correct and better call.)
+
+| arm | tok/s | accept | chain step (trace) |
+|---|---|---|---|
+| pw (PIECEWISE ref) | 3442 ±236 | 5.685 | 6.47 ms (61% active) |
+| sp (fused chain-CG) | 3222 ±90 | **5.655 ✓** | **3.70 ms (94% active, idle 0.21)** |
+| sp0 (+ step-0 FULL-CG) | 3281 ±44 | 5.683 ✓ | — |
+
+**Won — and it is a reusable systems law**: *FA3's captured schedule is
+replay-safe iff the attention geometry is CONSTANT.* The P35 freeze needs a
+growing sequence; the window scratchpad clamps geometry, so the whole chain
+step replays as ONE graph — floor eliminated (6.47 → 3.70 ms, launch idle
+2.26 → 0.21 ms), accept bit-preserved. This also retro-explains P69/P70:
+the mechanism was right, its SDPA payload was the cost.
+
+**Not cashed — the wall moved OFF the GPU**: e2e stays ~parity because with
+the chain at ~18.5 ms/cycle, ~20 ms of the ~55 ms cycle is CPU-side
+orchestration (scheduler, rejection sampler, python between forwards; the
+same cost was always there, previously shadowed by the longer GPU floor).
+The 1.75× gate is NOT met by chain work alone. Remaining lever = cycle-level
+serving engineering (async scheduling / overlapped step-0 / batched
+sampler) — the same class of work SparseSpec's "unified scheduler + delayed
+verification" does; substantial engineering, separate decision.
+
+**Delivery(γ, R) story for the paper improves either way**: the launch-floor
+component of delivery is now REMOVABLE (measured), and the residual is
+generic serving overhead — quantified at ~2.5 ms/token here, with the
+production remedy known and citable.

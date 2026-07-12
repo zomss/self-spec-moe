@@ -23,10 +23,36 @@ own ``impl.scale``. Greedy accept is therefore bit-exact to the paged windowed
 attention modulo attention-kernel ULP (which does not flip argmax in practice).
 """
 
+import os
 from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F
+
+# Phase 81 E1b: the SDPA path at q_len=1 with an additive mask dispatches
+# torch's MEM-EFFICIENT backend -> a gemv/elementwise decomposition costing
+# ~0.25 ms/layer (~7-9 ms/draft-step, the 81-E1 `sp` arm's 0.43x). The fused
+# FA3 varlen kernel does the same work in ~30 us -- and it is capture-safe
+# HERE because the scratchpad geometry is CONSTANT (max_seqlen_k = cap,
+# batch fixed): the P35 freeze needs a GROWING sequence; per-row validity is
+# read on-device from the persistent seq_lens buffer via ``seqused_k``.
+# Set VLLM_SELF_SPEC_SCRATCHPAD_SDPA=1 to restore the old SDPA path.
+_USE_SDPA = os.environ.get("VLLM_SELF_SPEC_SCRATCHPAD_SDPA", "0") == "1"
+try:
+    from vllm.vllm_flash_attn import flash_attn_varlen_func as _fa_varlen
+except ImportError:  # pragma: no cover
+    _fa_varlen = None
+_CU_CACHE: dict = {}
+
+
+def _cu_seqlens(bs: int, stride: int, device) -> torch.Tensor:
+    key = (bs, stride, device)
+    t = _CU_CACHE.get(key)
+    if t is None:
+        t = torch.arange(0, (bs + 1) * stride, stride,
+                         dtype=torch.int32, device=device)
+        _CU_CACHE[key] = t
+    return t
 
 
 @dataclass
@@ -81,8 +107,34 @@ def scratchpad_attention(
     n_kept = ctx.n_kept_blocks
     cap = n_kept * ctx.block_size
 
-    # Gather the kept (sink + trailing-window) pages into a dense scratchpad,
-    # [bs, num_kv_heads, cap, head_dim].
+    if _fa_varlen is not None and not _USE_SDPA:
+        # E1b fused path: PAGED FA3 varlen over the compacted window block
+        # table -- no gather at all (the dense scratchpad becomes unnecessary;
+        # FA3 reads the kept pages directly). Geometry is cycle-constant
+        # (total_q = bs, max_seqlen_k = cap, table width n_kept), so the
+        # host-side schedule captured into the FULL graph stays valid across
+        # replays; live per-row lengths and page ids are device-read from the
+        # PERSISTENT seq_lens / block_table buffers (updated in place each
+        # step -- the captured pointers see the live data).
+        if output.shape[0] > bs:
+            output[bs:].zero_()
+        _fa_varlen(
+            q=query[:bs].to(key_cache.dtype),
+            k=key_cache,
+            v=value_cache,
+            max_seqlen_q=1,
+            cu_seqlens_q=_cu_seqlens(bs, 1, query.device),
+            max_seqlen_k=cap,
+            seqused_k=ctx.seq_lens[:bs],
+            block_table=ctx.block_table[:bs, :n_kept],
+            softmax_scale=layer.impl.scale,
+            causal=False,
+            out=output[:bs],
+        )
+        return
+
+    # SDPA fallback: gather the kept pages into a dense scratchpad,
+    # [bs, cap, num_kv_heads, head_dim].
     idx = ctx.block_table[:bs, :n_kept].reshape(-1)
     k = key_cache.index_select(0, idx).view(bs, cap, num_kv_heads, head_dim)
     v = value_cache.index_select(0, idx).view(bs, cap, num_kv_heads, head_dim)

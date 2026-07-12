@@ -67,9 +67,13 @@ run(){  # arm mode K extra-env...
   kill_mine
 }
 
-run nospec nospec 0
-run pw     spec 6
-run sp     spec 6 VLLM_SELF_SPEC_DRAFT_FULLCG=1
-run tr     spec 6 W7_SPEC_ATTN_BACKEND=TRITON_ATTN W7_GQA_FORCE_EAGER_ATTN=0 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=0
-run fa3cg  spec 6 W7_GQA_FORCE_EAGER_ATTN=0 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=0
+FILTER="${1:-.}"
+want(){ echo "$1" | grep -qE "$FILTER"; }
+want nospec && run nospec nospec 0
+want pw     && run pw     spec 6
+want sp     && run sp     spec 6 VLLM_SELF_SPEC_DRAFT_FULLCG=1
+want spk4   && run spk4   spec 4 VLLM_SELF_SPEC_DRAFT_FULLCG=1
+want sp0    && run sp0    spec 6 VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1
+want tr     && run tr     spec 6 W7_SPEC_ATTN_BACKEND=TRITON_ATTN W7_GQA_FORCE_EAGER_ATTN=0 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=0
+want fa3cg  && run fa3cg  spec 6 W7_GQA_FORCE_EAGER_ATTN=0 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=0
 echo "[e1] DONE ($(date +%H:%M:%S))"
