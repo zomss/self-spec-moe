@@ -44,7 +44,10 @@ CONST = {
         W=15.24e9, kv_tok=57344.0, P_active=7.62e9, dp=1,
         ctx_of={2: 2048, 16: 16384, 32: 32512}),
     "moe": dict(
-        W_dense=3.07e9, n_res=32, E=128, topk=8, exp_bytes=9.44e6,
+        # exp_bytes is per expert SLOT ROLLED ACROSS LAYERS (9.44 MB/expert/layer
+        # x 48 layers) -- required for cross-architecture transfer (V3): a
+        # per-layer constant lets BW_eff silently absorb the layer count.
+        W_dense=3.07e9, n_res=32, E=128, topk=8, exp_bytes=453.1e6,
         kv_tok=98304.0, P_active=3.3e9, dp=4,
         ctx_of={2: 2048, 16: 16384, 32: 32768}),
 }

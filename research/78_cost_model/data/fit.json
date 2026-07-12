@@ -489,17 +489,17 @@
  },
  "moe/additive": {
   "params": {
-   "f0": 2.7917,
-   "f1": 0.0525,
-   "BW_GBs": 1014.9156,
-   "h_ms_per_Mtok": 55.7178,
-   "c0": 1.6448,
-   "c1": 0.1318,
-   "kappa_fp8m": 0.6964,
-   "kappa_fib": 1.1894,
+   "f0": 3.1588,
+   "f1": 0.0,
+   "BW_GBs": 2661.5187,
+   "h_ms_per_Mtok": 85.0511,
+   "c0": 1.7692,
+   "c1": 0.0,
+   "kappa_fp8m": 1.149,
+   "kappa_fib": 1.6998,
    "kappa_a2atile": 0.0
   },
-  "median_err": 0.0682,
+  "median_err": 0.0876,
   "crossovers": "8/9",
   "holdout": null,
   "residuals": [
@@ -508,576 +508,576 @@
     "batch": 4,
     "ctx": 2,
     "tpot": 7.923,
-    "pred": 7.68,
-    "err_pct": -3.1
+    "pred": 8.08,
+    "err_pct": 2.0
    },
    {
     "arm": "m_fp8block",
     "batch": 4,
     "ctx": 16,
     "tpot": 8.604,
-    "pred": 9.87,
-    "err_pct": 14.7
+    "pred": 9.83,
+    "err_pct": 14.3
    },
    {
     "arm": "m_fp8block",
     "batch": 4,
     "ctx": 32,
     "tpot": 11.606,
-    "pred": 12.37,
-    "err_pct": 6.5
+    "pred": 11.83,
+    "err_pct": 1.9
    },
    {
     "arm": "m_fp8block",
     "batch": 8,
     "ctx": 2,
     "tpot": 9.052,
-    "pred": 8.21,
-    "err_pct": -9.3
+    "pred": 8.82,
+    "err_pct": -2.6
    },
    {
     "arm": "m_fp8block",
     "batch": 8,
     "ctx": 16,
     "tpot": 13.807,
-    "pred": 12.59,
-    "err_pct": -8.8
+    "pred": 12.32,
+    "err_pct": -10.8
    },
    {
     "arm": "m_fp8block",
     "batch": 8,
     "ctx": 32,
     "tpot": 19.645,
-    "pred": 17.59,
-    "err_pct": -10.5
+    "pred": 16.31,
+    "err_pct": -17.0
    },
    {
     "arm": "m_fp8block",
     "batch": 32,
     "ctx": 2,
     "tpot": 11.317,
-    "pred": 11.32,
-    "err_pct": 0.0
+    "pred": 11.64,
+    "err_pct": 2.9
    },
    {
     "arm": "m_fp8block",
     "batch": 32,
     "ctx": 16,
     "tpot": 25.058,
-    "pred": 28.82,
-    "err_pct": 15.0
+    "pred": 25.63,
+    "err_pct": 2.3
    },
    {
     "arm": "m_fp8block",
     "batch": 32,
     "ctx": 32,
     "tpot": 58.452,
-    "pred": 48.82,
-    "err_pct": -16.5
+    "pred": 41.62,
+    "err_pct": -28.8
    },
    {
     "arm": "m_fp8marlin",
     "batch": 4,
     "ctx": 2,
     "tpot": 7.279,
-    "pred": 7.19,
-    "err_pct": -1.3
+    "pred": 7.53,
+    "err_pct": 3.5
    },
    {
     "arm": "m_fp8marlin",
     "batch": 4,
     "ctx": 16,
     "tpot": 9.339,
-    "pred": 9.37,
-    "err_pct": 0.4
+    "pred": 9.28,
+    "err_pct": -0.6
    },
    {
     "arm": "m_fp8marlin",
     "batch": 4,
     "ctx": 32,
     "tpot": 10.392,
-    "pred": 11.87,
-    "err_pct": 14.3
+    "pred": 11.28,
+    "err_pct": 8.5
    },
    {
     "arm": "m_fp8marlin",
     "batch": 8,
     "ctx": 2,
     "tpot": 8.104,
-    "pred": 7.72,
-    "err_pct": -4.8
+    "pred": 8.27,
+    "err_pct": 2.0
    },
    {
     "arm": "m_fp8marlin",
     "batch": 8,
     "ctx": 16,
     "tpot": 12.592,
-    "pred": 12.09,
-    "err_pct": -4.0
+    "pred": 11.77,
+    "err_pct": -6.6
    },
    {
     "arm": "m_fp8marlin",
     "batch": 8,
     "ctx": 32,
     "tpot": 22.727,
-    "pred": 17.09,
-    "err_pct": -24.8
+    "pred": 15.76,
+    "err_pct": -30.6
    },
    {
     "arm": "m_fp8marlin",
     "batch": 32,
     "ctx": 2,
     "tpot": 9.89,
-    "pred": 10.83,
-    "err_pct": 9.5
+    "pred": 11.09,
+    "err_pct": 12.2
    },
    {
     "arm": "m_fp8marlin",
     "batch": 32,
     "ctx": 16,
     "tpot": 27.574,
-    "pred": 28.33,
-    "err_pct": 2.7
+    "pred": 25.08,
+    "err_pct": -9.0
    },
    {
     "arm": "m_fp8marlin",
     "batch": 32,
     "ctx": 32,
     "tpot": 58.632,
-    "pred": 48.33,
-    "err_pct": -17.6
+    "pred": 41.07,
+    "err_pct": -29.9
    },
    {
     "arm": "m_kvq",
     "batch": 4,
     "ctx": 2,
     "tpot": 8.358,
-    "pred": 7.93,
-    "err_pct": -5.1
+    "pred": 7.54,
+    "err_pct": -9.8
    },
    {
     "arm": "m_kvq",
     "batch": 4,
     "ctx": 16,
     "tpot": 8.696,
-    "pred": 9.43,
-    "err_pct": 8.4
+    "pred": 9.02,
+    "err_pct": 3.8
    },
    {
     "arm": "m_kvq",
     "batch": 4,
     "ctx": 32,
     "tpot": 10.926,
-    "pred": 11.13,
-    "err_pct": 1.9
+    "pred": 10.72,
+    "err_pct": -1.9
    },
    {
     "arm": "m_kvq",
     "batch": 8,
     "ctx": 2,
     "tpot": 9.731,
-    "pred": 8.39,
-    "err_pct": -13.8
+    "pred": 8.72,
+    "err_pct": -10.4
    },
    {
     "arm": "m_kvq",
     "batch": 8,
     "ctx": 16,
     "tpot": 11.553,
-    "pred": 11.38,
-    "err_pct": -1.5
+    "pred": 11.68,
+    "err_pct": 1.1
    },
    {
     "arm": "m_kvq",
     "batch": 8,
     "ctx": 32,
     "tpot": 14.906,
-    "pred": 14.79,
-    "err_pct": -0.8
+    "pred": 15.08,
+    "err_pct": 1.1
    },
    {
     "arm": "m_kvq",
     "batch": 32,
     "ctx": 2,
     "tpot": 11.644,
-    "pred": 10.96,
-    "err_pct": -5.9
+    "pred": 12.59,
+    "err_pct": 8.1
    },
    {
     "arm": "m_kvq",
     "batch": 32,
     "ctx": 16,
     "tpot": 26.874,
-    "pred": 22.9,
-    "err_pct": -14.8
+    "pred": 24.46,
+    "err_pct": -9.0
    },
    {
     "arm": "m_kvq",
     "batch": 32,
     "ctx": 32,
     "tpot": 44.57,
-    "pred": 36.55,
-    "err_pct": -18.0
+    "pred": 38.03,
+    "err_pct": -14.7
    },
    {
     "arm": "m_localroute",
     "batch": 4,
     "ctx": 2,
     "tpot": 6.314,
-    "pred": 6.27,
-    "err_pct": -0.8
+    "pred": 5.93,
+    "err_pct": -6.1
    },
    {
     "arm": "m_localroute",
     "batch": 4,
     "ctx": 16,
     "tpot": 7.834,
-    "pred": 8.45,
-    "err_pct": 7.9
+    "pred": 7.68,
+    "err_pct": -2.0
    },
    {
     "arm": "m_localroute",
     "batch": 4,
     "ctx": 32,
     "tpot": 12.445,
-    "pred": 10.95,
-    "err_pct": -12.0
+    "pred": 9.68,
+    "err_pct": -22.2
    },
    {
     "arm": "m_localroute",
     "batch": 8,
     "ctx": 2,
     "tpot": 7.407,
-    "pred": 6.7,
-    "err_pct": -9.6
+    "pred": 7.21,
+    "err_pct": -2.6
    },
    {
     "arm": "m_localroute",
     "batch": 8,
     "ctx": 16,
     "tpot": 12.116,
-    "pred": 11.07,
-    "err_pct": -8.6
+    "pred": 10.71,
+    "err_pct": -11.6
    },
    {
     "arm": "m_localroute",
     "batch": 8,
     "ctx": 32,
     "tpot": 15.863,
-    "pred": 16.07,
-    "err_pct": 1.3
+    "pred": 14.71,
+    "err_pct": -7.3
    },
    {
     "arm": "m_localroute",
     "batch": 32,
     "ctx": 2,
     "tpot": 9.31,
-    "pred": 9.08,
-    "err_pct": -2.4
+    "pred": 11.28,
+    "err_pct": 21.1
    },
    {
     "arm": "m_localroute",
     "batch": 32,
     "ctx": 16,
     "tpot": 20.994,
-    "pred": 26.58,
-    "err_pct": 26.6
+    "pred": 25.27,
+    "err_pct": 20.3
    },
    {
     "arm": "m_localroute",
     "batch": 32,
     "ctx": 32,
     "tpot": 52.326,
-    "pred": 46.58,
-    "err_pct": -11.0
+    "pred": 41.26,
+    "err_pct": -21.2
    },
    {
     "arm": "m_skip50",
     "batch": 4,
     "ctx": 2,
     "tpot": 5.36,
-    "pred": 4.91,
-    "err_pct": -8.5
+    "pred": 4.67,
+    "err_pct": -12.8
    },
    {
     "arm": "m_skip50",
     "batch": 4,
     "ctx": 16,
     "tpot": 5.896,
-    "pred": 6.0,
-    "err_pct": 1.8
+    "pred": 5.55,
+    "err_pct": -5.9
    },
    {
     "arm": "m_skip50",
     "batch": 4,
     "ctx": 32,
     "tpot": 5.87,
-    "pred": 7.25,
-    "err_pct": 23.5
+    "pred": 6.55,
+    "err_pct": 11.5
    },
    {
     "arm": "m_skip50",
     "batch": 8,
     "ctx": 2,
     "tpot": 5.423,
-    "pred": 5.25,
-    "err_pct": -3.2
+    "pred": 5.28,
+    "err_pct": -2.6
    },
    {
     "arm": "m_skip50",
     "batch": 8,
     "ctx": 16,
     "tpot": 7.068,
-    "pred": 7.44,
-    "err_pct": 5.2
+    "pred": 7.03,
+    "err_pct": -0.5
    },
    {
     "arm": "m_skip50",
     "batch": 8,
     "ctx": 32,
     "tpot": 9.993,
-    "pred": 9.94,
-    "err_pct": -0.5
+    "pred": 9.03,
+    "err_pct": -9.6
    },
    {
     "arm": "m_skip50",
     "batch": 32,
     "ctx": 2,
     "tpot": 7.004,
-    "pred": 7.24,
-    "err_pct": 3.3
+    "pred": 7.33,
+    "err_pct": 4.7
    },
    {
     "arm": "m_skip50",
     "batch": 32,
     "ctx": 16,
     "tpot": 14.604,
-    "pred": 15.99,
-    "err_pct": 9.5
+    "pred": 14.33,
+    "err_pct": -1.9
    },
    {
     "arm": "m_skip50",
     "batch": 32,
     "ctx": 32,
     "tpot": 26.621,
-    "pred": 25.98,
-    "err_pct": -2.4
+    "pred": 22.32,
+    "err_pct": -16.1
    },
    {
     "arm": "m_skipa2a",
     "batch": 4,
     "ctx": 2,
     "tpot": 6.023,
-    "pred": 6.26,
-    "err_pct": 3.9
+    "pred": 5.81,
+    "err_pct": -3.5
    },
    {
     "arm": "m_skipa2a",
     "batch": 4,
     "ctx": 16,
     "tpot": 7.159,
-    "pred": 8.45,
-    "err_pct": 18.0
+    "pred": 7.56,
+    "err_pct": 5.6
    },
    {
     "arm": "m_skipa2a",
     "batch": 4,
     "ctx": 32,
     "tpot": 11.363,
-    "pred": 10.95,
-    "err_pct": -3.7
+    "pred": 9.56,
+    "err_pct": -15.9
    },
    {
     "arm": "m_skipa2a",
     "batch": 8,
     "ctx": 2,
     "tpot": 6.826,
-    "pred": 6.69,
-    "err_pct": -2.0
+    "pred": 7.02,
+    "err_pct": 2.9
    },
    {
     "arm": "m_skipa2a",
     "batch": 8,
     "ctx": 16,
     "tpot": 9.982,
-    "pred": 11.06,
-    "err_pct": 10.8
+    "pred": 10.52,
+    "err_pct": 5.4
    },
    {
     "arm": "m_skipa2a",
     "batch": 8,
     "ctx": 32,
     "tpot": 17.401,
-    "pred": 16.06,
-    "err_pct": -7.7
+    "pred": 14.52,
+    "err_pct": -16.6
    },
    {
     "arm": "m_skipa2a",
     "batch": 32,
     "ctx": 2,
     "tpot": 9.701,
-    "pred": 9.07,
-    "err_pct": -6.5
+    "pred": 11.13,
+    "err_pct": 14.7
    },
    {
     "arm": "m_skipa2a",
     "batch": 32,
     "ctx": 16,
     "tpot": 22.951,
-    "pred": 26.57,
-    "err_pct": 15.8
+    "pred": 25.12,
+    "err_pct": 9.5
    },
    {
     "arm": "m_skipa2a",
     "batch": 32,
     "ctx": 32,
     "tpot": 48.155,
-    "pred": 46.57,
-    "err_pct": -3.3
+    "pred": 41.11,
+    "err_pct": -14.6
    },
    {
     "arm": "m_win",
     "batch": 4,
     "ctx": 2,
     "tpot": 8.388,
-    "pred": 7.89,
-    "err_pct": -6.0
+    "pred": 7.52,
+    "err_pct": -10.3
    },
    {
     "arm": "m_win",
     "batch": 4,
     "ctx": 16,
     "tpot": 8.754,
-    "pred": 8.69,
-    "err_pct": -0.8
+    "pred": 8.74,
+    "err_pct": -0.1
    },
    {
     "arm": "m_win",
     "batch": 4,
     "ctx": 32,
     "tpot": 10.787,
-    "pred": 9.6,
-    "err_pct": -11.0
+    "pred": 10.14,
+    "err_pct": -6.0
    },
    {
     "arm": "m_win",
     "batch": 8,
     "ctx": 2,
     "tpot": 8.815,
-    "pred": 8.3,
-    "err_pct": -5.8
+    "pred": 8.68,
+    "err_pct": -1.5
    },
    {
     "arm": "m_win",
     "batch": 8,
     "ctx": 16,
     "tpot": 9.445,
-    "pred": 9.9,
-    "err_pct": 4.8
+    "pred": 11.12,
+    "err_pct": 17.7
    },
    {
     "arm": "m_win",
     "batch": 8,
     "ctx": 32,
     "tpot": 10.9,
-    "pred": 11.72,
-    "err_pct": 7.6
+    "pred": 13.91,
+    "err_pct": 27.6
    },
    {
     "arm": "m_win",
     "batch": 32,
     "ctx": 2,
     "tpot": 10.908,
-    "pred": 10.6,
-    "err_pct": -2.9
+    "pred": 12.45,
+    "err_pct": 14.1
    },
    {
     "arm": "m_win",
     "batch": 32,
     "ctx": 16,
     "tpot": 18.456,
-    "pred": 16.99,
-    "err_pct": -8.0
+    "pred": 22.2,
+    "err_pct": 20.3
    },
    {
     "arm": "m_win",
     "batch": 32,
     "ctx": 32,
     "tpot": 21.987,
-    "pred": 24.29,
-    "err_pct": 10.5
+    "pred": 33.35,
+    "err_pct": 51.7
    },
    {
     "arm": "bf16",
     "batch": 4,
     "ctx": 2,
     "tpot": 7.647736862415822,
-    "pred": 8.04,
-    "err_pct": 5.1
+    "pred": 7.58,
+    "err_pct": -0.9
    },
    {
     "arm": "bf16",
     "batch": 4,
     "ctx": 16,
     "tpot": 9.397769138996294,
-    "pred": 10.22,
-    "err_pct": 8.8
+    "pred": 9.33,
+    "err_pct": -0.7
    },
    {
     "arm": "bf16",
     "batch": 4,
     "ctx": 32,
     "tpot": 15.763347612705374,
-    "pred": 12.72,
-    "err_pct": -19.3
+    "pred": 11.33,
+    "err_pct": -28.1
    },
    {
     "arm": "bf16",
     "batch": 8,
     "ctx": 2,
     "tpot": 8.965903461203597,
-    "pred": 8.59,
-    "err_pct": -4.1
+    "pred": 8.79,
+    "err_pct": -1.9
    },
    {
     "arm": "bf16",
     "batch": 8,
     "ctx": 16,
     "tpot": 13.959329093264978,
-    "pred": 12.97,
-    "err_pct": -7.1
+    "pred": 12.29,
+    "err_pct": -11.9
    },
    {
     "arm": "bf16",
     "batch": 8,
     "ctx": 32,
     "tpot": 16.897250226897263,
-    "pred": 17.97,
-    "err_pct": 6.3
+    "pred": 16.29,
+    "err_pct": -3.6
    },
    {
     "arm": "bf16",
     "batch": 32,
     "ctx": 2,
     "tpot": 10.994060359584463,
-    "pred": 11.77,
-    "err_pct": 7.1
+    "pred": 12.9,
+    "err_pct": 17.3
    },
    {
     "arm": "bf16",
     "batch": 32,
     "ctx": 16,
     "tpot": 28.50720626427458,
-    "pred": 29.27,
-    "err_pct": 2.7
+    "pred": 26.89,
+    "err_pct": -5.7
    },
    {
     "arm": "bf16",
     "batch": 32,
     "ctx": 32,
     "tpot": 63.12040242666626,
-    "pred": 49.27,
-    "err_pct": -21.9
+    "pred": 42.88,
+    "err_pct": -32.1
    }
   ]
  }

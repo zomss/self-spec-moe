@@ -1,0 +1,239 @@
+{
+ "transfer": {
+  "layer_ratio": 0.562,
+  "moe_params": {
+   "f0": 3.1588,
+   "f1": 0.0,
+   "BW_GBs": 2661.5187,
+   "h_ms_per_Mtok": 85.0511,
+   "c0": 1.7692,
+   "c1": 0.0,
+   "kappa_fp8m": 1.149,
+   "kappa_fib": 1.6998,
+   "kappa_a2atile": 0.0
+  }
+ },
+ "cells": {
+  "ds_bf16_b4_c2k": {
+   "tpot": 3.84,
+   "R": 1.0
+  },
+  "ds_bf16_b4_c16k": {
+   "tpot": 5.23,
+   "R": 1.0
+  },
+  "ds_bf16_b4_c32k": {
+   "tpot": 6.81,
+   "R": 1.0
+  },
+  "ds_bf16_b8_c2k": {
+   "tpot": 4.64,
+   "R": 1.0
+  },
+  "ds_bf16_b8_c16k": {
+   "tpot": 7.41,
+   "R": 1.0
+  },
+  "ds_bf16_b8_c32k": {
+   "tpot": 10.58,
+   "R": 1.0
+  },
+  "ds_bf16_b32_c2k": {
+   "tpot": 6.98,
+   "R": 1.0
+  },
+  "ds_bf16_b32_c16k": {
+   "tpot": 18.07,
+   "R": 1.0
+  },
+  "ds_bf16_b32_c32k": {
+   "tpot": 30.75,
+   "R": 1.0
+  },
+  "ds_fp8marlin_b4_c2k": {
+   "tpot": 4.68,
+   "R": 1.219
+  },
+  "ds_fp8marlin_b4_c16k": {
+   "tpot": 6.07,
+   "R": 1.161
+  },
+  "ds_fp8marlin_b4_c32k": {
+   "tpot": 7.65,
+   "R": 1.123
+  },
+  "ds_fp8marlin_b8_c2k": {
+   "tpot": 5.18,
+   "R": 1.117
+  },
+  "ds_fp8marlin_b8_c16k": {
+   "tpot": 7.95,
+   "R": 1.073
+  },
+  "ds_fp8marlin_b8_c32k": {
+   "tpot": 11.12,
+   "R": 1.051
+  },
+  "ds_fp8marlin_b32_c2k": {
+   "tpot": 6.96,
+   "R": 0.998
+  },
+  "ds_fp8marlin_b32_c16k": {
+   "tpot": 18.06,
+   "R": 0.999
+  },
+  "ds_fp8marlin_b32_c32k": {
+   "tpot": 30.74,
+   "R": 1.0
+  },
+  "ds_fp8block_b4_c2k": {
+   "tpot": 2.91,
+   "R": 0.758
+  },
+  "ds_fp8block_b4_c16k": {
+   "tpot": 4.3,
+   "R": 0.822
+  },
+  "ds_fp8block_b4_c32k": {
+   "tpot": 5.88,
+   "R": 0.864
+  },
+  "ds_fp8block_b8_c2k": {
+   "tpot": 3.41,
+   "R": 0.736
+  },
+  "ds_fp8block_b8_c16k": {
+   "tpot": 6.18,
+   "R": 0.835
+  },
+  "ds_fp8block_b8_c32k": {
+   "tpot": 9.35,
+   "R": 0.884
+  },
+  "ds_fp8block_b32_c2k": {
+   "tpot": 5.19,
+   "R": 0.744
+  },
+  "ds_fp8block_b32_c16k": {
+   "tpot": 16.29,
+   "R": 0.901
+  },
+  "ds_fp8block_b32_c32k": {
+   "tpot": 28.97,
+   "R": 0.942
+  },
+  "ds_win_b4_c2k": {
+   "tpot": 3.82,
+   "R": 0.995
+  },
+  "ds_win_b4_c16k": {
+   "tpot": 5.04,
+   "R": 0.965
+  },
+  "ds_win_b4_c32k": {
+   "tpot": 6.43,
+   "R": 0.945
+  },
+  "ds_win_b8_c2k": {
+   "tpot": 4.6,
+   "R": 0.992
+  },
+  "ds_win_b8_c16k": {
+   "tpot": 7.04,
+   "R": 0.95
+  },
+  "ds_win_b8_c32k": {
+   "tpot": 9.83,
+   "R": 0.929
+  },
+  "ds_win_b32_c2k": {
+   "tpot": 6.84,
+   "R": 0.98
+  },
+  "ds_win_b32_c16k": {
+   "tpot": 16.59,
+   "R": 0.918
+  },
+  "ds_win_b32_c32k": {
+   "tpot": 27.74,
+   "R": 0.902
+  },
+  "ds_skip50_b4_c2k": {
+   "tpot": 1.92,
+   "R": 0.5
+  },
+  "ds_skip50_b4_c16k": {
+   "tpot": 2.61,
+   "R": 0.5
+  },
+  "ds_skip50_b4_c32k": {
+   "tpot": 3.41,
+   "R": 0.5
+  },
+  "ds_skip50_b8_c2k": {
+   "tpot": 2.32,
+   "R": 0.5
+  },
+  "ds_skip50_b8_c16k": {
+   "tpot": 3.71,
+   "R": 0.5
+  },
+  "ds_skip50_b8_c32k": {
+   "tpot": 5.29,
+   "R": 0.5
+  },
+  "ds_skip50_b32_c2k": {
+   "tpot": 3.49,
+   "R": 0.5
+  },
+  "ds_skip50_b32_c16k": {
+   "tpot": 9.04,
+   "R": 0.5
+  },
+  "ds_skip50_b32_c32k": {
+   "tpot": 15.38,
+   "R": 0.5
+  },
+  "ds_kvq_b4_c2k": {
+   "tpot": 3.83,
+   "R": 0.997
+  },
+  "ds_kvq_b4_c16k": {
+   "tpot": 5.13,
+   "R": 0.982
+  },
+  "ds_kvq_b4_c32k": {
+   "tpot": 6.62,
+   "R": 0.972
+  },
+  "ds_kvq_b8_c2k": {
+   "tpot": 4.61,
+   "R": 0.995
+  },
+  "ds_kvq_b8_c16k": {
+   "tpot": 7.22,
+   "R": 0.974
+  },
+  "ds_kvq_b8_c32k": {
+   "tpot": 10.2,
+   "R": 0.964
+  },
+  "ds_kvq_b32_c2k": {
+   "tpot": 6.88,
+   "R": 0.986
+  },
+  "ds_kvq_b32_c16k": {
+   "tpot": 17.3,
+   "R": 0.957
+  },
+  "ds_kvq_b32_c32k": {
+   "tpot": 29.22,
+   "R": 0.95
+  }
+ },
+ "claims": [
+  "window is a WEAK lever on MLA (KV latent tiny): R stays 0.90-0.99 across the grid (vs 0.35-0.65 on GQA-MoE at long ctx)",
+  "quant arms ~parity plus kernel tax (as on GQA-MoE)",
+  "=> combined with 77's beta, NVLink MLA has NO strong self-spec lever; its levers await the comm-bound fabric (shared-expert local-route)."
+ ]
+}
