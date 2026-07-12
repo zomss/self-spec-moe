@@ -38,7 +38,9 @@ kill_mine(){ pkill -9 -u "$ME" -f 'vllm[.]entrypoints' 2>/dev/null; pkill -9 -u 
 
 CELLS_B="4 8 32"; CELLS_C="2048 16384 32768"    # per-group defaults, set below
 DWIN='{"sliding_window": 512, "use_sliding_window": true, "max_window_layers": 28}'
+DWIN128='{"sliding_window": 128, "use_sliding_window": true, "max_window_layers": 28}'   # 78-V2
 MWIN='{"sliding_window": 512, "use_sliding_window": true, "max_window_layers": 48}'
+MWIN128='{"sliding_window": 128, "use_sliding_window": true, "max_window_layers": 48}'   # 78-V2
 SWIN='{"sliding_window": 512}'
 
 # run_arm <name> <par:tp1|dp4> <model> [serve extra args...]
@@ -132,6 +134,7 @@ dense)
   run_arm d_fp8w8a8   tp1 "$E76_DENSE" --quantization fp8
   run_arm d_kvq       tp1 "$E76_DENSE" --kv-cache-dtype fp8_e4m3
   run_arm d_win       tp1 "$E76_DENSE" --hf-overrides "$DWIN"
+  run_arm d_win128    tp1 "$E76_DENSE" --hf-overrides "$DWIN128"
   run_arm d_bf16dummy tp1 "$E76_DENSE" --load-format dummy
   run_arm d_skip50    tp1 "$E76_DENSE" --load-format dummy --hf-overrides '{"num_hidden_layers": 14}'
   A_CELLS="1:2048 1:32512 32:2048 32:32512" \
@@ -143,6 +146,7 @@ moe)
   run_arm m_fp8block  dp4 "$E76_MOE" --quantization fp8_per_block
   run_arm m_kvq       dp4 "$E76_MOE" --kv-cache-dtype fp8_e4m3
   run_arm m_win       dp4 "$E76_MOE" --hf-overrides "$MWIN"
+  run_arm m_win128    dp4 "$E76_MOE" --hf-overrides "$MWIN128"
   run_arm m_bf16dummy dp4 "$E76_MOE" --load-format dummy
   run_arm m_skip50    dp4 "$E76_MOE" --load-format dummy --hf-overrides '{"num_hidden_layers": 24}'
   A_ENV="VLLM_SELF_SPEC_LOCAL_ROUTE=1" run_arm m_localroute dp4 "$E76_MOE"
