@@ -107,3 +107,32 @@ Registered claim "window weak on MLA": measured window R 0.73-1.14 (median
 DP-noise cell below the registered band. MLA's measured cost tier is now in
 76's dataset; composing it with 77's β completes the MLA strategy column
 (selector.py, V4).
+
+## V4 / phase close-out: selector.py + strategy map v3 (three architectures)
+
+`scripts/selector.py` → `data/strategy_map_v3.md`. The closed loop the project
+set out to build: (architecture, batch, ctx) → best lever + depth, including
+OFF — every input measured (R: 76 + MLA tier; β: 77 per-architecture).
+
+- **Dense**: W4-Marlin region (short ctx / low batch, 1.28-1.30×) ∪ window
+  region (long ctx / high batch, up to 1.56×); window-128 ties window-512
+  (same family) — the smallest window is never worse.
+- **MoE-GQA**: OFF-or-marginal-quant region (2k: ≤1.06×) ∪ window region
+  (≥16k: 1.27-2.22× roofline).
+- **MLA**: effectively OFF everywhere at NVLink (≤1.13× roofline ≈ parity
+  after delivery) — CONFIRMS the registered V3 claim. MLA's measured-β
+  strengths (shared-expert local-route 0.95-0.99, shallow-skip 0.97) await
+  the comm-bound fabric + a skip cost arm.
+- **Consistency**: all five e2e ground-truth cells match the v3 winner (5/5).
+
+Also fixed during close-out: the V2 interp runs OVERWROTE the dense bf16 meta
+sidecar (runner truncates META at server start), silently un-excluding the
+b32/32k over-capacity cell on summary regeneration — marks restored; hazard
+noted for the runner backlog.
+
+**Phase 78 verdict**: V0 dense PASS / moe noise-floor; V1 PASS (held-out
+window from bytes: 2.2%/6.9%); V2 PASS (forward: win128 2.9%, interp 8.0%);
+V3 registered-transfer FAIL → V3b one-anchor refinement (R 9.3% PASS, TPOT
+18.3% FAIL — h/BW are stack constants); V4 delivered. The defensible claim:
+**a measured-once selector whose R structure transfers to a new architecture
+with one anchor cell, and whose strategy map is e2e-validated on 5 cells.**
