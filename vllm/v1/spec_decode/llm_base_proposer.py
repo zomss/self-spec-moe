@@ -3960,12 +3960,19 @@ class SpecDecodeBaseProposer:
             for attn_group in self.draft_attn_groups:
                 builder = attn_group.get_metadata_builder()
                 is_mla = isinstance(builder, MLACommonMetadataBuilder)
-                if is_mla and getattr(builder, "max_num_splits", 0):
+                # Phase 79 (MLA challenger): FLASH_ATTN_MLA is FA3-family --
+                # its captured schedule freezes like FA3-GQA's (constant-
+                # geometry law), NOT like FLASHMLA's. Measured: captured
+                # chain accept 2.00 vs eager 5.89 (K=5 self-draft,
+                # DeepSeek-V2-Lite b32/16k). Treat it as non-replay-safe.
+                is_fa3_mla = type(builder).__name__ == "FlashAttnMLAMetadataBuilder"
+                if is_mla and not is_fa3_mla and getattr(builder, "max_num_splits", 0):
                     builder.max_num_splits = draft_splits
-                elif not is_mla and not self._draft_fullcg:
-                    # FA3 / GQA (or any non-MLA backend): the captured decode
-                    # graph cannot replay the draft's intra-loop growing
-                    # sequence -> run the chain attention eagerly.
+                elif (not is_mla or is_fa3_mla) and not self._draft_fullcg:
+                    # FA3 / GQA (or any non-MLA backend, or FA3-family MLA):
+                    # the captured decode graph cannot replay the draft's
+                    # intra-loop growing sequence -> run the chain attention
+                    # eagerly.
                     # Phase 69: with the window-scratchpad attention
                     # (VLLM_SELF_SPEC_DRAFT_FULLCG) the chain attention is a
                     # fixed-shape dense op that IS replay-safe, so keep the FULL

@@ -179,3 +179,59 @@ optimistic by ~0.10-0.12 beta.
 - mla b32/2k: q_fp8 priced 1.07x (gamma5, prodB/measR)
 - moe b8/2k: q_fp8 priced 1.06x (gamma4, prodB/measR)
 - mla b8/32k: win512 priced 1.05x (gamma1, prodB/measR)
+
+## Measured: the top challenger (mla b32/16k q_fp8) — COLLAPSES e2e; OFF stands
+
+First MLA self-spec e2e in the record (`scripts/run_mla_challenger.sh`,
+DeepSeek-V2-Lite TP1, fp8_per_block self-draft, shared KV, b32/16k):
+
+| arm | tok/s | accept |
+|---|---|---|
+| nospec | 2452 ±675 | — |
+| q_fp8 K=7 | 367 ±5 | **1.821** |
+| q_fp8 K=5 | 413 ±4 | **1.802** |
+
+The 1.13x optimistic price does not survive contact: measured 0.15x. TWO
+independent failures, both informative:
+1. **Accept 1.8 vs offline beta 0.995 (predicted accept ~6.3)** — the MLA
+   e2e path was never anchor-gated (77's gate covered dense+moe only);
+   either the MLA self-spec draft path has a defect (first exercise ever)
+   or runtime fp8_per_block on V2-Lite diverges from the offline
+   fake-quant beta. Backlog: MLA anchor-gate before any MLA map claim
+   beyond OFF.
+2. **Chain cost: decode 11.2s vs 1.77s nospec** — the MLA draft chain on
+   this stack is far above its standalone-serve R (0.85); none of the
+   Phase-81 chain fixes apply (no window -> no scratchpad graphs).
+
+**Verdict: OFF on MLA is now measured, not just priced** — the best
+challenger the exhaustive search could produce loses by 6.7x on the real
+system. The optimistic pricing was an upper bound in the right direction.
+
+## Anomaly RESOLVED: F11 strikes on FLASH_ATTN_MLA; fix applied; OFF triply measured
+
+The accept collapse decomposed into three separately-measured causes:
+
+1. **Harness defect (the big one, +4.1 accept): FLASH_ATTN_MLA's captured
+   chain graph is not replay-safe** — it is FA3-family, so the
+   constant-geometry law (81-F11) applies; the fg2-era "MLA keeps the
+   captured graph" rule was a FLASHMLA-only fact. bf16 self-draft accept:
+   captured 2.00 → eager 5.89 → **5.916 by default after the fix**
+   (llm_base_proposer: FlashAttnMLAMetadataBuilder classified
+   non-replay-safe). FLASHMLA itself untestable here (block-size
+   incompatibility) — noted, not assumed.
+2. **Lever mismatch (−2.1 accept)**: the harness's fp8_per_block draft is
+   W8A8 (activations too); the map's q_fp8 β=0.995 is weight-only. W8A8 on
+   V2-Lite: accept 3.86 at K5 (β_eff ≈ 0.77). A weight-only draft option
+   is future plumbing.
+3. **Chain cost is the binding loss anyway**: on the fixed chain, even the
+   PERFECT-accept bf16 self-draft (5.916) reaches only 1364 tok/s = 0.56×
+   nospec (2452 ±675) — the eager MLA chain step costs far above the
+   standalone-serve R=0.85 the pricing used, and no Phase-81 remedy
+   applies without a window (no scratchpad geometry to clamp).
+
+**Final verdict: OFF on MLA at NVLink is (a) search-backed (max 1.13×
+optimistic over 53 configs), (b) mechanism-explained, and (c) measured —
+the best challenger delivers 0.54×, and even β≈1 delivers 0.56×.** The gap
+to close before ANY MLA config can win is chain execution (captured MLA
+chain via FLASHMLA or an MLA scratchpad), and even at perfect delivery the
+priced ceiling is 1.13× — below every dense/MoE map winner.
