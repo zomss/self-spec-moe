@@ -1,4 +1,4 @@
-# Paper outline — phases 76-80
+# Paper outline — phases 76-81 (updated 2026-07-13 with the Phase-81 headline)
 
 **Working title**: *No Universal Draft: A Measured Selector for Training-Free
 Self-Speculative Decoding Across Batch, Context, and Architecture*
@@ -37,10 +37,19 @@ selector + honest negative regions), not a single-method paper.
      (2.5-16% err); cost model with held-out-arm (2.2%) and forward (2.9%)
      validation; one-anchor transfer to an unswept architecture (R 9.3%) (§6).
   C4 The composition law: β_combo ≈ Πβ_i (median dev 0.01) with two
-     structured exceptions; composed configs win the dense long-ctx map
-     (measured 1.41× at 91% delivery); the delivery(γ, R) systems law (§7).
+     structured exceptions; composed configs win the dense long-ctx map;
+     the delivery(γ, R) systems law (§7).
+  C5 The floor-free chain: two execution laws that CASH the composed
+     frontier — (i) FA3's captured schedule is replay-safe iff attention
+     geometry is constant (the window scratchpad clamps it: chain step
+     6.47→3.70 ms, accept bit-preserved); (ii) a compacted q=1 step-0 must
+     trim seq_lens by the cycle's rejections (non-causal decode attends the
+     rejected tail; window-amplified, −0.55 accept → fixed). Result:
+     **1.91× measured at dense b32/16k = the registered roofline, delivery
+     ≈ 100%**; same stack gives the MoE window cell +12% (§8).
 - Anti-contribution framing (honesty as a feature): three map regions say
-  "turn it OFF"; the composed frontier is gated by the draft launch floor.
+  "turn it OFF"; the delivery discount that gated the composed frontier is
+  fully attributed (launch floor) and fully recovered (C5).
 
 ## 2. Background and related work
 
@@ -128,10 +137,46 @@ selector + honest negative regions), not a single-method paper.
 - F10 e2e: composed config confirmed at b8/16k (1.41×, 91% delivery); the
   b32 miss ⇒ **delivery(γ, R)**: the fixed per-draft-step launch floor
   binds precisely when composition makes the draft byte-cheap (K4≈K6
-  signature) — composition shifts the bottleneck from bytes to launch;
-  ~1.9× measured-payoff awaits a floor-free chain.
+  signature) — composition shifts the bottleneck from bytes to launch.
+  This sets up §8: the floor is not fate.
 
-## 8. Discussion, limitations, and open surface
+## 8. Cashing the frontier: the floor-free chain (Phase 81)
+
+- Anatomy first (Kineto): the composed dense chain step is 6.47 ms at 61%
+  GPU-active — 2.26 ms/step is launch idle across ~370 eager kernels; cycle
+  arithmetic puts the recoverable payoff at up to 1.98×.
+- F11 **the constant-geometry capture law**: FA3's captured schedule is
+  replay-safe iff attention geometry is CONSTANT. The known failure (P35-
+  style accept collapse, reproduced as a control: 5.69 → 1.93) needs a
+  growing sequence; the window scratchpad clamps KV length (sinks+window),
+  so the whole chain step replays as one graph. Implementation: paged FA3
+  varlen over the compacted window block table replacing an SDPA that
+  silently dispatched mem-efficient decomposition (~0.25 ms/layer → ~30 µs).
+  Chain step 6.47 → 3.70 ms (94% active), accept bit-preserved (5.655 vs
+  5.685). Negative results kept: TRITON_ATTN and naive FA3 chain-CG both
+  collapse accept — the A/B accept gate is methodology, not paranoia.
+- F12 **the compacted step-0 correctness law**: under shared KV, step-0 is
+  semantically a q=1 decode of the appended token — but padded-path
+  seq_lens span rejected slots, which a causal ragged forward masks and a
+  q=1 decode does NOT. Untrimmed, the appended token attends the stale KV
+  of the cycle's rejected draft tokens; a KV window AMPLIFIES this (up to K
+  wrong keys among the ~window most recent → −0.55 accept; at full context
+  it dilutes to noise — reconciling the earlier −0.04 reading). Fix: trim
+  per-request seq_lens by num_rejected. Accept restored bit-clean (5.672).
+- F13 the payoff, e2e (same cells/method as §7): dense b32/16k K6
+  **4152 tok/s = 1.91× — exactly the registered roofline, delivery ≈ 100%**
+  (was 1.48×/77%); b8/16k K4 1.64× (registered 1.55×); γ* structure of the
+  map survives (b8: K4 > K6). Baseline-fairness control: nospec+async +4%,
+  headline still 1.84× against it.
+- F14 cross-architecture: the identical stack engages under DP4/EP4 MoE
+  (compaction on all ranks) — window cell 615 → 688 tok/s (+12%) at
+  identical accept. The chain fix is architecture-generic, not a dense
+  special case.
+- Delivery(γ,R) closes: with the floor removed, delivery ≈ 1 at both
+  measured γ* — the selector drops the delivery discount for dense composed
+  configs and ranks on raw τ_β(γ)/(γR+1).
+
+## 9. Discussion, limitations, and open surface
 
 - Single box (H100 ×4), single serving stack; TPOT absolutes don't transfer
   (2-3 stack constants) — the R-selector does.
@@ -141,12 +186,18 @@ selector + honest negative regions), not a single-method paper.
   are parked — the original thesis, now with its accept side fully measured.
 - The draft-only KV pool: motivated (1.25× on QK-normed MoE) and scoped
   (V-only on un-normed models) but unbuilt.
-- The launch floor as the next systems lever (measured payoff attached).
+- Remaining headroom on the fixed chain: verify forward idles 31%
+  (4.8 ms/cycle) — a second, independent dial; step-0 residual vs a pure
+  chain step is the last ~250 tok/s to the 1.98× ceiling.
+- Runtime lever SWITCHING (the map as a scheduler policy) is scoped as
+  follow-on work (Phase 82) — this paper establishes the maps, the
+  selector, and that the selected configs deliver.
 
-## 9. Conclusion
+## 10. Conclusion
 
-- The map exists, the selector predicts it, composition extends it, and
-  "OFF" is a first-class answer.
+- The map exists, the selector predicts it, composition extends it,
+  "OFF" is a first-class answer — and the selected frontier configs
+  deliver their rooflines end to end on a floor-free chain.
 
 ---
 
@@ -161,6 +212,10 @@ selector + honest negative regions), not a single-method paper.
 | composition law | 80 E0 (48 paired cells) | beta_combo.csv |
 | composed e2e | 80 E3 | logs/e3c_*, results_composition.md |
 | delivery(γ,R) | 80 E3 K4≈K6 + 76-E3 γ-trend | same |
+| capture law (F11) | 81 E1/E1b A/B + traces | results_floor.md, data/trace_* |
+| step-0 law (F12) | 81 E2b isolation ladder (spsd/spsd2/spw0/spw0sd/spsdfix) | results_floor.md, logs/e1_* |
+| 1.91× headline (F13) | 81 E3 (7 cells, parallel) | data/e3/, results_floor.md |
+| MoE generality (F14) | 81 MoE check (noreg + fixed arms) | data/moe_check/ |
 
 ## Figures plan
 
@@ -169,10 +224,14 @@ selector + honest negative regions), not a single-method paper.
   Fig 4 validation scatter (add the 2 forward cells + combo cells) · Fig 5
   (R, β) plane (add measured skip points + combo points) · NEW Fig 6:
   three-arch β portability (slopegraph) · NEW Fig 7: composition law
-  (measured vs product scatter with the two exception clusters).
+  (measured vs product scatter with the two exception clusters) · NEW
+  Fig 8: the floor-free chain — (a) chain-step anatomy before/after
+  (6.47 ms/61% active → 3.70 ms/94%), (b) delivery bars per cell
+  (77% → 100% at b32/16k; the b8 cells), (c) the step-0 poisoning
+  schematic (causal span vs q=1 key set under the window).
 
 ## Writing order
 
-related-work table → §4/§5 (data sections, assets ready) → §6/§7 →
-§3 methodology → §1/§8/§9 last. Re-check the login-walled OpenReview paper
-before submission (duplicate_check.md flag).
+related-work table → §4/§5 (data sections, assets ready) → §6/§7 → §8
+(fresh, numbers final) → §3 methodology → §1/§9/§10 last. Re-check the
+login-walled OpenReview paper before submission (duplicate_check.md flag).
