@@ -1,0 +1,54 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "tag": "e3x32_dense_spec_K4_b32_c32k",
+  "dp": 1,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 4,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 4,
+        "warmup": 1,
+        "long_s_mean": 90.21628946546116,
+        "short_s_mean": 88.40418961099931,
+        "long_s_all": [
+          90.17910549789667,
+          90.21568277897313,
+          90.22099314793013,
+          90.2493764370447
+        ],
+        "short_s_all": [
+          88.41224830900319,
+          88.39948813803494,
+          88.38284904498141,
+          88.4221729519777
+        ],
+        "decode_s_mean": 1.8120998544618487,
+        "decode_s_std": 0.031464734760896125,
+        "tok_s_mean": 2260.879243796007,
+        "tok_s_std": 39.789973355676274,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": true,
+        "accept_len": 4.286209286209287,
+        "num_accepted": 18968.0,
+        "num_drafted": 23088.0,
+        "num_drafts": 5772.0
+      }
+    ]
+  }
+}

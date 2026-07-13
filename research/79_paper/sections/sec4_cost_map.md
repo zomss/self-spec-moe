@@ -50,12 +50,19 @@ our earlier 6-cell probe to full coverage and both kernels, and it is the
 map's first OFF-region boundary: on this architecture class, the
 community's default lever buys nothing.
 
-**F3 — Levers extend the serviceable envelope.** At dense b32/32k the bf16
-baseline is over-capacity — the scheduler queues 7 of 32 requests and TPOT
-thrashes to 117–140 ms — while window (6.8 ms), W4 (12–14 ms), and KV-fp8
-(13 ms) all hold the batch cleanly. A draft lever can therefore create
-operating points where the target alone cannot even run, which no
-speedup-ratio table can express; we mark these cells specially in the map.
+**F3 — Levers extend the serviceable envelope (standalone configs only).**
+At dense b32/32k the bf16 baseline is over-capacity — the scheduler queues
+7 of 32 requests and TPOT thrashes to 117–140 ms — while window (6.8 ms),
+W4 (12–14 ms), and KV-fp8 (13 ms) all hold the batch cleanly. A draft
+lever can therefore create operating points where the target alone cannot
+even run, which no speedup-ratio table can express; we mark these cells
+specially in the map. The scoping matters: this is a property of
+STANDALONE lever configs, which allocate less. Shared-KV self-speculation
+cannot extend the envelope by construction — the target keeps its full KV
+allocation (a draft window cuts reads, not pages) and the draft's weights
+add pressure; we verified the composed self-spec draft also thrashes at
+b32/32k. Envelope extension via drafting requires an allocation-cutting
+lever (the draft-only KV pool of §5-F6's design rule — unbuilt).
 
 **F4 — A law refined: local routing is not free even on NVLink.** Prior
 readings that expert-parallel width "doesn't matter on NVLink" measured

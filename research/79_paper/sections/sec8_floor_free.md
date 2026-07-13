@@ -62,6 +62,8 @@ Re-running §7's cells on the fixed chain (same method, same baselines):
 | dense b32/16k K=4 | — | 1.48× | 1.85× | |
 | dense b8/16k K=4 | 1.55× | 1.41× (91%) | 1.64× | >100%* |
 | dense b8/16k K=6 | — | — | 1.52× | |
+| dense b16/32k K=4 | — | — | **2994 ±517 = 2.77×** | |
+| dense b16/32k K=6 | — | — | 2517 ±340 = 2.33× | |
 
 The registered roofline is measured EXACTLY at the headline cell — the
 delivery discount was the launch floor and nothing else. The map's γ*
@@ -69,6 +71,15 @@ structure survives (b8: K=4 > K=6, as selected), and the baseline is not
 handicapped: async-scheduling helps nospec by only 4% (headline 1.84×
 against the async baseline). (*b8 slightly exceeds its registration
 because the fixed chain's R is better than the standalone R the map used.)
+
+The long-context rows are the composition thesis completing itself: the
+scratchpad chain's cost is context-INDEPENDENT (a constant 528-key window)
+while the target's per-token cost doubles from 16k to 32k — so the
+composed advantage GROWS with context once the floor is gone, reaching
+**2.77× at b16/32k** (acceptance still composing at the product law:
+4.33/5 ≈ β 0.92). At b32/32k neither arm runs: the target itself is
+over-capacity, and shared-KV self-spec cannot relieve residency (§4-F3
+scoping) — the honest boundary of the envelope.
 
 ## 8.5 F14 — the laws travel
 

@@ -22,8 +22,8 @@ kill_mine(){ for p in 'w7_2node[.]py' 'EngineCor[e]' 'Worker_D[P]' 'vllm[.]entry
 
 run(){  # gpu arm mode K batch [extra-env...]
   local GPU=$1 ARM=$2 MODE=$3 K=$4 B=$5; shift 5
-  local CTX=32768
-  local TAG="e3x32_dense_${ARM}_K${K}_b${B}_c16k"
+  local CTX=32000    # qwen2.5 max_position_embeddings=32768; leave outlen room
+  local TAG="e3x32_dense_${ARM}_K${K}_b${B}_c32k"
   local LOG="$PHASE/logs/${TAG}.log"
   echo "[e3] $TAG (GPU $GPU, $(date +%H:%M:%S))"
   ( source "$P76/scripts/env_e76.sh"
@@ -37,7 +37,7 @@ run(){  # gpu arm mode K batch [extra-env...]
     export W7_MODEL=Qwen/Qwen2.5-7B-Instruct W7_TP=1 W7_EP=0 W7_TRC=0 W7_EAGER=0
     export W7_NODES=1 W7_LOCAL_WORLD=1 W7_MASTER_IP=127.0.0.1
     export W7_GPU_MEM=0.90 W7_OUTLEN=160 W7_SHORTLEN=32
-    export W7_CTX_TOKENS=$CTX W7_MAX_MODEL_LEN=$((CTX + 4096)) W7_MAX_NUM_BATCHED=8192
+    export W7_CTX_TOKENS=$CTX W7_MAX_MODEL_LEN=32768 W7_MAX_NUM_BATCHED=8192
     export W7_KS=$K W7_BATCHES=$B W7_ITERS=4 W7_WARMUP=1
     export W7_TAG="$TAG" W7_OUT="$PHASE/data/e3_32k"
     export W7_PROMPT_FILE="$P57/data/prompts_ondist.txt" W7_CHAT=1
@@ -59,10 +59,20 @@ run(){  # gpu arm mode K batch [extra-env...]
 }
 
 kill_mine
+FILTER="${1:-b32}"
+if [ "$FILTER" = b32 ]; then
 echo "[e3x32] === b32/32k: nospec (over-capacity doc) + composed spec ==="
 run 0 nospec nospec 0 32 &
 run 1 spec   spec   6 32 &
 run 2 spec   spec   4 32 &
 wait
+fi
+if [ "$FILTER" = b16 ]; then
+echo "[e3x32] === b16/32k: the clean long-ctx composed cell (fits KV pool) ==="
+run 0 nospec nospec 0 16 &
+run 1 spec   spec   6 16 &
+run 2 spec   spec   4 16 &
+wait
+fi
 kill_mine
 echo "[e3] DONE ($(date +%H:%M:%S))"
