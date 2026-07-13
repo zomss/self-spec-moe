@@ -245,3 +245,26 @@ Same cells/method as 80-E3 (composed dense draft W4-Marlin + window 512/16,
   configs and re-rank on raw τ_β(γ)/(γR+1).
 
 **Phase gate (≥1.75× at dense b32/16k composed): PASSED at 1.91×.**
+
+## MoE no-regression check (README E2 item) — PASS, plus an uninvited +12%
+
+P74 MoE window cells re-run on current code (Qwen3-30B-A3B DP4/EP4, GPUs 0-3,
+b8/16k, window 512/16, `scripts/run_moe_check.sh`):
+
+| arm | tok/s | accept | P74 reference | verdict |
+|---|---|---|---|---|
+| noreg K=2 | 719 ±21 | 2.922 | 693 ±8 / 2.905 | **PASS** (first attempt 579 ±140 = one cold iter; clean re-run shown) |
+| noreg K=3 | 615 ±6 | 3.764 | 639 ±28 / 3.824 | **PASS** (within bands) |
+| **fixed K=3** | **688 ±5** | **3.766** | — | fixed-chain stack on the EP-routed MoE draft: **+12% at identical accept** |
+
+- The E1b/E2b vLLM changes are env-gated off on the default MoE path —
+  accepts reproduce (2.922/3.764 vs 2.905/3.824), so no silent regression.
+- Exploratory arm: the full fixed-chain stack (scratchpad FA3 chain +
+  compacted step-0 + CPU_ORCH + async) ENGAGES on MoE — compaction once-log
+  on all 4 DP ranks, q=1 chain graphs captured — and lifts the MoE window
+  cell 615 → 688 (1.03× → 1.15× vs the 599 nospec ref) with accept
+  unchanged (3.766 vs 3.764). The floor-free chain is NOT dense-only; the
+  seq_lens trim holds under EP.
+- Not pursued here: MoE-side gate arithmetic (the MoE chain still carries
+  dispatch collectives per step; its floor anatomy is a different budget) —
+  a Phase-82+ item if the MoE regime matters for the switching system.
