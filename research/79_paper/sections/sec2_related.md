@@ -64,10 +64,17 @@ QK-norm rule (§5-F6) gives the mechanism plus a design rule (V-only on
 un-normed models) that KIVI-style rescaling cannot rescue (it makes β
 worse).
 
-**Layer skip.** LayerSkip/SWIFT/DEL search or adapt skip sets; our measured
-β curve (§5-F7) shows cost-only skip claims are not decision-grade — skip
+**Layer skip.** LayerSkip/SWIFT/DEL search or adapt skip sets, and
+KnapSpec (2602.20217) is the lever's strongest form — non-contiguous layer
+SELECTION solved as a knapsack over offline-profiled per-layer
+latency/acceptance. Our fixed middle-block skip is a lower bound on that
+lever (the same relation our window arm has to PillarAttn). KnapSpec is
+dense-only, single-lever, with no OFF notion and no regime axis — and its
+knapsack-over-profiles methodology independently validates the
+offline-profiling-then-search approach our §7 applies ACROSS levers. Our
+measured β curve (§5-F7) is the caution its cost side needs: skip
 collapses super-linearly on dense, runs +0.24 higher on MoE, and cliffs at
-50% on MLA. DEL's depth adaptation is the natural companion to our curve.
+50% on MLA.
 
 **MoE-specific mechanisms.** SS-MoE / MoE-Spec / SP-MoE and utility-driven
 variants each build one MoE mechanism (expert-subset draft, verify-side

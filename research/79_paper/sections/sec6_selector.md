@@ -68,10 +68,27 @@ context) → lever + depth, including OFF:
   tying window-512 — §5-F8's size-insensitivity surfacing in the decision.
 - **MoE-GQA**: OFF-or-marginal at 2k (≤1.06× — §4-F2's parity band composed
   with β); a window region from 16k (1.27–2.22× roofline).
-- **MLA**: OFF everywhere at NVLink (≤1.13× roofline ≈ parity after
-  delivery) — the doubly-weak window (§5-F8) and the anchored cost tier
-  agreeing. MLA's measured β strengths (shared-expert local-route
-  0.95–0.99, shallow skip 0.97) are parked for the comm-bound fabric (§9).
+- **MLA**: OFF everywhere at NVLink — the doubly-weak window (§5-F8) and
+  the anchored cost tier agreeing. MLA's measured β strengths
+  (shared-expert local-route 0.95–0.99, shallow skip 0.97) are parked for
+  the comm-bound fabric (§9).
+
+**OFF is search-backed, not lever-exhaustion.** "OFF" would be a naive
+verdict if it meant only that the levers we tried lose — some COMBINATION
+might win. We therefore re-derive every OFF cell by exhaustive priced
+search over the full combination space (53 configs per cell: all subsets
+up to size 4 with ≤1 lever per class, including MLA's best acceptance
+lever lr50 β 0.95–0.99, × γ ≤ 8), priced OPTIMISTICALLY — product-law β is
+an upper bound (§7's measured exceptions are destructive), measured
+combo/single R where available, and delivery = 1 (the §8 chain). Even this
+upper bound stays ≤ 1.13× in every OFF cell, and — the structural finding
+— NO composed configuration materially beats the best single lever in any
+OFF region: composition cannot rescue OFF, because these regions are OFF
+precisely where the base cost terms the levers cut are already small
+(MLA's compressed KV mutes window; EP amortization mutes weight-quant;
+NVLink mutes local-route). The residual challengers are all the portable
+fp8 single lever at 1.05–1.13× optimistic; we report them as measured
+marginal cells, not OFF flips. [Artifact: off_hardening.md]
 
 All five end-to-end ground-truth cells match the map's winner (5/5), and
 the map-vs-measured speedups agree to 2.5–16% pre-§8 (the residual being

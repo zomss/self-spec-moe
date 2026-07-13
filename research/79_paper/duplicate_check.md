@@ -52,3 +52,20 @@ acceptance-portability findings and validated transfer.
 - Adaptive MoE verification: https://arxiv.org/pdf/2605.00342
 - Rethinking high-throughput spec (unread, login-walled — check at camera-ready):
   https://openreview.net/forum?id=59OJOgKLzN
+
+## Addendum 2026-07-13: KnapSpec (2602.20217)
+
+**KnapSpec: Self-Speculative Decoding via Adaptive Layer Selection as a
+Knapsack Problem** (Cha, Kim, Han, Yang, Han; github kaist-flexml-lab).
+Layer SELECTION (non-contiguous) as a knapsack over offline-profiled
+per-layer latency/acceptance. Dense-only, single-lever (skip family), no
+OFF, no batch/ctx regime axis. NOT a duplicate — it is to our skip arm what
+SparseSpec is to our window arm: the lever's strongest form. Cite in §2
+beside SWIFT/DEL; position our contiguous middle-skip as a lower bound.
+Its offline-profile+combinatorial-search methodology independently
+validates our §7 framing (search ACROSS levers vs their search WITHIN one).
+
+**Triggered hardening (user review)**: OFF verdicts re-derived by
+exhaustive priced search over the full combo space (79/scripts/
+off_hardening.py) — see §6 update; OFF now means "the argmax over the
+whole combination space loses under optimistic pricing".
