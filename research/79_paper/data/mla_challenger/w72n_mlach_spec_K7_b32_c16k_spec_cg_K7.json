@@ -1,0 +1,89 @@
+{
+  "mode": "spec",
+  "model": "deepseek-ai/DeepSeek-V2-Lite",
+  "tag": "mlach_spec_K7_b32_c16k",
+  "dp": 1,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "fp8_per_block",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 4,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "7": [
+      {
+        "batch": 32,
+        "out_len": 160,
+        "short_len": 32,
+        "iters": 4,
+        "warmup": 1,
+        "long_s_mean": 16.263008715206524,
+        "short_s_mean": 5.106798867258476,
+        "long_s_all": [
+          16.277676127967425,
+          16.154934157966636,
+          16.12675233592745,
+          16.492672238964587
+        ],
+        "short_s_all": [
+          5.144572471035644,
+          5.005161341978237,
+          5.132202798034996,
+          5.145258857985027
+        ],
+        "decode_s_mean": 11.156209847948048,
+        "decode_s_std": 0.1452218743104649,
+        "tok_s_mean": 367.1962696871583,
+        "tok_s_std": 4.7620904946461815,
+        "out_tokens_decode": 4096,
+        "full_ntoks": 5120,
+        "suspect": false,
+        "accept_len": 1.8208888558028735,
+        "num_accepted": 11027.0,
+        "num_drafted": 94031.0,
+        "num_drafts": 13433.0
+      }
+    ]
+  },
+  "this_k": 7,
+  "results": [
+    {
+      "batch": 32,
+      "out_len": 160,
+      "short_len": 32,
+      "iters": 4,
+      "warmup": 1,
+      "long_s_mean": 16.263008715206524,
+      "short_s_mean": 5.106798867258476,
+      "long_s_all": [
+        16.277676127967425,
+        16.154934157966636,
+        16.12675233592745,
+        16.492672238964587
+      ],
+      "short_s_all": [
+        5.144572471035644,
+        5.005161341978237,
+        5.132202798034996,
+        5.145258857985027
+      ],
+      "decode_s_mean": 11.156209847948048,
+      "decode_s_std": 0.1452218743104649,
+      "tok_s_mean": 367.1962696871583,
+      "tok_s_std": 4.7620904946461815,
+      "out_tokens_decode": 4096,
+      "full_ntoks": 5120,
+      "suspect": false,
+      "accept_len": 1.8208888558028735,
+      "num_accepted": 11027.0,
+      "num_drafted": 94031.0,
+      "num_drafts": 13433.0
+    }
+  ]
+}
