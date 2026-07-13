@@ -216,3 +216,32 @@ window (512/16) composed draft.
 
 Remaining headroom (not gating): verify forward still idles 31% (4.8 ms);
 the ~250 tok/s to the ceiling is step-0's residual cost vs a pure chain step.
+
+## E3 — 80-E3 cells on the fixed chain: the parked 1.91× is CASHED
+
+Same cells/method as 80-E3 (composed dense draft W4-Marlin + window 512/16,
+16k ctx, `scripts/run_e3.sh`, cells parallel across GPUs 0-3, 2026-07-13):
+
+| cell | nospec | spec (fixed chain) | accept | speedup | 80-E3 (broken chain) | map v4 roofline |
+|---|---|---|---|---|---|---|
+| **b32 K=6** | 2175 ±98 | **4152 ±68** | 5.649 | **1.91×** | 1.48× | 1.91× @ γ*=6 — **delivery ≈ 100%** |
+| b32 K=4 | 2175 ±98 | 4018 ±168 | 4.291 | 1.85× | — | |
+| b8 K=4 | 946 ±8 | 1553 ±22 | 4.376 | **1.64×** | 1.55× | 1.55× @ γ*=4 — delivery > 1 |
+| b8 K=6 | 946 ±8 | 1436 ±44 | 5.641 | 1.52× | — | |
+
+- **b32/16k K6 measures EXACTLY the registered roofline (1.91×)** — the
+  delivery(γ,R) discount at γ6 (was ~86% predicted, 77% measured) is gone:
+  the floor was the whole gap.
+- Baseline-fairness control: nospec+async = 2261 ±52 (+4%); against it the
+  K6 cell is still 1.84×. Both baselines reported; maps use plain nospec.
+- b8 K4 (1.64×) > b8 K6 (1.52×): γ*=4 at small batch confirmed on the fixed
+  chain — the γ* structure of map v4 survives; only its delivery discount
+  needed the fix.
+- b8 delivery slightly >1 vs the registered 1.55×: the fixed chain's R is
+  better than the map's standalone-measured R at small batch (chain steps
+  now ride captured graphs end to end). Delivery(γ,R) refit (README E3
+  secondary) folds into roadmap (b): with delivery ≈ 1 at both measured
+  γ*, the selector can drop the delivery discount for dense composed
+  configs and re-rank on raw τ_β(γ)/(γR+1).
+
+**Phase gate (≥1.75× at dense b32/16k composed): PASSED at 1.91×.**
