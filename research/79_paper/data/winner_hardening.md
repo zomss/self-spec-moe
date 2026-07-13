@@ -392,9 +392,13 @@ optimistic by ~0.10-0.12 beta.
   * non-contiguous layer sets (KnapSpec's lever): leave-one-out profile
     beta 0.836-0.954 (early-mid droppable, late critical); greedy set
     {2,5,6} beta 0.849 vs contiguous skip125 0.448 -- SET SELECTION
-    DOUBLES skip beta at equal budget. Product law holds within the lever
-    for non-adjacent drops (0.849 vs 0.857 predicted); adjacency is the
-    exception (7-set with a 6-run: 0.507 vs 0.65 product).
+    DOUBLES skip beta at equal budget (and 5.6x at budget 7: 0.507 vs
+    0.09). Product law prices SHALLOW sets (budget 3: 0.849 vs 0.857
+    predicted) and degrades super-multiplicatively with DEPTH regardless
+    of adjacency -- the adjacency hypothesis was tested and REFUTED
+    (non-adjacent 7-set 0.435 < adjacency-blind greedy 0.507; both far
+    below their ~0.62-0.65 products). Depth, not contiguity, breaks
+    composition; deep sets must be measured, not priced.
   * Even doubled, skip does not flip any dense winner (best composed use
     ~1.14x vs q_int4 1.28x) -- winners robust to the menu extension.
 - Standing discretization caveats: window {128,512}, skip budgets {3,7},
