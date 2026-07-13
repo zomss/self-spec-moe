@@ -186,11 +186,14 @@ selector + honest negative regions), not a single-method paper.
   are parked — the original thesis, now with its accept side fully measured.
 - The search protocol's backtest (§7.5) is single-architecture-as-new
   (MLA); a second replay (MoE-as-new from dense+MLA) would strengthen it.
-- MLA e2e anchor gap: the MLA β column was never e2e anchor-gated (77's
-  gate covered dense+MoE); the measured challenger collapse (accept 1.8 vs
-  offline β 0.995) is either an MLA draft-path defect or an offline-vs-
-  runtime quant divergence — under investigation; either way OFF stands
-  operationally.
+- MLA challenger post-mortem (RESOLVED — a §8-law dividend): the accept
+  collapse was F11 on FLASH_ATTN_MLA (captured chain not replay-safe;
+  fixed — bf16 self-draft accept 2.00 → 5.92 default), plus a
+  W8A8-vs-weight-only lever mismatch in the harness (−2.1 accept). With
+  both understood, OFF on MLA is measured three ways: best challenger
+  0.54×, and even β≈1 delivers 0.56× (eager MLA chain cost binds). The
+  MLA β column is vindicated; a weight-only draft-quant option and a
+  captured MLA chain (FLASHMLA / MLA scratchpad) are future plumbing.
 - The draft-only KV pool: motivated (1.25× on QK-normed MoE) and scoped
   (V-only on un-normed models) but unbuilt.
 - Remaining headroom on the fixed chain: verify forward idles 31%
