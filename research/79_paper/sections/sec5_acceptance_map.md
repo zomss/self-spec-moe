@@ -47,11 +47,32 @@ regions right and its values wrong (we show this quantitatively in §6's
 v1→v2 comparison); a selector that borrows across the wrong architecture
 pair gets even the regions wrong.
 
-[PENDING robustness slot: β re-measured on a second prompt distribution
-(competition-math reasoning, AIME-derived bank, same harness/positions) for
-the claim-bearing arms on all three architectures — table of paired deltas.
-Claim to support: the portability VERDICT and the ordering of levers within
-a cell are distribution-stable even where absolute β shifts.]
+**Robustness to prompt distribution.** We re-measured the claim-bearing
+arms on a second, deliberately different distribution — competition-math
+reasoning (AIME-derived bank, same harness, same 1,152 positions per cell)
+— at the map's central context:
+
+| arm | dense (gen → math) | MoE | MLA |
+|---|---|---|---|
+| q_fp8 | .978 → .991 | .993 → .995 | 1.000 → .995 |
+| q_int4 | .924 → .974 | .972 → .980 | .997 → .983 |
+| win512 | .978 → .995 | .971 → .990 | **.922 → .795** |
+| kvq_fp8 | .841 → .905 | .971 → .986 | .997 → .993 |
+| skip50 | .029 → .067 | .154 → .159 | .000 → .005 |
+| lr25 | — | .693 → .797 | .936 → .897 |
+
+Every structural claim survives: fp8 weight-quant remains the top, flat,
+portable lever (|Δ| ≤ 0.012 across all three architectures); the kvq
+inversion keeps its monotone QK-norm ordering (0.905 < 0.986 < 0.993);
+skip stays dead with the same architecture ordering; and within-cell lever
+RANKINGS are unchanged in all three architectures. Absolute β shifts are
+small and mostly upward (median |Δ| ≈ 0.015 — math continuations are more
+predictable). The one large mover is the one the map already flags as
+fragile: MLA-window drops a further 0.13 on math (0.922 → 0.795) — the
+distribution check AMPLIFIES the F8 double-weakness rather than
+challenging it. Local-route is the noisiest lever (±0.10, opposite signs
+on MoE/MLA), consistent with its routing-sensitivity history; its map
+regions carry the widest error bars.
 
 **F6 — The QK-norm rule (mechanism, not correlation).** The kvq inversion
 has a measurable cause. K-cache outlier magnitude anti-correlates
