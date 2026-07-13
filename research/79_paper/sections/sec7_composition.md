@@ -98,3 +98,36 @@ despite far lower R.
 This is the cliff-hanger §8 resolves: the floor is measurable, attributable
 — and removable. With it removed, this table's b32 row becomes 1.91× at
 ~100% delivery.
+
+## 7.5 The cost of the search: a profiling-budget backtest
+
+The selection step is free — pricing all 53 configurations per cell is CPU
+work. The search's real cost is PROFILING, so we ask: how few GPU-minutes
+buy the same decisions? We backtest by replaying a minimal protocol
+against the completed record, treating MLA as the new architecture (which
+is how the project actually unfolded), revealing at each budget level only
+what the protocol would have measured, and scoring every cell's argmax
+against the full-information map. Regret = true speedup of the chosen
+config vs the true best.
+
+| budget level | GPU-min | near-opt (≤0.02) | median regret | max regret |
+|---|---|---|---|---|
+| L0: mechanism priors only | 0 | 1/9 | +0.077 | +0.223 |
+| L1: + one bf16 R anchor | 5 | 1/9 | +0.077 | +0.223 |
+| L2: + one κ anchor + checklist β at one ctx | 26 | 3/9 | +0.057 | +0.213 |
+| L3: + deviation-triggered ctx reveal | 46 | 3/9 | +0.064 | +0.213 |
+| **L4: + contested-cell R + conservatism rule** | **91** | **8/9** | **+0.000** | **+0.026** |
+| full profile | 305 | 9/9 | 0 | 0 |
+
+Three lessons. (1) **Priors alone fail** (max regret 0.22): per-kernel κ
+and per-architecture context behavior are not config-derivable — the maps
+are load-bearing, not decoration. (2) The last mile comes from DECISION
+RULES, not more data: measure R only where the top-2 gap is inside the
+model's validated error (±0.09), and on such ties prefer measured-R
+configs over model-priced ones — that one conservatism rule alone cut max
+regret from 0.213 to 0.026. (3) The protocol's cost is roughly
+grid-independent (two anchors + one β column + a handful of contested
+cells), so its advantage grows with map size: here 91 vs 305 GPU-minutes
+(3.4×) for one 9-cell architecture. This is the search protocol we
+recommend over exhaustive profiling: exhaustive SELECTION over measured
+physics, with measurement itself allocated by decision uncertainty.

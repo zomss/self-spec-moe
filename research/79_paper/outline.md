@@ -184,6 +184,13 @@ selector + honest negative regions), not a single-method paper.
 - Deferred: the comm-bound fabric (PCIe/multi-node) where the MoE triple
   (β 0.82-0.83 measured) and MLA's shared-expert local-route (β 0.95-0.99)
   are parked — the original thesis, now with its accept side fully measured.
+- The search protocol's backtest (§7.5) is single-architecture-as-new
+  (MLA); a second replay (MoE-as-new from dense+MLA) would strengthen it.
+- MLA e2e anchor gap: the MLA β column was never e2e anchor-gated (77's
+  gate covered dense+MoE); the measured challenger collapse (accept 1.8 vs
+  offline β 0.995) is either an MLA draft-path defect or an offline-vs-
+  runtime quant divergence — under investigation; either way OFF stands
+  operationally.
 - The draft-only KV pool: motivated (1.25× on QK-normed MoE) and scoped
   (V-only on un-normed models) but unbuilt.
 - Remaining headroom on the fixed chain: verify forward idles 31%
