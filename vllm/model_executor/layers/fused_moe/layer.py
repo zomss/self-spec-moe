@@ -22,6 +22,7 @@ from vllm.model_executor.layers.fused_moe.config import (
 )
 from vllm.model_executor.layers.fused_moe.expert_map_manager import (
     ExpertMapManager,
+    maybe_override_partial_replica,
 )
 from vllm.model_executor.layers.fused_moe.routed_experts import RoutedExperts
 from vllm.model_executor.layers.fused_moe.router.fused_moe_router import (
@@ -264,6 +265,9 @@ def FusedMoE(
         num_fused_shared_experts=num_fused_shared_experts,
         rocm_aiter_enabled=rocm_aiter_ops.is_fused_moe_enabled() and is_act_and_mul,
     )
+    # Phase 83: self-spec draft PARTIAL replica (frequency-profiled resident
+    # experts only); no-op unless the proposer's draft-build context is active.
+    maybe_override_partial_replica(expert_map_manager, prefix)
 
     # TODO(bnell): we should not have to create a router if the kernel is
     # monolithic.

@@ -56,6 +56,13 @@ for B in 4 8 32; do
     W7_DRAFT_FULL_REPLICA=1 W7_DRAFT_QUANT=fp8_per_block \
     W7_MAX_SEQS=64 W7_GPU_MEM=0.90 \
     VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS="$PHASE/data/resident_sets_flr50.pt"
+  # bf16 PARTIAL replica (the correct realization: top-freq experts only,
+  # ~30 GiB bf16, no fp8 kappa, comm-free; masking via the layer's own map)
+  want "flrp50_b$B" && run flrp50 spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
+    W7_DRAFT_FULL_REPLICA=1 W7_MAX_SEQS=64 W7_GPU_MEM=0.90 \
+    VLLM_SELF_SPEC_CPU_ORCH=1 W7_ASYNC_SCHED=1 \
+    VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 W7_ITERS=8 \
+    VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA="$PHASE/data/resident_sets_flr50.pt"
   # + the window-independent floor mitigation (81-E2b stack)
   want "flr50qm_b$B" && run flr50qm spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
     W7_DRAFT_FULL_REPLICA=1 W7_DRAFT_QUANT=fp8_per_block \

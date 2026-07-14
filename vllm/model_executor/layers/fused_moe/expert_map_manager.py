@@ -18,6 +18,65 @@ from vllm.model_executor.layers.fused_moe.experts.rocm_aiter_moe import (
 
 logger = init_logger(__name__)
 
+# Phase 83: draft PARTIAL replica -- the self-spec draft loads only the
+# frequency-profiled resident experts per layer (bf16, comm-free, no fp8
+# small-M kappa). Active only while the proposer builds the draft model
+# (draft_partial_replica_build) AND VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA
+# points at a {layer_idx: LongTensor expert ids} file. The custom map is
+# installed BEFORE weight loading, so the loader's -1 skip drops
+# non-resident experts and parameter tensors are sized to the kept set;
+# local-route masking then rides self.expert_map unchanged.
+_DRAFT_PARTIAL_BUILD = False
+_PARTIAL_SETS: dict | None = None
+
+
+class draft_partial_replica_build:
+    def __enter__(self):
+        global _DRAFT_PARTIAL_BUILD
+        _DRAFT_PARTIAL_BUILD = True
+        return self
+
+    def __exit__(self, *a):
+        global _DRAFT_PARTIAL_BUILD
+        _DRAFT_PARTIAL_BUILD = False
+
+
+def maybe_override_partial_replica(manager: "ExpertMapManager", prefix: str):
+    global _PARTIAL_SETS
+    import vllm.envs as envs
+
+    path = envs.VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA
+    if not path or not _DRAFT_PARTIAL_BUILD:
+        return
+    assert manager.ep_size == 1, (
+        "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA requires the draft replica "
+        "(enable_expert_parallel=False, e.g. VLLM_SELF_SPEC_DRAFT_FULL_"
+        f"REPLICA=1); got ep_size={manager.ep_size}."
+    )
+    if _PARTIAL_SETS is None:
+        obj = torch.load(path, weights_only=False)  # local trusted artifact
+        _PARTIAL_SETS = (
+            dict(obj) if isinstance(obj, dict) else dict(enumerate(obj))
+        )
+    from vllm.model_executor.models.utils import extract_layer_index
+
+    try:
+        li = extract_layer_index(prefix)
+    except Exception:
+        return
+    ids = _PARTIAL_SETS.get(li)
+    if ids is None:
+        return
+    ids_t = torch.as_tensor(ids, dtype=torch.long).sort().values
+    emap = torch.full((manager.global_num_experts,), -1, dtype=torch.int32)
+    emap[ids_t] = torch.arange(ids_t.numel(), dtype=torch.int32)
+    manager._expert_map = emap
+    manager._local_num_experts = int(ids_t.numel())
+    logger.debug(
+        "[partial-replica] layer %d: %d/%d experts resident",
+        li, ids_t.numel(), manager.global_num_experts,
+    )
+
 
 def determine_node_expert_mask(
     ep_size: int,

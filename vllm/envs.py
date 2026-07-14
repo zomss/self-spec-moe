@@ -252,6 +252,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS: str = ""
+    VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA: str = ""
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
@@ -1866,6 +1867,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # masks draft routing to the per-layer set instead of the EP shard.
     "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS": lambda: os.getenv(
         "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS", ""
+    ),
+    # Phase 83: draft PARTIAL replica -- load ONLY the per-layer resident
+    # expert sets ({layer_idx: LongTensor} file) into the draft's replica
+    # (requires VLLM_SELF_SPEC_DRAFT_FULL_REPLICA=1). bf16, comm-free,
+    # ~frac of expert bytes; routing masks via the layer's own expert_map.
+    "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": lambda: os.getenv(
+        "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA", ""
     ),
     "VLLM_SELF_SPEC_DRAFT_TOPC": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_TOPC", "0")

@@ -3329,9 +3329,17 @@ class SpecDecodeBaseProposer:
         # the W2a full-replica enable_expert_parallel=False override (the draft
         # would build use_ep=True, an EP shard, not a full replica). Set the
         # draft config as current so the draft's MoE honors draft_vllm_config.
+        # Phase 83: draft PARTIAL replica -- activate the build context so
+        # FusedMoE construction installs the frequency-profiled per-layer
+        # expert maps (weights for non-resident experts are never loaded).
+        from vllm.model_executor.layers.fused_moe.expert_map_manager import (
+            draft_partial_replica_build,
+        )
+
         with (
             set_current_vllm_config(draft_vllm_config),
             set_model_tag("eagle_head"),
+            draft_partial_replica_build(),
         ):
             model = get_model(
                 vllm_config=draft_vllm_config,
