@@ -251,6 +251,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_SKIP_A2A: bool = False
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
+    VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS: str = ""
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
@@ -1859,6 +1860,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # accept/compute tradeoff of a "smart" prune WITHOUT building the bounded
     # expert cache (experts stay resident). 0 -> off (full top_k). Only affects
     # the modular-kernel draft path (select_experts). Default off.
+    # Phase 83: path to a torch.load-able {layer_idx: LongTensor expert ids}
+    # (or list) of frequency-profiled RESIDENT expert sets for the self-spec
+    # draft's local routing. Requires the draft full replica (expert_map None);
+    # masks draft routing to the per-layer set instead of the EP shard.
+    "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS": lambda: os.getenv(
+        "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS", ""
+    ),
     "VLLM_SELF_SPEC_DRAFT_TOPC": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_TOPC", "0")
     ),

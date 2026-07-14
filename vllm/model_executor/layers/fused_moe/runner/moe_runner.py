@@ -40,6 +40,7 @@ from vllm.model_executor.layers.fused_moe.expert_map_manager import (
 from vllm.model_executor.layers.fused_moe.local_route import (
     draft_topc,
     local_route_enabled,
+    freq_resident_map,
     mask_router_logits_to_resident,
     prune_topk_to_topc,
 )
@@ -600,9 +601,26 @@ class MoERunner(MoERunnerInterface):
         # top-k. No-op when expert_map is None (resident=all -> identical to
         # full routing, preserving the sanity invariant).
         if local_route_enabled():
-            router_logits = mask_router_logits_to_resident(
-                router_logits, self.expert_map
+            # Phase 83: frequency-profiled resident set (draft-only override).
+            # Requires the draft full replica: an EP shard cannot compute
+            # non-local experts, so a configured set with expert_map != None
+            # is a misconfiguration, not a fallback.
+            fmap = freq_resident_map(
+                self.layer_id, router_logits.shape[-1], router_logits.device
             )
+            if fmap is not None:
+                assert self.expert_map is None, (
+                    "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS requires the draft "
+                    "FULL replica (VLLM_SELF_SPEC_DRAFT_FULL_REPLICA=1); this "
+                    "layer has an EP expert_map."
+                )
+                router_logits = mask_router_logits_to_resident(
+                    router_logits, fmap
+                )
+            else:
+                router_logits = mask_router_logits_to_resident(
+                    router_logits, self.expert_map
+                )
         elif node_local_enabled():
             # Self-spec Phase 54 (node-local draft): mask to the union of
             # experts resident on ANY EP rank of this node; the AgRs manager

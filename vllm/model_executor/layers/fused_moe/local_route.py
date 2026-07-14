@@ -32,9 +32,52 @@ __all__ = [
     "SELF_SPEC_LOCAL_ROUTE_KEY",
     "local_route_enabled",
     "mask_router_logits_to_resident",
+    "freq_resident_map",
     "draft_topc",
     "prune_topk_to_topc",
 ]
+
+# Phase 83: frequency-profiled resident sets (draft-only). Loaded once from
+# VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS ({layer_idx: LongTensor expert ids} or a
+# list indexed by layer); converted lazily to pseudo expert_maps (-1 =
+# non-resident) per (layer, device). Requires the draft FULL REPLICA -- an EP
+# shard cannot compute non-local experts, so the caller asserts
+# expert_map is None when a frequency map is active.
+_RESIDENT_SETS: dict | None = None
+_FREQ_MAPS: dict = {}
+
+
+def freq_resident_map(
+    layer_id: int, num_experts: int, device: torch.device
+) -> torch.Tensor | None:
+    """Per-layer frequency-profiled resident map, or None when unconfigured.
+
+    Returns a ``[num_experts]`` int tensor with ``-1`` for non-resident
+    experts (the format ``mask_router_logits_to_resident`` expects) built
+    from the configured keep-set for ``layer_id``.
+    """
+    global _RESIDENT_SETS
+    path = envs.VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS
+    if not path:
+        return None
+    if _RESIDENT_SETS is None:
+        obj = torch.load(path, weights_only=False)   # local trusted artifact
+        _RESIDENT_SETS = (
+            dict(obj) if isinstance(obj, dict) else dict(enumerate(obj))
+        )
+    ids = _RESIDENT_SETS.get(layer_id)
+    if ids is None:
+        return None
+    key = (layer_id, device)
+    m = _FREQ_MAPS.get(key)
+    if m is None:
+        m = torch.full((num_experts,), -1, dtype=torch.int32, device=device)
+        ids_t = torch.as_tensor(ids, dtype=torch.long, device=device)
+        m[ids_t] = torch.arange(
+            ids_t.numel(), dtype=torch.int32, device=device
+        )
+        _FREQ_MAPS[key] = m
+    return m
 
 
 def draft_topc() -> int:
