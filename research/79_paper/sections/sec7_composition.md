@@ -131,3 +131,22 @@ cells), so its advantage grows with map size: here 91 vs 305 GPU-minutes
 (3.4×) for one 9-cell architecture. This is the search protocol we
 recommend over exhaustive profiling: exhaustive SELECTION over measured
 physics, with measurement itself allocated by decision uncertainty.
+
+**The same allocation rule governs search WITHIN a lever.** Non-contiguous
+layer-set selection (KnapSpec's lever) opens a 2^24 space our maps do not
+enumerate; we backtest the rule on a measured 17-set pool (budgets 3/5/7)
+with the 24 leave-one-out singles as the only prior. The product prior's
+quality DEGRADES with depth — Spearman ρ = 0.94 / 0.80 / 0.60, absolute
+error growing to −0.16..−0.28 at budget 7 — so pure profile-then-solve
+(the knapsack recipe) is unreliable at depth in two distinct ways: its
+RANKING decays, and even when its argmax is right its VALUE is wrong
+(prior 0.663 vs measured 0.507 at budget 7 — a selector composing the
+unverified estimate would over-price the config by 30%). Prior-guided
+measurement fixes both at almost no cost: the pool-best set is found
+within 1–2 measurements (~90 s) at every budget, and the winning set
+enters the map with a MEASURED β. Set-selection itself is a real lever
+upgrade — {2,4,5} holds β 0.855 where contiguous skip at the same budget
+holds 0.448 — though even doubled, skip flips no winner on this
+architecture (§6). The unified statement: profiles nominate, measurements
+confirm, and the confirmation budget is 1–2 per decision at every level
+of the hierarchy (lever, combination, set, cell).
