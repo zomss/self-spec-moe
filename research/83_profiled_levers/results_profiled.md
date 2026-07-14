@@ -43,3 +43,22 @@ adds +0.02/+0.05 over singles-greedy at budgets 3/7 (interaction-aware
 re-measurement pays modestly on dense). Dense skip remains map-irrelevant
 (winners are 0.92+ quant/window); the profiled frontier's value is on MoE
 (skip runs +0.24 higher there) — E1-moe running.
+
+## E1-moe — the layer profile is FLAT; profiling structure is architecture-specific
+
+Leave-one-out column (44 layers): 0.946-0.959, no early/late structure
+(dense: 0.836-0.954 with early-droppable/late-critical shape). Iterative
+greedy frontier: 0.959 / 0.935 / 0.917 / 0.898 / 0.869 / 0.742 / 0.683
+(budgets 1-7; interaction cliff between 5 and 6). At the skip125-equivalent
+budget (6/48), profiled = 0.742 vs naive contiguous ~0.70: **+0.04, vs
+dense's +0.42** at equal relative budget. No MoE cell flips via layer
+profiling (best pricing ~0.95x).
+
+**The architecture-split law**: profiling headroom lives where the
+parameters are — dense profits from layer PLACEMENT (redundancy
+concentrated in early blocks), MoE from EXPERT selection (redundancy
+concentrated in routing skew; layer redundancy spread flat by design —
+each layer's contribution is already diluted across 128 experts). Even the
+STRUCTURE of profitable profiling fails to port across architectures —
+the portability verdict (77-F5) extends from lever values to profiling
+strategies.
