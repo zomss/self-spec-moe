@@ -62,3 +62,40 @@ each layer's contribution is already diluted across 128 experts). Even the
 STRUCTURE of profitable profiling fails to port across architectures —
 the portability verdict (77-F5) extends from lever values to profiling
 strategies.
+
+## E2b — e2e of the priced flips: ACCEPT PROVEN, delivery blocked by the realization
+
+Plumbing (committed): VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS masks draft
+routing to per-layer frequency sets (requires the draft full replica).
+Finding #0: **the bf16 full replica does not fit** on 4x80GB beside the
+EP4 target (weights 73.25 GiB/rank) -- the runnable realization is the
+fp8 replica (= the flr50+q_fp8 combo, itself priced 1.11x).
+
+b4/2k and b32/2k, 8-iter pairs (gamma=2, mitigation stack on):
+
+| cell | nospec | flr50q+mitig | ratio | accept (pred ~2.82) |
+|---|---|---|---|---|
+| b4/2k | 460 +-12 | 427 +-84 | 0.93x | 2.851 |
+| b32/2k | 2487 +-33 | 1859 +-18 | 0.75x | 2.793 |
+| (naive lr, b4/2k, 4-iter) | 475 | 259 | 0.55x | 2.173 |
+
+1. **The acceptance flip is fully proven e2e**: 2.17 -> 2.85, exactly the
+   offline surface's prediction (beta 0.953 x 0.99), stable across four
+   runs and both cells. Offline-profiled routing transfers to the real
+   system with no loss.
+2. **Delivery fails for attributable, lever-external reasons**: at b4 the
+   windowless-MoE chain floor leaves the cycle ~2 ms short of break-even
+   (0.93x); at b32 the fp8 replica's small-M kappa (the map's own F2/V3
+   lesson) lifts the realized draft R to ~1.0 vs the priced 0.83x0.95 --
+   the REALIZATION, not the profiling, broke the pricing.
+3. **The correct realization is a bf16 PARTIAL replica** -- load only the
+   top-frequency experts' weights (frac 0.5 = ~28 GiB bf16, fits): bf16
+   GEMMs (no kappa), comm-free, and less memory than the fp8 full replica.
+   Why replicate experts the mask never routes to? Future plumbing (weight
+   loader surgery), now with a measured motivation.
+
+**Gate verdict**: condition (a) NOT closed -- flips are acceptance-proven
+and pricing-correct on the beta side, but delivered throughput needs the
+partial-replica loader (R side) and/or the MoE-chain floor fix. Both gaps
+are quantified and lever-external. The map-v5 entries carry this
+provenance: "flr50: beta measured e2e; R pending realization".

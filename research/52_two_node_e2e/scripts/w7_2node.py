@@ -118,6 +118,11 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
         enforce_eager=EAGER,
         disable_log_stats=False,
     )
+    # Phase 83: cap max_num_seqs (sampler warmup allocates per-seq buffers for
+    # the default 1024 -- OOMs when a draft FULL replica leaves little slack).
+    max_seqs = os.environ.get("W7_MAX_SEQS", "").strip()
+    if max_seqs:
+        kwargs["max_num_seqs"] = int(max_seqs)
     # Phase 53/54: cap CUDA-graph capture shapes (graph private pools are not
     # covered by gpu_memory_utilization; at 236B the default 51 shapes OOM).
     cg_sizes = os.environ.get("W7_CG_SIZES", "").strip()

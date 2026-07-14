@@ -41,9 +41,27 @@ FILTER="${1:-.}"
 want(){ echo "$1" | grep -qE "$FILTER"; }
 for B in 4 8 32; do
   want "nospec_b$B" && run nospec nospec 0 $B
+  want "nospec8_b$B" && run nospec8 nospec 0 $B W7_ITERS=8
+  want "flr50qm8_b$B" && run flr50qm8 spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
+    W7_DRAFT_FULL_REPLICA=1 W7_DRAFT_QUANT=fp8_per_block \
+    W7_MAX_SEQS=64 W7_GPU_MEM=0.90 W7_ITERS=8 \
+    VLLM_SELF_SPEC_CPU_ORCH=1 W7_ASYNC_SCHED=1 \
+    VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 \
+    VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS="$PHASE/data/resident_sets_flr50.pt"
   want "lrnaive_b$B" && run lrnaive spec 2 $B W7_DRAFT_LOCAL_ROUTE=1
-  want "flr50_b$B" && run flr50 spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
-    W7_DRAFT_FULL_REPLICA=1 \
+  # bf16 full replica does NOT fit (weights 73.25 GiB/rank vs 80 GB):
+  # fp8 replica = the flr50+q_fp8 combo arm (also a priced winner, 1.11x;
+  # W8A8 accept P74-validated on this model). Replica ~30 GiB -> fits.
+  want "flr50q_b$B" && run flr50q spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
+    W7_DRAFT_FULL_REPLICA=1 W7_DRAFT_QUANT=fp8_per_block \
+    W7_MAX_SEQS=64 W7_GPU_MEM=0.90 \
+    VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS="$PHASE/data/resident_sets_flr50.pt"
+  # + the window-independent floor mitigation (81-E2b stack)
+  want "flr50qm_b$B" && run flr50qm spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
+    W7_DRAFT_FULL_REPLICA=1 W7_DRAFT_QUANT=fp8_per_block \
+    W7_MAX_SEQS=64 W7_GPU_MEM=0.90 \
+    VLLM_SELF_SPEC_CPU_ORCH=1 W7_ASYNC_SCHED=1 \
+    VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 \
     VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS="$PHASE/data/resident_sets_flr50.pt"
 done
 kill_mine
