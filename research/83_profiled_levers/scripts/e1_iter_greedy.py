@@ -24,9 +24,27 @@ P77 = PHASE.parent / "77_acceptance_map"
 sys.path.insert(0, str(P77 / "scripts"))
 sys.path.insert(0, str(P79 / "scripts"))
 import score_accept as SA  # noqa: E402
-from beta_menu_ext import CFG, REFDIR, Args, LayerSet  # noqa: E402
+from beta_menu_ext import Args as DArgs, LayerSet  # noqa: E402
+import os
 
-OUT = PHASE / "data/iter_greedy.csv"
+MODEL = os.environ.get("E1_MODEL", "dense")
+CFG = SA.MODELS[MODEL]
+REFDIR = PHASE.parent / f"77_acceptance_map/data/refs/{MODEL}_c16384"
+N_LAYERS = {"dense": 28, "moe": 48}[MODEL]
+
+
+class Args(DArgs):
+    model = MODEL
+
+
+OUT = PHASE / f"data/iter_greedy_{MODEL}.csv"
+
+
+class LayerSetN(LayerSet):
+    def __init__(self, model, drop):
+        import torch.nn as nn  # noqa: F401
+        self.m, self.cfg = model.model, model.config
+        self.kept = [i for i in range(N_LAYERS) if i not in set(drop)]
 (PHASE / "data").mkdir(parents=True, exist_ok=True)
 POOL = 8            # candidates re-measured per round (cost cap)
 BUDGET = 7
@@ -44,17 +62,29 @@ def append_row(row, rnd):
 
 
 def main() -> int:
-    # round-1 column: 79's measured singles
-    singles = {}
-    for r in csv.DictReader((P79 / "data/beta_menu_ext.csv").open()):
-        if r["arm"].startswith("ls_") and r["arm"].count("_") == 1:
-            singles[int(r["arm"][3:])] = float(r["beta_greedy"])
     done = {}
     if OUT.exists():
         for r in csv.DictReader(OUT.open()):
             done[r["arm"]] = float(r["beta_greedy"])
-
     model = SA.load_model(CFG)
+    if MODEL == "dense":
+        # round-1 column: 79's measured singles
+        singles = {}
+        for r in csv.DictReader((P79 / "data/beta_menu_ext.csv").open()):
+            if r["arm"].startswith("ls_") and r["arm"].count("_") == 1:
+                singles[int(r["arm"][3:])] = float(r["beta_greedy"])
+    else:
+        # measure the leave-one-out column (round 1) for this model
+        singles = {}
+        for i in range(2, N_LAYERS - 2):
+            arm = f"ig_{i}"
+            if arm in done:
+                singles[i] = done[arm]
+                continue
+            with LayerSetN(model, [i]):
+                row = SA.score_arm(model, CFG, arm, REFDIR, Args())
+            append_row(row, 1)
+            singles[i] = float(row["beta_greedy"])
     chosen = []
     col = dict(singles)                      # candidate -> beta(set+cand)
     frontier = []
@@ -75,7 +105,7 @@ def main() -> int:
             if arm in done:
                 col[c] = done[arm]
                 continue
-            with LayerSet(model, drop):
+            with LayerSetN(model, drop):
                 row = SA.score_arm(model, CFG, arm, REFDIR, Args())
             append_row(row, rnd + 1)
             col[c] = float(row["beta_greedy"])
