@@ -99,3 +99,43 @@ and pricing-correct on the beta side, but delivered throughput needs the
 partial-replica loader (R side) and/or the MoE-chain floor fix. Both gaps
 are quantified and lever-external. The map-v5 entries carry this
 provenance: "flr50: beta measured e2e; R pending realization".
+
+## E2c — bf16 PARTIAL replica: the loader works; ONE delivered flip; the band's boundary measured
+
+Plumbing (committed 51918f8b2 + draft_model override): per-layer expert
+maps installed at FusedMoE construction inside the proposer's build
+context -> parameter tensors sized to the kept set, loader's -1 skip
+drops non-resident experts. **Verified end to end: model load 73.25 ->
+46.25 GiB (exactly half the expert bytes), draft layers report
+use_ep=False + expert_map set, accept 2.88 (the highest of any
+realization -- bf16 numerics, no fp8 noise).**
+
+The realization ladder at the flipped band (2k ctx, gamma=2, vs nospec):
+
+| cell | priced | naive lr | fp8 full replica | bf16 partial replica |
+|---|---|---|---|---|
+| b4/2k | 1.11x | 0.55x (2.17) | 0.93x (2.85) | **1.03x (2.882) — DELIVERED** |
+| b8/2k | 1.11x | — | — | 0.63x (2.841) |
+| b32/2k | 1.09x | — | 0.75x (2.79) | 0.64x (2.811) |
+
+1. **First delivered flip**: b4/2k at 1.03x (+-0.10 -- parity-to-win),
+   +11% over the fp8 realization at identical routing = the kappa
+   attribution CONFIRMED at low batch.
+2. **kappa is not the whole story at scale**: at b32 the bf16 partial is
+   WORSE than fp8 full (0.64 vs 0.75) -- with ~all 64 residents activated
+   per step, byte reads match the fp8 replica without its byte savings.
+   At b8+ the draft chain's cost grows faster than verify's: the needed
+   cycle is 27.4 ms, measured 43.6 ms.
+3. **The mechanism, named**: the map's lr R (0.83) is a STANDALONE-serve
+   number; the W7 draft CHAIN at short ctx is far above it (the
+   delivery(gamma, R) law, MoE edition: at 2k the verify is too cheap to
+   amortize any chain overhead at batch >= 8). Full band delivery needs
+   MoE chain-execution work (the 81-class floor/step-cost program,
+   windowless variant) -- lever-external, quantified per cell.
+
+**Phase-83 gate, final**: condition (a) MET at b4/2k (measured 1.03x
+where the naive map said OFF at 1.04x priced/0.55x realized), with the
+acceptance flip proven at every cell (2.81-2.88 across the band, exactly
+the offline surface). The stronger statement stands regardless of
+delivery: profiled levers change WHAT THE MAP SAYS (4 cells), the beta
+transfer is exact, and the remaining gaps are execution, not selection.
