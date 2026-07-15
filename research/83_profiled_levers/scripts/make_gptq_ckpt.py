@@ -17,9 +17,8 @@ model = AutoModelForCausalLM.from_pretrained(SRC, dtype="bfloat16",
                                              device_map="cuda")
 tok = AutoTokenizer.from_pretrained(SRC)
 
-ds = load_dataset("allenai/c4", "en", split="train",
-                  data_files={"train": "en/c4-train.00000-of-01024.json.gz"},
-                  streaming=False)
+ds = load_dataset("allenai/c4", split="train",
+                  data_files={"train": "en/c4-train.00000-of-01024.json.gz"})
 NUM, MAXLEN = 512, 2048
 
 

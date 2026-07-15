@@ -1,6 +1,6 @@
 # Strategy map v5 — profiled levers (Phase 83)
 
-q_int4 beta source: RTN 0.924 (E3 pending).
+q_int4 beta source: GPTQ-calibrated 0.9427.
 Profiled columns: dense ls3 0.869; moe flr50 0.9531 / flr25
 0.8229 / skip6p 0.742. mla unchanged. delivery=1 pricing;
 e2e verdicts noted where measured (E2b/E2c).
@@ -10,13 +10,13 @@ e2e verdicts noted where measured (E2b/E2c).
 
 | cell | v5 winner | speedup* | v4 | note |
 |---|---|---|---|---|
-| b1/2k | **q_int4** | 1.28× | q_int4 1.28 |  |
-| b1/16k | **q_int4** | 1.28× | q_int4 1.28 |  |
+| b1/2k | **q_int4** | 1.31× | q_int4 1.28 |  |
+| b1/16k | **q_int4** | 1.32× | q_int4 1.28 |  |
 | b1/32k | **q_int4+win512** | 1.31× | q_int4+win512 1.31 |  |
-| b8/2k | **q_int4** | 1.30× | q_int4 1.30 |  |
+| b8/2k | **q_int4** | 1.32× | q_int4 1.30 |  |
 | b8/16k | **q_int4+win512** | 1.55× | q_int4+win512 1.55 |  |
 | b8/32k | **q_int4+win512** | 1.61× | q_int4+win512 1.61 |  |
-| b32/2k | **q_int4+win128** | 1.27× | q_int4+win128 1.27 |  |
+| b32/2k | **q_int4+win128** | 1.29× | q_int4+win128 1.27 |  |
 | b32/16k | **q_int4+win512** | 1.91× | q_int4+win512 1.91 |  |
 | b32/32k | (over-capacity) | | | |
 

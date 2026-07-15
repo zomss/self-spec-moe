@@ -139,3 +139,33 @@ acceptance flip proven at every cell (2.81-2.88 across the band, exactly
 the offline surface). The stronger statement stands regardless of
 delivery: profiled levers change WHAT THE MAP SAYS (4 cells), the beta
 transfer is exact, and the remaining gaps are execution, not selection.
+
+## E3 — calibrated quant: GPTQ buys +0.019 beta; winners unchanged
+
+GPTQ W4A16 (int4 sym g128, 512 C4 samples; `make_gptq_ckpt.py` in the
+CUDA lc venv) scored on 77's dense refs, decompressed forward:
+
+| variant | beta (dense, 16k) |
+|---|---|
+| RTN fake-quant (77, = the deployed data-free RTN ckpt) | 0.924 |
+| **GPTQ-calibrated** | **0.9427** |
+
++0.019: real but modest — RTN was already near the lever's ceiling on
+this model. Map effect: dense single-quant cells +0.02-0.04x (1.28 ->
+1.31-1.32); composed cells' measured-combo beta pins the headline cells
+unchanged. Verdict: calibration is worth taking when the ckpt is built
+anyway; it flips nothing. (Note for the record: the deployed W4 artifact
+is data-free RTN, so map beta and artifact were consistent all along.)
+
+## E4 — strategy map v5 (data/strategy_map_v5.md): 4 flips, all profiled-expert-driven
+
+Exhaustive search with profiled columns (dense ls3 0.869 + GPTQ q_int4
+0.9427; moe flr50/flr25/skip6p; mla unchanged):
+
+- **4 flips vs v4, all on MoE, all flr50-driven**: b4/2k, b8/2k, b32/2k
+  -> flr50+q_fp8 (1.12-1.15x priced; e2e: b4 DELIVERED 1.03x, b8/b32
+  chain-blocked) and b4/16k -> flr50+q_fp8+win512 (1.11x, priced).
+- Dense/MLA winners unchanged (values +0.02-0.04 from calibration) —
+  consistent with the architecture-split law: the profiled lever that
+  changes decisions is the one aligned with where the architecture's
+  redundancy lives.
