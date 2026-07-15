@@ -31,6 +31,18 @@ q_fp8 β is weight-only — a −2.1 accept gap on MLA at K=5. A weight-only
 runtime draft option is plumbing, not research, but until it exists the
 map's q_fp8 column prices a config the harness cannot yet run exactly.
 
+**Profiled flips: delivery boundary measured, not closed.** Of the four
+map-v5 flips (§7.6), one is delivered (b4/2k, 1.03× — margins ±0.10, a
+parity-to-modest win); the 2k band's higher batches are chain-blocked
+(0.63–0.64×, needed cycle 27 ms vs measured 44 ms). The acceptance side
+transfers exactly everywhere (2.81–2.88 vs offline 0.953), so what
+remains is the windowless-MoE instance of the §8 execution program plus
+the partial replica's memory rent (~half the expert bytes per rank) —
+both quantified. Profiled sets also inherit a monitoring burden a naive
+shard does not: routing frequencies can drift with workload; the
+distribution-robustness check (§5.2) bounds this for our two banks, not
+for all traffic.
+
 **The deferred fabric.** The comm-bound tier (PCIe/multi-node) is where
 the refined local-route law predicts its largest wins and where the MoE
 comm-free triple (β 0.82–0.83, assembled and measured) is parked. The

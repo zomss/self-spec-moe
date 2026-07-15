@@ -110,17 +110,18 @@ def fig1():
 
 # ---------------------------------------------------------------- fig3: strategy map v4
 V4 = {  # (group,(b,ck)): (winner, speedup, gamma)  -- strategy_map_v4.md
-    ("dense", (1, 2)): ("q_int4", 1.28, 3), ("dense", (1, 16)): ("q_int4", 1.28, 3),
+    ("dense", (1, 2)): ("q_int4", 1.31, 3), ("dense", (1, 16)): ("q_int4", 1.32, 3),
     ("dense", (1, 32)): ("q_int4+win512", 1.31, 3),
-    ("dense", (8, 2)): ("q_int4", 1.30, 3), ("dense", (8, 16)): ("q_int4+win512", 1.55, 4),
+    ("dense", (8, 2)): ("q_int4", 1.32, 3), ("dense", (8, 16)): ("q_int4+win512", 1.55, 4),
     ("dense", (8, 32)): ("q_int4+win512", 1.61, 5),
-    ("dense", (32, 2)): ("q_int4+win128", 1.27, 3),
+    ("dense", (32, 2)): ("q_int4+win128", 1.29, 3),
     ("dense", (32, 16)): ("q_int4+win512", 1.91, 6), ("dense", (32, 32)): None,
-    ("moe", (4, 2)): ("OFF", 1.04, 1), ("moe", (4, 16)): ("win128", 1.05, 2),
+    # v5 (Phase 83): the 2k band + b4/16k flip to profiled expert selection
+    ("moe", (4, 2)): ("flr50+q_fp8", 1.12, 2), ("moe", (4, 16)): ("flr50+q_fp8+win512", 1.11, 2),
     ("moe", (4, 32)): ("win128", 1.58, 8),
-    ("moe", (8, 2)): ("OFF", 1.06, 4), ("moe", (8, 16)): ("win512", 1.27, 5),
+    ("moe", (8, 2)): ("flr50+q_fp8", 1.13, 2), ("moe", (8, 16)): ("win512", 1.27, 5),
     ("moe", (8, 32)): ("win512", 1.37, 7),
-    ("moe", (32, 2)): ("OFF", 1.07, 2), ("moe", (32, 16)): ("win128", 1.44, 6),
+    ("moe", (32, 2)): ("flr50+q_fp8", 1.15, 2), ("moe", (32, 16)): ("win128", 1.44, 6),
     ("moe", (32, 32)): ("win512", 2.22, 8),
     ("mla", (4, 2)): ("OFF", 1.08, 6), ("mla", (4, 16)): ("OFF", 1.02, 1),
     ("mla", (4, 32)): ("OFF", 1.07, 5),
@@ -130,7 +131,7 @@ V4 = {  # (group,(b,ck)): (winner, speedup, gamma)  -- strategy_map_v4.md
     ("mla", (32, 32)): ("OFF", 1.04, 4),
 }
 FAM = {"q_int4": "weight-quant", "q_fp8": "weight-quant", "win512": "window",
-       "win128": "window", "OFF": "none"}
+       "win128": "window", "flr50": "local-route", "OFF": "none"}
 
 
 def fig3():
@@ -153,7 +154,8 @@ def fig3():
                 base = C[fam]
                 ax.add_patch(Rectangle((j, i), 1, 1, fc=base, alpha=shade,
                                        ec="white", lw=2))
-                lbl = win.replace("q_int4", "W4").replace("+", "\n+")
+                lbl = (win.replace("q_int4", "W4").replace("flr50", "freq-lr")
+                       .replace("+", "\n+"))
                 dark = sp > 1.5
                 ax.text(j + .5, i + .58, lbl, ha="center", va="center",
                         fontsize=7.5, fontweight="bold",
@@ -169,7 +171,7 @@ def fig3():
         ax.tick_params(length=0)
         for s in ax.spines.values():
             s.set_visible(False)
-    fig.suptitle("Fig 3 — strategy map v4 (winner = argmax over the full combination space)",
+    fig.suptitle("Fig 3 — strategy map v5 (argmax over the full space, profiled lever forms)",
                  x=0.01, ha="left", fontsize=11, fontweight="bold", color=INK)
     fig.savefig(FIG / "fig3_strategy_map.png")
     plt.close(fig)

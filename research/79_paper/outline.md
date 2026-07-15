@@ -47,6 +47,14 @@ selector + honest negative regions), not a single-method paper.
      rejected tail; window-amplified, −0.55 accept → fixed). Result:
      **1.91× measured at dense b32/16k = the registered roofline, delivery
      ≈ 100%**; same stack gives the MoE window cell +12% (§8).
+  C6 Profiled levers (Phase 83): naive instantiation gets 4 MoE cells
+     wrong — frequency-profiled expert selection (+0.13 β, routing-skew
+     mechanism) flips the short-ctx band, one flip delivered e2e (1.03×,
+     partial-replica loader ships); the architecture-split law (profiling
+     headroom lives where the redundancy lives; even profiling STRATEGY
+     is architecture-specific); placement-not-contiguity on dense skip;
+     GPTQ +0.019 flips nothing. Map v5 = the profiled map with e2e
+     provenance per flip.
 - Anti-contribution framing (honesty as a feature): three map regions say
   "turn it OFF"; the delivery discount that gated the composed frontier is
   fully attributed (launch floor) and fully recovered (C5).
@@ -226,6 +234,8 @@ selector + honest negative regions), not a single-method paper.
 | step-0 law (F12) | 81 E2b isolation ladder (spsd/spsd2/spw0/spw0sd/spsdfix) | results_floor.md, logs/e1_* |
 | 1.91× headline (F13) | 81 E3 (7 cells, parallel) | data/e3/, results_floor.md |
 | MoE generality (F14) | 81 MoE check (noreg + fixed arms) | data/moe_check/ |
+| profiled levers / split law (C6) | 83 E1/E2 (freq experts, iter-greedy, GPTQ) | 83/results_profiled.md, freq_lr.csv, iter_greedy*.csv |
+| map v5 flips + realization ladder | 83 E2b/E2c/E4 | 83/data/strategy_map_v5.md, e2e_flip/ |
 
 ## Figures plan
 

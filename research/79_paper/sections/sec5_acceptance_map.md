@@ -116,3 +116,32 @@ for every lever except MLA-window (±0.01–0.03 across 2k→32k), so one β
 column per (lever, architecture) — ~1 GPU-hour offline, anchor-gated —
 prices the whole acceptance side of the map. Combined with §4's R surface,
 the selector of §6 needs no end-to-end sweeps at all.
+
+## 5.4 Profiled lever forms: the naive-instantiation check
+
+Every arm above is a lever's NAIVE form — contiguous middle-block skip,
+RTN quantization, a contiguous expert shard for local routing. The
+single-lever literature (KnapSpec's layer knapsack; GPTQ/AWQ) shows
+offline profiling recovers accuracy at equal cost, so we re-measured the
+levers' PROFILED forms on the same paired references (Phase 83):
+
+| lever, profiled form | naive β | profiled β | mechanism measured |
+|---|---|---|---|
+| expert selection, top-frequency sets (MoE) | .826 / .693 (50/25%) | **.953 / .823** | top-half experts carry 96.3% of routing mass |
+| layer sets, iterative greedy (dense, budget 3/7) | .448 / .09 (contiguous middle) | **.869 / .557** | redundancy concentrated in EARLY blocks |
+| layer sets (MoE, budget 6/48) | ~.70 | .742 | leave-one-out profile FLAT (.946–.959) |
+| int4, GPTQ-calibrated (dense) | .924 (RTN) | .9427 | calibration near the lever's ceiling |
+
+Three structural findings. **Placement, not contiguity**: dense iterative
+greedy picks a nearly contiguous EARLY block — the middle-block
+convention, not contiguity itself, is what the naive skip arm got wrong;
+early layers drop in blocks almost freely. **The architecture-split law**:
+profiling headroom lives where the architecture's redundancy lives —
+layer placement pays on dense (+0.42 at equal budget) and almost nothing
+on MoE (+0.04, flat profile: each layer's contribution is already diluted
+across 128 experts), while expert selection pays on MoE (+0.13) and does
+not exist elsewhere. Even the profitable profiling STRATEGY fails to port
+across architectures, extending F5 from lever values to lever forms.
+**Frequency-selected quarter ≈ contiguous half**: flr25 (0.823) matches
+naive lr50 (0.826) at half the resident memory — a free 2× on the
+residency axis. Selection consequences in §7.6; delivery in §8.6.

@@ -102,3 +102,31 @@ byte-cheap, and a constant-geometry chain removes the floor — after
 which the selector may rank on raw τ_β(γ)/(γR+1). Remaining headroom is
 known and bounded: verify still idles 31% of its forward, and step-0's
 residual over a pure chain step is the last ~6% to the 1.98× ceiling.
+
+## 8.6 The execution boundary, generalized: a delivered flip and its realization ladder
+
+§7.6's flipped cells are where selection and execution meet, and we walk
+one through to metal. The frequency-profiled expert draft admits several
+REALIZATIONS, and the ladder separates the lever from its execution:
+
+| realization (MoE 2k band, γ=2) | b4 | b8 | b32 | accept |
+|---|---|---|---|---|
+| naive contiguous shard (EP-local) | 0.55× | — | — | 2.17 |
+| fp8 full replica + freq mask | 0.93× | — | 0.75× | 2.85 |
+| **bf16 partial replica (ships with this paper)** | **1.03×** | 0.63× | 0.64× | **2.88** |
+
+The acceptance flip transfers EXACTLY (offline β 0.953 → accept
+2.81–2.88 everywhere — the profiling surface loses nothing at the
+metal), and each throughput gap is attributable by the paper's own laws:
+the bf16 full replica does not fit (73.25 GiB/rank — realization is a
+memory problem first); the fp8 replica pays fp8's small-M κ (§6's
+per-kernel lesson, biting our own realization); the partial replica —
+per-layer frequency sets installed as the draft's expert_map, so the
+loader skips non-resident experts (46.25 GiB measured) — removes κ and
+DELIVERS the b4 flip at 1.03×, the first naive-map OFF cell measured
+above baseline. At b8/b32 the 2k verify is too cheap to amortize the
+draft chain (needed cycle 27 ms, measured 44 ms): delivery(γ,R) again,
+now with the boundary measured inside one band. The division of labor is
+the section's thesis in one exhibit: profiling changes what the map says;
+execution decides what the deployment collects; and the gaps between
+them are quantified, named, and lever-external.

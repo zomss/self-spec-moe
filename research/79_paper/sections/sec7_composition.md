@@ -150,3 +150,18 @@ holds 0.448 — though even doubled, skip flips no winner on this
 architecture (§6). The unified statement: profiles nominate, measurements
 confirm, and the confirmation budget is 1–2 per decision at every level
 of the hierarchy (lever, combination, set, cell).
+
+## 7.6 Map v5: profiled levers change what the map says
+
+Re-running the exhaustive search with the profiled columns of §5.4 flips
+FOUR cells — all on MoE, all driven by frequency-profiled expert
+selection: the short-context band (b4/b8/b32 at 2k) moves from
+OFF/marginal to flr50+q_fp8 (1.12–1.15× priced), and b4/16k composes
+flr50+q_fp8+win512 (1.11×). Dense and MLA winners are unchanged
+(calibration lifts dense values +0.02–0.04× without moving any argmax) —
+the architecture-split law carried through search: the only
+decision-changing profiled lever is the one aligned with the
+architecture's redundancy. Each flipped cell carries its e2e provenance
+in the map (delivered / chain-blocked, §8.6) — a profiled winner enters
+the map with a measured β (§7.5's rule) and exits to deployment only
+through a realization whose R is also measured.

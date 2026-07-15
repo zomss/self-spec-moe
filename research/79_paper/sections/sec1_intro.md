@@ -52,6 +52,16 @@ Contributions, each with its number:
   2.77× at 32k context**, +12% on MoE with the identical stack, and an
   out-of-sample diagnosis of an MLA backend failure the laws were not
   derived from.
+- **C6 — profiled levers** (§5.4, §7.6, §8.6): offline profiling changes
+  what the map says. Frequency-profiled expert selection (+0.13 β from
+  measured routing skew) flips four MoE cells, one delivered end to end
+  (1.03×) through a partial-replica loader that ships with the paper;
+  layer-set placement doubles dense skip β (the middle-block convention,
+  not contiguity, is the naive arm's error); calibration polishes values
+  without moving argmaxes. The architecture-split law: the
+  decision-changing profiled lever is the one aligned with where the
+  architecture's redundancy lives — and even profiling STRATEGY fails to
+  port across architectures.
 
 The anti-contributions are load-bearing: three map regions say OFF (and
 the exhaustive search plus a measured challenger say it stays OFF); the
