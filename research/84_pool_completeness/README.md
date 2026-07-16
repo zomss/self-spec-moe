@@ -15,17 +15,17 @@ drafting ships in vLLM; draft top-C ships in OUR OWN FORK).
 | weight read | int quant (RTN/GPTQ) | IN MAP (calibrated E3-83) |
 | weight read | fp8 quant | IN MAP |
 | weight read | pruning (2:4/unstructured) | GATED DEAD (79: dominated by int4) |
-| weight read | low-rank factorization (SVD-r) | **UNGATED -> E1 (svdr)** |
+| weight read | low-rank factorization (SVD-r) | GATED DEAD (svdr50 .044) |
 | weight read | expert restriction (contig/freq) | IN MAP (83: profiled) |
 | layer compute | whole-layer skip (contig/sets) | IN MAP (83: profiled) |
-| layer compute | sub-layer skip (MLP-only / attn-only) | **UNGATED -> E1 (mlpskip/attnskip)** |
-| MoE routed compute | top-C prune (draft_topc, IN THE FORK) | **UNGATED -> E1 (topc)** |
+| layer compute | sub-layer skip (MLP-only / attn-only) | GATED ALIVE (mlpskip6 .846 > whole-layer at bytes) |
+| MoE routed compute | top-C prune (draft_topc, IN THE FORK) | GATED ALIVE (topc4 .892) |
 | KV read | fixed window+sinks | IN MAP |
 | KV read | draft-only KV quant | MEASURED-EXCLUDED (pool unbuilt; V-only rule stated) |
 | KV read | dynamic token selection (Quest/PillarAttn) | SCOPED OUT (cited as upper bound on window) — candidate for a later gate |
-| KV read | KV-head merging | **UNGATED -> E1 (deferred if svdr-class domination argument lands)** |
-| lm_head | vocab restriction (FR-Spec-class) | **UNGATED -> E1 (vres)** |
-| whole draft model | n-gram / prompt-lookup (NO model) | **UNGATED -> E1 (ngram)** — R=0, floor-free by construction |
+| KV read | KV-head merging | DEFERRED with argument (svdr-class: destructive vs quant at worse bytes) |
+| lm_head | vocab restriction (FR-Spec-class) | GATED ALIVE (vres16k .9948 -- near-free; composed R 0.311->~0.25) |
+| whole draft model | n-gram / prompt-lookup (NO model) | GATED ALIVE on repetitive-output regimes (mla .84 both dists; dense/moe dead) |
 | draft policy | tree/multi-draft | SCOPED OUT (changes the tau formula, not the lever pool) |
 | draft policy | gamma | IN SELECTOR |
 
