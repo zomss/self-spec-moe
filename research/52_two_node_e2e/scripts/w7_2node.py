@@ -157,6 +157,14 @@ def worker(rank, local_rank, dp, tp, master_ip, master_port, mode, k, q):
             "model": os.environ.get("W7_SPEC_MODEL", MODEL),
             "num_speculative_tokens": k,
         }
+        # Phase 85 (map-v6 queue): model-free n-gram / prompt-lookup drafter.
+        if spec_method == "ngram":
+            spec_cfg = {
+                "method": "ngram",
+                "num_speculative_tokens": k,
+                "prompt_lookup_max": int(os.environ.get("W7_NGRAM_MAX", "4")),
+                "prompt_lookup_min": int(os.environ.get("W7_NGRAM_MIN", "2")),
+            }
         if spec_method == "draft_model":
             spec_cfg["draft_tensor_parallel_size"] = tp
             if DRAFT_QUANT:

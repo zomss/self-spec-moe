@@ -81,3 +81,18 @@ by their own uncertainty (LCB 0.89-0.93) — the selector now agrees with
 the E2c parity-band measurement; (iii) MLA prints ngram at LCB ~2.45
 P1.00 with the e2e-unvalidated flag; (iv) each cell carries winner + LCB
 + P(win) + provenance, and the map emits its own measurement queue.
+
+## v6 measurement queue: both corrections landed, map v6.1 emitted
+
+| queue item | priced (LCB/median) | measured | correction |
+|---|---|---|---|
+| ngram e2e, mla b32/16k | 2.44 / 2.88 | **0.78x** (accept 2.846) | psi_ngram = 2.4 Tt-units MEASURED: vLLM's proposer does a CPU O(ctx) scan per request per cycle (32x16k here) + verify width. The beta physics transferred (accept ~ block prediction); the REALIZATION is the cost. A GPU-side/суffix-automaton lookup would re-open the cell -- recorded as the lever's realization gap, exactly like flr's replica story. |
+| ngram e2e, mla b8/16k | — | 0.77x (accept 2.463) | same |
+| flr50 moe b4/16k | 1.15 / 1.35 | **1.00x** (accept 2.943) | FLR_CTXFAC corrected to 1.0: the flr draft is FULL-attention, so its cost grows with ctx like the target's -- R is ctx-invariant. The 16k/32k flr cells revert to window winners. beta stable across ctx (2.94 vs 2.88) as the offline surface said. |
+
+v6.1: MLA returns to OFF on all cells (best LCB 0.88-0.91, now with the
+model-free challenger measured too -- OFF is backed by N+1 lever classes);
+MoE prints window winners at >=16k and OFF at the 2k band. The selector's
+queue-and-correct loop CLOSED within one measurement round: every
+provenance flag it emitted was adjudicated, and no confident (high-LCB,
+measured-provenance) cell moved.

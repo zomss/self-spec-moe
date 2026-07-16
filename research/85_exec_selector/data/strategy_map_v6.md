@@ -23,47 +23,25 @@ ngram priced as geometric beta_eff at gamma<=8 (block-proposal semantics approxi
 | cell | winner (LCB05 / median / P(win)) | runner-up | note |
 |---|---|---|---|
 | b4/2k | **OFF** (best LCB 0.89 q_fp8 | P(OFF-ish)=0.14 | measR/cell |
-| b4/16k | **flr50+q_fp8** 1.15/1.35/P0.70 | topc4+flr50 0.97 | 83 realization R per cell (batch-dep) |
-| b4/32k | **flr50+q_fp8** 1.43/1.73/P0.75 | win128 1.23 | 83 realization R per cell (batch-dep) |
+| b4/16k | **OFF** (best LCB 0.90 win128 | P(OFF-ish)=0.10 | measR/cell |
+| b4/32k | **win128** 1.23/1.40/P0.71 | q_fp8 1.15 | measR/cell |
 | b8/2k | **OFF** (best LCB 0.93 q_fp8 | P(OFF-ish)=0.29 | measR/cell |
-| b8/16k | **win512** 1.07/1.20/P0.68 | win128 0.99 | measR/cell |
-| b8/32k | **win512** 1.11/1.23/P0.26 | win128 1.08 | measR/cell |
+| b8/16k | **win512** 1.07/1.20/P0.80 | win128 0.99 | measR/cell |
+| b8/32k | **win512** 1.11/1.23/P0.57 | win128 1.08 | measR/cell |
 | b32/2k | **OFF** (best LCB 0.93 q_fp8 | P(OFF-ish)=0.32 | measR/cell |
-| b32/16k | **win128** 1.19/1.34/P0.67 | win512 1.11 | measR/cell |
-| b32/32k | **win512** 1.61/1.90/P0.65 | win128 1.52 | measR/cell |
+| b32/16k | **win128** 1.19/1.34/P0.77 | win512 1.11 | measR/cell |
+| b32/32k | **win512** 1.61/1.90/P0.70 | win128 1.52 | measR/cell |
 
 ## mla
 
 | cell | winner (LCB05 / median / P(win)) | runner-up | note |
 |---|---|---|---|
-| b4/2k | **ngram** 2.47/2.90/P1.00 | q_fp8 0.59 | 84: block-4 semantics; e2e UNVALIDATED |
-| b4/16k | **ngram** 2.48/2.89/P1.00 | q_fp8 0.55 | 84: block-4 semantics; e2e UNVALIDATED |
-| b4/32k | **ngram** 2.43/2.86/P1.00 | q_fp8 0.59 | 84: block-4 semantics; e2e UNVALIDATED |
-| b8/2k | **ngram** 2.49/2.88/P1.00 | q_fp8 0.58 | 84: block-4 semantics; e2e UNVALIDATED |
-| b8/16k | **ngram** 2.49/2.89/P1.00 | q_fp8 0.58 | 84: block-4 semantics; e2e UNVALIDATED |
-| b8/32k | **ngram** 2.46/2.91/P1.00 | win512 0.60 | 84: block-4 semantics; e2e UNVALIDATED |
-| b32/2k | **ngram** 2.49/2.90/P1.00 | q_fp8 0.59 | 84: block-4 semantics; e2e UNVALIDATED |
-| b32/16k | **ngram** 2.44/2.88/P1.00 | q_fp8 0.60 | 84: block-4 semantics; e2e UNVALIDATED |
-| b32/32k | **ngram** 2.45/2.86/P1.00 | q_fp8 0.59 | 84: block-4 semantics; e2e UNVALIDATED |
-
-## Provenance notes
-
-1. Dense 2k cells: the window component is a cost no-op at 2k, so the
-   winner is effectively q_int4+vres16k; printed with win512 for config-
-   set continuity.
-2. MoE b4/16k and b4/32k flr50 wins use the REALIZATION R scaled by
-   T_t growth (FLR_CTXFAC — assumption, not measurement): these two
-   cells head the e2e measurement queue.
-3. MLA ngram: block-4 semantics approximated as geometric beta_eff at
-   gamma<=4; e2e UNVALIDATED (vLLM ships the ngram speculator — queue).
-4. LCB DEMOTES the v5 moe 2k flips to OFF (best LCB 0.89-0.93) —
-   consistent with the measured parity band (E2c 1.03±0.10, 0.63, 0.64):
-   the selector now agrees with the measurement it used to contradict.
-
-## v6 measurement queue (from the map's own uncertainty)
-
-- vres16k draft-side plumbing + e2e at dense b32/16k (priced LCB 1.99,
-  median 2.26 — the new headline candidate)
-- ngram e2e on V2-Lite (priced LCB ~2.45; one harness config if
-  W7_SPEC_METHOD passes through)
-- flr50+q_fp8 at moe b4/16k (priced LCB 1.15 on assumed ctx scaling)
+| b4/2k | **OFF** (best LCB 0.90 ngram | P(OFF-ish)=0.28 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b4/16k | **OFF** (best LCB 0.90 ngram | P(OFF-ish)=0.28 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b4/32k | **OFF** (best LCB 0.88 ngram | P(OFF-ish)=0.31 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b8/2k | **OFF** (best LCB 0.91 ngram | P(OFF-ish)=0.27 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b8/16k | **OFF** (best LCB 0.91 ngram | P(OFF-ish)=0.27 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b8/32k | **OFF** (best LCB 0.90 ngram | P(OFF-ish)=0.28 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b32/2k | **OFF** (best LCB 0.91 ngram | P(OFF-ish)=0.26 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b32/16k | **OFF** (best LCB 0.89 ngram | P(OFF-ish)=0.29 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |
+| b32/32k | **OFF** (best LCB 0.89 ngram | P(OFF-ish)=0.32 | e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack |

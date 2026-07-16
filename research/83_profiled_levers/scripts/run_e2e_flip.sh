@@ -16,8 +16,8 @@ ME="$(whoami)"
 kill_mine(){ for p in 'w7_2node[.]py' 'EngineCor[e]' 'Worker_D[P]'; do pkill -9 -u "$ME" -f "$p" 2>/dev/null; done; sleep 5; }
 
 run(){  # arm mode K B [extra-env...]
-  local ARM=$1 MODE=$2 K=$3 B=$4 CTX=2048; shift 4
-  local TAG="flip_${ARM}_K${K}_b${B}_c2k"
+  local ARM=$1 MODE=$2 K=$3 B=$4 CTX=${FLIP_CTX:-2048}; shift 4
+  local TAG="flip_${ARM}_K${K}_b${B}_c$((CTX/1024))k"
   local LOG="$PHASE/logs/${TAG}.log"
   echo "[flip] $TAG ($(date +%H:%M:%S))"
   kill_mine
@@ -59,7 +59,7 @@ for B in 4 8 32; do
   # bf16 PARTIAL replica (the correct realization: top-freq experts only,
   # ~30 GiB bf16, no fp8 kappa, comm-free; masking via the layer's own map)
   want "flrp50_b$B" && run flrp50 spec 2 $B W7_DRAFT_LOCAL_ROUTE=1 \
-    W7_DRAFT_FULL_REPLICA=1 W7_MAX_SEQS=64 W7_GPU_MEM=0.90 \
+    W7_DRAFT_FULL_REPLICA=1 W7_MAX_SEQS=64 W7_GPU_MEM=0.87 \
     VLLM_SELF_SPEC_CPU_ORCH=1 W7_ASYNC_SCHED=1 \
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 W7_ITERS=8 \
     VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA="$PHASE/data/resident_sets_flr50.pt"

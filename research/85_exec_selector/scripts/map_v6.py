@@ -36,7 +36,7 @@ CTX_OF = {2: 2048, 16: 16384, 32: 32768}
 W4WIN_R = {(8, 16): (0.435, 0.05), (32, 16): (0.311, 0.05)}  # measured
 WINFAC = {2: (1.00, 0.05), 16: (0.62, 0.15), 32: (0.40, 0.25)}  # w4->combo
 FLR_R2K = {4: (0.78, 0.15), 8: (1.40, 0.25), 32: (1.20, 0.22)}  # E2c implied
-FLR_CTXFAC = {2: 1.0, 16: 0.65, 32: 0.45}
+FLR_CTXFAC = {2: 1.0, 16: 1.0, 32: 1.0}  # MEASURED (v6q): full-attention draft -> R ctx-invariant (b4/16k parity)
 CONFIGS = {
     "dense": [
         ("q_int4", 0.9427, 0.010, None, 0.04, "fixed", 8, "GPTQ; measR/cell"),
@@ -53,7 +53,7 @@ CONFIGS = {
         ("q_fp8", 0.993, 0.010, None, 0.04, "moe_mit", 8, "measR/cell"),
     ],
     "mla": [
-        ("ngram", 0.835, 0.030, ("const", 0.0, 0.0), None, "ngram", 4, "84: block-4 semantics; e2e UNVALIDATED"),
+        ("ngram", 0.835, 0.030, ("const", 0.0, 0.0), None, "ngram", 4, "e2e MEASURED 0.77-0.78x: psi=2.4 (CPU lookup) kills it on this stack"),
         ("q_fp8", 0.995, 0.010, None, 0.04, "mla_eager", 8, "measR/cell; chain eager"),
         ("win512", 0.922, 0.015, None, 0.04, "mla_eager", 8, "measR/cell"),
     ],
@@ -96,7 +96,7 @@ SINGLE_ARM = {("dense", "q_int4"): "d_w4marlin", ("dense", "win512"): "d_win",
 TIERS = {"fixed": (0.00, 0.02, 0.00, 0.05),
          "moe_mit": (0.03, 0.05, 0.15, 0.10),
          "mla_eager": (0.90, 0.20, 0.20, 0.10),
-         "ngram": (0.00, 0.00, 0.25, 0.10)}
+         "ngram": (0.00, 0.00, 2.40, 0.30)}  # MEASURED (v6q): CPU O(ctx) lookup/req/cycle + verify width
 # residency-infeasible (85 residency.py): dense b32/32k
 INFEASIBLE = {("dense", (32, 32))}
 GAMMAS = range(1, 9)
