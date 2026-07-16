@@ -5469,6 +5469,7 @@ class GPUModelRunner(
                     _DraftDecodeForwardSample(
                         drafter.model,
                         getattr(drafter, "use_local_argmax_reduction", False),
+                        vres_map=getattr(drafter, "_vres_map", None),
                     ),
                     self.vllm_config,
                     runtime_mode=CUDAGraphMode.FULL,

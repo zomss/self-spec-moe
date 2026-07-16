@@ -88,10 +88,14 @@ class _DraftDecodeForwardSample(nn.Module):
     the plain-forward FULL graph), so the captured graph replays correctly.
     """
 
-    def __init__(self, model: nn.Module, use_local_argmax_reduction: bool):
+    def __init__(self, model: nn.Module, use_local_argmax_reduction: bool,
+                 vres_map: torch.Tensor | None = None):
         super().__init__()
         self.model = model
         self.use_local_argmax_reduction = use_local_argmax_reduction
+        # Phase 85: sliced-vocab draft -- remap argmax local->global INSIDE
+        # the captured graph (a gather; pointer-stable buffer).
+        self.vres_map = vres_map
 
     def forward(self, **model_kwargs: Any):
         ret = self.model(**model_kwargs)
@@ -106,6 +110,8 @@ class _DraftDecodeForwardSample(nn.Module):
             draft_token_ids = self.model.compute_logits(last_hidden_states).argmax(
                 dim=-1
             )
+            if self.vres_map is not None:
+                draft_token_ids = self.vres_map[draft_token_ids]
         return last_hidden_states, hidden_states, draft_token_ids
 
 
@@ -895,7 +901,8 @@ class SpecDecodeBaseProposer:
         """Greedy-sample draft tokens from hidden states."""
         if self.use_local_argmax_reduction:
             return self.model.get_top_tokens(hidden_states)
-        return self.model.compute_logits(hidden_states).argmax(dim=-1)
+        return self._vres_remap(
+            self.model.compute_logits(hidden_states).argmax(dim=-1))
 
     def _sample_from_logits(
         self,
@@ -903,9 +910,9 @@ class SpecDecodeBaseProposer:
         sampling_metadata: SamplingMetadata,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         if not self._enable_probabilistic_draft_probs:
-            return logits.argmax(dim=-1), None
+            return self._vres_remap(logits.argmax(dim=-1)), None
         if sampling_metadata.all_greedy:
-            return logits.argmax(dim=-1), None
+            return self._vres_remap(logits.argmax(dim=-1)), None
         return compute_probs_and_sample_next_token(
             logits, sampling_metadata, self.use_fp64_gumbel
         )
@@ -3473,6 +3480,7 @@ class SpecDecodeBaseProposer:
 
         self._maybe_share_embeddings(target_language_model)
         self._maybe_share_lm_head(target_language_model)
+        self._maybe_vres_slice()
 
         if (
             self.parallel_drafting
@@ -3557,6 +3565,47 @@ class SpecDecodeBaseProposer:
                 "The draft model's vocab embedding will be loaded separately"
                 " from the target model."
             )
+
+    def _maybe_vres_slice(self) -> None:
+        """Phase 85 (map-v6 queue): draft vocab restriction with a REAL
+        lm_head slice. VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP points at a saved
+        LongTensor of kept token ids; the draft's lm_head weight is REBUILT
+        (fresh Parameter -- the head may be shared with the target) to only
+        those rows, shrinking the logits GEMM ~vocab/keep-fold; every draft
+        argmax is remapped local->global via _vres_map (a gather: capture-
+        safe inside FULL graphs). Greedy drafts only."""
+        self._vres_map: torch.Tensor | None = None
+        path = os.environ.get("VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP", "").strip()
+        if not path:
+            return
+        lm_head = getattr(self.model, "lm_head", None)
+        assert lm_head is not None and hasattr(lm_head, "weight"), (
+            "VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP: draft has no lm_head")
+        assert not self._enable_probabilistic_draft_probs, (
+            "vres slice supports greedy drafts only")
+        keep = torch.load(path, weights_only=False).to(
+            lm_head.weight.device).long()
+        new_w = nn.Parameter(
+            lm_head.weight.data.index_select(0, keep).clone(),
+            requires_grad=False)
+        lm_head.weight = new_w
+        for attr in ("num_embeddings", "num_embeddings_padded",
+                     "org_vocab_size"):
+            if hasattr(lm_head, attr):
+                setattr(lm_head, attr, keep.numel())
+        self._vres_map = keep.to(torch.int64)
+        logger.info(
+            "[vres] draft lm_head sliced to %d rows (%.2f GiB saved)",
+            keep.numel(),
+            (new_w.shape[0] and (lm_head.weight.element_size()
+             * (self._vres_map.numel()) * 0)) or 0.0,
+        )
+
+    def _vres_remap(self, token_ids: torch.Tensor) -> torch.Tensor:
+        """Map sliced-vocab argmax indices back to global token ids."""
+        if self._vres_map is None:
+            return token_ids
+        return self._vres_map[token_ids]
 
     def _maybe_share_lm_head(self, target_language_model: nn.Module) -> None:
         """
