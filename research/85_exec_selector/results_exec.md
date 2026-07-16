@@ -70,3 +70,14 @@ All incident validations PASS. Selector rule: a config is admissible iff feasibl
 
 - FIT BASIS (honest): the paired realization deltas (same cell, same beta, kernel-only difference) carry the fit; serve rows are context (weights 0-0.2; the MLA b4/2k implied 0.97 is an S4-class outlier -- its b8 neighbor implies ~0). Re-prediction: the flip inversion (fp8 beats bf16-partial at M>=0.5, loses at M<=0.06) is reproduced by construction of the ramp.
 - Scope: fp8-dequant grouped-GEMM kernels; MoE Marlin shows the same sign with smaller k0 (not separately fitted -- data within noise). Selector rule: any fp8 draft realization prices with kappa(M) at its CHAIN M, which is batch- and parallelism-dependent -- constants alone CANNOT price a realization.
+
+## Map v6 (data/strategy_map_v6.md)
+
+LCB selection over the execution-extended model, feasibility-filtered,
+600 MC draws per cell. Headlines: (i) dense composed+vres wins every
+feasible cell (LCB 1.16-2.00, P(win) 0.66-0.95) — the 84 lm_head find
+carried through selection; (ii) the v5 MoE 2k flips are DEMOTED to OFF
+by their own uncertainty (LCB 0.89-0.93) — the selector now agrees with
+the E2c parity-band measurement; (iii) MLA prints ngram at LCB ~2.45
+P1.00 with the e2e-unvalidated flag; (iv) each cell carries winner + LCB
++ P(win) + provenance, and the map emits its own measurement queue.
