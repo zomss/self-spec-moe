@@ -96,6 +96,8 @@ class _DraftDecodeForwardSample(nn.Module):
         # Phase 85: sliced-vocab draft -- remap argmax local->global INSIDE
         # the captured graph (a gather; pointer-stable buffer).
         self.vres_map = vres_map
+        logger.info("[vres] _DraftDecodeForwardSample built: vres_map=%s",
+                    "None" if vres_map is None else tuple(vres_map.shape))
 
     def forward(self, **model_kwargs: Any):
         ret = self.model(**model_kwargs)
@@ -3588,23 +3590,39 @@ class SpecDecodeBaseProposer:
         new_w = nn.Parameter(
             lm_head.weight.data.index_select(0, keep).clone(),
             requires_grad=False)
-        lm_head.weight = new_w
+        # The draft's lm_head may BE the target's module
+        # (_maybe_share_lm_head fires when the checkpoints' heads are
+        # byte-identical -- true for the W4 recipe, which skips lm_head).
+        # NEVER mutate it: build a detached shallow copy with its own
+        # parameter dict and hang the sliced weight there.
+        import copy as _copy
+
+        new_head = _copy.copy(lm_head)
+        new_head._parameters = dict(lm_head._parameters)
+        new_head._buffers = dict(lm_head._buffers)
+        new_head.weight = new_w
         for attr in ("num_embeddings", "num_embeddings_padded",
                      "org_vocab_size"):
-            if hasattr(lm_head, attr):
-                setattr(lm_head, attr, keep.numel())
+            if hasattr(new_head, attr):
+                setattr(new_head, attr, keep.numel())
+        self.model.lm_head = new_head
         self._vres_map = keep.to(torch.int64)
         logger.info(
-            "[vres] draft lm_head sliced to %d rows (%.2f GiB saved)",
-            keep.numel(),
-            (new_w.shape[0] and (lm_head.weight.element_size()
-             * (self._vres_map.numel()) * 0)) or 0.0,
+            "[vres] draft lm_head sliced to %d rows (detached copy; "
+            "target head untouched)", keep.numel(),
         )
 
     def _vres_remap(self, token_ids: torch.Tensor) -> torch.Tensor:
         """Map sliced-vocab argmax indices back to global token ids."""
         if self._vres_map is None:
             return token_ids
+        if getattr(self, "_vres_dbg_n", 0) < 8 and os.environ.get(
+                "W7_VRES_DEBUG"):
+            self._vres_dbg_n = getattr(self, "_vres_dbg_n", 0) + 1
+            loc = token_ids.flatten()[:8].tolist()
+            glob = self._vres_map[token_ids].flatten()[:8].tolist()
+            logger.info("[vres-dbg] shape=%s local=%s -> global=%s",
+                        tuple(token_ids.shape), loc, glob)
         return self._vres_map[token_ids]
 
     def _maybe_share_lm_head(self, target_language_model: nn.Module) -> None:

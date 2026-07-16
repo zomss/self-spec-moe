@@ -70,6 +70,7 @@ run(){  # arm mode K extra-env...
 FILTER="${1:-.}"
 want(){ echo "$1" | grep -qE "$FILTER"; }
 want nospec && run nospec nospec 0
+want pwvres && run pwvres spec 6 VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP=/data/smcho/self-spec-moe/research/85_exec_selector/data/vres_keep16k.pt
 want pw     && run pw     spec 6
 want sp     && run sp     spec 6 VLLM_SELF_SPEC_DRAFT_FULLCG=1
 want spk4   && run spk4   spec 4 VLLM_SELF_SPEC_DRAFT_FULLCG=1

@@ -96,3 +96,31 @@ MoE prints window winners at >=16k and OFF at the 2k band. The selector's
 queue-and-correct loop CLOSED within one measurement round: every
 provenance flag it emitted was adjudicated, and no confident (high-LCB,
 measured-provenance) cell moved.
+
+## vres e2e: the plumbing works; the BENCHMARK's ignore_eos tail is the collapse
+
+Evidence chain (all committed logs/micro-runs):
+- offline slice+remap semantics: beta 0.9974 alone, 0.9349 composed with
+  W4+win512 (vres RESCUES W4 noise-flips -- the kvq-rescue mechanism).
+- e2e micro-runs at OUTLEN=16: b1/2k AND b1/16k accept 7.000 (PERFECT;
+  remap pairs verified sane) -- the lm_head slice, in-graph gather remap,
+  and detached-copy sharing fix all work end to end.
+- full cells (OUTLEN=160, ignore_eos=1): accept 2.57-2.95 regardless of
+  chain config, keep size (16k vs 32k: 2.888 vs 2.948 -- coverage-test
+  NEGATIVE), batch composition prompt-dependent (b2 4.9, b4 5.3).
+- Diagnosis: with ignore_eos the harness generates far past each answer's
+  natural end; post-EOS greedy drift is high-entropy/OOD content that a
+  frequency-restricted head cannot propose, while full-vocab drafts track
+  the target there (pw holds 5.685 on the same windows). The refs bank
+  (96-token continuations at 16k) is pre-EOS-dominated -> offline 0.995
+  never saw the tail.
+
+Verdicts: (1) the vres LEVER and its realization are sound (b1 7.0);
+(2) its beta is CONTENT-CONDITIONAL -- the same monitoring-burden class
+as flr's routing drift, now with a measured failure mode (vocabulary
+drift); (3) the HARNESS's ignore_eos regime is out-of-distribution for
+vocabulary-restricted drafts -- an honest benchmark-artifact note that
+also cautions any FR-Spec-style deployment: restrict only where the
+serving path stops at EOS or the keep set tracks live traffic.
+Next verification: dump live texts to confirm tail composition; a
+stop-at-EOS e2e cell would give the lever's fair number.
