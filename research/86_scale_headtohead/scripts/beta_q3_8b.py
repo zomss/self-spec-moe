@@ -31,7 +31,7 @@ POOL, BUDGET = 8, 7
 
 
 class Args:
-    model, ctx, prompts, gen = "q3_8b", 16384, 12, 96
+    model, ctx, prompts, gen, chunk = "q3_8b", 16384, 12, 96, 4096
 
 
 class LayerSet:
