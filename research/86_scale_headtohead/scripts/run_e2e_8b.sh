@@ -63,6 +63,8 @@ want w4_b1_2k    && run w4s    spec   4 1 2048
 want w4win_b1_2k && run w4wins spec   4 1 2048 $WINENV $FIXENV
 want nospec_b1_2k && run nospecs nospec 0 1 2048
 # --- our regimes (no KnapSpec counterpart)
+want w4a8win_b8  && run w4a8win spec 4 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b16 && run w4a8win spec 6 16 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
 want nospec_b8   && run nospec nospec 0 8 16384
 want w4win_b8    && run w4win  spec   4 8 16384 $WINENV $FIXENV
 want nospec_b32  && run nospec nospec 0 32 16384
