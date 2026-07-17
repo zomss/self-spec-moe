@@ -1,4 +1,4 @@
-# Paper outline — phases 76-81 (updated 2026-07-13 with the Phase-81 headline)
+# Paper outline — phases 76-85 (ASSEMBLED 2026-07-18: paper_draft.md; sections/ = source of truth)
 
 **Working title**: *No Universal Draft: A Measured Selector for Training-Free
 Self-Speculative Decoding Across Batch, Context, and Architecture*

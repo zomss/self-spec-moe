@@ -31,6 +31,12 @@ q_fp8 β is weight-only — a −2.1 accept gap on MLA at K=5. A weight-only
 runtime draft option is plumbing, not research, but until it exists the
 map's q_fp8 column prices a config the harness cannot yet run exactly.
 
+**Retractions carried, not buried.** One Phase-84 gate (vocabulary
+restriction) was circular and its map consequences were withdrawn after
+the e2e audit (§7.5); the n-gram lever's dramatic MLA pricing died on
+its realization (CPU-side lookup); both survive in the record with
+mechanisms named, and both produced rules now applied paper-wide.
+
 **Profiled flips: delivery boundary measured, not closed.** Of the four
 map-v5 flips (§7.6), one is delivered (b4/2k, 1.03× — margins ±0.10, a
 parity-to-modest win); the 2k band's higher batches are chain-blocked

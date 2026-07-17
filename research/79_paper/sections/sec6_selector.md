@@ -97,6 +97,20 @@ recomposing the map with literature β values gets the REGIONS right and
 the values wrong (dense b32/16k: 1.40× borrowed → 1.55× measured vs 1.54×
 e2e) — measuring β is what makes the map quantitative.
 
+**Selection under uncertainty (the final selector).** The map of record
+(v6) selects by LOWER CONFIDENCE BOUND under per-source uncertainty
+(measured R ±4%, term-model R ±10–30% by family, product-β ±0.02,
+per-chain-tier execution constants φ/ψ from §8's fits), with residency
+feasibility as an admission filter, Monte-Carlo P(winner) per cell, and
+γ capped per lever semantics. Three properties follow by construction:
+an under-measured realization cannot win (its wide bounds sink its LCB);
+every cell prints winner + LCB + P(win) + provenance; and the map emits
+its own measurement queue — the cells where uncertainty is
+decision-relevant. In its first round that queue adjudicated all three
+of its items against the offline layer and the offline layer lost twice
+on realization constants and once on our own gate circularity (§7.5) —
+without any confident cell moving.
+
 The deployment recipe this section justifies: one R sweep per serving
 stack (§4), one β column per (lever, architecture) (§5, ~1 GPU-hour), one
 anchor cell per new architecture (5 minutes) — then every regime cell of

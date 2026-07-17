@@ -151,6 +151,21 @@ architecture (§6). The unified statement: profiles nominate, measurements
 confirm, and the confirmation budget is 1–2 per decision at every level
 of the hierarchy (lever, combination, set, cell).
 
+**The confirmation layer catches the profiler's own bugs.** In the map's
+first queue-and-correct round, end-to-end measurement contradicted the
+offline layer three times and was right all three: a model-free lever's
+realization cost (n-gram's CPU lookup, ψ = 2.4 target-steps), a
+context-scaling assumption (the full-attention expert draft's R is
+context-invariant), and — most instructive — a CIRCULAR gate (§3's
+disjoint-artifact rule exists because the vocabulary-restriction keep
+set was built from its own evaluation refs; honest coverage 0.80–0.90
+retired the lever from the dense map and withdrew a headline candidate).
+Every correction was absorbed as a constant or a rule, no
+measured-provenance cell moved, and the loop closed in one round. This
+is the paper's operational thesis: profiles nominate, measurements
+confirm — and the confirmation layer is load-bearing precisely because
+the profiling layer, including ours, has bugs.
+
 ## 7.6 Map v5: profiled levers change what the map says
 
 Re-running the exhaustive search with the profiled columns of §5.4 flips
