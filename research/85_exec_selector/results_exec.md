@@ -124,3 +124,22 @@ also cautions any FR-Spec-style deployment: restrict only where the
 serving path stops at EOS or the keep set tracks live traffic.
 Next verification: dump live texts to confirm tail composition; a
 stop-at-EOS e2e cell would give the lever's fair number.
+
+## vres FINAL: the gate was CIRCULAR; honest re-gate retires the lever (v6.2)
+
+The ignore_eos attribution was WRONG (no EOS reached in 160 tokens); the
+live-coverage measurement found the truth: the 84 keep set was built from
+the same 12-prompt refs it was scored on (refs hold ~12k distinct tokens
+-- top-16k covered them by construction; offline 0.9948 was circular).
+Honest C4-frequency keeps: live coverage 0.80 (16k) / 0.90 (32k) ->
+beta ~0.85-0.88 -> composed ~1.57x at b32/16k vs 1.91x WITHOUT vres:
+retired from the dense map (survives only on high-natural-coverage
+workloads or shallow gamma). Map v6.2: dense reverts to q_int4+win512
+everywhere (the measured 1.91x headline stands); vres prints as
+runner-up with honest provenance.
+
+E2E WAS RIGHT THREE TIMES THIS ROUND (ngram, flr-ctx, vres) and the
+offline layer wrong twice by realization and once by CIRCULARITY -- the
+queue-and-correct loop is the method's real product. New gate rule
+(applied retroactively, all pass except vres): a profiled artifact must
+be built on data DISJOINT from its evaluation set.

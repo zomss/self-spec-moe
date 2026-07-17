@@ -8,14 +8,14 @@ ngram priced as geometric beta_eff at gamma<=8 (block-proposal semantics approxi
 
 | cell | winner (LCB05 / median / P(win)) | runner-up | note |
 |---|---|---|---|
-| b1/2k | **q_int4+win512+vres16k** 1.27/1.46/P0.82 | q_int4 1.22 | 84: lm_head cut (x0.80) |
-| b1/16k | **q_int4+win512+vres16k** 1.61/2.02/P0.73 | q_int4+win512 1.46 | 84: lm_head cut (x0.80) |
-| b1/32k | **q_int4+win512+vres16k** 2.00/2.61/P0.66 | q_int4+win512 1.76 | 84: lm_head cut (x0.80) |
-| b8/2k | **q_int4+win512+vres16k** 1.28/1.48/P0.85 | q_int4 1.23 | 84: lm_head cut (x0.80) |
-| b8/16k | **q_int4+win512+vres16k** 1.60/1.81/P0.95 | q_int4+win512 1.46 | 84: lm_head cut (x0.80) |
-| b8/32k | **q_int4+win512+vres16k** 1.81/2.42/P0.69 | q_int4+win512 1.62 | 84: lm_head cut (x0.80) |
-| b32/2k | **q_int4+win512+vres16k** 1.16/1.32/P0.84 | q_int4 1.11 | 84: lm_head cut (x0.80) |
-| b32/16k | **q_int4+win512+vres16k** 1.99/2.26/P0.93 | q_int4+win512 1.83 | 84: lm_head cut (x0.80) |
+| b1/2k | **q_int4** 1.22/1.28/P0.39 | q_int4+win512 1.15 | GPTQ; measR/cell |
+| b1/16k | **q_int4+win512** 1.46/1.77/P0.74 | q_int4+win512+vres32kC4 1.28 | measR combo / w4xwinfac |
+| b1/32k | **q_int4+win512** 1.76/2.31/P0.77 | q_int4+win512+vres32kC4 1.53 | measR combo / w4xwinfac |
+| b8/2k | **q_int4** 1.23/1.30/P0.41 | q_int4+win512 1.15 | GPTQ; measR/cell |
+| b8/16k | **q_int4+win512** 1.46/1.58/P0.86 | q_int4+win512+vres32kC4 1.27 | measR combo / w4xwinfac |
+| b8/32k | **q_int4+win512** 1.62/2.12/P0.74 | q_int4+win512+vres32kC4 1.41 | measR combo / w4xwinfac |
+| b32/2k | **q_int4** 1.11/1.17/P0.30 | q_int4+win512 1.05 | GPTQ; measR/cell |
+| b32/16k | **q_int4+win512** 1.83/1.97/P0.92 | q_int4+win512+vres32kC4 1.49 | measR combo / w4xwinfac |
 | b32/32k | INFEASIBLE (residency) | | |
 
 ## moe

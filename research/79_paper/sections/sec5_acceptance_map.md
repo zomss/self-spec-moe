@@ -131,6 +131,7 @@ levers' PROFILED forms on the same paired references (Phase 83):
 | layer sets, iterative greedy (dense, budget 3/7) | .448 / .09 (contiguous middle) | **.869 / .557** | redundancy concentrated in EARLY blocks |
 | layer sets (MoE, budget 6/48) | ~.70 | .742 | leave-one-out profile FLAT (.946–.959) |
 | int4, GPTQ-calibrated (dense) | .924 (RTN) | .9427 | calibration near the lever's ceiling |
+| vocab restriction (dense) | — | .85-.88 honest (live C4-keep coverage .80/.90) | first gate was CIRCULAR (keep built from the scored refs); caught by the e2e audit — the cautionary exhibit for profiled-artifact gating |
 
 Three structural findings. **Placement, not contiguity**: dense iterative
 greedy picks a nearly contiguous EARLY block — the middle-block

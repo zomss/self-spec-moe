@@ -41,7 +41,7 @@ CONFIGS = {
     "dense": [
         ("q_int4", 0.9427, 0.010, None, 0.04, "fixed", 8, "GPTQ; measR/cell"),
         ("q_int4+win512", 0.917 * (0.9427 / 0.924), 0.012, "combo", None, "fixed", 8, "measR combo / w4xwinfac"),
-        ("q_int4+win512+vres16k", 0.917 * (0.9427 / 0.924) * 0.9948, 0.015, ("vres", "combo"), None, "fixed", 8, "84: lm_head cut (x0.80)"),
+        ("q_int4+win512+vres32kC4", 0.917 * (0.9427 / 0.924) * 0.88, 0.04, ("vres", "combo"), None, "fixed", 8, "HONEST re-gate: C4 keep, live coverage 0.90 -- loses at deep gamma"),
         ("mlpskip6+q_int4", 0.9427 * 0.8464, 0.025, ("mult", None, 0.85, 0.12), None, "fixed", 8, "84 sublayer x quant"),
         ("win512", 0.978, 0.010, None, 0.04, "fixed", 8, "measR/cell"),
     ],
@@ -79,7 +79,7 @@ def resolve_R(group, name, spec, b, ck, Rs):
         return (base * FLR_CTXFAC[ck], sig)
     if isinstance(spec, tuple) and spec[0] == "vres":
         base = resolve_R(group, "q_int4+win512", "combo", b, ck, Rs)
-        return (base[0] * 0.80, base[1] + 0.04) if base else None
+        return (base[0] * 0.84, base[1] + 0.04) if base else None  # 32k keep: smaller lm_head cut
     if isinstance(spec, tuple) and spec[0] == "mult":
         w4 = Rs["dense"].get(("d_w4marlin", (b, ck)))
         return (w4 * spec[2], spec[3]) if w4 is not None else None
