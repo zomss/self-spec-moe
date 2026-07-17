@@ -58,10 +58,16 @@ want w4_b1       && run w4     spec   4 1 16384
 want w4_b1_t07   && run w4t07  spec   4 1 16384 W7_TEMP=0.7
 want nospec_b1_t07 && run nospect07 nospec 0 1 16384 W7_TEMP=0.7
 want w4win_b1    && run w4win  spec   4 1 16384 $WINENV $FIXENV
+want w4win_b1_t07 && run w4wint07 spec 4 1 16384 W7_TEMP=0.7 $WINENV $FIXENV
+want w4_b1_2k    && run w4s    spec   4 1 2048 
+want w4win_b1_2k && run w4wins spec   4 1 2048 $WINENV $FIXENV
+want nospec_b1_2k && run nospecs nospec 0 1 2048
 # --- our regimes (no KnapSpec counterpart)
 want nospec_b8   && run nospec nospec 0 8 16384
 want w4win_b8    && run w4win  spec   4 8 16384 $WINENV $FIXENV
 want nospec_b32  && run nospec nospec 0 32 16384
 want w4win_b32   && run w4win  spec   6 32 16384 $WINENV $FIXENV
+want nospec_b16  && run nospec nospec 0 16 16384
+want w4win_b16   && run w4win  spec   6 16 16384 $WINENV $FIXENV
 kill_mine
 echo "[86e2] DONE ($(date +%H:%M:%S))"

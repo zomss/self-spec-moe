@@ -1,0 +1,26 @@
+{
+  "mode": "spec",
+  "model": "Qwen/Qwen3-8B",
+  "tag": "q38b_w4wins_K4_b1_c2k",
+  "dp": 1,
+  "tp": 1,
+  "nodes": 1,
+  "node_rank": 0,
+  "draft_quant": "bf16",
+  "out_len": 160,
+  "short_len": 32,
+  "iters": 8,
+  "warmup": 1,
+  "gpu_mem": 0.9,
+  "eager": false,
+  "a2a_emulated_us": 0.0,
+  "suffix": "cg",
+  "by_k": {
+    "4": [
+      {
+        "batch": 1,
+        "error": "EngineDeadError('EngineCore encountered an issue. See stack trace (above) for the root cause.')"
+      }
+    ]
+  }
+}
