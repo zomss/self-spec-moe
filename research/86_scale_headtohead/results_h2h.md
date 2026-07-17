@@ -88,3 +88,17 @@ GROWS with scale). Leave-one-out: 60 layers, .913-.976, median .967
   law and our distribution study.
 - Cross-system caveat: both sides report speedup vs their own AR
   baseline.
+
+## Addendum: the 32B greedy frontier (their lever, our search, their scale)
+
+.976/.954/.912/.892/.833/.800/.770 at budgets 1-7 (of 64). Set selection
+recovers +0.11 over contiguous at matched depth (placement law, third
+scale) -- yet composed pricing keeps skip OUT of the 32B map (best
+budget-4 composition: beta .843 x R .59 < w4win alone). The gap to
+KnapSpec's implied ~0.935 acceptance decomposes into: task mix (math
+lifts beta, our measured distribution effect), attention-sublayer
+skipping (their adaptive attention-skip; our attnskip gate showed the
+distinct R structure), and knapsack-vs-greedy (bounded small by our
+backtest). The head-to-head verdict is UNCHANGED: composition beats
+their lever at both scales; their lever alone never enters our map on
+this workload.
