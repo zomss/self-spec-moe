@@ -148,9 +148,16 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 cc.mode, cc.cudagraph_mode = old_mode, old_cg
 
         draft_vllm_config = self._create_draft_vllm_config()
+        # Phase 83: draft PARTIAL replica -- activate the build context so
+        # FusedMoE construction installs the frequency-profiled per-layer
+        # expert maps (non-resident experts are never loaded).
+        from vllm.model_executor.layers.fused_moe.expert_map_manager import (
+            draft_partial_replica_build,
+        )
+
         with set_model_tag("draft_model"), _maybe_uncompiled_draft(
             draft_vllm_config.compilation_config
-        ):
+        ), draft_partial_replica_build():
             model = get_model(
                 vllm_config=draft_vllm_config,
                 prefix="draft_model",
