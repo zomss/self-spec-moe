@@ -69,6 +69,18 @@
 | Q3-8B (36L) | .951 | .923 | .885 | .849 | .813 | .773 | .694 | .754 @12.5% |
 | Q3-32B (64L) | .976 | .954 | .912 | .892 | .833 | .800 | .770 | .659 @12.5% |
 
+## T5. New-lever gates (Phase 87, Qwen3-8B 16k) + retrieval workload axis
+
+| arm | beta ondist | beta retrieval (needle@2k) | reading |
+|---|---|---|---|
+| actfp8 (A-only, dyn per-token e4m3) | **.9922** | - | A-quant factor isolated first time: ~free; validates W8A8 ~ W-only x A-only |
+| w4a8 (int4-W + fp8-A) | .9470 | - | -.005 vs W4-alone (.952); CutlassW4A8 beta-viable; e2e at b8/b16 pending |
+| sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
+| s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
+| win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |
+| win128 | .975 | .872 | same collapse, deeper |
+| kvq_fp8 | .985 | **.974** | holds; first regime where kvq beta > window beta (kvq pool still priced out; not built) |
+
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
   rows carry the greedy-only-capture execution gap; cross-system caveat
