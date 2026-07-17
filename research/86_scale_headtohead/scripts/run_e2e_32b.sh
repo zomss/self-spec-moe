@@ -54,8 +54,17 @@ FILTER="${1:-.}"
 want(){ echo "$1" | grep -qE "$FILTER"; }
 # --- their setting: b1, greedy and T=0.7
 want nospec_b1   && run nospec nospec 0 1 16384
+want nospec_math && run nospecm nospec 0 1 16384 W7_PROMPT_FILE=$REPO/research/79_paper/data/prompts_math.txt
+want w4win_math_k4 && run w4winm spec 4 1 16384 W7_PROMPT_FILE=$REPO/research/79_paper/data/prompts_math.txt $WINENV $FIXENV
+want w4win_math_k5 && run w4winm spec 5 1 16384 W7_PROMPT_FILE=$REPO/research/79_paper/data/prompts_math.txt $WINENV $FIXENV
 want w4win_b1    && run w4win  spec   4 1 16384 $WINENV $FIXENV
+want w4win_b1_k5 && run w4win  spec   5 1 16384 $WINENV $FIXENV
+want w4win_b1_k6 && run w4win  spec   6 1 16384 $WINENV $FIXENV
+want w4win_b1_t07 && run w4wint07 spec 4 1 16384 W7_TEMP=0.7 $WINENV $FIXENV
+want w4win_b8    && run w4win8 spec   5 8 16384 $WINENV $FIXENV
 want fp8win_b1   && run fp8win spec   5 1 16384 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV
+want fp8mwin_b1_k5 && run fp8mwin spec 5 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
+want fp8mwin_b1_k6 && run fp8mwin spec 6 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
 want nospec_b1_t07 && run nospect07 nospec 0 1 16384 W7_TEMP=0.7
 want best_b1_t07 && run bestt07 spec  5 1 16384 W7_TEMP=0.7 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV
 # --- our regime bonus row
