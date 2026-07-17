@@ -30,7 +30,9 @@ optimistic pricing).
 **Realizations** (the axis single-lever work ignores): per config, the
 execution variant is priced separately -- e.g. expert restriction spans
 {EP-shard local, fp8 full replica, bf16 partial replica} = measured
-0.55x/0.93x/1.03x at the SAME beta. Chain implementations {piecewise,
+0.55x/0.93x/1.03x at the SAME beta; W4A8 spans {CutlassW4A8, HummingW4A8}
+= 1.60x/1.90x at b8 and 1.78x/2.19x at b16 (same ckpt, same beta -- the
+kernel flips the cell from losing to winning). Chain implementations {piecewise,
 scratchpad-FA3 fixed, eager-MLA} carry fitted (phi, psi).
 
 **Known holes (explicit)**: hardware axis (one 4xH100 box), one model per

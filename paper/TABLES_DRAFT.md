@@ -74,7 +74,12 @@
 | arm | beta ondist | beta retrieval (needle@2k) | reading |
 |---|---|---|---|
 | actfp8 (A-only, dyn per-token e4m3) | **.9922** | - | A-quant factor isolated first time: ~free; validates W8A8 ~ W-only x A-only |
-| w4a8 (int4-W + fp8-A) | .9470 | - | -.005 vs W4-alone (.952); CutlassW4A8 beta-viable; e2e at b8/b16 pending |
+| w4a8 (int4-W + fp8-A) | .9470 | - | -.005 vs W4-alone (.952); e2e CONFIRMED dense-batch winner, see below |
+
+W4A8+win e2e (Q3-8B 16k, GPTQ ckpt): Humming kernel **1.90x b8 / 2.19x
+b16** (new batch headline) vs w4win 1.81/1.79; SAME ckpt on CutlassW4A8
+1.60/1.78 -- realization span 1.60<->2.19 at identical beta (kernel choice
+flips the cell). Accept 6.02 vs 5.69 (GPTQ-calibrated ckpt vs RTN proxy).
 | sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
 | s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
 | win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |
