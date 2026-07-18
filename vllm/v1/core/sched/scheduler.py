@@ -1209,7 +1209,7 @@ class Scheduler(SchedulerInterface):
             if veto:
                 num_spec_tokens_to_schedule = 0
         if (
-            self._sd_accept_off_thresh > 0.0
+            (self._sd_accept_off_thresh > 0.0 or self._sd_policy is not None)
             and num_spec_tokens_to_schedule > 0
             and self.running
             and n_run >= self._sd_gate_min_batch
@@ -1771,7 +1771,7 @@ class Scheduler(SchedulerInterface):
                 num_sampled = self.num_sampled_tokens_per_step
                 num_accepted = max(len(generated_token_ids) - num_sampled, 0)
                 num_rejected = num_draft_tokens - num_accepted
-                if self._sd_accept_off_thresh > 0.0:
+                if self._sd_accept_off_thresh > 0.0 or envs.VLLM_SELF_SPEC_POLICY_FILE:
                     # Per-REQUEST accept EMA: the regime unit at small
                     # batch is the request (task type sets accept). A new
                     # request starts optimistic (1.0); a finished one takes

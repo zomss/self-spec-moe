@@ -85,13 +85,19 @@ def main():
                 "num_speculative_tokens": {"k4": 4}.get(a.arm, 6),
                 "draft_tensor_parallel_size": 1}
         if a.arm == "policy":
-            sched = SCHEDULE
-            if os.environ.get("E2_SCHEDULE"):
-                sched = [tuple(int(x) for x in t.split(":"))
-                         for t in os.environ["E2_SCHEDULE"].split(",")]
-            kmax = max(k for _, _, k in sched)
-            spec["num_speculative_tokens"] = kmax
-            spec["num_speculative_tokens_per_batch_size"] = sched
+            if os.environ.get("E2_POLICY"):
+                cells = json.loads(
+                    Path(os.environ["E2_POLICY"]).read_text())["cells"]
+                kmax = max((int(c["K"]) for c in cells), default=0)
+                spec["num_speculative_tokens"] = max(kmax, 1)
+            else:
+                sched = SCHEDULE
+                if os.environ.get("E2_SCHEDULE"):
+                    sched = [tuple(int(x) for x in t.split(":"))
+                             for t in os.environ["E2_SCHEDULE"].split(",")]
+                kmax = max(k for _, _, k in sched)
+                spec["num_speculative_tokens"] = kmax
+                spec["num_speculative_tokens_per_batch_size"] = sched
     import os
     longctx = bool(os.environ.get("E2_LONGCTX")) or \
         bool(os.environ.get("E2_LONGMATH"))
@@ -100,7 +106,8 @@ def main():
               gpu_memory_utilization=0.90,
               max_num_seqs=32, enable_prefix_caching=False,
               disable_log_stats=False,
-              async_scheduling=True)
+              async_scheduling=True,
+              max_num_batched_tokens=8192)
     tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
     aime = load_aime()
     docs = load_docs(tok, n=16, target_tok=14000) if longctx \

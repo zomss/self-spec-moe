@@ -73,7 +73,8 @@ def measure(arm):
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
               max_model_len=20480, gpu_memory_utilization=0.90,
               max_num_seqs=max(BATCHES), enable_prefix_caching=False,
-              disable_log_stats=False, async_scheduling=True)
+              disable_log_stats=False, async_scheduling=True,
+              max_num_batched_tokens=8192)
     tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
     prompts_by_ctx = {c: load_ctx_prompts(tok, max(BATCHES), c)
                       for c in CTXS}
@@ -81,8 +82,12 @@ def measure(arm):
     spN = SamplingParams(max_tokens=1 + NDEC, ignore_eos=True,
                         temperature=0)
     rows = []
+    KV_LIMIT_TOKENS = 330_000  # ~50 GB pool / 147 KB per token
     for ctx in CTXS:
         for b in BATCHES:
+            if b * ctx > KV_LIMIT_TOKENS:
+                print(f"[cell] SKIP infeasible b{b}/ctx{ctx} (residency)")
+                continue
             ps = prompts_by_ctx[ctx][:b]
             llm.generate(ps, spN, use_tqdm=False)  # warm shapes
             t1s, tns, accs = [], [], []

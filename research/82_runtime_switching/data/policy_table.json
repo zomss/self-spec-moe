@@ -1,0 +1,96 @@
+{
+ "model": "Qwen3-8B",
+ "draft": "/home/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+ "ndec": 160,
+ "arming_rent": 0.015,
+ "cells": [
+  {
+   "batch": 1,
+   "ctx": 2000,
+   "K": 0,
+   "S_dec": 1.0,
+   "R": null,
+   "accept_off_thresh": null
+  },
+  {
+   "batch": 1,
+   "ctx": 8000,
+   "K": 0,
+   "S_dec": 1.0,
+   "R": null,
+   "accept_off_thresh": null
+  },
+  {
+   "batch": 1,
+   "ctx": 14000,
+   "K": 4,
+   "S_dec": 1.097,
+   "R": 0.737,
+   "accept_off_thresh": 0.882
+  },
+  {
+   "batch": 8,
+   "ctx": 2000,
+   "K": 0,
+   "S_dec": 1.0,
+   "R": null,
+   "accept_off_thresh": null
+  },
+  {
+   "batch": 8,
+   "ctx": 8000,
+   "K": 4,
+   "S_dec": 1.072,
+   "R": 0.785,
+   "accept_off_thresh": 0.906
+  },
+  {
+   "batch": 8,
+   "ctx": 14000,
+   "K": 6,
+   "S_dec": 1.261,
+   "R": 0.648,
+   "accept_off_thresh": 0.877
+  },
+  {
+   "batch": 16,
+   "ctx": 2000,
+   "K": 0,
+   "S_dec": 1.0,
+   "R": null,
+   "accept_off_thresh": null
+  },
+  {
+   "batch": 16,
+   "ctx": 8000,
+   "K": 4,
+   "S_dec": 1.176,
+   "R": 0.692,
+   "accept_off_thresh": 0.858
+  },
+  {
+   "batch": 16,
+   "ctx": 14000,
+   "K": 6,
+   "S_dec": 1.322,
+   "R": 0.597,
+   "accept_off_thresh": 0.854
+  },
+  {
+   "batch": 32,
+   "ctx": 2000,
+   "K": 0,
+   "S_dec": 1.0,
+   "R": null,
+   "accept_off_thresh": null
+  },
+  {
+   "batch": 32,
+   "ctx": 8000,
+   "K": 4,
+   "S_dec": 1.209,
+   "R": 0.655,
+   "accept_off_thresh": 0.838
+  }
+ ]
+}
