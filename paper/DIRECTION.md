@@ -92,8 +92,12 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
     (-2.0%: monotone drift is tracked by one static). The RL argument
     that stands is trained-draft STALENESS -> the training-free lever
     family; do not stage the RL demo as a switching win.
-- Sec D (eval): normal serving cells (already measured: 1.91x/2.77x
-  headlines) + RL-rollout trace (NEW), with the staleness argument.
+- Sec D (eval): decode-cell headlines (1.91x/2.77x; W4A8-Humming
+  2.19x) + the SERVING WALL headline (2026-07-19, T6): **1.80x wall
+  aggregate / 1.90x at b16** vs AR on the full serving driver at
+  reasoning shapes (14k-doc RAG + 3k-token CoT), S_dec 2.13 =
+  decode-cell record reproduced in serving. Plus the RL-rollout trace
+  (staleness framing).
 - Honest ledger carried (retractions, corrections, one-box scope until
   the hardware column lands).
 

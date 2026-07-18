@@ -112,7 +112,37 @@ b16) -- dominates its class, wins no cell; e2e not built
 | win128 | .975 | .872 | same collapse, deeper |
 | kvq_fp8 | .985 | **.974** | holds; first regime where kvq beta > window beta (kvq pool still priced out; not built) |
 
+## T6. Serving wall-clock e2e (the deployment headline; 2026-07-19)
+
+Full vLLM serving driver (LLM API), WALL time incl. prefill, real data:
+C4 14k-token documents + AIME problem, 3072-token CoT outputs --
+the realistic reasoning-serving shape (decode share ~90%). Qwen3-8B,
+1xH100, fixed stack (whole-chain draft graph, corrected skip-prefill,
+target-KV binding, mnb=8192).
+
+| arm | b8 x 14k RAG | b16 x 14k RAG | aggregate |
+|---|---|---|---|
+| AR (no spec) | 581.6 tok/s | 769.9 | 694.9 |
+| W4+win K4 | 1.53x | 1.72x | 1.64x |
+| W4+win K6 | 1.51x | 1.76x | 1.65x |
+| W4A8 K6 (CutlassW4A8) | 1.40x | 1.61x | 1.52x |
+| **W4A8 K6 (Humming)** | **1.67x** | **1.90x** | **1.80x** |
+
+- Implied b16 decode 1834 vs 862 tok/s = S_dec 2.13: the T5 harness
+  record (2.19x) REPRODUCED in serving -- decode-cell maps transfer to
+  wall once the serving stack is fixed and decode share is realistic.
+- Kernel-realization span, third confirmation: the SAME W4A8 ckpt runs
+  1.52x (Cutlass) vs 1.80x (Humming) wall aggregate.
+- The serving-stack fixes this table required (each measured): draft
+  prefill skip (2x prefill tax, with a placeholder-vs-prefill scheduler
+  bug that hid ~0.3x wall in interim numbers), whole-chain draft graph
+  (chain halved + boot-deterministic), async-scheduling force
+  (draft_model silently disables it), mnb async-stall avoidance.
+
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
   rows carry the greedy-only-capture execution gap; cross-system caveat
   (speedup vs own AR both sides); KnapSpec numbers from their paper.
+- T1-T5 are decode-focused cell measurements (harness); T6 is the
+  serving WALL headline. Both needed: cells feed the map, T6 is what a
+  deployment sees.
