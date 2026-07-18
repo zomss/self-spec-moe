@@ -67,10 +67,42 @@ Needle bank (fact at depth 2k, outside any window; Q3-8B, 12 prompts):
   task feature (long-range dependence), alongside the ngram lesson
   (output repetitiveness). Two measured workload features total.
 
+## L4 (follow-up gates) — kvq bounded; WIDTH PRUNING BEATS LAYER SKIP
+
+Requested completeness pass: kvq full-potential form + the untried
+width-pruning axis (Wanda-style importance, 32 C4 seqs -- disjoint from
+eval refs; masks are exact removal equivalents; realization is FREE:
+smaller dense GEMMs, no special kernel).
+
+| arm | beta | ~total-byte cut | matched-byte comparator |
+|---|---|---|---|
+| kvq_int4 (per-head/token, g=head_dim) | .9253 | KV 4x (vs fp8 2x) | kvq_fp8 .985: int4 costs -.06; still priced out vs window -> kvq lever now BOUNDED top-to-bottom |
+| ffn125 (FFN-channel 12.5%) | .9167 | 9.8% | greedy layer-skip 4L=11.1%: .849 (+.07) |
+| ffn25 | .8733 | 19.6% | greedy 7L=19.4%: .694 (**+.18**) |
+| ffn375 | .8142 | 29.4% | (skip frontier ends ~.69 @ 19%) |
+| ffn50 | .7613 | 39.1% | SparseGPT 2:4 .828 @ ~50% -- 2:4 wins deep, ffn wins realization (no kernel needed) |
+| head25 (Q-heads) | .8984 | 4.3% | poor per-byte (Q/O only 17% of layer bytes) |
+| head50 | .8038 | 8.7% | dominated by ffn125 (.917 @ 9.8%) |
+| ffn25head25 | .8273 | 23.9% | product predicts .784 -> **+.043 sub-additive** (error overlap, like s24w4) |
+
+- **FFN-channel pruning ENTERS THE POOL**: it beats the layer-skip
+  frontier at every matched byte budget on dense (+.07 shallow, +.18
+  deep) and needs no kernel. The placement law refines: on dense,
+  CHANNEL granularity > LAYER granularity at matched bytes.
+- Head pruning: measured-dominated (per-byte loser to ffn at every
+  budget).
+- Width x width combo is sub-additive (favorable) -- third measured
+  product-law exception, same sign as s24w4.
+- Next (map-gated): price w4+ffn25 composition (bytes 0.25x0.80 ~ 0.2x,
+  beta ~ .83 by product, likely better by sub-additivity) vs skip-based
+  sets at deep-budget cells.
+
 ## Entry summary
 
 | lever | status |
 |---|---|
 | activation quant (fp8-A; W4A8) | IN POOL; **e2e-confirmed dense-batch winner** (Humming realization: 1.90x b8 / 2.19x b16 vs w4win 1.81/1.79) |
 | SparseGPT 2:4 (+int4 combo) | alive-pending-realization (kernel absent) |
-| draft-only kvq pool | not selected (regime found but priced out); reference column upgraded with the retrieval row |
+| draft-only kvq pool | not selected (regime found but priced out); lever bounded: fp8 .985 / int4 .925 |
+| FFN-channel width prune | **IN POOL** (beats layer-skip frontier at all matched bytes; realization-free) |
+| Q-head prune | measured-dominated by ffn at every budget |
