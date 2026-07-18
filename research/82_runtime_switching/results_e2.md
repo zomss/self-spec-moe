@@ -611,3 +611,61 @@ Kernel forced via the disable list (log-confirmed HummingLinearKernel):
 - THE headline e2e vs AR: **1.80x wall aggregate / 1.90x at b16** at
   realistic reasoning-serving shapes on the fully-fixed stack
   (wholechain + corrected skip-prefill + target-KV binding).
+
+## FIXED-SKIP REVALIDATION (2026-07-19): the corrected 8B record --
+## policy wins 2 of 3 traces
+
+The entire E2 program above (compile + traces) ran with the buggy G-A
+skip condition (alternate-cycle K=0, -20% steady decode wherever spec
+ran). Full rerun on the corrected condition: recompile off/k4/k6 ->
+resolve -> 4 arms x 3 traces (run_fixedskip_pipeline.sh; buggy-era
+artifacts archived as policy_cells_buggyskip.csv /
+policy_table_buggyskip.json).
+
+Recompiled table (fixed skip; S_ref at compile accept):
+
+| cell | K4 S (R) | K6 S (R) | buggy-era K4 S |
+|---|---|---|---|
+| b8/14k | 1.306 (.592) | **1.346 (.567)** | 1.23 |
+| b16/8k | 1.290 (.600) | 1.074 | 1.10 |
+| b16/14k | **1.587 (.428)** | 1.489 | 1.29 |
+| b32/8k | 1.418 (.500) | 1.254 | 1.19 |
+| b16/2k | 0.832 (.997) | 0.690 | 0.84 |
+| b32/2k | 0.844 (1.014) | 0.710 | 0.86 |
+| b8/8k | 1.031 (.781) | 0.850 | 0.97 |
+
+The fix moves ONLY the spec-win cells (they were the ones being
+throttled): the deep-ctx column jumps ~10-25% (b16/14k 1.29 -> 1.59)
+while the OFF-class burst cells stay put. Regime deltas WIDEN --
+which raises the value of selection (see ceiling below).
+
+Trace matrix (tok/s aggregate; per-phase in valfx_*.json):
+
+| trace | off | k4 | k6 | policy |
+|---|---|---|---|---|
+| E2 mixed | 955.7 | 976.6 | 914.0 | **979.2 (wins)** |
+| E2c longmath | 584.4 | **769.8** | 753.5 | 752.2 (-2.3%) |
+| E2b longctx | 768.1 | 799.5 | 704.9 | **817.8 (wins, +2.3%)** |
+
+- The policy now wins E2 and E2b OUTRIGHT and is -2.3% behind the
+  oracle static on E2c: best cross-trace record of the program. One
+  policy config vs three different per-trace winners (k4 wins E2c,
+  off nearly wins E2, no static wins E2b).
+- Spec statics transformed where spec runs: E2c k4 = +31.7% over OFF
+  (was +9.8% buggy-era); S3 b16/rag14k 994.1 tok/s = 1.52x vs AR
+  in-trace (matches the compiled 1.587 cell within accept drift).
+- E2-P2 (b8 docs6k) k4 DROPPED to 615.2 (0.89x, was 635-692): the
+  buggy alternation had been accidentally protecting the losing cell
+  (forced K=0 half the time = a crude 50% duty cycle on a spec-losing
+  regime). The fix exposes the cell's true loss -- consistent with the
+  compiled b8/8k S=1.031 marginal/losing pricing. The policy tracks to
+  613.8 there (EMA-armed at a genuinely marginal cell; OFF would give
+  687.6 -- residual per-cell regret, the E2 aggregate still wins).
+- E2b Q1 (b1 doc16k): policy 102.4 vs k4's 88.0 disaster -- the gate
+  correctly rejects the low-accept doc regime at b1; this plus Q4
+  tracking (3816 vs 3612) is the whole E2b win.
+- Scoping-law refresh (predict_switch_gap.py on fixed cells): 8B
+  intra-column ceiling DOUBLES to **+10.4%** (was +5.9%) -- wider
+  measured deltas (1.52x wins vs 0.81x losses) make switching worth
+  more inside one column too. Adversarial-mix ceiling, still single
+  digits; the cross-column +39.1% remains the effectiveness headline.

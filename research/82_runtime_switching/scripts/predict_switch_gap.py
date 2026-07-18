@@ -15,18 +15,17 @@ random.seed(7)
 REGRET = 0.98  # measured runtime tracking: within 1-3% of per-regime max
 
 # ---- measured regimes: name -> {arm: speedup vs regime AR} -------------
-# 8B, wholechain stack (traces + probes, 2026-07-19)
+# 8B, wholechain stack + FIXED skip condition (traces, 2026-07-19)
 Q38B = {
-    "b1_2k_math":   {"off": 1.0, "k4": 1.04, "k6": 1.04},
-    "b1_14k_rag":   {"off": 1.0, "k4": 1.12, "k6": 1.14},
-    "b1_16k_docs":  {"off": 1.0, "k4": 0.90, "k6": 0.80},
-    "b8_6k_docs":   {"off": 1.0, "k4": 0.92, "k6": 0.93},
-    "b8_14k_C4":    {"off": 1.0, "k4": 1.23, "k6": 0.91},
-    "b8_14k_rag":   {"off": 1.0, "k4": 1.23, "k6": 1.23},
-    "b8_16k_docs":  {"off": 1.0, "k4": 1.19, "k6": 1.20},
-    "b16_14k_rag":  {"off": 1.0, "k4": 1.26, "k6": 1.32},
-    "b16_16k_docs": {"off": 1.0, "k4": 1.13, "k6": 1.12},
-    "b32_2k_math":  {"off": 1.0, "k4": 0.87, "k6": 0.79},
+    "b1_2k_math":   {"off": 1.0, "k4": 1.155, "k6": 1.156},
+    "b1_14k_rag":   {"off": 1.0, "k4": 1.233, "k6": 1.194},
+    "b1_16k_docs":  {"off": 1.0, "k4": 0.809, "k6": 0.675},
+    "b8_6k_docs":   {"off": 1.0, "k4": 0.895, "k6": 0.793},
+    "b8_14k_rag":   {"off": 1.0, "k4": 1.403, "k6": 1.397},
+    "b8_16k_docs":  {"off": 1.0, "k4": 1.248, "k6": 1.112},
+    "b16_14k_rag":  {"off": 1.0, "k4": 1.519, "k6": 1.526},
+    "b16_16k_docs": {"off": 1.0, "k4": 1.183, "k6": 1.079},
+    "b32_2k_math":  {"off": 1.0, "k4": 0.862, "k6": 0.742},
 }
 # 32B column (h2h decode-only, fixed chain -- cross-stack transfer FLAGGED)
 Q332B = {

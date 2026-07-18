@@ -84,10 +84,16 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
     ~zero toggle cost, with the engine determinism work (whole-chain
     graph, prefill skip) as standalone contributions.
   * SCOPING LAW (measured + predicted): intra-column switching ceilings
-    are small -- +5.9% max over ALL workload compositions on the 8B
-    column, +10.4% on 32B (transfer-estimated) -- so runtime switching
-    pays only where regimes span columns/content with large deltas.
-    Report as a boundary result, not a limitation buried.
+    are ~+10% over ALL workload compositions (8B +10.4% on the
+    fixed-skip cells -- doubled from +5.9% once the skip bug stopped
+    throttling spec-win cells; 32B +10.4% oracle-est, measured trace
+    ceiling +1.9%) -- vs +39.1% cross-column. Runtime switching pays
+    mainly where regimes span columns/content with large deltas.
+    Report as a boundary result, not a limitation buried. Fixed-skip
+    revalidation (82/results_e2.md): the policy WINS 2 of 3 traces
+    outright (E2 979.2 vs best static 976.6; E2b 817.8 vs 799.5) and
+    is -2.3% on the third -- one config vs three different per-trace
+    static winners.
   * RL note: the drift model REFUTES the RL switching-win hypothesis
     (-2.0%: monotone drift is tracked by one static). The RL argument
     that stands is trained-draft STALENESS -> the training-free lever
@@ -127,6 +133,11 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
    harness's 1.63) -- oracle ceiling +1.9% over best static, policy
    regret -1.4%. Scoping law confirmed at both scales; the transfer
    failure is itself Sec B evidence for measure-on-deployment.
+   FIXED-SKIP REVALIDATION 2026-07-19 (the final 8B record): with the
+   scheduler bug corrected, spec statics surge where spec wins (E2c k4
+   +31.7% over OFF; b16/14k cell 1.59x) and the POLICY WINS 2 of 3
+   traces outright (E2 979.2, E2b 817.8) at -2.3% on the third --
+   cite THESE numbers, buggy-era tables archived as *_buggyskip.
 
 ## Two-paper fallback (recorded, not active)
 
