@@ -95,6 +95,12 @@ flips the cell). Accept 6.02 vs 5.69 (GPTQ-calibrated ckpt vs RTN proxy).
 
 On dense, CHANNEL granularity beats LAYER granularity at matched bytes
 at every budget, with a free realization (smaller dense GEMMs).
+
+w4+ffn compositions (measured betas .8993/.8628/.8116 at f=12.5/25/37.5%,
+all sub-additive vs product by +.027-.037): PRICED OUT at every measured
+8B cell (best 1.32x vs w4win 1.42x at b1; 1.58x vs W4A8-Humming 2.19x at
+b16) -- dominates its class, wins no cell; e2e not built
+(build-on-selection). Open: 32B b1, residency-constrained cells.
 | sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
 | s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
 | win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |

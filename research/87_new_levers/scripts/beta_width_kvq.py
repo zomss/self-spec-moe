@@ -171,11 +171,14 @@ def done():
 ARMS = [("ffn125", 0.125, 0.0), ("ffn25", 0.25, 0.0), ("ffn375", 0.375, 0.0),
         ("ffn50", 0.50, 0.0), ("head25", 0.0, 0.25), ("head50", 0.0, 0.50),
         ("ffn25head25", 0.25, 0.25)]
+W4_ARMS = [("w4ffn25", 0.25, 0.0), ("w4ffn125", 0.125, 0.0),
+           ("w4ffn375", 0.375, 0.0)]
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", required=True, choices=["profile", "score"])
+    ap.add_argument("--stage", required=True,
+                    choices=["profile", "score", "w4combo"])
     a = ap.parse_args()
     args = Args()
     model = SA.load_model(CFG)
@@ -185,6 +188,14 @@ def main():
         profile(model, tok)
         return 0
     d = done()
+    if a.stage == "w4combo":
+        SA.fake_quant_(model, "int4")
+        for arm, ff, hf in W4_ARMS:
+            if arm in d:
+                continue
+            with WidthMask(model, ff, hf):
+                append_row(SA.score_arm(model, CFG, arm, REFDIR, args))
+        return 0
     if "kvq_int4" not in d:
         orig = SA.kv_quant
         SA.kv_quant = kv_quant_int4

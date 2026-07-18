@@ -93,9 +93,29 @@ smaller dense GEMMs, no special kernel).
   budget).
 - Width x width combo is sub-additive (favorable) -- third measured
   product-law exception, same sign as s24w4.
-- Next (map-gated): price w4+ffn25 composition (bytes 0.25x0.80 ~ 0.2x,
-  beta ~ .83 by product, likely better by sub-additivity) vs skip-based
-  sets at deep-budget cells.
+### w4+ffn composition: measured beta, PRICED OUT at 8B (no e2e built)
+
+Combo betas MEASURED (sub-additive at every depth): w4ffn125 .8993
+(product .8727), w4ffn25 .8628 (.8314), w4ffn375 .8116 (.775).
+Priced on measured Q3-8B anchors (e2e-implied R, term edit
+1 - s*0.783*f with weight-stream share s = .70/.50/.45 +- sigma at
+b1/b8/b16; 2000 MC, LCB05 -- scripts/price_w4ffn.py):
+
+| cell | winner (P) | best w4+ffn (P) |
+|---|---|---|
+| b1/16k | w4win 1.42x (.89) | w4ffn25win 1.32x (.04) |
+| b8/16k | w4a8win-Humming 1.90x (.95) | 1.57x (.00) |
+| b16/16k | w4a8win-Humming 2.19x (1.00) | 1.58x (.00) |
+
+- The -0.09 beta vs w4win buys only ~10-15% R at 8B (draft not
+  weight-bound enough) -> **no cell flips; e2e NOT built**
+  (build-on-selection).
+- Pool reading: ffn-width DOMINATES ITS CLASS (beats layer-skip at all
+  matched bytes) yet wins no cross-class cell -- the
+  whole-combination-search argument in one lever.
+- Open cells where it could flip (map-nominated, unmeasured): 32B b1
+  (more weight-bound), residency-infeasible cells (byte cut buys
+  feasibility).
 
 ## Entry summary
 
