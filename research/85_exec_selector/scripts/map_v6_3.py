@@ -174,9 +174,12 @@ def main():
             lines.append(f"- {q}")
     else:
         lines.append("- (empty: no model-R config wins any cell)")
-    lines.append("\nStanding queue items from Phase 87 (not cell-triggered): "
-                 "32B W4A8 ckpt + batch arm (8B batch win was +0.40x; 32B is "
-                 "the headline scale); w4a8 b32 8B cell unmeasured.")
+    lines.append("\nStanding queue items: w4a8 b32 8B cell unmeasured. "
+                 "RESOLVED 2026-07-18: 32B W4A8 arm MEASURED -- b8 K5 1.22x "
+                 "vs w4win 1.28x (no flip; kernel factor ~1.05 at 32B/TP2 "
+                 "vs 0.945 at 8B -> scale/TP-dependent); b16/16k "
+                 "capacity-infeasible at TP2 (KV 185k < 262k, 7th residency "
+                 "incident).")
     text = "\n".join(lines)
     (PHASE / "data/strategy_map_v6_3.md").write_text(text + "\n")
     print(text)

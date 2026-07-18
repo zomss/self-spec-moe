@@ -117,6 +117,29 @@ b1/b8/b16; 2000 MC, LCB05 -- scripts/price_w4ffn.py):
   (more weight-bound), residency-infeasible cells (byte cut buys
   feasibility).
 
+## L2 continued — 32B W4A8 arm (map v6.3 standing queue item): NO FLIP
+
+Ckpt: Qwen3-32B-W4A8-gptq (512 C4, pack-quantized). TP2, GPUs 0-1, 16k.
+
+| arm (b8 K5) | tok/s | speedup | accept |
+|---|---|---|---|
+| nospec | 414.9 | 1.00 | - |
+| w4win K5 (incumbent) | 529.6 | **1.28x** | 5.20 |
+| w4a8win Humming K5 | 505.9 +-42 | 1.22x | 5.16 |
+
+- **The 8B batch flip does NOT transfer to 32B b8**: implied
+  Humming/Marlin kernel factor ~1.05 here vs 0.945 at 8B b8 -- the
+  realization factor is SCALE/TP-DEPENDENT (TP2 halves GEMM shards;
+  dynamic act-quant overhead stops amortizing).
+- Map vindicated: v6.3's LCB conservatism kept the W4A8 transfer row
+  from winning any Q2.5 cell; the measured confirm agrees (incumbent
+  holds).
+- b16/16k (the 8B-evidence flip cell): **CAPACITY-INFEASIBLE at TP2**
+  -- engine KV pool 185,360 tok < 262,144 needed; the w4win "0.58x"
+  print is KV-thrashing, not a measurement. 7th validated residency
+  incident; cell marked infeasible (TP4 would be a different hardware
+  column).
+
 ## Entry summary
 
 | lever | status |

@@ -81,6 +81,11 @@ b16** (new batch headline) vs w4win 1.81/1.79; SAME ckpt on CutlassW4A8
 1.60/1.78 -- realization span 1.60<->2.19 at identical beta (kernel choice
 flips the cell). Accept 6.02 vs 5.69 (GPTQ-calibrated ckpt vs RTN proxy).
 
+32B (TP2) W4A8 arm: b8 K5 1.22x vs w4win 1.28x -- **no flip at scale**;
+kernel factor ~1.05 at 32B/TP2 vs 0.945 at 8B (realization factor is
+scale/TP-dependent). b16/16k cell capacity-infeasible at TP2 (KV pool
+185k < 262k) -- 7th residency incident, feasibility filter validated.
+
 ### T5b. Width-pruning frontier + kvq bound (Q3-8B, C4-profiled, 16k refs)
 
 | arm | beta | ~byte cut | layer-skip frontier at same bytes |

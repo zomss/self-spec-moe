@@ -31,4 +31,4 @@ Delta vs v6: dense gains q_int4+win512+A8humming (kernel-factor transfer, ckpt u
 - Q2.5-7B W4A8 arm at b8/32k CONTESTED (gap 0.04 < model error; nominate-confirm rule)
 - Q2.5-7B W4A8 arm at b32/16k CONTESTED (gap 0.04 < model error; nominate-confirm rule)
 
-Standing queue items from Phase 87 (not cell-triggered): 32B W4A8 ckpt + batch arm (8B batch win was +0.40x; 32B is the headline scale); w4a8 b32 8B cell unmeasured.
+Standing queue items: w4a8 b32 8B cell unmeasured. RESOLVED 2026-07-18: 32B W4A8 arm MEASURED -- b8 K5 1.22x vs w4win 1.28x (no flip; kernel factor ~1.05 at 32B/TP2 vs 0.945 at 8B -> scale/TP-dependent); b16/16k capacity-infeasible at TP2 (KV 185k < 262k, 7th residency incident).
