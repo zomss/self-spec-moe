@@ -350,3 +350,30 @@ Resolution:
   whole-chain capture needs).
 - Instrument next: guard-evaluation counts on the draft wrapper
   (torch._dynamo guard logging) to pin the 2x precisely.
+
+## Scratchpad-chain + whole-chain capture surgery (verdict, measured)
+
+- The scratchpad FULL-CG chain (research-69, VLLM_SELF_SPEC_DRAFT_FULLCG)
+  now RUNS on the serving driver: the blocker was a
+  SKIP_PREFILL_DRAFT interaction -- bootstrap step-0s (post-skip, q=1 at
+  arbitrary batch) hit keyed-but-uncaptured PIECEWISE shapes (self-
+  identifying capture error added to the wrapper; descriptor
+  num_tokens=2 vs captured multiples-of-5). Fix: bootstrap step-0s run
+  eager (once per prefill boundary). Accept intact (4.31).
+- MEASURED VERDICT at b8/14k: the scratchpad saves only ~6% of a chain
+  step (draft_forward 5.01 -> 4.68 ms sync-region; wall 709 vs 696
+  tok/s, neutral). The chain step is NOT KV-read-bound in practice --
+  the KV-roofline model (4.8 ms/step at 14k) is falsified; per-step CPU
+  orchestration + launch overheads dominate, consistent with the
+  mnb-keyed CPU stall. The 1519 "window not applied" warning is
+  SPURIOUS under fullcg (the scratchpad applies it) -- worth silencing.
+- Whole-chain single-graph capture (K steps in ONE cudaGraphLaunch)
+  does NOT exist in the fork -- FULLCG is per-step graphs + scratchpad.
+  Building it is the real remaining lever against the CPU-bound chain
+  (one launch per cycle instead of K), but Phase 69's fws-graph note
+  (sampling-in-graph across replayed steps collapsed accept 4.63->1.97)
+  shows the in-graph step-to-step token feed is the hard part; design
+  item, multi-session.
+- Net for the deployed stack: keep per-step FULL-CG chain (either mode;
+  they tie), keep mnb=8192, keep skip-prefill. The draft-side KV story
+  is complete: target-KV binding + scratchpad + skipped prefill.

@@ -348,7 +348,14 @@ class CUDAGraphWrapper:
                     entry.batch_descriptor,
                 )
             # validate that cudagraph capturing is legal at this point.
-            validate_cudagraph_capturing_enabled()
+            try:
+                validate_cudagraph_capturing_enabled()
+            except RuntimeError as e:
+                raise RuntimeError(
+                    f"{e} [wrapper mode={self.runtime_mode.name} "
+                    f"descriptor={entry.batch_descriptor} "
+                    f"captured={sorted(d.num_tokens for d, en in self.concrete_cudagraph_entries.items() if en.cudagraph is not None)[:20]}]"
+                ) from e
 
             input_addresses = [
                 x.data_ptr() for x in args if isinstance(x, torch.Tensor)

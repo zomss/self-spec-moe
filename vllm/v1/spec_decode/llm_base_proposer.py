@@ -1141,9 +1141,22 @@ class SpecDecodeBaseProposer:
                         or _desc.num_tokens not in self._step0_captured
                     ):
                         _step0_uniform = False
+                # Phase 82 (SKIP_PREFILL_DRAFT): a BOOTSTRAP step-0 (no drafts
+                # verified this step, e.g. right after a skipped draft prefill)
+                # arrives q=1-shaped at arbitrary batch -- geometries the
+                # capture pass never drives (it only sees verify-width
+                # multiples). A keyed-but-uncaptured PIECEWISE shape would
+                # fault in the wrapper; run these rare boundary steps eager.
+                _step0_bootstrap = (
+                    envs.VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT
+                    and num_rejected_tokens_gpu is None
+                    and self.method == "draft_model"
+                )
                 cudagraph_runtime_mode, num_input_tokens, num_tokens_across_dp = (
                     self._determine_batch_execution_and_padding(
-                        num_tokens, uniform_decode=_step0_uniform
+                        num_tokens,
+                        uniform_decode=_step0_uniform,
+                        use_cudagraphs=not _step0_bootstrap,
                     )
                 )
                 if (
