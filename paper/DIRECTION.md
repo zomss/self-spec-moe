@@ -67,9 +67,26 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
 - Sec B (search): the corrected recipe vs profile-then-solve, with the
   KnapSpec head-to-head (our backtest's m=0 row IS their recipe) and the
   91-min protocol.
-- Sec C (switching system): toggle-cost table (NEW measurement), the
-  dwell-time law, the regime detector (batch/ctx/content), policy = the
-  map + hysteresis; delivered switching demo.
+- Sec C (switching system) — REFRAMED 2026-07-19 after the gap
+  prediction (82/scripts/predict_switch_gap.py, measured cells only):
+  * The EFFECTIVENESS headline is CROSS-COLUMN selection: one global
+    lever config across a dense+MoE+MLA fleet leaves +39.1% on the
+    table (measured cells; wrong-lever costs 30-60%: MLA self-spec
+    0.56x, MoE dense-chain 0.63x). The map IS the selector; this is
+    Sec A/B's payoff restated as deployment value.
+  * The runtime system claims a REGRET BOUND, not victories: within
+    1-3% of the per-trace oracle static without workload knowledge, at
+    ~zero toggle cost, with the engine determinism work (whole-chain
+    graph, prefill skip) as standalone contributions.
+  * SCOPING LAW (measured + predicted): intra-column switching ceilings
+    are small -- +5.9% max over ALL workload compositions on the 8B
+    column, +10.4% on 32B (transfer-estimated) -- so runtime switching
+    pays only where regimes span columns/content with large deltas.
+    Report as a boundary result, not a limitation buried.
+  * RL note: the drift model REFUTES the RL switching-win hypothesis
+    (-2.0%: monotone drift is tracked by one static). The RL argument
+    that stands is trained-draft STALENESS -> the training-free lever
+    family; do not stage the RL demo as a switching win.
 - Sec D (eval): normal serving cells (already measured: 1.91x/2.77x
   headlines) + RL-rollout trace (NEW), with the staleness argument.
 - Honest ledger carried (retractions, corrections, one-box scope until
@@ -80,7 +97,9 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
 1. ~~82-E0 toggle-cost table (incl. CPU KV-requant path)~~ DONE
    2026-07-18 — Sec C's core (results_e0.md).
 2. Second-hardware R column (91-min protocol) — validates axis 2.
-3. RL-rollout-style trace eval (batch drain + on-policy text) — Sec D.
+3. RL-rollout-style trace eval — Sec D, staged as the STALENESS /
+   training-free-tracking argument (NOT a switching win: the drift
+   model predicts -2%).
 4. ~~Switching demo on a regime-shifting trace~~ RUN 2026-07-18
    (82/results_e2.md): FAIL-HONEST on an OFF-heavy real-data trace --
    omniscient switching ceiling was only +1.7% over static-OFF (the one
@@ -89,8 +108,12 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
    OFF regimes while armed. The dwell-time law is now MEASURED: with
    toggle cost ~0, detection is the binding constraint and the win
    condition is spec-favorable regime VOLUME. Sec C presents the
-   machinery + the law; the RL trace (item 3) is the win stage
-   (content drift + long-decode batches).
+   machinery + the law. SUPERSEDED CODA 2026-07-19: the full demo
+   program (E2/E2b/E2c + wholechain stack + compiled policy, 82/
+   results_e2.md) landed at regret 1-3% with an E2b win on every
+   variant; the gap prediction shows this is near the intra-column
+   ceiling (+5.9% max at 8B). OPTIONAL: a 32B runtime trace (+10.4%
+   predicted) if a stronger in-engine number is wanted.
 
 ## Two-paper fallback (recorded, not active)
 
