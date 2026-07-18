@@ -283,3 +283,70 @@ every arm 10-30% over the previous rounds):**
 - Residual: ~3% at knife-edge burst cells (ramp/drain arming churn),
   nearest-cell ctx transfer error at 6k (b8/8k cell applied) -- both
   are refinement items (cell interpolation, ramp-aware arming).
+
+## Deep-dives (2026-07-18 night): shared-KV extent + the async stall
+
+### 1. How much target KV the draft already uses (directive: maximize)
+
+MAXIMAL at the allocation level already (P66 binder, verified in code +
+logs): every draft attention layer aliases the TARGET's KV tensors --
+there is NO draft-side KV pool (get_kv_cache_spec skips bound layers).
+Prefix reads are target-exact; the chain's own drafted slots are
+provisional writes into the SAME pool, overwritten by the next verify.
+The G-A fix (skip draft prefill) works BECAUSE of this binding.
+
+The one remaining gap: under the per-step FULL-CG chain (what both the
+harness and driver actually run -- the 1519 warning fires in both),
+CHAIN steps attend the FULL context, not the window: full-CG replay
+reads capture-time metadata and cannot rebuild the windowed view per
+step. Step-0 already uses the window SCRATCHPAD (contiguous 544-token
+span). EXTENSION (identified, not yet built): point chain-step
+attention at the scratchpad too -- its layout is static, so chain
+metadata becomes capture-constant: windowed chain attention AND full-CG
+replay simultaneously. Value: removes the O(ctx) term from chain
+attention (~10-15% of draft step at 14k, growing with ctx) and makes
+the map's ctx-invariant-R assumption physically true.
+
+### 2. The async-pipeline stall, in detail
+
+Symptom: draft chain 513 vs 1077 tok/s at max_num_batched_tokens 16384
+vs 8192 (b8/14k decode-only); AR barely moves (674 vs 688).
+
+Eliminated by direct experiment: compile-range endpoints (split
+[192,16384] -> no change), cudagraph capture ceiling (max=512 -> no
+change), capture-size lists (identical), max_num_seqs (bisected out).
+
+Two positive pieces of evidence:
+- Under the region profiler's CUDA syncs the two configs EQUALIZE
+  (793 vs 731): serializing the pipeline removes the pathology -> it
+  is an overlap/dispatch stall, not kernel or algorithm cost.
+- Engine-side torch traces (33-tok decode + prefill window): GPU busy
+  95-96% in BOTH (the profiler serializes and hides the stall), prefill
+  GEMM totals equal -- but the DRAFT's CompiledFxGraph CPU time is
+  499 ms vs 229 ms (2.2x) and aten::mm CPU 851 vs 516 ms. The draft
+  compiled-graph WRAPPER (python + guards + launches) costs ~2x per
+  call under the mnb=16384 build.
+
+Interpretation: with async scheduling, the tiny draft chain steps are
+CPU-DISPATCH-BOUND -- the GPU finishes each ~1 ms chain step before the
+CPU can issue the next. The per-call CPU of the draft's compiled-graph
+wrapper depends on the compilation configuration keyed by
+max_num_batched_tokens; at 16384 it roughly doubles, and the whole
+chain slows by the same factor. The stall is CPU starvation of the
+draft stream, not a GPU-side wait.
+
+Resolution:
+- DEPLOYED (measured): mnb=8192 -- the compiler prices the engine
+  config as part of the realization; the policy table was measured
+  under it.
+- FUNDAMENTAL (next): remove per-step compiled-wrapper CPU from the
+  chain hot path entirely -- the K-1 chain steps should be a single
+  whole-chain graph replay (pure cudaGraphLaunch), making chain cost
+  independent of compile configuration and of CPU dispatch speed. The
+  fork's DRAFT_FULLCG whole-chain mode exists but does not engage on
+  this driver path (warning 1519 fires); making it engage (or a direct
+  cudaGraphExec chain) is the durable fix, and composes with the
+  scratchpad-chain extension above (static metadata is exactly what
+  whole-chain capture needs).
+- Instrument next: guard-evaluation counts on the draft wrapper
+  (torch._dynamo guard logging) to pin the 2x precisely.

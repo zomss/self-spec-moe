@@ -53,6 +53,11 @@ def main():
     if os.environ.get("GAP_MAXCG"):
         kw["compilation_config"] = {
             "max_cudagraph_capture_size": int(os.environ["GAP_MAXCG"])}
+    if os.environ.get("GAP_TRACE"):
+        kw["profiler_config"] = {
+            "profiler": "torch",
+            "torch_profiler_dir": str(Path(
+                "research/82_runtime_switching/data/traces").resolve())}
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
               max_model_len=20480, gpu_memory_utilization=0.90,
               max_num_seqs=kw.pop("max_num_seqs", 32),
@@ -65,6 +70,14 @@ def main():
     # warm both shapes
     llm.generate(docs, sp1, use_tqdm=False)
     llm.generate(docs, spN, use_tqdm=False)
+    if os.environ.get("GAP_TRACE"):
+        sp32 = SamplingParams(max_tokens=33, ignore_eos=True, temperature=0)
+        llm.generate(docs, sp32, use_tqdm=False)  # warm
+        llm.start_profile(profile_prefix=os.environ["GAP_TRACE"])
+        llm.generate(docs, sp32, use_tqdm=False)
+        llm.stop_profile()
+        print(f"[gap] trace prefix {os.environ['GAP_TRACE']}", flush=True)
+        return
     t1s, tNs = [], []
     for _ in range(3):
         t0 = time.perf_counter()
