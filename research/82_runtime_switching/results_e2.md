@@ -114,6 +114,45 @@ the request), (b) probe cadence scaled by batch (128-step recovery is
 (task type predicts accept before any token is drafted -- the offline
 map re-enters as the prior the online signal corrects).
 
+## Fix round: per-request signal + gate hierarchy (2026-07-18, late)
+
+Applied the root-cause fixes and re-measured (policy arm only; statics
+unchanged):
+
+| policy variant | P1 | P2 | P3 | aggregate |
+|---|---|---|---|---|
+| global EMA (v10, baseline) | 157.3 | 565.5 | 4118.1 | 929.2 |
+| per-request EMA alone | 152.6 | 554.6 | 4120.6 | 909.0 (45 flaps: b1 signal is NOISE at half-life 24) |
+| + gate min-batch 4 (b1 -> map prior) | 163.6 | 563.2 | 4141.7 | **948.6** (2 transitions, both correct latches) |
+| + ctx-cell OFF 8000:8 (map boundary) | 157.8 | 579.0 | 4130.3 | 938.0 |
+
+Diagnostic (gate forced always-OFF = pure ARMING RENT): P1 145.6 /
+P2 683.4 / P3 4146.8 -> rent is 0.9-2.9% per phase, NOT the gap.
+
+**The layered causal chain (all measured):**
+1. b1: accept signal has no statistical power (4 quantized tok/step;
+   per-step noise > hard/easy content gap) -> per-request tracking
+   FLAPS (45 transitions). Correct resolution: gate only where volume
+   gives SNR (min-batch 4); at b1 follow the map prior. Residual b1
+   deficit ~3-6% vs k4-static = the PADDED-VERIFY TAX: a K6-sized
+   engine (needed for the b13-24 band) running K4 -- R(K4|Kmax=6) >
+   R(K4|Kmax=4), the measured price of K-flexibility.
+2. b8/6k-ctx docs: NOT a content cell -- break-even accept tau* =
+   3.87/0.75 = 5.16 > 5 = max at K4: spec loses AT ANY ACCEPT. An
+   accept gate is structurally the wrong detector; the (b, ctx) MAP
+   is the right one (the same b8 cell at 16k wins 1.81x). The ctx-cell
+   rule catches it in 0 steps (veto log: n=8, ctx 4839 -> OFF).
+3. OPEN ANOMALY (flagged): P2 under either OFF mechanism inside the
+   full trace runs 555-580, while the forced-OFF diagnostic ran 683
+   and the nospec engine 690. Same suppression path (num_spec=0),
+   ~15% unexplained -- hypotheses: warm-state asymmetry after a
+   spec-active P1, or prefill-time variance. Needs per-step tracing.
+
+Best policy aggregate 948.6 = -1.0% vs best-static (OFF 957.9), +1.7%
+over k4, +7.1% over k6, on a trace whose omniscient switching ceiling
+is +1.7%. Transition count 45 -> 2. The demo's residual gap is fully
+attributed except item 3.
+
 ## Next (per DIRECTION): the RL-rollout trace is the natural win stage
 -- content drift over training is the star axis there, and rollout
 batches are large+long-decode (spec-favorable volume). Rollout regime

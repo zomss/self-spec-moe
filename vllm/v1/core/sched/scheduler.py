@@ -243,10 +243,10 @@ class Scheduler(SchedulerInterface):
         self._sd_gated_off = False
         self._sd_probe_interval = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL
         self._sd_probe_burst = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_BURST
+        self._sd_gate_min_batch = envs.VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH
         self._sd_accept_ema = 1.0
+        self._sd_req_ema: dict[str, float] = {}
         self._sd_gate_step = 0
-        self._sd_step_accepted = 0
-        self._sd_step_drafted = 0
         self._sd_batch_band = -1
         self._sd_shortctx_off: tuple[int, int] | None = None
         if envs.VLLM_SELF_SPEC_SHORTCTX_OFF:
@@ -1100,44 +1100,46 @@ class Scheduler(SchedulerInterface):
             mean_ctx = sum(
                 r.num_computed_tokens for r in self.running
             ) / n_run
-            if n_run >= b_bound and mean_ctx < ctx_thresh:
+            veto = n_run >= b_bound and mean_ctx < ctx_thresh
+            if veto != getattr(self, "_sd_ctx_veto", False):
+                self._sd_ctx_veto = veto
+                if envs.VLLM_SELF_SPEC_GATE_DEBUG:
+                    logger.info(
+                        "[ctxveto] n_run=%d mean_ctx=%.0f -> %s",
+                        n_run, mean_ctx, "OFF" if veto else "on",
+                    )
+            if veto:
                 num_spec_tokens_to_schedule = 0
-        if self._sd_accept_off_thresh > 0.0 and num_spec_tokens_to_schedule > 0:
-            # Regime change (batch band shifts) -> reset the EMA
-            # optimistically: trust the map prior for the new regime and
-            # re-verify by measurement. Prevents a stale content signal
-            # from one regime gating a different one OFF irrecoverably.
-            # Band keys on RUNNING requests (stable across chunked
-            # prefill), not per-step scheduled counts.
+        if (
+            self._sd_accept_off_thresh > 0.0
+            and num_spec_tokens_to_schedule > 0
+            and self.running
+            and n_run >= self._sd_gate_min_batch
+        ):
+            # Regime change (batch band shifts) -> drop the accumulated
+            # signal and start optimistic (trust the map prior, verify by
+            # measurement). Band keys on RUNNING requests (stable across
+            # chunked prefill), not per-step scheduled counts.
             band = n_run.bit_length()
             if band != self._sd_batch_band:
                 self._sd_batch_band = band
-                self._sd_accept_ema = 1.0
+                self._sd_req_ema.clear()
                 self._sd_gated_off = False
-                self._sd_step_accepted = self._sd_step_drafted = 0
             probing = (
                 self._sd_gate_step % self._sd_probe_interval
                 < self._sd_probe_burst
             )
             self._sd_gate_step += 1
-            if self._sd_step_drafted > 0:
-                frac = self._sd_step_accepted / self._sd_step_drafted
-                # Volume-weighted fold: small batches contribute few drafted
-                # tokens per step, so weight by token count (half-life ~96
-                # drafted tokens) -- a noisy b1 step must not flap the gate.
-                # Probe folds get a floor weight so recovery is possible at
-                # small batches (w=0.04 probes could never lift the EMA).
-                w = self._sd_step_drafted / (self._sd_step_drafted + 96)
-                if self._sd_gate_step - getattr(self, "_sd_last_probe", -9) <= 3:
-                    # This fold carries probe verify data (under async
-                    # pipelining, drafts scheduled on the probe step fold
-                    # up to two steps later) -- floor the weight so probes
-                    # can actually recover the EMA at small batches.
-                    w = max(w, 0.3)
-                self._sd_accept_ema = (1 - w) * self._sd_accept_ema + w * frac
-                self._sd_step_accepted = self._sd_step_drafted = 0
-            if probing:
-                self._sd_last_probe = self._sd_gate_step
+            # Pool the per-request EMAs of the RUNNING requests (finished
+            # requests take their history with them; unseen requests are
+            # optimistic 1.0). Prune departed ids to bound the dict.
+            run_ids = {r.request_id for r in self.running}
+            for rid in list(self._sd_req_ema):
+                if rid not in run_ids:
+                    del self._sd_req_ema[rid]
+            self._sd_accept_ema = sum(
+                self._sd_req_ema.get(rid, 1.0) for rid in run_ids
+            ) / max(len(run_ids), 1)
             # Hysteresis: OFF below the lower bound, back ON only above
             # the upper bound -- a signal sitting between the bounds keeps
             # its current state instead of flapping.
@@ -1657,8 +1659,15 @@ class Scheduler(SchedulerInterface):
                 num_accepted = max(len(generated_token_ids) - num_sampled, 0)
                 num_rejected = num_draft_tokens - num_accepted
                 if self._sd_accept_off_thresh > 0.0:
-                    self._sd_step_accepted += num_accepted
-                    self._sd_step_drafted += num_draft_tokens
+                    # Per-REQUEST accept EMA: the regime unit at small
+                    # batch is the request (task type sets accept). A new
+                    # request starts optimistic (1.0); a finished one takes
+                    # its history with it. Half-life ~24 drafted tokens.
+                    ema = self._sd_req_ema.get(req_id, 1.0)
+                    w = num_draft_tokens / (num_draft_tokens + 24)
+                    self._sd_req_ema[req_id] = (
+                        (1 - w) * ema + w * num_accepted / num_draft_tokens
+                    )
                 # num_computed_tokens represents the number of tokens
                 # processed in the current step, considering scheduled
                 # tokens and rejections. If some tokens are rejected,
