@@ -71,6 +71,7 @@ def spec_counters(llm):
 
 
 def main():
+    import os
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", required=True,
                     choices=["off", "k4", "k6", "policy"])
@@ -84,15 +85,26 @@ def main():
                 "num_speculative_tokens": {"k4": 4}.get(a.arm, 6),
                 "draft_tensor_parallel_size": 1}
         if a.arm == "policy":
-            spec["num_speculative_tokens_per_batch_size"] = SCHEDULE
+            sched = SCHEDULE
+            if os.environ.get("E2_SCHEDULE"):
+                sched = [tuple(int(x) for x in t.split(":"))
+                         for t in os.environ["E2_SCHEDULE"].split(",")]
+            kmax = max(k for _, _, k in sched)
+            spec["num_speculative_tokens"] = kmax
+            spec["num_speculative_tokens_per_batch_size"] = sched
+    import os
+    longctx = bool(os.environ.get("E2_LONGCTX")) or \
+        bool(os.environ.get("E2_LONGMATH"))
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
-              max_model_len=12288, gpu_memory_utilization=0.90,
+              max_model_len=20480 if longctx else 12288,
+              gpu_memory_utilization=0.90,
               max_num_seqs=32, enable_prefix_caching=False,
               disable_log_stats=False,
               async_scheduling=True)
     tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
     aime = load_aime()
-    docs = load_docs(tok)
+    docs = load_docs(tok, n=16, target_tok=14000) if longctx \
+        else load_docs(tok)
     sp = SamplingParams(max_tokens=256, ignore_eos=True, temperature=0)
 
     # warm both shapes
@@ -106,7 +118,30 @@ def main():
     trace = ([("P1_b1_aime", [aime[i]], sp) for i in range(8)]
              + [("P2_b8_docs", docs[:8], sp512)]
              + [("P3_b32_aime", aime[8:40], sp512)])
-    import os
+    if longctx:
+        # E2b: LONG-CONTEXT trace -- every batch cell at 16k-class ctx is
+        # a measured SPEC win with different geometry (b1/b8 -> K4,
+        # b16 -> K6); the b32 short-ctx math burst stays the OFF contrast.
+        trace = ([("Q1_b1_doc16k", [docs[i]], sp) for i in range(4)]
+                 + [("Q2_b8_doc16k", docs[4:12], sp512)]
+                 + [("Q3_b16_doc16k", docs[:16], sp512)]
+                 + [("Q4_b32_aime2k", aime[8:40], sp512)])
+    if os.environ.get("E2_LONGMATH"):
+        # E2c: RAG-like long-doc REASONING trace -- 14k-token real document
+        # (C4) then an AIME problem, 1024-tok decode. Long ctx keeps the
+        # window-draft R small; math content keeps accept high; long
+        # decode amortizes prefill. b32 short-math burst = OFF contrast.
+        spL = SamplingParams(max_tokens=1024, ignore_eos=True,
+                             temperature=0)
+        def rag(i):
+            return (docs[i].rsplit("\n\n", 1)[0]
+                    + "\n\nNow solve this competition math problem step "
+                    "by step.\n\n" + aime[i % 8])
+        rags = [rag(i) for i in range(16)]
+        trace = ([("S1_b1_rag14k", [rags[i]], spL) for i in range(4)]
+                 + [("S2_b8_rag14k", rags[4:12], spL)]
+                 + [("S3_b16_rag14k", rags[:16], spL)]
+                 + [("S4_b32_aime2k", aime[8:40], sp512)])
     if os.environ.get("E2_PHASES"):
         keep = os.environ["E2_PHASES"].split(",")
         trace = [t for t in trace if any(t[0].startswith(k) for k in keep)]

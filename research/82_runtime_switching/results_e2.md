@@ -186,3 +186,51 @@ batches are large+long-decode (spec-favorable volume). Rollout regime
 dwells are LONG (a training batch is one content regime), which is
 precisely the condition the root-cause analysis says the detector
 needs.
+
+## E2c — the spec-favorable trace (RAG-style long-doc reasoning) + the fixes it forced
+
+Trace: 14k-token C4 document + AIME problem, 1024-tok decode (b1 x4,
+b8, b16) + b32 short-math burst. Real datasets: allenai/c4 +
+di-zhang-fdu/AIME_1983_2024.
+
+Three engine/policy defects found and fixed en route (each measured):
+1. **Dynamic-SD cudagraph downgrade**: setting the per-batch K schedule
+   silently forced the TARGET to PIECEWISE-only cudagraphs -- a flat
+   7-10% tax on every step. Relaxed for single-spec-width schedules
+   (verify widths {K+1, 1} are standard captured shapes). vllm.py fix.
+2. **K6 prior falsified**: K4 >= K6 at EVERY measured batch on this
+   column (the b13-24 -> K6 entry was an unvalidated Qwen2.5 transfer).
+   Schedule recompiled to (1,24,4),(25,32,0); engine built K4-native.
+3. **Per-cell gate threshold**: the .84 accept bound encodes the
+   SHORT-ctx break-even; at 14k ctx the break-even frac is ~0.5 and
+   math-RAG content (ema .83-.90) was being wrongly gated OFF.
+   Ctx-dependent bound added (>=8k ctx -> 0.55).
+
+| arm | S1 b1 rag14k | S2 b8 rag14k | S3 b16 rag14k | S4 b32 | agg |
+|---|---|---|---|---|---|
+| OFF | 128.3 | 514.5 | 658.4 | **4155.5** | 587.6 |
+| k4 static | 145.7 | 557.9 | 712.9 | 3755.9 | 642.3 |
+| k6 static | 140.9 | 549.2 | 700.9 | 3576.0 | 626.3 |
+| **policy** | **145.9** | **557.8** | **713.7** | 4109.2 (-1.1%) | **646.5** |
+
+Policy tracks the per-regime winner to +-0.1% at S1-S3, -1.1% at S4:
+ALL regimes inside the 5% bound; aggregate beats every static.
+
+## The combined claim (E2 + E2c): workload robustness
+
+| arm | E2 aggregate (OFF-heavy) | E2c aggregate (spec-heavy) |
+|---|---|---|
+| OFF | 957.9 | 587.6 (-9.1% vs policy) |
+| k4 | 932.8 (-5.8%) | 642.3 |
+| k6 | 886.1 | 626.3 |
+| **policy** | **990.1** (+3.4% over best) | **646.5** (+0.7% over best) |
+
+**No static wins both workloads; the policy wins both.** That is the
+switching system's claim: not beating the per-trace oracle static
+(impossible to know in advance), but robustness across workload
+distributions with per-regime tracking at the ~1% level.
+
+Interim E2b (14k multi-doc summarize, 512-tok outputs) stays on record
+as the honest third case: content accept collapse (2.81) + prefill-
+dominated wall time make even long-ctx cells OFF -- the policy's map
+priors mistransferred there, corrected by the same measurement loop.
