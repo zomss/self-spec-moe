@@ -146,8 +146,45 @@ def fig_frontiers():
     plt.close(fig)
 
 
+# ---------------- fig D: serving wall-clock e2e (T6, the deployment headline) ----------------
+def fig_serving():
+    phases = ["b8 x 14k RAG\n(3k-tok CoT)", "b16 x 14k RAG\n(3k-tok CoT)",
+              "aggregate"]
+    arms = [
+        ("W4+win K4", [1.53, 1.72, 1.64], "#7cc7f0"),
+        ("W4+win K6", [1.51, 1.76, 1.65], "#2a78d6"),
+        ("W4A8 K6 Cutlass", [1.40, 1.61, 1.52], "#c9a3e8"),
+        ("W4A8 K6 Humming", [1.67, 1.90, 1.80], "#0e7a54"),
+    ]
+    fig, ax = plt.subplots(figsize=(8.2, 4.4), constrained_layout=True)
+    n = len(arms)
+    w = 0.8 / n
+    for j, (name, vals, col) in enumerate(arms):
+        xs = [i + (j - n / 2 + 0.5) * w for i in range(len(phases))]
+        ax.bar(xs, vals, w * 0.92, color=col, edgecolor="white", lw=0.5,
+               label=name)
+        for x, v in zip(xs, vals):
+            ax.text(x, v + 0.015, f"{v:.2f}", ha="center", fontsize=7.5,
+                    fontweight="bold" if "Humming" in name else "normal")
+    ax.axhline(1.0, color=C["ink2"], lw=1, ls=":")
+    ax.text(2.42, 1.015, "AR", fontsize=8, color=C["ink2"])
+    ax.set_xticks(range(len(phases)), phases, fontsize=9)
+    ax.set_ylabel("serving WALL speedup vs AR (prefill included)")
+    ax.set_ylim(0, 2.15)
+    ax.legend(frameon=False, fontsize=8, ncol=2, loc="upper left")
+    ax.set_title("Serving wall-clock e2e (DRAFT) -- Qwen3-8B, real data "
+                 "(C4 14k-doc RAG + AIME CoT);\nb16 decode 2.13x reproduces "
+                 "the harness record; same-ckpt kernel span 1.52-1.80x",
+                 loc="left", fontsize=9.5, fontweight="bold", color=C["ink"])
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    fig.savefig(OUT / "figD_serving.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_h2h()
     fig_regimes()
     fig_frontiers()
+    fig_serving()
     print("figures ->", OUT)
