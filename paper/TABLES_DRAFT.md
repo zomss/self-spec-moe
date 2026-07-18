@@ -75,6 +75,11 @@
 |---|---|---|---|
 | actfp8 (A-only, dyn per-token e4m3) | **.9922** | - | A-quant factor isolated first time: ~free; validates W8A8 ~ W-only x A-only |
 | w4a8 (int4-W + fp8-A) | .9470 | - | -.005 vs W4-alone (.952); e2e CONFIRMED dense-batch winner, see below |
+| sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
+| s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
+| win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |
+| win128 | .975 | .872 | same collapse, deeper |
+| kvq_fp8 | .985 | **.974** | holds; first regime where kvq beta > window beta (kvq pool still priced out; not built) |
 
 W4A8+win e2e (Q3-8B 16k, GPTQ ckpt): Humming kernel **1.90x b8 / 2.19x
 b16** (new batch headline) vs w4win 1.81/1.79; SAME ckpt on CutlassW4A8
@@ -106,11 +111,6 @@ all sub-additive vs product by +.027-.037): PRICED OUT at every measured
 8B cell (best 1.32x vs w4win 1.42x at b1; 1.58x vs W4A8-Humming 2.19x at
 b16) -- dominates its class, wins no cell; e2e not built
 (build-on-selection). Open: 32B b1, residency-constrained cells.
-| sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
-| s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
-| win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |
-| win128 | .975 | .872 | same collapse, deeper |
-| kvq_fp8 | .985 | **.974** | holds; first regime where kvq beta > window beta (kvq pool still priced out; not built) |
 
 ## T6. Serving wall-clock e2e (the deployment headline; 2026-07-19)
 
