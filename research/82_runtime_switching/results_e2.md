@@ -531,3 +531,23 @@ refuted them before the trace even ran.
   switching claim; it strengthens the SCOPING LAW and the
   measure-on-deployment argument. The paper's effectiveness claim
   stays with cross-column selection (+39.1% fleet).
+
+## T2 execution deficit: NOT REPRODUCIBLE -- closed as boot variance
+
+Chased three ways: (1) profiled isolated T2 -- regions near-identical
+(draft_chain 84.1 vs 80.8 ms, wc_replay 39.5 vs 39.6, forward_first
+33.7 vs 33.5), rates 220.5 vs 227.1 (-3%); (2) unprofiled isolated
+multi-boot A/B -- k5 260.9/262.0 vs policy 255.8/262.9: PARITY within
+noise. The full-trace 228.4 was a single-boot outlier. At the same
+lever the policy engine executes at static parity.
+
+Residual characterization note: 32B TP2 retains boot-to-boot spread
+(228-263 for the same arm/phase) that single-GPU wholechain had
+eliminated -- the TP sync/NCCL path sits OUTSIDE the captured chain
+graph, so the dispatch-state sensitivity re-enters there. Minor open
+item; single-GPU deployments are deterministic.
+
+Variance-adjusted reading of the 32B trace (labeled, not replacing the
+measured row): with T2 at parity (~260), the policy aggregate is
+~196.2 = +1.2% over the best static -- i.e., at the oracle ceiling
+(+1.9%) minus its usual ~1% regret, consistent with every other trace.
