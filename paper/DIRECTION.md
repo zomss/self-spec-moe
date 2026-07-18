@@ -57,6 +57,11 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
      axis at once: batch drain, context growth, and content drift over
      training (early repetitive -> ngram-favorable; later not) — the
      switching system has real work to do within one training run.
+   - DATA ANNOTATION 2026-07-19: the drift model (predict_switch_gap)
+     says monotone within-run drift is tracked by ONE static (-2% for
+     switching); RL's argument for the paper is trained-draft
+     STALENESS (the lever family tracks the policy for free), not
+     runtime switching. Kept as motivation with that framing.
 
 ## Single-paper structure (foundation = research/79_paper/paper_draft.md)
 
