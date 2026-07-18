@@ -39,9 +39,14 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
    drafts, CPU-side KV requantization + upload for kv-quant switches,
    both-resident memory rent vs swap latency.
    - DATA IN HAND: load times (46.25 GiB partial replica), residency
-     model (6/6 incidents), dwell-time law sketched (82 README:
-     dwell* = toggle_cost / delta_rate). UNMEASURED: the toggle-cost
-     table itself (82-E0), incl. the KV-requant path. A switch is a
+     model (7/7 incidents), dwell-time law sketched (82 README:
+     dwell* = toggle_cost / delta_rate). MEASURED 2026-07-18 (82-E0,
+     research/82_runtime_switching/results_e0.md): OFF and K = FREE
+     (per-step scheduler primitives, incl. the fork's per-batch-size K
+     schedule); window = hot-switchable (~2 ms, accept-exact restore);
+     draft swap = 0.11 s pinned-staged (5.65 GiB @ 50 GiB/s) vs
+     both-resident rent; CPU KV-requant (C9) = ~8 s at b8/16k ->
+     kvq is deploy-time, NOT a runtime toggle. A switch is a
      REALIZATION change -> the execution-extended pricing is the
      switching cost model.
 
@@ -72,10 +77,13 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
 
 ## Measurement queue for the paper (priority order)
 
-1. 82-E0 toggle-cost table (incl. CPU KV-requant path) — Sec C's core.
+1. ~~82-E0 toggle-cost table (incl. CPU KV-requant path)~~ DONE
+   2026-07-18 — Sec C's core (results_e0.md).
 2. Second-hardware R column (91-min protocol) — validates axis 2.
 3. RL-rollout-style trace eval (batch drain + on-policy text) — Sec D.
-4. Switching demo on a regime-shifting trace — Sec C's payoff.
+4. Switching demo on a regime-shifting trace — Sec C's payoff
+   (E0 says: switch latency ~free -> the demo is detection+policy,
+   not switch-cost engineering).
 
 ## Two-paper fallback (recorded, not active)
 
