@@ -1183,6 +1183,13 @@ class Scheduler(SchedulerInterface):
             )
             self._sd_gate_step += 1
             f_live = self._sd_accept_ema
+            # EMA prior: OPTIMISTIC init (1.0) measured best across the
+            # three traces. The map-prior alternative (init at the
+            # cell's f_ref) was measured 0.4-1.2% WORSE overall: it
+            # avoids ~1-2% of burst-entry arming but starves genuine
+            # content winners (b1 math) that only live evidence can
+            # reveal -- and a probe's volume can't lift a pessimistic
+            # EMA past the arming margin. Discovery beats prior here.
             cur_k = getattr(self, "_sd_policy_k", 0)
             # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
             # score is always 1.0 -- staying ON requires S >= 1.0, and

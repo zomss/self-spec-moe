@@ -435,3 +435,41 @@ Full matrix on the wholechain stack (9 runs, OFF carried):
   change; (b) recheck mnb=16384 with the positions mirror (same
   signature as the cured b32 collapse -- likely the same root, which
   would upgrade wholechain to config-immune).
+
+## FINAL: recompiled table on the wholechain stack + variant study
+
+- mnb=16384 recheck: **CURED by the positions mirror** (793.2 tok/s,
+  accept 4.43 vs the defect's 478/2.09) -- wholechain is config-immune;
+  the catastrophic mnb stall (513 per-step) is neutralized (~5%
+  residual sensitivity).
+- Recompiled (K,R) table under wholechain: R's shifted per cell (the
+  stack IS the realization); table archived alongside the per-step one
+  (policy_table*.json / policy_cells*.csv).
+
+**Three policy variants measured on the wholechain stack (aggregate
+tok/s E2 / E2c / E2b):**
+
+| variant | E2 | E2c | E2b |
+|---|---|---|---|
+| per-step-stack table, optimistic EMA | **950.4** | **688.5** | **817.0** |
+| recompiled table, optimistic EMA | 935.1 | 671.4 | 816.0 |
+| recompiled, map-prior EMA + burst-8 | 931.0 | 670.2 | 806.1 |
+
+Statics (wholechain stack): E2 off **954.2** / k4 931.6 / k6 917.2;
+E2c k6 **694.9** / k4 683.3; E2b k4 806.1 / k6 769.5 / off 770.3.
+
+Findings:
+1. The policy wins E2b on EVERY variant and stays within 0.4-3.4% of
+   the per-trace best elsewhere; no static is near-best on all three
+   (off -16% on E2c; k6 -6% on E2b; k4 -2.4/-1.7% and never a winner).
+2. **Prior-vs-discovery, measured**: optimistic EMA init beats the
+   map-prior init on all traces -- pessimism avoids ~1-2% of
+   burst-entry arming but starves content winners the table cannot see
+   (b1 math: cell measured on C4 says lose 7%, live math wins 4%), and
+   probe volume cannot lift a pessimistic EMA past the arming margin.
+   Optimism + fast disarm is the right default; kept.
+3. Deployed final config: wholechain + recompiled table + optimistic
+   EMA + probe burst 8. Residuals on record: burst-entry arming
+   (~1-2% at b32 phases), the compiler's K6 cell anomaly at b8/14k
+   (cell S .914 vs trace-static 1.23 -- one measurement carries an
+   artifact; targeted recheck queued), b1 content-discovery latency.
