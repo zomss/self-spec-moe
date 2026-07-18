@@ -232,6 +232,26 @@ class Scheduler(SchedulerInterface):
         self.num_spec_tokens = vllm_config.num_speculative_tokens
         self.num_lookahead_tokens = 0
         self.dynamic_sd_lookup: list[int] | None = None
+        # Phase 82 E1: accept-feedback OFF gate (content axis). EMA of the
+        # per-step acceptance fraction; below threshold -> schedule 0 spec
+        # tokens, with periodic probe bursts for recovery (hysteresis).
+        self._sd_accept_off_thresh = envs.VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD
+        self._sd_accept_on_thresh = (
+            envs.VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD
+            or self._sd_accept_off_thresh
+        )
+        self._sd_gated_off = False
+        self._sd_probe_interval = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL
+        self._sd_probe_burst = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_BURST
+        self._sd_accept_ema = 1.0
+        self._sd_gate_step = 0
+        self._sd_step_accepted = 0
+        self._sd_step_drafted = 0
+        self._sd_batch_band = -1
+        self._sd_shortctx_off: tuple[int, int] | None = None
+        if envs.VLLM_SELF_SPEC_SHORTCTX_OFF:
+            c, b = envs.VLLM_SELF_SPEC_SHORTCTX_OFF.split(":")
+            self._sd_shortctx_off = (int(c), int(b))
         if speculative_config is not None:
             if speculative_config.num_speculative_tokens_per_batch_size:
                 self.dynamic_sd_lookup = build_dynamic_sd_schedule_lookup(
@@ -1064,6 +1084,70 @@ class Scheduler(SchedulerInterface):
             num_spec_tokens_to_schedule = self.dynamic_sd_lookup[
                 len(num_scheduled_tokens)
             ]
+        # Phase 82 E1 accept gate: fold the last step's acceptance into the
+        # EMA, then veto speculation when the EMA is below threshold (except
+        # on probe-burst steps, which keep the signal alive).
+        # Short-ctx large-batch OFF (map: verify-width cost at low ctx):
+        # mean effective context below the threshold at batch >= the
+        # bound -> speculation off, regardless of the content gate.
+        n_run = max(len(self.running), 1)
+        if (
+            self._sd_shortctx_off is not None
+            and num_spec_tokens_to_schedule > 0
+            and self.running
+        ):
+            ctx_thresh, b_bound = self._sd_shortctx_off
+            mean_ctx = sum(
+                r.num_computed_tokens for r in self.running
+            ) / n_run
+            if n_run >= b_bound and mean_ctx < ctx_thresh:
+                num_spec_tokens_to_schedule = 0
+        if self._sd_accept_off_thresh > 0.0 and num_spec_tokens_to_schedule > 0:
+            # Regime change (batch band shifts) -> reset the EMA
+            # optimistically: trust the map prior for the new regime and
+            # re-verify by measurement. Prevents a stale content signal
+            # from one regime gating a different one OFF irrecoverably.
+            # Band keys on RUNNING requests (stable across chunked
+            # prefill), not per-step scheduled counts.
+            band = n_run.bit_length()
+            if band != self._sd_batch_band:
+                self._sd_batch_band = band
+                self._sd_accept_ema = 1.0
+                self._sd_gated_off = False
+                self._sd_step_accepted = self._sd_step_drafted = 0
+            probing = (
+                self._sd_gate_step % self._sd_probe_interval
+                < self._sd_probe_burst
+            )
+            self._sd_gate_step += 1
+            if self._sd_step_drafted > 0:
+                frac = self._sd_step_accepted / self._sd_step_drafted
+                # Volume-weighted fold: small batches contribute few drafted
+                # tokens per step, so weight by token count (half-life ~96
+                # drafted tokens) -- a noisy b1 step must not flap the gate.
+                # Probe folds get a floor weight so recovery is possible at
+                # small batches (w=0.04 probes could never lift the EMA).
+                w = self._sd_step_drafted / (self._sd_step_drafted + 96)
+                if self._sd_gate_step - getattr(self, "_sd_last_probe", -9) <= 3:
+                    # This fold carries probe verify data (under async
+                    # pipelining, drafts scheduled on the probe step fold
+                    # up to two steps later) -- floor the weight so probes
+                    # can actually recover the EMA at small batches.
+                    w = max(w, 0.3)
+                self._sd_accept_ema = (1 - w) * self._sd_accept_ema + w * frac
+                self._sd_step_accepted = self._sd_step_drafted = 0
+            if probing:
+                self._sd_last_probe = self._sd_gate_step
+            # Hysteresis: OFF below the lower bound, back ON only above
+            # the upper bound -- a signal sitting between the bounds keeps
+            # its current state instead of flapping.
+            if self._sd_gated_off:
+                if self._sd_accept_ema > self._sd_accept_on_thresh:
+                    self._sd_gated_off = False
+            elif self._sd_accept_ema < self._sd_accept_off_thresh:
+                self._sd_gated_off = True
+            if self._sd_gated_off and not probing:
+                num_spec_tokens_to_schedule = 0
 
         scheduler_output = SchedulerOutput(
             scheduled_new_reqs=new_reqs_data,
@@ -1564,6 +1648,9 @@ class Scheduler(SchedulerInterface):
                 num_sampled = self.num_sampled_tokens_per_step
                 num_accepted = max(len(generated_token_ids) - num_sampled, 0)
                 num_rejected = num_draft_tokens - num_accepted
+                if self._sd_accept_off_thresh > 0.0:
+                    self._sd_step_accepted += num_accepted
+                    self._sd_step_drafted += num_draft_tokens
                 # num_computed_tokens represents the number of tokens
                 # processed in the current step, considering scheduled
                 # tokens and rejections. If some tokens are rejected,

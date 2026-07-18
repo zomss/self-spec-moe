@@ -5227,6 +5227,17 @@ class GPUModelRunner(
             else:
                 mm_embed_inputs = None
 
+            # Phase 82 E1: the scheduler chose OFF for the next cycle
+            # (dynamic K schedule or accept gate). The async bookkeeping
+            # above (next_token_ids, prev_sampled_token_ids) must still
+            # run every step; only the draft chain itself is skipped --
+            # proposing 0 tokens through the chain pays its full cost.
+            if num_spec_tokens_to_schedule == 0:
+                return torch.empty(
+                    (next_token_ids.shape[0], 0),
+                    dtype=torch.int32,
+                    device=self.device,
+                )
             # Self-spec OV1(b) (phase 49): in consume mode, the drafts come
             # from the previous cycle's ahead chain; propose is skipped in
             # steady state (None -> bootstrap/fence fallback to propose).

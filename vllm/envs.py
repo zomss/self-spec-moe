@@ -256,6 +256,11 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
+    VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD: float = 0.0
+    VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL: int = 64
+    VLLM_SELF_SPEC_ACCEPT_PROBE_BURST: int = 2
+    VLLM_SELF_SPEC_SHORTCTX_OFF: str = ""
+    VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD: float = 0.0
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
@@ -1892,6 +1897,35 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # warning. 0 -> off (default). See research/62_window_kv_draft.
     "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_KV_WINDOW", "0")
+    ),
+    # Phase 82 E1: accept-feedback OFF gate (content axis of the regime
+    # detector). When the EMA of the per-step draft acceptance fraction
+    # (accepted/drafted) drops below this threshold, the scheduler stops
+    # scheduling spec tokens; periodic probe bursts re-measure so the gate
+    # can recover (hysteresis). 0.0 -> disabled.
+    "VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD": lambda: float(
+        os.getenv("VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD", "0.0")
+    ),
+    # Probe cadence for the accept gate: every INTERVAL scheduler steps,
+    # BURST consecutive steps run speculation regardless of the gate.
+    "VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL", "64")
+    ),
+    "VLLM_SELF_SPEC_ACCEPT_PROBE_BURST": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_ACCEPT_PROBE_BURST", "2")
+    ),
+    # Phase 82 E1: hysteresis upper bound -- once gated OFF, speculation
+    # re-enables only when the probe EMA rises above this (defaults to the
+    # OFF threshold when 0, i.e. no hysteresis band).
+    "VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD": lambda: float(
+        os.getenv("VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD", "0.0")
+    ),
+    # Phase 82 E1: "ctx:batch" -- speculation OFF when the mean effective
+    # context of running requests is below ctx AND the running batch is
+    # >= batch (the map's verify-width OFF region at short context).
+    # Empty -> disabled.
+    "VLLM_SELF_SPEC_SHORTCTX_OFF": lambda: os.getenv(
+        "VLLM_SELF_SPEC_SHORTCTX_OFF", ""
     ),
     # Number of attention-sink tokens the window-KV draft keeps at the start
     # of the KV sequence (rounded up to whole blocks). Only meaningful when
