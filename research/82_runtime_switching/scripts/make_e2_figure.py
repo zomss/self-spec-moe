@@ -37,9 +37,8 @@ fig, (ax, bx) = plt.subplots(
 CTX_MAX, B_MAX = 16000, 33
 # regions (x0, x1, y0, y1, color, label)
 regions = [
-    (0, CTX_MAX, 1, 8, "K4", None),            # b1-7: K4 everywhere
-    (8000, CTX_MAX, 8, 13, "K4", None),        # b8-12 long ctx: K4
-    (8000, CTX_MAX, 13, 25, "K6", None),       # b13-24 long ctx: K6
+    (0, CTX_MAX, 1, 8, "K4", None),            # b1-7: K4 (map prior)
+    (8000, CTX_MAX, 8, 25, "K4", None),        # b8-24 long ctx: K4
     (0, 8000, 8, 25, "veto", None),            # ctx-cell veto -> OFF
     (0, CTX_MAX, 25, B_MAX, "OFF", None),      # schedule b>=25: OFF
 ]
@@ -50,10 +49,9 @@ for x0, x1, y0, y1, key, _ in regions:
         alpha=0.75 if key in ("K4", "K6") else 1.0))
 ax.text(4500, 4.6, "SPEC K4  (b1-7: map prior, accept gate silent)",
         ha="center", fontsize=8.2, color="white", fontweight="bold")
-ax.text(12000, 10.0, "SPEC K4", ha="center", fontsize=8.5,
-        color="white", fontweight="bold")
-ax.text(12000, 18, "SPEC K6", ha="center", fontsize=8.5,
-        color="white", fontweight="bold")
+ax.text(12000, 16, "SPEC K4\n(K6 prior FALSIFIED by\nmeasurement: "
+        "K4 ≥ K6 at\nevery batch on this column)", ha="center",
+        fontsize=8, color="white", fontweight="bold")
 ax.text(3800, 15.5, "OFF\n(ctx-cell veto:\n$\\tau^*>K{+}1$,\n"
         "any-accept loses)", ha="center", fontsize=8, color=C["ink2"])
 ax.text(8000, 28.6, "OFF (schedule: verify-width regime)",
@@ -65,10 +63,10 @@ TRACES = [  # (name, ctx, batch, selected, dy)
     ("E2:P1 b1 math", 1400, 1, "K4", 0),
     ("E2:P2 b8 docs", 6100, 8, "OFF", 0),
     ("E2:P3 b32 math", 900, 32, "OFF", 0),
-    ("E2b:Q1 b1 doc16k", 14100, 1, "K4", 0),
-    ("E2b:Q2 b8 doc16k", 14200, 8, "K4", 0),
-    ("E2b:Q3 b16 doc16k", 14200, 16, "K6", 0),
-    ("E2b:Q4 b32 math", 900, 30, "OFF", -2),
+    ("E2c:S1 b1 rag14k", 14100, 1, "K4", 0),
+    ("E2c:S2 b8 rag14k", 14200, 8, "K4", 0),
+    ("E2c:S3 b16 rag14k", 14200, 16, "K4", 0),
+    ("E2c:S4 b32 math", 900, 30, "OFF", -2),
 ]
 for name, x, b, sel, dy in TRACES:
     ax.scatter([x], [b], s=52, color=C["ink"], zorder=5,
@@ -96,6 +94,19 @@ E2_FINAL = {  # committed finals (results_e2.md)
     "aggregate": {"off": 957.9, "k4": 932.8, "k6": 886.1,
                   "policy": (990.1, "")},
 }
+E2C_FINAL = {
+    "S1 b1\nrag14k": {"off": 128.3, "k4": 145.7, "k6": 140.9,
+                      "policy": (145.9, "K4")},
+    "S2 b8\nrag14k": {"off": 514.5, "k4": 557.9, "k6": 549.2,
+                      "policy": (557.8, "K4")},
+    "S3 b16\nrag14k": {"off": 658.4, "k4": 712.9, "k6": 700.9,
+                       "policy": (713.7, "K4")},
+    "S4 b32\nmath": {"off": 4155.5, "k4": 3755.9, "k6": 3576.0,
+                     "policy": (4109.2, "OFF")},
+    "aggregate ": {"off": 587.6, "k4": 642.3, "k6": 626.3,
+                   "policy": (646.5, "")},
+}
+E2_FINAL.update(E2C_FINAL)
 SELMAP = {"Q1_b1_doc16k": "K4", "Q2_b8_doc16k": "K4",
           "Q3_b16_doc16k": "K6", "Q4_b32_aime2k": "OFF"}
 e2b = {}
@@ -154,7 +165,7 @@ t2, l2 = [], []
 bx.set_xticks(ticks, labels, fontsize=8)
 bx.axhline(1.0, color=C["ink2"], lw=0.8, ls=":")
 bx.set_ylabel("tok/s normalized to OFF (per regime)")
-bx.set_title("B. Measured per-regime tok/s vs OFF (policy bar: selected lever)",
+bx.set_title("B. Per-regime tok/s vs OFF — E2 (left 4) + E2c RAG trace (right 5)",
              loc="left", fontsize=10.5, fontweight="bold")
 leg = [mpatches.Patch(color=C["off_arm"], label="OFF static"),
        mpatches.Patch(color=C["k4_arm"], label="K4 static"),
