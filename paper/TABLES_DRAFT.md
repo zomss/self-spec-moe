@@ -80,6 +80,21 @@ W4A8+win e2e (Q3-8B 16k, GPTQ ckpt): Humming kernel **1.90x b8 / 2.19x
 b16** (new batch headline) vs w4win 1.81/1.79; SAME ckpt on CutlassW4A8
 1.60/1.78 -- realization span 1.60<->2.19 at identical beta (kernel choice
 flips the cell). Accept 6.02 vs 5.69 (GPTQ-calibrated ckpt vs RTN proxy).
+
+### T5b. Width-pruning frontier + kvq bound (Q3-8B, C4-profiled, 16k refs)
+
+| arm | beta | ~byte cut | layer-skip frontier at same bytes |
+|---|---|---|---|
+| ffn125 | .9167 | 9.8% | .849 (+.07) |
+| ffn25 | .8733 | 19.6% | .694 (**+.18**) |
+| ffn375 | .8142 | 29.4% | - |
+| ffn50 | .7613 | 39.1% | (2:4-SparseGPT .828 @ 50%, kernel-bound) |
+| head25 / head50 | .8984 / .8038 | 4.3% / 8.7% | dominated by ffn per byte |
+| ffn25head25 | .8273 | 23.9% | product .784 -> +.043 sub-additive |
+| kvq_int4 | .9253 | KV 4x | fp8 .985; kvq lever bounded, still priced out |
+
+On dense, CHANNEL granularity beats LAYER granularity at matched bytes
+at every budget, with a free realization (smaller dense GEMMs).
 | sparse24 (SparseGPT 2:4, 512 C4) | .8281 | - | calibration DOUBLES magnitude-2:4 (.416); still dominated alone (int4 .952 @ half the bytes) |
 | s24w4 (2:4 + int4 = marlin_24 combo) | .8220 | - | int4 costs only -.006 on top of sparse; 0.125x bytes; kernel absent in fork -> alive-pending-realization |
 | win512 | .975 | **.890** | window beta is TASK-DEPENDENT: first measured break on GQA |

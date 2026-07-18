@@ -10,10 +10,10 @@ training-free-reduction-op) cell is classified:
 
 | status | members |
 |---|---|
-| IN POOL | int4 quant (RTN + GPTQ), fp8 quant (W-only, W8A8, Marlin/native realizations), activation quant (dyn fp8-A .9922 isolated; W4A8 CutlassW4A8 .947), window+sinks (128/512), whole-layer skip (contiguous + profiled sets), sub-layer skip (mlp/attn), MoE expert restriction (contiguous shard, frequency-profiled), MoE top-C routing, n-gram/model-free |
+| IN POOL | int4 quant (RTN + GPTQ), fp8 quant (W-only, W8A8, Marlin/native realizations), activation quant (dyn fp8-A .9922 isolated; W4A8 .947, e2e-confirmed batch winner), window+sinks (128/512), whole-layer skip (contiguous + profiled sets), sub-layer skip (mlp/attn), FFN-channel width prune (C4-profiled Wanda-style; beats the layer frontier +.07-.18 at matched bytes, realization-free), MoE expert restriction (contiguous shard, frequency-profiled), MoE top-C routing, n-gram/model-free |
 | GATED DEAD (measured, with domination argument) | magnitude 2:4 & unstructured pruning (.42/.60 vs int4 .92 at more byte cut), SVD low-rank (.044 at 50% bytes) |
 | ALIVE-PENDING-REALIZATION | SparseGPT-calibrated 2:4 (.828; calibration doubles magnitude form) + int4 combo (.822 at 0.125x bytes) -- prices ~level with w4win at 8B/b1 but the fork lacks marlin_24 kernels |
-| MEASURED-EXCLUDED (reason stated) | draft-only KV-quant (pool unbuilt by build-on-selection discipline even after the retrieval regime was found: beta lead .974 vs .890 cannot beat 30x byte gap), vocab restriction (RETRACTED: circular gate; honest C4-keep coverage .80-.90 -> loses at deep gamma) |
+| MEASURED-EXCLUDED (reason stated) | draft-only KV-quant (pool unbuilt by build-on-selection discipline even after the retrieval regime was found: beta lead .974 vs .890 cannot beat 30x byte gap; lever bounded fp8 .985 / int4 .925), Q-head prune (per-byte dominated by FFN-channel at every budget), vocab restriction (RETRACTED: circular gate; honest C4-keep coverage .80-.90 -> loses at deep gamma) |
 | SCOPED OUT (statement) | dynamic token selection (cited as upper bound on window), tree/multi-draft (changes tau formula), KV-head merge (svdr-class argument) |
 
 **Settings grids**: window {128,512} (win2048 pruned by measured beta-
