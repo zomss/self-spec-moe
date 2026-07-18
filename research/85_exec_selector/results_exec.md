@@ -143,3 +143,22 @@ offline layer wrong twice by realization and once by CIRCULARITY -- the
 queue-and-correct loop is the method's real product. New gate rule
 (applied retroactively, all pass except vres): a profiled artifact must
 be built on data DISJOINT from its evaluation set.
+
+## v6.3 — Humming-W4A8 reprice (Phase 87 fold)
+
+New dense config q_int4+win512+A8humming: R = combo-R x measured
+Humming/Marlin kernel factor (Q3-8B: b8 .945, b16 .88-imputed .841 at
+implied-R level), beta x .9922 (actfp8), wide transfer sigma. Plus the
+measured Qwen3-8B column as its own group (map_v6_3.py ->
+data/strategy_map_v6_3.md).
+
+- Q2.5 column: NO cell flips (LCB conservatism holds: transfer rows
+  carry wide sigma, so under-measured configs cannot win) -- but W4A8
+  is runner-up in 4/8 feasible cells and CONTESTED (gap < 0.10) at
+  b8/16k, b8/32k, b32/16k -> queue: Q2.5 W4A8 ckpt + 3 arms.
+- Q3-8B measured column: w4win holds b1 (P .53 vs ffn-combo .03);
+  w4a8win-Humming holds b8 (P .94) and b16 (P 1.00); Cutlass realization
+  prints as dominated in-cell (1.55/1.72). The map now RECORDS the
+  measured kernel-realization span instead of assuming one kernel per
+  scheme.
+- Standing (not cell-triggered): 32B W4A8 ckpt + batch arm; 8B b32 w4a8.
