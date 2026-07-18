@@ -473,3 +473,28 @@ Findings:
    (~1-2% at b32 phases), the compiler's K6 cell anomaly at b8/14k
    (cell S .914 vs trace-static 1.23 -- one measurement carries an
    artifact; targeted recheck queued), b1 content-discovery latency.
+
+## K6 cell anomaly at b8/14k: RESOLVED -- no artifact, two real effects
+
+Direct recheck (isolated probes, wholechain stack, C4 content, 2 boots):
+off 679.7; k6 616.7/620.0 (S=0.91, accept 5.42 -- the compiler cell
+REPRODUCED exactly); k4 836.4 (S=1.23 ~ compiler 1.249). The compiler
+was right; the "conflict" with the trace statics dissolves into:
+
+1. **The verify-width x ctx term**: the argmax's R_K folds the verify
+   cost in, and K6's verify (width 7 vs 5) pays 40% more query-tokens
+   against 14k of KV -- R_K6 .826 vs R_K4 .673 at this cell is real
+   physics, not noise. Deep K gets EXPENSIVE at long ctx on the verify
+   side even when the draft chain is cheap.
+2. **Content carried the trace K6 wins**: math-RAG/doc accept at K6
+   (f .87-.93) vs the compiler's C4 reference (f .737). At live math f,
+   S_K6 = 1.04 vs S_K4 = 1.23 -> K4 is correctly preferred even on
+   math, matching the trace measurement that k4 and k6 statics TIED at
+   S2 (629.3 vs 628.6) -- k6's higher tau exactly compensating its
+   higher R.
+
+The recompiled table's K4 pick at b8/14k stands. Refinement noted: the
+pooled accept EMA is K-flavored (f_K6 < f_K4 from marginal positions --
+C4: .737 vs .886); estimating S_K6 with a K4-running EMA overestimates
+it. A per-position accept-decay model would sharpen cross-K estimates;
+in practice the argmax chose correctly at every measured cell.

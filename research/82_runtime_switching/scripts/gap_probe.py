@@ -33,14 +33,14 @@ def load_docs(tok, n=8, target_tok=14000):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", required=True, choices=["off", "k4"])
+    ap.add_argument("--arm", required=True, choices=["off", "k4", "k6"])
     a = ap.parse_args()
     from vllm import LLM, SamplingParams
     from transformers import AutoTokenizer
     spec = None
-    if a.arm == "k4":
+    if a.arm in ("k4", "k6"):
         spec = {"method": "draft_model", "model": CKPT,
-                "num_speculative_tokens": 4,
+                "num_speculative_tokens": int(a.arm[1]),
                 "draft_tensor_parallel_size": 1}
     import os
     kw = {}
