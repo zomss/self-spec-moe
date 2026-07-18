@@ -591,3 +591,23 @@ The chase: harness 1124.7 tok/s (1.81x) at b8/16k vs driver ~837
 - Statics k4/k6 within 1-3% of each other: the intra-column scoping
   law unchanged; the STRONG claim is vs AR (1.65x wall aggregate,
   1.76x at b16), delivered at realistic reasoning-serving shapes.
+
+## FINAL STRONG E2E: W4A8-Humming on the serving driver
+
+Kernel forced via the disable list (log-confirmed HummingLinearKernel):
+
+| arm | G1 b8 | G2 b16 | aggregate |
+|---|---|---|---|
+| AR | 581.6 | 769.9 | 694.9 |
+| W4+win K6 | 1.51x | 1.76x | 1.65x |
+| W4A8 K6 Cutlass | 1.40x | 1.61x | 1.52x |
+| **W4A8 K6 Humming** | **1.67x** | **1.90x** | **1.80x** |
+
+- Wall-clock incl. prefill, real data (C4 14k-doc RAG + AIME CoT,
+  3072-tok outputs). Implied b16 decode 1834 vs 862 = **S_dec 2.13**:
+  the harness h2h record (2.19x) reproduced in serving.
+- Kernel-realization pricing, third confirmation: SAME ckpt spans
+  1.52x <-> 1.80x wall aggregate by kernel choice alone.
+- THE headline e2e vs AR: **1.80x wall aggregate / 1.90x at b16** at
+  realistic reasoning-serving shapes on the fully-fixed stack
+  (wholechain + corrected skip-prefill + target-KV binding).
