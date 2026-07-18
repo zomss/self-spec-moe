@@ -1121,8 +1121,14 @@ class Scheduler(SchedulerInterface):
             envs.VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT
             and num_spec_tokens_to_schedule > 0
             and len(num_scheduled_tokens) > 0
-            and total_num_scheduled_tokens > len(num_scheduled_tokens)
+            and total_num_scheduled_tokens
+            > len(num_scheduled_tokens) * (1 + self.num_spec_tokens)
         ):
+            # A spec decode step schedules up to 1+K tokens per request
+            # (placeholders included) -- only totals BEYOND that bound
+            # prove prefill tokens are present. The earlier `> num_reqs`
+            # form fired on EVERY drafting step, silently zeroing K on
+            # alternate cycles (measured -22% steady decode).
             num_spec_tokens_to_schedule = 0
         n_run = max(len(self.running), 1)
         # Phase 82 F4: compiled-policy cell lookup -- K and the accept

@@ -105,7 +105,8 @@ def main():
     import os
     longctx = bool(os.environ.get("E2_LONGCTX")) or \
         bool(os.environ.get("E2_LONGMATH")) or \
-        bool(os.environ.get("E2_TRACE32"))
+        bool(os.environ.get("E2_TRACE32")) or \
+        bool(os.environ.get("E2_LONGGEN"))
     llm = LLM(model=MODEL, speculative_config=spec,
               tensor_parallel_size=TP,
               max_model_len=20480 if longctx else 12288,
@@ -155,6 +156,18 @@ def main():
                  + [("S2_b8_rag14k", rags[4:12], spL)]
                  + [("S3_b16_rag14k", rags[:16], spL)]
                  + [("S4_b32_aime2k", aime[8:40], sp512)])
+    if os.environ.get("E2_LONGGEN"):
+        # STRONG-E2E trace: long-decode reasoning at the measured-best
+        # cells -- decode share ~85% so wall converges to decode rates.
+        spG = SamplingParams(max_tokens=3072, ignore_eos=True,
+                             temperature=0)
+        def ragg(i):
+            return (docs[i].rsplit("\n\n", 1)[0]
+                    + "\n\nNow solve this competition math problem step "
+                    "by step.\n\n" + aime[i % 8])
+        rg = [ragg(i) for i in range(16)]
+        trace = ([("G1_b8_rag14k_3k", rg[:8], spG)]
+                 + [("G2_b16_rag14k_3k", rg[:16], spG)])
     if os.environ.get("E2_TRACE32"):
         # 32B runtime trace (map-predicted +10.4% mix): deep-K RAG
         # interactive + RAG serving + short-math burst (the OFF cell).
