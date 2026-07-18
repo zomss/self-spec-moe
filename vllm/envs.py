@@ -263,6 +263,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD: float = 0.0
     VLLM_SELF_SPEC_GATE_DEBUG: bool = False
     VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH: int = 1
+    VLLM_SELF_SPEC_ACCEPT_THRESH_LONG: str = ""
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
@@ -1918,6 +1919,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     ),
     "VLLM_SELF_SPEC_GATE_DEBUG": lambda: os.getenv(
         "VLLM_SELF_SPEC_GATE_DEBUG", "0") == "1",
+    # Phase 82 E1: "ctx:thresh" -- above this mean context, the accept
+    # gate's OFF threshold switches to the given (lower) value. The
+    # break-even acceptance is a per-(batch, ctx) cell quantity: the
+    # window draft's R shrinks with context, so long-ctx cells win at
+    # much lower acceptance. Empty -> single threshold.
+    "VLLM_SELF_SPEC_ACCEPT_THRESH_LONG": lambda: os.getenv(
+        "VLLM_SELF_SPEC_ACCEPT_THRESH_LONG", ""
+    ),
     # Phase 82 E1: the accept gate engages only at running batch >= this.
     # Below it (e.g. b1) the per-step accept signal lacks the volume to
     # separate content regimes from noise -- follow the map prior (ON).

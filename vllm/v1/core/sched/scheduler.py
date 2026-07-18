@@ -244,6 +244,10 @@ class Scheduler(SchedulerInterface):
         self._sd_probe_interval = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL
         self._sd_probe_burst = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_BURST
         self._sd_gate_min_batch = envs.VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH
+        self._sd_thresh_long: tuple[int, float] | None = None
+        if envs.VLLM_SELF_SPEC_ACCEPT_THRESH_LONG:
+            c, t = envs.VLLM_SELF_SPEC_ACCEPT_THRESH_LONG.split(":")
+            self._sd_thresh_long = (int(c), float(t))
         self._sd_accept_ema = 1.0
         self._sd_req_ema: dict[str, float] = {}
         self._sd_gate_step = 0
@@ -1154,14 +1158,25 @@ class Scheduler(SchedulerInterface):
             self._sd_accept_ema = sum(
                 self._sd_req_ema.get(rid, 1.0) for rid in run_ids
             ) / max(len(run_ids), 1)
+            # Per-cell threshold: the break-even acceptance falls with
+            # context (window-draft R ~ 1/ctx) -- switch to the long-ctx
+            # bound above the configured context.
+            off_t, on_t = self._sd_accept_off_thresh, self._sd_accept_on_thresh
+            if self._sd_thresh_long is not None:
+                run_ctx = sum(
+                    r.num_computed_tokens for r in self.running
+                ) / n_run
+                if run_ctx >= self._sd_thresh_long[0]:
+                    off_t = self._sd_thresh_long[1]
+                    on_t = off_t + 0.02
             # Hysteresis: OFF below the lower bound, back ON only above
             # the upper bound -- a signal sitting between the bounds keeps
             # its current state instead of flapping.
             was_off = self._sd_gated_off
             if self._sd_gated_off:
-                if self._sd_accept_ema > self._sd_accept_on_thresh:
+                if self._sd_accept_ema > on_t:
                     self._sd_gated_off = False
-            elif self._sd_accept_ema < self._sd_accept_off_thresh:
+            elif self._sd_accept_ema < off_t:
                 self._sd_gated_off = True
             if was_off != self._sd_gated_off and envs.VLLM_SELF_SPEC_GATE_DEBUG:
                 logger.info(

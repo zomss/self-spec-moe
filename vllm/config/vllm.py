@@ -764,6 +764,24 @@ class VllmConfig:
         ):
             return
 
+        # Phase 82: a schedule whose nonzero Ks are all equal only ever
+        # verifies at widths {K+1, 1} -- both standard captured shapes
+        # (q=1 is the universal decode shape; q=K+1 is the static-K spec
+        # shape). Full cudagraphs are safe there; the blanket PIECEWISE
+        # downgrade costs a measured ~7-10% on every step.
+        nonzero_ks = {
+            k for _, _, k in
+            self.speculative_config.num_speculative_tokens_per_batch_size
+            if k > 0
+        }
+        if len(nonzero_ks) <= 1:
+            logger.info_once(
+                "Dynamic speculative decoding with a single spec width "
+                "(K set %s): keeping cudagraph_mode %s.",
+                str(sorted(nonzero_ks)),
+                self.compilation_config.cudagraph_mode.name,
+            )
+            return
         logger.warning_once(
             "Dynamic speculative decoding changes the target verification "
             "length at runtime. Overriding cudagraph_mode from %s to "
