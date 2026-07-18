@@ -1141,11 +1141,19 @@ class Scheduler(SchedulerInterface):
             # Hysteresis: OFF below the lower bound, back ON only above
             # the upper bound -- a signal sitting between the bounds keeps
             # its current state instead of flapping.
+            was_off = self._sd_gated_off
             if self._sd_gated_off:
                 if self._sd_accept_ema > self._sd_accept_on_thresh:
                     self._sd_gated_off = False
             elif self._sd_accept_ema < self._sd_accept_off_thresh:
                 self._sd_gated_off = True
+            if was_off != self._sd_gated_off and envs.VLLM_SELF_SPEC_GATE_DEBUG:
+                logger.info(
+                    "[gate] step=%d band=%d n_run=%d ema=%.3f %s",
+                    self._sd_gate_step, self._sd_batch_band, n_run,
+                    self._sd_accept_ema,
+                    "ON->OFF" if self._sd_gated_off else "OFF->ON",
+                )
             if self._sd_gated_off and not probing:
                 num_spec_tokens_to_schedule = 0
 

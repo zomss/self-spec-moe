@@ -73,6 +73,50 @@ v7 shortctx rule: P1 flap at single threshold -> hysteresis.
 v8-9 hysteresis + async probe-lag fix: mechanism complete.
 v10 continuous trace (round-drain artifact removed): final table.
 
+## Root-cause analysis (gate-transition log, VLLM_SELF_SPEC_GATE_DEBUG)
+
+Why the policy loses to OFF (-3%) and even ties/loses static-k4:
+
+Per-phase time vs k4: policy GAINS at P2 (+0.69s) and P3 (+0.41s) and
+gives it all back at P1 (-1.19s) -- where policy and k4 run the SAME
+config on paper. The log (11 transitions) shows why:
+
+1. **P1: intra-regime content variance flips the gate one request too
+   late.** OFF stretches of 97/98/130/124 steps at band=1 -- the gate
+   latches OFF ~30 steps into a HARD math problem (per-request accept
+   frac ~.75-.8 vs easy ~.9+), then stays OFF ~128 steps (the probe
+   interval) into the NEXT, usually easy, request. Per-request dwell
+   (~60 steps) is SHORTER than detect (~30, w=.04 at b1) + recover
+   (~128) -- a phase-lag classifier on a signal whose dwell is shorter
+   than its time constants. Measured blend: ~45% OFF x 149.9 + 55% x
+   173.1 = 162.7 (~ the observed 155-157 with probe cost). The
+   per-request OFF decisions are individually CORRECT (break-even
+   accept at this cell is tau ~4.06; hard problems sit at ~3.1) -- they
+   just arrive one request late, converting a correct policy into a
+   net loss vs always-ON.
+2. **P2 (-18% vs OFF): detection latency against a drifting signal.**
+   Docs accept starts at frac ~.81 (predictable summary openings, just
+   under the .84 bound) and decays to ~.65 -- the EMA crosses slowly,
+   so ~15-25% of the phase runs at the spec rate (517) before OFF.
+3. **P3 (-1.5%): the arming rent.** Zero drafts scheduled, yet the
+   armed engine pays per-step propose bookkeeping, K6-sized lookahead
+   allocation, and gate CPU. This is the true cost of keeping the
+   switch available.
+
+So the policy pays three taxes no static pays -- detection lag, probe
+cost, arming rent -- against an omniscient dividend of only +1.7% on
+this trace. Negative margin is structural here, not a tuning miss.
+
+**Fix directions (next iteration, not run):** (a) per-REQUEST accept
+signal (reset/track at request boundaries -- the regime unit at b1 IS
+the request), (b) probe cadence scaled by batch (128-step recovery is
+2 requests at b1, 2 seconds at b32), (c) map-prior K by prompt features
+(task type predicts accept before any token is drafted -- the offline
+map re-enters as the prior the online signal corrects).
+
 ## Next (per DIRECTION): the RL-rollout trace is the natural win stage
 -- content drift over training is the star axis there, and rollout
-batches are large+long-decode (spec-favorable volume).
+batches are large+long-decode (spec-favorable volume). Rollout regime
+dwells are LONG (a training batch is one content regime), which is
+precisely the condition the root-cause analysis says the detector
+needs.

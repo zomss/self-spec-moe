@@ -261,6 +261,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_ACCEPT_PROBE_BURST: int = 2
     VLLM_SELF_SPEC_SHORTCTX_OFF: str = ""
     VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD: float = 0.0
+    VLLM_SELF_SPEC_GATE_DEBUG: bool = False
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
@@ -1914,6 +1915,8 @@ environment_variables: dict[str, Callable[[], Any]] = {
     "VLLM_SELF_SPEC_ACCEPT_PROBE_BURST": lambda: int(
         os.getenv("VLLM_SELF_SPEC_ACCEPT_PROBE_BURST", "2")
     ),
+    "VLLM_SELF_SPEC_GATE_DEBUG": lambda: os.getenv(
+        "VLLM_SELF_SPEC_GATE_DEBUG", "0") == "1",
     # Phase 82 E1: hysteresis upper bound -- once gated OFF, speculation
     # re-enables only when the probe EMA rises above this (defaults to the
     # OFF threshold when 0, i.e. no hysteresis band).
