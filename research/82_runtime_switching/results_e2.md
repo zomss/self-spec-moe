@@ -551,3 +551,43 @@ Variance-adjusted reading of the 32B trace (labeled, not replacing the
 measured row): with T2 at parity (~260), the policy aggregate is
 ~196.2 = +1.2% over the best static -- i.e., at the oracle ceiling
 (+1.9%) minus its usual ~1% regret, consistent with every other trace.
+
+## Driver-vs-harness decode gap: RESOLVED (a one-line scheduler bug)
+
+The chase: harness 1124.7 tok/s (1.81x) at b8/16k vs driver ~837
+(1.23x) at b8/14k. Decomposition by controlled cells:
+- wholechain WITHOUT skip-prefill: decode 1005.1 -> the gap was NOT
+  ctx/methodology; it tracked SKIP_PREFILL_DRAFT.
+- ROOT CAUSE: the G-A condition `total_scheduled > num_reqs` fires on
+  EVERY spec decode step (each request schedules 1+K placeholder
+  tokens), silently zeroing K on alternate cycles: -20% steady decode
+  in every skip-era measurement since 2026-07-18 23:47.
+- FIX: fire only beyond the spec-shaped bound
+  (total > n_reqs x (1 + K_max)). Verified: prefill 3.40s AND decode
+  934.8 together (residual ~7% vs no-skip = true boundary cost,
+  amortizes with output length).
+
+## STRONG E2E (the concrete numbers vs AR): long-decode serving,
+## fixed stack, wall-clock incl. prefill, real data (C4 14k-doc RAG +
+## AIME CoT, 3072-tok outputs)
+
+| arm | G1 b8 | G2 b16 | aggregate |
+|---|---|---|---|
+| AR | 581.6 | 769.9 | 694.9 |
+| W4+win K4 | 889.8 (1.53x) | 1321.4 (1.72x) | 1137.5 (1.64x) |
+| W4+win K6 | 876.2 (1.51x) | **1353.0 (1.76x)** | **1145.3 (1.65x)** |
+| W4A8 K6 | 813.7 (1.40x) | 1236.8 (1.61x) | 1054.1 (1.52x) |
+
+- Implied decode: b16 spec 1617 vs AR 862 = S_dec 1.88 -- the harness
+  record RECOVERED on the serving driver; the remaining wall discount
+  is honest prefill share (~8-12% at 3k outputs).
+- Pre-fix this table read 1.33-1.38x: the skip bug alone hid ~0.3x of
+  wall speedup in every serving measurement this week.
+- W4A8@b16 BELOW W4 here (1.61 vs 1.76): the driver env lacks the
+  Marlin/Machete disable list, so the ckpt likely ran the losing
+  CutlassW4A8 kernel (harness needed VLLM_DISABLED_KERNELS to surface
+  Humming) -- kernel-realization pricing again; Humming-forced rerun
+  optional.
+- Statics k4/k6 within 1-3% of each other: the intra-column scoping
+  law unchanged; the STRONG claim is vs AR (1.65x wall aggregate,
+  1.76x at b16), delivered at realistic reasoning-serving shapes.
