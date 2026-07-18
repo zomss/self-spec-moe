@@ -24,13 +24,23 @@ import json
 import time
 from pathlib import Path
 
+import os
+
 PHASE = Path(__file__).resolve().parents[1]
 DATA = PHASE / "data"
-CKPT = str(Path.home() / "ckpts/Qwen3-8B-W4A16-INT4")
-BATCHES = [1, 8, 16, 32]
-CTXS = [2000, 8000, 14000]
+MODEL = os.environ.get("COMPILE_MODEL", "Qwen/Qwen3-8B")
+CKPT = os.environ.get(
+    "COMPILE_DRAFT", str(Path.home() / "ckpts/Qwen3-8B-W4A16-INT4"))
+TP = int(os.environ.get("COMPILE_TP", "1"))
+BATCHES = [int(x) for x in os.environ.get(
+    "COMPILE_BATCHES", "1,8,16,32").split(",")]
+CTXS = [int(x) for x in os.environ.get(
+    "COMPILE_CTXS", "2000,8000,14000").split(",")]
+KV_LIMIT = int(os.environ.get("COMPILE_KV_LIMIT", "330000"))
+CELLS_OUT = os.environ.get("COMPILE_CELLS", "policy_cells.csv")
+TABLE_OUT = os.environ.get("COMPILE_TABLE", "policy_table.json")
 NDEC = 160
-ARM_K = {"off": 0, "k4": 4, "k6": 6}
+ARM_K = {"off": 0, "k4": 4, "k5": 5, "k6": 6}
 ARMING_RENT = 0.015
 
 
@@ -69,20 +79,21 @@ def measure(arm):
     if k:
         spec = {"method": "draft_model", "model": CKPT,
                 "num_speculative_tokens": k,
-                "draft_tensor_parallel_size": 1}
-    llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
+                "draft_tensor_parallel_size": TP}
+    llm = LLM(model=MODEL, speculative_config=spec,
+              tensor_parallel_size=TP,
               max_model_len=20480, gpu_memory_utilization=0.90,
               max_num_seqs=max(BATCHES), enable_prefix_caching=False,
               disable_log_stats=False, async_scheduling=True,
               max_num_batched_tokens=8192)
-    tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
+    tok = AutoTokenizer.from_pretrained(MODEL)
     prompts_by_ctx = {c: load_ctx_prompts(tok, max(BATCHES), c)
                       for c in CTXS}
     sp1 = SamplingParams(max_tokens=1, ignore_eos=True, temperature=0)
     spN = SamplingParams(max_tokens=1 + NDEC, ignore_eos=True,
                         temperature=0)
     rows = []
-    KV_LIMIT_TOKENS = 330_000  # ~50 GB pool / 147 KB per token
+    KV_LIMIT_TOKENS = KV_LIMIT
     for ctx in CTXS:
         for b in BATCHES:
             if b * ctx > KV_LIMIT_TOKENS:
@@ -110,7 +121,7 @@ def measure(arm):
             rows.append(row)
             print("[cell]", json.dumps(row), flush=True)
     DATA.mkdir(exist_ok=True)
-    out = DATA / "policy_cells.csv"
+    out = DATA / CELLS_OUT
     exists = out.exists()
     with out.open("a") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
@@ -127,7 +138,7 @@ def solve():
     content enters ONLY through the live signal -- R is a pure time
     ratio measured here). K=0 (S=1) is always an option."""
     cells = {}
-    for row in csv.DictReader((DATA / "policy_cells.csv").open()):
+    for row in csv.DictReader((DATA / CELLS_OUT).open()):
         key = (int(row["batch"]), int(row["ctx"]))
         cells.setdefault(key, {})[row["arm"]] = row
     table = []
@@ -151,9 +162,9 @@ def solve():
         entry = dict(batch=b, ctx=ctx, options=options)
         table.append(entry)
         print("[solve]", json.dumps(entry), flush=True)
-    out = DATA / "policy_table.json"
+    out = DATA / TABLE_OUT
     out.write_text(json.dumps(
-        dict(model="Qwen3-8B", draft=CKPT, ndec=NDEC,
+        dict(model=MODEL, draft=CKPT, ndec=NDEC,
              arming_rent=ARMING_RENT, cells=table), indent=1))
     print("emitted ->", out)
 

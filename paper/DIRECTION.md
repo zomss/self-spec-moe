@@ -117,8 +117,12 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
    program (E2/E2b/E2c + wholechain stack + compiled policy, 82/
    results_e2.md) landed at regret 1-3% with an E2b win on every
    variant; the gap prediction shows this is near the intra-column
-   ceiling (+5.9% max at 8B). OPTIONAL: a 32B runtime trace (+10.4%
-   predicted) if a stronger in-engine number is wanted.
+   ceiling (+5.9% max at 8B). 32B runtime trace RUN 2026-07-19: the
+   +10.4% prediction was FALSIFIED (it rested on harness-transfer
+   cells; the deployment compile priced b1/14k at ~0.99 vs the
+   harness's 1.63) -- oracle ceiling +1.9% over best static, policy
+   regret -1.4%. Scoping law confirmed at both scales; the transfer
+   failure is itself Sec B evidence for measure-on-deployment.
 
 ## Two-paper fallback (recorded, not active)
 

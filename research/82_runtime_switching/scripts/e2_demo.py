@@ -29,8 +29,12 @@ import json
 import time
 from pathlib import Path
 
+import os as _os
 PHASE = Path(__file__).resolve().parents[1]
-CKPT = str(Path.home() / "ckpts/Qwen3-8B-W4A16-INT4")
+MODEL = _os.environ.get("E2_MODEL", "Qwen/Qwen3-8B")
+TP = int(_os.environ.get("E2_TP", "1"))
+CKPT = _os.environ.get(
+    "E2_DRAFT", str(Path.home() / "ckpts/Qwen3-8B-W4A16-INT4"))
 SCHEDULE = [(1, 12, 4), (13, 24, 6), (25, 32, 0)]
 
 
@@ -74,7 +78,7 @@ def main():
     import os
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", required=True,
-                    choices=["off", "k4", "k6", "policy"])
+                    choices=["off", "k4", "k5", "k6", "policy"])
     a = ap.parse_args()
     from vllm import LLM, SamplingParams
     from transformers import AutoTokenizer
@@ -82,8 +86,8 @@ def main():
     spec = None
     if a.arm != "off":
         spec = {"method": "draft_model", "model": CKPT,
-                "num_speculative_tokens": {"k4": 4}.get(a.arm, 6),
-                "draft_tensor_parallel_size": 1}
+                "num_speculative_tokens": {"k4": 4, "k5": 5}.get(a.arm, 6),
+                "draft_tensor_parallel_size": TP}
         if a.arm == "policy":
             if os.environ.get("E2_POLICY"):
                 cells = json.loads(
@@ -100,15 +104,17 @@ def main():
                 spec["num_speculative_tokens_per_batch_size"] = sched
     import os
     longctx = bool(os.environ.get("E2_LONGCTX")) or \
-        bool(os.environ.get("E2_LONGMATH"))
-    llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
+        bool(os.environ.get("E2_LONGMATH")) or \
+        bool(os.environ.get("E2_TRACE32"))
+    llm = LLM(model=MODEL, speculative_config=spec,
+              tensor_parallel_size=TP,
               max_model_len=20480 if longctx else 12288,
               gpu_memory_utilization=0.90,
               max_num_seqs=32, enable_prefix_caching=False,
               disable_log_stats=False,
               async_scheduling=True,
               max_num_batched_tokens=8192)
-    tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
+    tok = AutoTokenizer.from_pretrained(MODEL)
     aime = load_aime()
     docs = load_docs(tok, n=16, target_tok=14000) if longctx \
         else load_docs(tok)
@@ -149,6 +155,19 @@ def main():
                  + [("S2_b8_rag14k", rags[4:12], spL)]
                  + [("S3_b16_rag14k", rags[:16], spL)]
                  + [("S4_b32_aime2k", aime[8:40], sp512)])
+    if os.environ.get("E2_TRACE32"):
+        # 32B runtime trace (map-predicted +10.4% mix): deep-K RAG
+        # interactive + RAG serving + short-math burst (the OFF cell).
+        spL = SamplingParams(max_tokens=1024, ignore_eos=True,
+                             temperature=0)
+        def rag32(i):
+            return (docs[i].rsplit("\n\n", 1)[0]
+                    + "\n\nNow solve this competition math problem step "
+                    "by step.\n\n" + aime[i % 8])
+        rags = [rag32(i) for i in range(8)]
+        trace = ([("T1_b1_rag14k", [rags[i]], spL) for i in range(4)]
+                 + [("T2_b8_rag14k", rags[:8], sp512)]
+                 + [("T3_b16_aime2k", aime[8:24], sp512)])
     if os.environ.get("E2_PHASES"):
         keep = os.environ["E2_PHASES"].split(",")
         trace = [t for t in trace if any(t[0].startswith(k) for k in keep)]

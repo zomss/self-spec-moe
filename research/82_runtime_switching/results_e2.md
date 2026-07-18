@@ -498,3 +498,36 @@ pooled accept EMA is K-flavored (f_K6 < f_K4 from marginal positions --
 C4: .737 vs .886); estimating S_K6 with a K4-running EMA overestimates
 it. A per-position accept-decay model would sharpen cross-K estimates;
 in practice the argmax chose correctly at every measured cell.
+
+## 32B runtime trace (2026-07-19): prediction falsified, scoping law confirmed
+
+Full pipeline on the 32B deployment path (TP2, wholechain stack):
+compile (off/k4/k5, 8 feasible cells) -> policy_table_32b.json -> trace
+(T1 b1 x rag14k, T2 b8 x rag14k, T3 b16 x aime2k).
+
+Compiled column vs the harness h2h: **cross-stack transfer INVALID** --
+b1/14k prices at S ~0.98-0.99 on the serving driver (TP2, wall) where
+the harness's decode-only fixed-chain cell said 1.63x; only b8/14k
+(K5 1.221) and b16/8k (1.086) are genuine wins. The +10.4% predicted
+gap rested on exactly those transfer cells; the deployment compile
+refuted them before the trace even ran.
+
+| arm | T1 | T2 | T3 | aggregate |
+|---|---|---|---|---|
+| off | 64.9 | 236.1 | **1097.3** | 186.4 |
+| k4 | **68.6** | 254.0 | 947.1 | **193.9** (+4.0%) |
+| k5 | 67.1 | **259.9** | 973.3 | 192.3 |
+| policy | 68.3 | 228.4 | 1051.4 | 191.2 |
+
+- Oracle composite 197.6 = **+1.9% over the best static**: the
+  intra-column scoping law holds at 32B too (ceiling a few %, at both
+  scales). The prediction script's transfer rows were the weak link --
+  measure-on-deployment caught it, again.
+- Policy regret -1.4% vs k4-static; T1/T3 tracked (68.3 / 1051 with
+  OFF-at-burst mostly right); T2 shows a residual policy-engine
+  execution deficit (228 vs 260 at the SAME K5 lever) -- the same
+  class as earlier policy-arm taxes; unresolved, flagged.
+- VERDICT: the optional 32B runtime demo does not strengthen the
+  switching claim; it strengthens the SCOPING LAW and the
+  measure-on-deployment argument. The paper's effectiveness claim
+  stays with cross-column selection (+39.1% fleet).
