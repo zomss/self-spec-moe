@@ -406,3 +406,32 @@ still reads something stale (accept 2.09) -- one more per-propose
 tensor is reallocated under that config. Wholechain is deployed ONLY at
 the verified mnb=8192 config; 16384-class configs keep the per-step
 chain until the input is found.
+
+## Whole-chain validation (all traces, 2026-07-19)
+
+Second stale input found by the trace validation itself: POSITIONS
+(some step-0 branches -- b32/short-ctx, large-mnb builds -- produce a
+per-propose tensor; the captured first position-update read its baked
+address -> the b32-phase accept collapse 4.6->2.09). Mirrored like
+seq_lens/block_table; collapse gone (P3 accept 4.64).
+
+Full matrix on the wholechain stack (9 runs, OFF carried):
+
+| trace | OFF | k4 | k6 | policy |
+|---|---|---|---|---|
+| E2 | **954.2** | 931.6 | 917.2 | 950.4 (-0.4%) |
+| E2c | 585.7 | 683.3 | **694.9** | 688.5 (-0.9%) |
+| E2b | 770.3 | 806.1 | 769.5 | **817.0 (wins)** |
+
+- No accept collapse anywhere; dynamic-K (per-(bs,K) graphs) exercised
+  live by the policy arm.
+- The robustness claim survives the stack change: each trace has a
+  different winner (OFF / k6 / policy); the policy is best-or-within-1%
+  on all three and beats both spec statics on E2 and E2b.
+- FOLLOW-UPS recorded: (a) recompile the policy table ON the wholechain
+  stack (the compiled R's are per-step-stack values; the b32 knife-edge
+  arming costs 6-8% at burst phases and should resolve with fresh R's)
+  -- the compile-on-deployment discipline applied to its own stack
+  change; (b) recheck mnb=16384 with the positions mirror (same
+  signature as the cured b32 collapse -- likely the same root, which
+  would upgrade wholechain to config-immune).

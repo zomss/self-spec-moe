@@ -1510,6 +1510,24 @@ class SpecDecodeBaseProposer:
             common_attn_metadata.seq_lens = _wc_mir["sl"][:batch_size]
             common_attn_metadata._seq_lens_cpu = None
             common_attn_metadata._num_computed_tokens_cpu = None
+            # positions too: some step-0 branches produce a per-propose
+            # tensor (b32/short-ctx and large-mnb builds) -- the captured
+            # first position-update reads its baked address (was the
+            # residual accept collapse at those geometries).
+            if "pos" not in _wc_mir:
+                _wc_mir["pos"] = torch.zeros(
+                    self.max_batch_size,
+                    dtype=positions.dtype,
+                    device=self.device,
+                )
+                self._wc_graphs.clear()
+            _wc_mir["pos"][:batch_size].copy_(
+                positions[:batch_size]
+                if positions.dim() == 1
+                else positions[0, :batch_size]
+            )
+            if positions.dim() == 1:
+                positions = _wc_mir["pos"][:batch_size]
         if _wc_capture:
             torch.cuda.synchronize()
             _wc_graph_obj = torch.cuda.CUDAGraph()
