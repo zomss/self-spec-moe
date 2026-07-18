@@ -88,7 +88,7 @@ def main():
             if os.environ.get("E2_POLICY"):
                 cells = json.loads(
                     Path(os.environ["E2_POLICY"]).read_text())["cells"]
-                kmax = max((int(c["K"]) for c in cells), default=0)
+                kmax = max((int(o["K"]) for c in cells for o in c.get("options", [])), default=0)
                 spec["num_speculative_tokens"] = max(kmax, 1)
             else:
                 sched = SCHEDULE

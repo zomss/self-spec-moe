@@ -1161,19 +1161,47 @@ class Scheduler(SchedulerInterface):
                     self._sd_policy_pending = None
                     if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                         logger.info(
-                            "[policy] cell -> b%s/ctx%s K=%s thr=%s "
+                            "[policy] cell -> b%s/ctx%s opts=%s "
                             "(n_load=%d mean_ctx=%.0f)",
-                            cell["batch"], cell["ctx"], cell["K"],
-                            cell["accept_off_thresh"], n_load, mean_ctx,
+                            cell["batch"], cell["ctx"],
+                            [(o["K"], o["R"]) for o in
+                             cell.get("options", [])],
+                            n_load, mean_ctx,
                         )
             else:
                 self._sd_policy_pending = key
                 self._sd_policy_dwell = 1
             active = self._sd_policy_cell
-            num_spec_tokens_to_schedule = min(
-                int(active["K"]), self.num_spec_tokens
+            # v2: online K selection. tau = 1 + f*K identically (f = live
+            # accepted/drafted EMA), so expected speedup per option is
+            # S_K(f) = (1 + f*K)/(K*R_K + 1) with the cell's measured R.
+            # argmax over {0} + options; 2% switch penalty (hysteresis);
+            # probe bursts keep the signal alive when parked at K=0.
+            probing = (
+                self._sd_gate_step % self._sd_probe_interval
+                < self._sd_probe_burst
             )
-            self._sd_cell_thresh = active.get("accept_off_thresh")
+            self._sd_gate_step += 1
+            f_live = self._sd_accept_ema
+            cur_k = getattr(self, "_sd_policy_k", 0)
+            # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
+            # score is always 1.0 -- staying ON requires S >= 1.0, and
+            # only ARMING (or switching K) pays the 2% margin.
+            best_k, best_s = 0, 1.0
+            nz_best_k, nz_best_s = 0, 0.0
+            for o in active.get("options", []):
+                k_o, r_o = int(o["K"]), float(o["R"])
+                s_o = (1 + f_live * k_o) / (k_o * r_o + 1)
+                if s_o > nz_best_s:
+                    nz_best_k, nz_best_s = k_o, s_o
+                if k_o != cur_k:
+                    s_o -= 0.02
+                if s_o > best_s:
+                    best_k, best_s = k_o, s_o
+            if best_k == 0 and probing and nz_best_k:
+                best_k = nz_best_k
+            self._sd_policy_k = best_k
+            num_spec_tokens_to_schedule = min(best_k, self.num_spec_tokens)
         if (
             self._sd_policy is None
             and self._sd_shortctx_off is not None
@@ -1227,7 +1255,8 @@ class Scheduler(SchedulerInterface):
                 self._sd_gate_step % self._sd_probe_interval
                 < self._sd_probe_burst
             )
-            self._sd_gate_step += 1
+            if self._sd_policy is None:
+                self._sd_gate_step += 1
             # Pool the per-request EMAs of the RUNNING requests (finished
             # requests take their history with them; unseen requests are
             # optimistic 1.0). Prune departed ids to bound the dict.
@@ -1269,7 +1298,13 @@ class Scheduler(SchedulerInterface):
                     self._sd_accept_ema,
                     "ON->OFF" if self._sd_gated_off else "OFF->ON",
                 )
-            if self._sd_gated_off and not probing:
+            if (
+                self._sd_gated_off
+                and not probing
+                and self._sd_policy is None
+            ):
+                # Threshold veto only in hand-rule mode; under a compiled
+                # policy the argmax above already chose K.
                 num_spec_tokens_to_schedule = 0
 
         scheduler_output = SchedulerOutput(

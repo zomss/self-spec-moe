@@ -839,7 +839,10 @@ class GPUModelRunner(
             with open(envs.VLLM_SELF_SPEC_POLICY_FILE) as _f:
                 _cells = _json.load(_f)["cells"]
             _uniform_lens |= {1} | {
-                1 + int(c["K"]) for c in _cells if int(c["K"]) > 0
+                1 + int(o["K"])
+                for c in _cells
+                for o in c.get("options", [])
+                if int(o["K"]) > 0
             }
         self.uniform_decode_query_lens = sorted(_uniform_lens)
         self.uniform_decode_query_len = self.uniform_decode_query_lens[-1]

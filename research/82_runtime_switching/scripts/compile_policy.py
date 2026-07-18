@@ -120,28 +120,12 @@ def measure(arm):
     print("appended ->", out)
 
 
-def tau(frac, k):
-    if frac >= 1.0:
-        return k + 1
-    return (1 - frac ** (k + 1)) / (1 - frac)
-
-
-def breakeven_frac(k, r):
-    """Smallest acceptance fraction where tau(f,K) = K*R + 1."""
-    target = k * r + 1
-    if target >= k + 1:
-        return 1.01  # unwinnable at any acceptance
-    lo, hi = 0.0, 1.0
-    for _ in range(50):
-        mid = (lo + hi) / 2
-        if tau(mid, k) < target:
-            lo = mid
-        else:
-            hi = mid
-    return round(hi, 3)
-
-
 def solve():
+    """v2: emit per-cell (K, R) OPTIONS. The scheduler picks K online by
+    argmax S_K(f) = (1 + f*K)/(K*R_K + 1) with f = live accept-fraction
+    EMA (identity: tau = 1 + f*K, so this is exact, unit-consistent, and
+    content enters ONLY through the live signal -- R is a pure time
+    ratio measured here). K=0 (S=1) is always an option."""
     cells = {}
     for row in csv.DictReader((DATA / "policy_cells.csv").open()):
         key = (int(row["batch"]), int(row["ctx"]))
@@ -151,20 +135,20 @@ def solve():
         if "off" not in arms:
             continue
         base = float(arms["off"]["decode_toks"])
-        best = dict(K=0, S=1.0, R=None, thresh=None)
+        options = []
         for arm, row in arms.items():
             k = int(row["K"])
             if k == 0:
                 continue
             s_dec = float(row["decode_toks"]) / base
             t_meas = float(row["accept"])
-            r = (t_meas / s_dec - 1) / k if s_dec > 0 else 99.0
-            if s_dec > best["S"] * (1 + ARMING_RENT):
-                best = dict(K=k, S=round(s_dec, 3), R=round(r, 3),
-                            thresh=breakeven_frac(k, r))
-        entry = dict(batch=b, ctx=ctx, K=best["K"],
-                     S_dec=best["S"], R=best["R"],
-                     accept_off_thresh=best["thresh"])
+            if s_dec <= 0 or t_meas <= 1:
+                continue
+            r = (t_meas / s_dec - 1) / k
+            options.append(dict(K=k, R=round(r, 3),
+                                S_ref=round(s_dec, 3),
+                                f_ref=round((t_meas - 1) / k, 3)))
+        entry = dict(batch=b, ctx=ctx, options=options)
         table.append(entry)
         print("[solve]", json.dumps(entry), flush=True)
     out = DATA / "policy_table.json"

@@ -234,3 +234,52 @@ Interim E2b (14k multi-doc summarize, 512-tok outputs) stays on record
 as the honest third case: content accept collapse (2.81) + prefill-
 dominated wall time make even long-ctx cells OFF -- the policy's map
 priors mistransferred there, corrected by the same measurement loop.
+
+## Fundamental-fix round (2026-07-18 late): gap analysis + compiled policy
+
+**Gap between search and real trace — three mechanisms, all measured:**
+1. **Draft-prefill tax (G-A)**: propose forwarded EVERY prefill token
+   through the draft (2x prefill wall time; invisible to decode-only
+   search). FIX (engine): scheduler-side skip of drafting on
+   prefill-carrying steps (async-contract-safe). Validated: prefill
+   6.95s -> 3.40s (= AR), accept intact (4.31) -- drafting works
+   without draft prefill (shared-KV carries it). Wall -36% at b8/14k.
+2. **Async-pipeline stall keyed by max_num_batched_tokens (G-B)**:
+   chain 513 vs 1077 tok/s at mnb 16384 vs 8192; equalized under
+   profiler syncs (=> pipeline stall, not compute); compile-ranges and
+   capture-ceiling hypotheses falsified by direct test. Deployment
+   prices it (mnb=8192); stream-level root cause = open item.
+3. **Content accept (G-C)**: handled online -- see the compiled gate.
+
+**The compiled policy (no hand constants):** compile_policy.py measures
+(b, ctx) cells ON the deployment path (decode-only via T(1+N)-T(1), one
+engine per K arm), emits per-cell (K, R) OPTIONS. The scheduler picks K
+per step by argmax S_K(f) = (1 + f*K)/(K*R_K + 1) with f = live pooled
+accept-fraction EMA (identity tau = 1 + f*K: unit-consistent -- an
+earlier geometric-space threshold was a measured bug). Asymmetric
+hysteresis: disarming free (E0), arming pays 2%. Multi-width full-CG
+capture (widths {1, K+1...}) removes the dynamic-SD piecewise downgrade
+and the padded-verify tax; K4<->K6<->OFF switching ran full-graph.
+
+**Validation (all arms on the FIXED stack -- the engine fixes lifted
+every arm 10-30% over the previous rounds):**
+
+| trace | OFF | k4 | k6 | policy (compiled) |
+|---|---|---|---|---|
+| E2 mixed | 954.2 | **1010.7** | 967.8 | 980.3 |
+| E2c RAG-math | 585.7 | 701.5 | **717.6** | 713.9 (-0.5%) |
+| E2b doc-summarize | 770.3 | 824.8 | 800.2 | **847.1 (wins +2.7%)** |
+
+- Each static wins exactly one trace; the compiled policy wins E2b,
+  ties E2c (-0.5%), and is -3% on E2 -- best cross-trace sum, without
+  knowing the workload, with zero hand-tuned constants.
+- The compiler's cell predictions verified: K6 cells predicted
+  1.26x/1.32x, statics measured 1.29x/1.36x.
+- K6 RE-ENTERED via measurement on the fixed stack (its earlier
+  falsification was stack-specific) -- the per-deployment compile loop
+  is what catches such reversals.
+- b1 content blindness fixed by the R-unit gate (E2b Q1 self-gates OFF
+  at doc accept .69 < R .737; E2 P1 self-arms on math).
+- Residual: ~3% at knife-edge burst cells (ramp/drain arming churn),
+  nearest-cell ctx transfer error at 6k (b8/8k cell applied) -- both
+  are refinement items (cell interpolation, ramp-aware arming).
