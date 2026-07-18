@@ -377,3 +377,32 @@ Resolution:
 - Net for the deployed stack: keep per-step FULL-CG chain (either mode;
   they tie), keep mnb=8192, keep skip-prefill. The draft-side KV story
   is complete: target-KV binding + scratchpad + skipped prefill.
+
+## Whole-chain single-graph capture (implemented, 2026-07-19)
+
+The K-1 chain steps captured as ONE CUDA graph (env
+VLLM_SELF_SPEC_DRAFT_WHOLECHAIN, requires the scratchpad chain +
+greedy). Implementation: the EXISTING loop recorded in place (ExitStack
+capture, no code duplication); persistent seed buffer for the step-0
+handoff; persistent MIRRORS for per-propose tensors (seq_lens /
+block_table -- the padded prepare path reallocates them, and the first
+version's accept collapse 4.54->2.13 was exactly stale-storage reads);
+graphs keyed by (batch, table width, K) for dynamic-SD; profiler syncs
+suppressed during capture; capture pass replayed immediately for real
+values.
+
+Measured at b8/14k (deployed config mnb=8192):
+- Chain segment HALVED: draft_chain 32.5 -> wc_replay 15.4 ms (sync).
+- **Determinism**: 3-boot A/B -- wholechain 837.3/835.8/838.1 tok/s,
+  accept 4.54/4.54/4.54; per-step 842.6/691.7/695.6, accept
+  4.54/4.17/4.31. The per-step chain's BOOT-LEVEL BIMODALITY (the async
+  stall) is eliminated: wholechain pins every boot at the good-state
+  rate. Median +20%.
+- The intra-graph token feed is CORRECT (Phase 69's inter-graph
+  collapse does not apply to a single capture).
+
+OPEN DEFECT (fail-closed): at mnb=16384 builds the captured chain
+still reads something stale (accept 2.09) -- one more per-propose
+tensor is reallocated under that config. Wholechain is deployed ONLY at
+the verified mnb=8192 config; 16384-class configs keep the per-step
+chain until the input is found.

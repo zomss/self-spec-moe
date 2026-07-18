@@ -384,6 +384,22 @@ class SpecDecodeBaseProposer:
         self._disable_sample_in_graph = bool(
             int(os.environ.get("W7_DISABLE_SAMPLE_IN_CG", "0"))
         )
+        # Phase 82: WHOLE-CHAIN capture -- the K-1 chain steps recorded as
+        # ONE CUDA graph (single launch per cycle; chain cost becomes
+        # immune to CPU dispatch speed). Requires the scratchpad chain
+        # (static metadata) + greedy. Captured lazily per batch size on
+        # the first eligible propose; the capture pass records (garbage
+        # values) and is immediately replayed for real values. The
+        # step-0 -> chain handoff goes through a persistent seed buffer
+        # so replay reads a stable address.
+        self._wholechain = (
+            envs.VLLM_SELF_SPEC_DRAFT_WHOLECHAIN
+            and envs.VLLM_SELF_SPEC_DRAFT_FULLCG
+            and self.method == "draft_model"
+        )
+        self._wc_graphs: dict[int, dict] = {}
+        self._wc_failed: set[int] = set()
+        self._wc_seed: torch.Tensor | None = None
         # Phase 69: the window-scratchpad chain uses the plain-forward FULL graph
         # + EAGER sample, not the combined forward+compute_logits+argmax (fws)
         # graph. The fws graph replayed K-1 times with the scratchpad collapses
@@ -1422,7 +1438,92 @@ class SpecDecodeBaseProposer:
         # Phase 65 (CHAIN_LIGHT_MD): per-group metadata built on the first
         # chain step, reused (data updated in place) by the later steps.
         chain_md_groups: list | None = None
-        for token_index in range(self.num_speculative_tokens - 1):
+        # Phase 82 whole-chain capture: arm when eligible. The seed buffer
+        # replaces the step-0 output in the list so the captured first
+        # step reads a persistent address; per-propose state (positions,
+        # seq_lens, window buffers) already lives in persistent buffers.
+        _wc_armed = (
+            self._wholechain
+            and self.num_speculative_tokens > 1
+            and sampling_metadata.all_greedy
+            and batch_size not in self._wc_failed
+            and batch_size_across_dp is None
+            and not self._ahead_chain
+            and self._shadow_chain_steps == 0
+        )
+        self._wc_dbg_n = getattr(self, "_wc_dbg_n", 0) + 1
+        if False:
+            logger.info(
+                "[wc-dbg] armed=%s K=%d greedy=%s failed=%s dp=%s ahead=%s "
+                "shadow=%d rej=%s",
+                _wc_armed, self.num_speculative_tokens,
+                sampling_metadata.all_greedy, batch_size in self._wc_failed,
+                batch_size_across_dp is None, self._ahead_chain,
+                self._shadow_chain_steps, num_rejected_tokens_gpu is not None,
+            )
+        _wc_ncols = common_attn_metadata.block_table_tensor.shape[1]
+        # K is baked into the captured loop (dynamic-SD switches it per
+        # propose) -- key graphs by (batch, table width, K).
+        _wc_key = (batch_size, _wc_ncols, self.num_speculative_tokens)
+        _wc = self._wc_graphs.get(_wc_key) if _wc_armed else None
+        _wc_capture = _wc_armed and _wc is None
+        _wc_stack = _contextlib.ExitStack()
+        if _wc_armed:
+            if self._wc_seed is None:
+                self._wc_seed = torch.zeros(
+                    self.max_batch_size,
+                    dtype=draft_token_ids_list[-1].dtype,
+                    device=self.device,
+                )
+            self._wc_seed[:batch_size].copy_(
+                draft_token_ids_list[-1][:batch_size]
+            )
+            draft_token_ids_list[-1] = self._wc_seed[:batch_size]
+            # Persistent MIRRORS for per-propose tensors the captured
+            # kernels read (the padded prepare path allocates seq_lens /
+            # block_table fresh each propose; a captured graph would read
+            # the capture-time tensor's dead storage). The chain's
+            # in-place updates (seq_lens growth, slot advance) land on
+            # the mirrors and are re-seeded here every propose.
+            _wc_mir = getattr(self, "_wc_mirrors", None)
+            if _wc_mir is None or _wc_mir["bt"].shape[1] != _wc_ncols:
+                self._wc_mirrors = _wc_mir = dict(
+                    bt=torch.zeros(
+                        (self.max_batch_size, _wc_ncols),
+                        dtype=common_attn_metadata.block_table_tensor.dtype,
+                        device=self.device,
+                    ),
+                    sl=torch.zeros(
+                        self.max_batch_size,
+                        dtype=common_attn_metadata.seq_lens.dtype,
+                        device=self.device,
+                    ),
+                )
+                self._wc_graphs.clear()
+            _wc_mir["bt"][:batch_size].copy_(
+                common_attn_metadata.block_table_tensor[:batch_size]
+            )
+            _wc_mir["sl"][:batch_size].copy_(
+                common_attn_metadata.seq_lens[:batch_size]
+            )
+            common_attn_metadata.block_table_tensor = _wc_mir["bt"][:batch_size]
+            common_attn_metadata.seq_lens = _wc_mir["sl"][:batch_size]
+            common_attn_metadata._seq_lens_cpu = None
+            common_attn_metadata._num_computed_tokens_cpu = None
+        if _wc_capture:
+            torch.cuda.synchronize()
+            _wc_graph_obj = torch.cuda.CUDAGraph()
+            cudagraph_runtime_mode = CUDAGraphMode.NONE
+            # Profiler regions CUDA-sync -- illegal inside stream capture.
+            _wc_prof = _self_spec_profiler()
+            _wc_prof_saved = _wc_prof.enabled
+            _wc_prof.enabled = False
+            _wc_stack.enter_context(torch.cuda.graph(_wc_graph_obj))
+        for token_index in (
+            range(self.num_speculative_tokens - 1)
+            if _wc is None
+            else range(0)
+        ):
             # Update the inputs.
             # cast to int32 is crucial when eagle model is compiled.
             # tensor.argmax() returns int64 by default.
@@ -1647,6 +1748,33 @@ class SpecDecodeBaseProposer:
                 assert draft_probs_list is not None
                 draft_probs_list.append(draft_probs)
             draft_token_ids_list.append(draft_token_ids)
+
+        # Phase 82 whole-chain: end capture (stash graph + output refs,
+        # then replay once for real values -- the capture pass only
+        # records), or replay an existing graph.
+        if _wc_capture:
+            _wc_stack.close()
+            _wc_prof.enabled = _wc_prof_saved
+            entry = dict(
+                graph=_wc_graph_obj,
+                outs=list(draft_token_ids_list[1:]),
+                hidden=hidden_states,
+                last_hidden=last_hidden_states,
+            )
+            self._wc_graphs[_wc_key] = entry
+            _wc_graph_obj.replay()
+            logger.info(
+                "Whole-chain graph captured (bs=%d, %d steps).",
+                batch_size,
+                self.num_speculative_tokens - 1,
+            )
+        elif _wc is not None:
+            with _self_spec_profiler().region("wc_replay"):
+                _wc["graph"].replay()
+            draft_token_ids_list.extend(_wc["outs"])
+            hidden_states = _wc["hidden"]
+            last_hidden_states = _wc["last_hidden"]
+            draft_token_ids = _wc["outs"][-1]
 
         # OV0b: cache the chain's dispatch state so the next verify's shadow
         # replay can re-launch an identical decode-step forward on the side

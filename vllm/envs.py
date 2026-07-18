@@ -266,6 +266,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_ACCEPT_THRESH_LONG: str = ""
     VLLM_SELF_SPEC_POLICY_FILE: str = ""
     VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT: bool = False
+    VLLM_SELF_SPEC_DRAFT_WHOLECHAIN: bool = False
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
@@ -1943,6 +1944,12 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # one AR step after each prefill (drafting resumes next step).
     "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT": lambda: os.getenv(
         "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT", "0") == "1",
+    # Phase 82: capture the K-1 draft chain steps as ONE CUDA graph
+    # (single launch per spec cycle -- removes per-step CPU dispatch from
+    # the chain's critical path). Requires the scratchpad chain
+    # (VLLM_SELF_SPEC_DRAFT_FULLCG) and greedy sampling.
+    "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": lambda: os.getenv(
+        "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN", "0") == "1",
     # Phase 82 F4: path to a COMPILED policy table (compile_policy.py
     # --solve): per-(batch, ctx) cells of {K, accept_off_thresh} measured
     # on the deployment path. Replaces the hand-rule envs (schedule /
