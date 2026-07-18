@@ -142,16 +142,43 @@ P2 683.4 / P3 4146.8 -> rent is 0.9-2.9% per phase, NOT the gap.
    accept gate is structurally the wrong detector; the (b, ctx) MAP
    is the right one (the same b8 cell at 16k wins 1.81x). The ctx-cell
    rule catches it in 0 steps (veto log: n=8, ctx 4839 -> OFF).
-3. OPEN ANOMALY (flagged): P2 under either OFF mechanism inside the
-   full trace runs 555-580, while the forced-OFF diagnostic ran 683
-   and the nospec engine 690. Same suppression path (num_spec=0),
-   ~15% unexplained -- hypotheses: warm-state asymmetry after a
-   spec-active P1, or prefill-time variance. Needs per-step tracing.
+3. ANOMALY RESOLVED (bisection): P2 armed-OFF ran 579 vs 687. NOT
+   P1-history (reproduces P2-only), NOT the veto path (b_bound=1 veto
+   = 684.7 = latch 687.1). Cause: **boundary leak windows** -- the veto
+   keyed on RUNNING count, so (a) the chunked-prefill ramp (n climbing
+   2->8) ran spec cycles at 6k ctx, and (b) the first request finish
+   dropped n to 7, lifting the veto so the ENTIRE drain speculated at
+   shrinking batch and max context -- the most expensive place to leak
+   spec cycles. ~10-15 boundary steps cost ~1.1 s.
 
-Best policy aggregate 948.6 = -1.0% vs best-static (OFF 957.9), +1.7%
-over k4, +7.1% over k6, on a trace whose omniscient switching ceiling
-is +1.7%. Transition count 45 -> 2. The demo's residual gap is fully
-attributed except item 3.
+**Boundary fix (two scheduling laws):** key the veto on OFFERED LOAD
+(running + waiting -- the scheduler knows the queued batch at step 1;
+waiting requests contribute prompt length as ctx), and make release
+STICKY (a vetoed phase drains autoregressively; release only when load
+halves).
+
+## FINAL RESULT — the demo gate PASSES
+
+| arm | P1 b1 math | P2 b8 docs | P3 b32 | aggregate |
+|---|---|---|---|---|
+| OFF | 149.9 | **689.9** | **4180.1** | 957.9 |
+| k4 static | **173.1** | 516.6 | 3728.8 | 932.8 |
+| k6 static | 168.1 | 475.6 | 3539.5 | 886.1 |
+| **policy final** | 162.5 (-6.1%) | 670.5 (-2.8%) | 4052.2 (-3.1%) | **990.1** |
+
+- Policy beats EVERY static: **+3.4% over OFF**, +6.1% over k4,
+  +11.7% over k6. (Correction of an earlier arithmetic slip: the
+  omniscient per-regime composite is 1038.7 = +8.4% over OFF, not
+  +1.7%; the policy captures ~95% of it.)
+- Veto log: engage at load 8 mid-prefill (ctx 3756), sticky through
+  the drain (release at load 2), P3 engage at load 31/ctx 628, step 1.
+- Residual gaps: P1 -6.1% (the padded-verify tax of a K6-sized engine
+  running K4 -- the measured price of K-flexibility; misses the 5%
+  per-regime bound, the one remaining blemish), P2/P3 ~-3% (arming
+  rent + released-tail spec on the last 2 requests).
+- README stretch target (>=1.10x over best static) not met on this
+  OFF-heavy trace (ceiling was +8.4%); aggregate-beats-every-static
+  and the mechanism goals are met.
 
 ## Next (per DIRECTION): the RL-rollout trace is the natural win stage
 -- content drift over training is the star axis there, and rollout

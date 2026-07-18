@@ -1097,16 +1097,30 @@ class Scheduler(SchedulerInterface):
             and self.running
         ):
             ctx_thresh, b_bound = self._sd_shortctx_off
-            mean_ctx = sum(
-                r.num_computed_tokens for r in self.running
-            ) / n_run
-            veto = n_run >= b_bound and mean_ctx < ctx_thresh
-            if veto != getattr(self, "_sd_ctx_veto", False):
+            # Offered LOAD (running + waiting): the ramp while chunked
+            # prefill admits requests must not leak spec cycles -- the
+            # scheduler already knows the queued batch at step 1. Waiting
+            # requests contribute their prompt length as context.
+            n_load = n_run + len(self.waiting)
+            ctx_sum = sum(r.num_computed_tokens for r in self.running) + sum(
+                r.num_prompt_tokens for r in self.waiting
+            )
+            mean_ctx = ctx_sum / max(n_load, 1)
+            prev = getattr(self, "_sd_ctx_veto", False)
+            if prev:
+                # Sticky release: a vetoed phase DRAINS autoregressively.
+                # Speculating the tail (shrinking batch, max context) is
+                # the most expensive place to leak spec cycles -- release
+                # only when the offered load has halved.
+                veto = n_load >= max(1, b_bound // 2) and mean_ctx < ctx_thresh
+            else:
+                veto = n_load >= b_bound and mean_ctx < ctx_thresh
+            if veto != prev:
                 self._sd_ctx_veto = veto
                 if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                     logger.info(
-                        "[ctxveto] n_run=%d mean_ctx=%.0f -> %s",
-                        n_run, mean_ctx, "OFF" if veto else "on",
+                        "[ctxveto] n_load=%d mean_ctx=%.0f -> %s",
+                        n_load, mean_ctx, "OFF" if veto else "on",
                     )
             if veto:
                 num_spec_tokens_to_schedule = 0

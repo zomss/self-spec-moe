@@ -106,6 +106,10 @@ def main():
     trace = ([("P1_b1_aime", [aime[i]], sp) for i in range(8)]
              + [("P2_b8_docs", docs[:8], sp512)]
              + [("P3_b32_aime", aime[8:40], sp512)])
+    import os
+    if os.environ.get("E2_PHASES"):
+        keep = os.environ["E2_PHASES"].split(",")
+        trace = [t for t in trace if any(t[0].startswith(k) for k in keep)]
 
     per_phase = {}
     for name, prompts, sparams in trace:
