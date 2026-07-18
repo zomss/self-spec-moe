@@ -264,6 +264,8 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_GATE_DEBUG: bool = False
     VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH: int = 1
     VLLM_SELF_SPEC_ACCEPT_THRESH_LONG: str = ""
+    VLLM_SELF_SPEC_POLICY_FILE: str = ""
+    VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT: bool = False
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
@@ -1932,6 +1934,22 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # separate content regimes from noise -- follow the map prior (ON).
     "VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH": lambda: int(
         os.getenv("VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH", "1")
+    ),
+    # Phase 82 (gap G-A): skip the draft's propose on prefill chunks.
+    # The draft otherwise forwards EVERY prefill token (measured 2x
+    # prefill wall time); with shared-KV + window scratchpad the chain
+    # reads target KV, so that forward is pure waste (validated: requests
+    # whose prompts were never draft-prefilled draft correctly). Costs
+    # one AR step after each prefill (drafting resumes next step).
+    "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT": lambda: os.getenv(
+        "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT", "0") == "1",
+    # Phase 82 F4: path to a COMPILED policy table (compile_policy.py
+    # --solve): per-(batch, ctx) cells of {K, accept_off_thresh} measured
+    # on the deployment path. Replaces the hand-rule envs (schedule /
+    # SHORTCTX_OFF / THRESH_LONG); the accept gate's thresholds and the
+    # per-step K both come from the table.
+    "VLLM_SELF_SPEC_POLICY_FILE": lambda: os.getenv(
+        "VLLM_SELF_SPEC_POLICY_FILE", ""
     ),
     # Phase 82 E1: hysteresis upper bound -- once gated OFF, speculation
     # re-enables only when the probe EMA rises above this (defaults to the

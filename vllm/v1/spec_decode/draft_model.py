@@ -157,6 +157,8 @@ class DraftModelProposer(SpecDecodeBaseProposer):
 
         with set_model_tag("draft_model"), _maybe_uncompiled_draft(
             draft_vllm_config.compilation_config
+        ), self.draft_compile_ranges(
+            draft_vllm_config, self.speculative_config
         ), draft_partial_replica_build():
             model = get_model(
                 vllm_config=draft_vllm_config,

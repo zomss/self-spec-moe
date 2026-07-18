@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+import contextlib as _contextlib
 import copy
 import os
 from importlib.util import find_spec
@@ -3323,6 +3324,37 @@ class SpecDecodeBaseProposer:
 
         return base
 
+    @staticmethod
+    @_contextlib.contextmanager
+    def draft_compile_ranges(vllm_config, spec_cfg):
+        """Phase 82 (search-vs-trace gap G-B): the draft chain runs
+        decode-sized shapes, but the inherited single compile range
+        [1, max_num_batched_tokens] makes inductor tune those small
+        shapes over the whole prefill-sized dynamic range -- measured 2x
+        chain slowdown at endpoint 16384 vs 8192 (b8/14k: 513 vs 1077
+        tok/s). Insert an endpoint at the draft's decode bound FOR THE
+        DRAFT COMPILE ONLY (in place, restored after: the compilation
+        config carries shared registries that must not be forked)."""
+        cc = vllm_config.compilation_config
+        sched = vllm_config.scheduler_config
+        decode_bound = sched.max_num_seqs * (
+            spec_cfg.num_speculative_tokens + 2
+        )
+        old = cc.compile_ranges_endpoints
+        existing = old or [sched.max_num_batched_tokens]
+        if decode_bound >= min(existing):
+            yield
+            return
+        cc.compile_ranges_endpoints = sorted({decode_bound, *existing})
+        logger.info(
+            "Draft compile ranges split at decode bound %d (endpoints %s).",
+            decode_bound, cc.compile_ranges_endpoints,
+        )
+        try:
+            yield
+        finally:
+            cc.compile_ranges_endpoints = old
+
     def _get_model(self) -> nn.Module:
         """
         Default method to call get_model(). Can be overridden by subclasses which
@@ -3348,6 +3380,7 @@ class SpecDecodeBaseProposer:
         with (
             set_current_vllm_config(draft_vllm_config),
             set_model_tag("eagle_head"),
+            self.draft_compile_ranges(draft_vllm_config, self.speculative_config),
             draft_partial_replica_build(),
         ):
             model = get_model(

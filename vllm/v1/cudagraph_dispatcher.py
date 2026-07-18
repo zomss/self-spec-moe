@@ -35,6 +35,10 @@ class CudagraphDispatcher:
         self.vllm_config = vllm_config
         self.compilation_config = vllm_config.compilation_config
         self.uniform_decode_query_len = 1 + self.vllm_config.num_speculative_tokens
+        # Phase 82: dynamic-SD schedules verify at several widths ({1} for
+        # OFF steps, {K+1} per scheduled K). FULL keys are created per
+        # width; dispatch receives the step's actual width.
+        self.uniform_decode_query_lens: list[int] = [self.uniform_decode_query_len]
 
         # Dict to store valid cudagraph dispatching keys.
         self.cudagraph_keys: dict[CUDAGraphMode, set[BatchDescriptor]] = {
@@ -138,9 +142,10 @@ class CudagraphDispatcher:
         uniform_decode: bool,
         has_lora: bool,
         num_active_loras: int = 0,
+        query_len: int | None = None,
     ) -> BatchDescriptor:
         max_num_seqs = self.vllm_config.scheduler_config.max_num_seqs
-        uniform_decode_query_len = self.uniform_decode_query_len
+        uniform_decode_query_len = query_len or self.uniform_decode_query_len
         num_tokens_padded = self._bs_to_padded_graph_size[num_tokens]
 
         # Phase 55: the drafter's uniform query len (step-0 q=K+2) need not
@@ -193,8 +198,18 @@ class CudagraphDispatcher:
         self.cudagraph_keys[runtime_mode].add(batch_descriptor)
 
     def initialize_cudagraph_keys(
-        self, cudagraph_mode: CUDAGraphMode, uniform_decode_query_len: int = 1
+        self,
+        cudagraph_mode: CUDAGraphMode,
+        uniform_decode_query_len: int = 1,
+        uniform_decode_query_lens: list[int] | None = None,
     ):
+        if uniform_decode_query_lens:
+            self.uniform_decode_query_lens = sorted(uniform_decode_query_lens)
+            self.uniform_decode_query_len = self.uniform_decode_query_lens[-1]
+            uniform_decode_query_len = self.uniform_decode_query_len
+        else:
+            self.uniform_decode_query_lens = [uniform_decode_query_len]
+            self.uniform_decode_query_len = uniform_decode_query_len
         # This should be called only after attention backend is initialized. So we can
         # get the correct cudagraph mode after backend support is resolved.
         self.cudagraph_mode = cudagraph_mode
@@ -237,30 +252,33 @@ class CudagraphDispatcher:
             cudagraph_mode.decode_mode() == CUDAGraphMode.FULL
             and cudagraph_mode.separate_routine()
         ):
-            max_num_tokens = (
-                uniform_decode_query_len
-                * self.vllm_config.scheduler_config.max_num_seqs
-            )
             assert self.compilation_config.cudagraph_capture_sizes is not None, (
                 "Cudagraph capture sizes must be set when full mode is enabled."
             )
-            cudagraph_capture_sizes_for_decode = [
-                x
-                for x in self.compilation_config.cudagraph_capture_sizes
-                if x <= max_num_tokens and x >= uniform_decode_query_len
-            ]
-            for bs, num_active_loras in product(
-                cudagraph_capture_sizes_for_decode, lora_cases
-            ):
-                batch_desc = self._create_padded_batch_descriptor(
-                    bs, True, num_active_loras > 0, num_active_loras
+            # Phase 82: one FULL key family per uniform width. Distinct
+            # widths never collide: (num_tokens, num_reqs) differ.
+            for qlen in self.uniform_decode_query_lens:
+                max_num_tokens = (
+                    qlen * self.vllm_config.scheduler_config.max_num_seqs
                 )
-                # Phase 55: sizes with no uniform-divisible padding target
-                # lose the uniform claim; skip them (a non-uniform FULL key
-                # would wrongly match mixed batches).
-                if not batch_desc.uniform:
-                    continue
-                self.add_cudagraph_key(CUDAGraphMode.FULL, batch_desc)
+                cudagraph_capture_sizes_for_decode = [
+                    x
+                    for x in self.compilation_config.cudagraph_capture_sizes
+                    if x <= max_num_tokens and x >= qlen
+                ]
+                for bs, num_active_loras in product(
+                    cudagraph_capture_sizes_for_decode, lora_cases
+                ):
+                    batch_desc = self._create_padded_batch_descriptor(
+                        bs, True, num_active_loras > 0, num_active_loras,
+                        query_len=qlen,
+                    )
+                    # Phase 55: sizes with no uniform-divisible padding target
+                    # lose the uniform claim; skip them (a non-uniform FULL key
+                    # would wrongly match mixed batches).
+                    if not batch_desc.uniform:
+                        continue
+                    self.add_cudagraph_key(CUDAGraphMode.FULL, batch_desc)
 
         self.keys_initialized = True
 
@@ -272,6 +290,7 @@ class CudagraphDispatcher:
         num_active_loras: int = 0,
         valid_modes: AbstractSet[CUDAGraphMode] | None = None,
         invalid_modes: AbstractSet[CUDAGraphMode] | None = None,
+        uniform_query_len: int | None = None,
     ) -> tuple[CUDAGraphMode, BatchDescriptor]:
         """
         Given conditions(e.g.,batch descriptor and if using piecewise only),
@@ -333,7 +352,8 @@ class CudagraphDispatcher:
 
         normalized_uniform = uniform_decode and self.cudagraph_mode.separate_routine()
         batch_desc = self._create_padded_batch_descriptor(
-            num_tokens, normalized_uniform, has_lora, effective_num_active_loras
+            num_tokens, normalized_uniform, has_lora, effective_num_active_loras,
+            query_len=uniform_query_len,
         )
 
         if CUDAGraphMode.FULL in allowed_modes:

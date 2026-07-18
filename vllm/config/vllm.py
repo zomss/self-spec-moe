@@ -764,31 +764,20 @@ class VllmConfig:
         ):
             return
 
-        # Phase 82: a schedule whose nonzero Ks are all equal only ever
-        # verifies at widths {K+1, 1} -- both standard captured shapes
-        # (q=1 is the universal decode shape; q=K+1 is the static-K spec
-        # shape). Full cudagraphs are safe there; the blanket PIECEWISE
-        # downgrade costs a measured ~7-10% on every step.
-        nonzero_ks = {
+        # Phase 82: full cudagraphs are captured PER VERIFY WIDTH ({1} for
+        # OFF steps plus {K+1} per scheduled K) by the multi-width
+        # dispatcher -- no downgrade needed. The former blanket PIECEWISE
+        # override cost a measured 7-10% on every step.
+        ks = sorted({
             k for _, _, k in
             self.speculative_config.num_speculative_tokens_per_batch_size
-            if k > 0
-        }
-        if len(nonzero_ks) <= 1:
-            logger.info_once(
-                "Dynamic speculative decoding with a single spec width "
-                "(K set %s): keeping cudagraph_mode %s.",
-                str(sorted(nonzero_ks)),
-                self.compilation_config.cudagraph_mode.name,
-            )
-            return
-        logger.warning_once(
-            "Dynamic speculative decoding changes the target verification "
-            "length at runtime. Overriding cudagraph_mode from %s to "
-            "PIECEWISE for reliability.",
+        })
+        logger.info_once(
+            "Dynamic speculative decoding (K schedule %s): keeping "
+            "cudagraph_mode %s with per-width full-graph capture.",
+            str(ks),
             self.compilation_config.cudagraph_mode.name,
         )
-        self.compilation_config.cudagraph_mode = CUDAGraphMode.PIECEWISE
 
     def _post_init_kv_transfer_config(self) -> None:
         """Update KVTransferConfig based on top-level configs in VllmConfig.

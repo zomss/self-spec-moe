@@ -823,6 +823,26 @@ class GPUModelRunner(
             )
 
         self.uniform_decode_query_len = 1 + self.num_spec_tokens
+        # Phase 82: a dynamic-SD schedule verifies at several widths --
+        # {1} on OFF steps plus {K+1} for each scheduled K. Full-CG keys
+        # are captured per width so K-switching carries no piecewise tax.
+        _uniform_lens = {self.uniform_decode_query_len}
+        _sc = self.speculative_config
+        if _sc is not None and _sc.num_speculative_tokens_per_batch_size:
+            _uniform_lens = {1} | {
+                1 + k
+                for _, _, k in _sc.num_speculative_tokens_per_batch_size
+                if k > 0
+            }
+        if _sc is not None and envs.VLLM_SELF_SPEC_POLICY_FILE:
+            import json as _json
+            with open(envs.VLLM_SELF_SPEC_POLICY_FILE) as _f:
+                _cells = _json.load(_f)["cells"]
+            _uniform_lens |= {1} | {
+                1 + int(c["K"]) for c in _cells if int(c["K"]) > 0
+            }
+        self.uniform_decode_query_lens = sorted(_uniform_lens)
+        self.uniform_decode_query_len = self.uniform_decode_query_lens[-1]
 
         # Cudagraph dispatcher for runtime cudagraph dispatching.
         self.cudagraph_dispatcher = CudagraphDispatcher(self.vllm_config)
@@ -3820,22 +3840,25 @@ class GPUModelRunner(
     @staticmethod
     def _is_uniform_decode(
         max_num_scheduled_tokens: int,
-        uniform_decode_query_len: int,
+        uniform_decode_query_len: int | list[int],
         num_tokens: int,
         num_reqs: int,
         force_uniform_decode: bool | None = None,
     ) -> bool:
         """
         Checks if it's a decode batch with same amount scheduled tokens
-        across all requests.
+        across all requests. Any captured uniform width qualifies
+        (Phase 82: dynamic-SD engines carry several widths).
         """
-        return (
-            (
-                (max_num_scheduled_tokens == uniform_decode_query_len)
-                and (num_tokens == max_num_scheduled_tokens * num_reqs)
-            )
-            if force_uniform_decode is None
-            else force_uniform_decode
+        if force_uniform_decode is not None:
+            return force_uniform_decode
+        lens = (
+            uniform_decode_query_len
+            if isinstance(uniform_decode_query_len, list)
+            else [uniform_decode_query_len]
+        )
+        return (max_num_scheduled_tokens in lens) and (
+            num_tokens == max_num_scheduled_tokens * num_reqs
         )
 
     def _determine_batch_execution_and_padding(
@@ -3862,11 +3885,12 @@ class GPUModelRunner(
     ]:
         uniform_decode = self._is_uniform_decode(
             max_num_scheduled_tokens=max_num_scheduled_tokens,
-            uniform_decode_query_len=self.uniform_decode_query_len,
+            uniform_decode_query_len=self.uniform_decode_query_lens,
             num_tokens=num_tokens,
             num_reqs=num_reqs,
             force_uniform_decode=force_uniform_decode,
         )
+        uniform_query_len = max_num_scheduled_tokens if uniform_decode else None
         # Encoder-decoder models only support CG for decoder_step > 0 (no enc_output
         # is present). Also, chunked-prefill is disabled, so batch are uniform.
         has_encoder_output = (
@@ -3891,6 +3915,7 @@ class GPUModelRunner(
                 num_active_loras=num_active_loras,
                 valid_modes={CUDAGraphMode.NONE} if force_eager else valid_modes,
                 invalid_modes={CUDAGraphMode.FULL} if disable_full else None,
+                uniform_query_len=uniform_query_len,
             )
 
         cudagraph_mode, batch_descriptor = dispatch_cudagraph(
@@ -5856,6 +5881,7 @@ class GPUModelRunner(
         is_graph_capturing: bool = False,
         num_active_loras: int = 0,
         profile_seq_lens: int | None = None,
+        uniform_query_len: int | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Run a dummy forward pass to warm up/profile run or capture the
@@ -5915,7 +5941,11 @@ class GPUModelRunner(
         # When setting max_query_len = 1, we switch to and capture the optimized
         # routine of FA2 for pure decode, i.e., Flashdecode + an optimization
         # for GQA/MQA.
-        max_query_len = self.uniform_decode_query_len if uniform_decode else num_tokens
+        max_query_len = (
+            (uniform_query_len or self.uniform_decode_query_len)
+            if uniform_decode
+            else num_tokens
+        )
 
         # Set num_scheduled_tokens based on num_tokens and max_num_seqs
         # for dummy run with LoRA so that the num_reqs collectively
@@ -6905,6 +6935,13 @@ class GPUModelRunner(
         if num_warmups is None:
             num_warmups = self.compilation_config.cudagraph_num_of_warmups
         force_attention = cudagraph_runtime_mode == CUDAGraphMode.FULL
+        # Phase 82: the descriptor implies its uniform width; fabricate the
+        # dummy batch at that width (multi-width dynamic-SD capture).
+        desc_qlen = (
+            desc.num_tokens // desc.num_reqs
+            if desc.uniform and desc.num_reqs
+            else None
+        )
         for _ in range(num_warmups):
             self._dummy_run(
                 desc.num_tokens,
@@ -6916,6 +6953,7 @@ class GPUModelRunner(
                 remove_lora=False,
                 num_active_loras=desc.num_active_loras,
                 profile_seq_lens=profile_seq_lens,
+                uniform_query_len=desc_qlen,
             )
         self._dummy_run(
             desc.num_tokens,
@@ -6927,6 +6965,7 @@ class GPUModelRunner(
             num_active_loras=desc.num_active_loras,
             is_graph_capturing=True,
             profile_seq_lens=profile_seq_lens,
+            uniform_query_len=desc_qlen,
         )
 
     def _capture_cudagraphs(
@@ -7164,7 +7203,9 @@ class GPUModelRunner(
         # Trigger cudagraph dispatching keys initialization after
         # resolved cudagraph mode.
         self.cudagraph_dispatcher.initialize_cudagraph_keys(
-            cudagraph_mode, self.uniform_decode_query_len
+            cudagraph_mode,
+            self.uniform_decode_query_len,
+            uniform_decode_query_lens=self.uniform_decode_query_lens,
         )
 
         # Initialize drafter's cudagraph dispatcher if using spec decode.

@@ -248,6 +248,22 @@ class Scheduler(SchedulerInterface):
         if envs.VLLM_SELF_SPEC_ACCEPT_THRESH_LONG:
             c, t = envs.VLLM_SELF_SPEC_ACCEPT_THRESH_LONG.split(":")
             self._sd_thresh_long = (int(c), float(t))
+        # Phase 82 F4: compiled policy table -- per-(batch, ctx) cells of
+        # {K, accept_off_thresh} measured on THIS deployment path
+        # (compile_policy.py). Replaces the hand rules; nearest-cell
+        # lookup with a short debounce against boundary flapping.
+        self._sd_policy: list | None = None
+        self._sd_policy_cell: dict | None = None
+        self._sd_policy_pending = None
+        self._sd_policy_dwell = 0
+        if envs.VLLM_SELF_SPEC_POLICY_FILE:
+            import json as _json
+            with open(envs.VLLM_SELF_SPEC_POLICY_FILE) as f:
+                self._sd_policy = _json.load(f)["cells"]
+            logger.info(
+                "Compiled SD policy loaded: %d cells from %s",
+                len(self._sd_policy), envs.VLLM_SELF_SPEC_POLICY_FILE,
+            )
         self._sd_accept_ema = 1.0
         self._sd_req_ema: dict[str, float] = {}
         self._sd_gate_step = 0
@@ -1094,9 +1110,73 @@ class Scheduler(SchedulerInterface):
         # Short-ctx large-batch OFF (map: verify-width cost at low ctx):
         # mean effective context below the threshold at batch >= the
         # bound -> speculation off, regardless of the content gate.
-        n_run = max(len(self.running), 1)
+        # Phase 82 G-A: no drafting on steps that carry prefill tokens.
+        # The draft would forward every prompt token (measured 2x prefill
+        # wall time); on the shared-KV window stack that forward is pure
+        # waste (drafting works without it -- the chain reads target KV).
+        # Deciding HERE keeps the async placeholder contract consistent:
+        # no spec tokens scheduled -> no drafts promised -> the runner
+        # short-circuits the chain.
         if (
-            self._sd_shortctx_off is not None
+            envs.VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT
+            and num_spec_tokens_to_schedule > 0
+            and len(num_scheduled_tokens) > 0
+            and total_num_scheduled_tokens > len(num_scheduled_tokens)
+        ):
+            num_spec_tokens_to_schedule = 0
+        n_run = max(len(self.running), 1)
+        # Phase 82 F4: compiled-policy cell lookup -- K and the accept
+        # threshold come from the measured table (nearest cell in
+        # (log-batch, ctx), 3-step debounce against boundary flapping).
+        # Subsumes the hand rules (schedule / shortctx / thresh-long).
+        self._sd_cell_thresh = None
+        if (
+            self._sd_policy is not None
+            and num_spec_tokens_to_schedule > 0
+            and (self.running or self.waiting)
+        ):
+            import math
+            n_load = len(self.running) + len(self.waiting)
+            ctx_sum = sum(r.num_computed_tokens for r in self.running) + sum(
+                r.num_prompt_tokens for r in self.waiting
+            )
+            mean_ctx = ctx_sum / max(n_load, 1)
+            cell = min(
+                self._sd_policy,
+                key=lambda c: (
+                    abs(math.log2(max(c["batch"], 1))
+                        - math.log2(max(n_load, 1))),
+                    abs(c["ctx"] - mean_ctx),
+                ),
+            )
+            key = (cell["batch"], cell["ctx"])
+            cur = self._sd_policy_cell
+            if cur is None or key == (cur["batch"], cur["ctx"]):
+                self._sd_policy_cell = cell
+                self._sd_policy_pending = None
+            elif self._sd_policy_pending == key:
+                self._sd_policy_dwell += 1
+                if self._sd_policy_dwell >= 3:
+                    self._sd_policy_cell = cell
+                    self._sd_policy_pending = None
+                    if envs.VLLM_SELF_SPEC_GATE_DEBUG:
+                        logger.info(
+                            "[policy] cell -> b%s/ctx%s K=%s thr=%s "
+                            "(n_load=%d mean_ctx=%.0f)",
+                            cell["batch"], cell["ctx"], cell["K"],
+                            cell["accept_off_thresh"], n_load, mean_ctx,
+                        )
+            else:
+                self._sd_policy_pending = key
+                self._sd_policy_dwell = 1
+            active = self._sd_policy_cell
+            num_spec_tokens_to_schedule = min(
+                int(active["K"]), self.num_spec_tokens
+            )
+            self._sd_cell_thresh = active.get("accept_off_thresh")
+        if (
+            self._sd_policy is None
+            and self._sd_shortctx_off is not None
             and num_spec_tokens_to_schedule > 0
             and self.running
         ):
@@ -1162,7 +1242,11 @@ class Scheduler(SchedulerInterface):
             # context (window-draft R ~ 1/ctx) -- switch to the long-ctx
             # bound above the configured context.
             off_t, on_t = self._sd_accept_off_thresh, self._sd_accept_on_thresh
-            if self._sd_thresh_long is not None:
+            if getattr(self, "_sd_cell_thresh", None):
+                # Compiled per-cell break-even threshold.
+                off_t = float(self._sd_cell_thresh)
+                on_t = off_t + 0.02
+            elif self._sd_thresh_long is not None:
                 run_ctx = sum(
                     r.num_computed_tokens for r in self.running
                 ) / n_run
