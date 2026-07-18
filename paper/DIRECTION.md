@@ -81,9 +81,16 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
    2026-07-18 — Sec C's core (results_e0.md).
 2. Second-hardware R column (91-min protocol) — validates axis 2.
 3. RL-rollout-style trace eval (batch drain + on-policy text) — Sec D.
-4. Switching demo on a regime-shifting trace — Sec C's payoff
-   (E0 says: switch latency ~free -> the demo is detection+policy,
-   not switch-cost engineering).
+4. ~~Switching demo on a regime-shifting trace~~ RUN 2026-07-18
+   (82/results_e2.md): FAIL-HONEST on an OFF-heavy real-data trace --
+   omniscient switching ceiling was only +1.7% over static-OFF (the one
+   spec-favorable regime carried 9% of tokens), so no detector pays for
+   itself there; policy beat both spec statics and held 98.5% of AR in
+   OFF regimes while armed. The dwell-time law is now MEASURED: with
+   toggle cost ~0, detection is the binding constraint and the win
+   condition is spec-favorable regime VOLUME. Sec C presents the
+   machinery + the law; the RL trace (item 3) is the win stage
+   (content drift + long-decode batches).
 
 ## Two-paper fallback (recorded, not active)
 
