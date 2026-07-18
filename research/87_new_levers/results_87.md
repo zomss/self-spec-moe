@@ -8,7 +8,32 @@
 | w4a8 (int4-W + fp8-A) | **0.9470** | -0.005 vs W4-alone (.952): the CutlassW4A8 config is beta-viable |
 
 Regime: batch rows (compute-bound verify/high-M draft); b1 stays
-weight-only (measured at 32B). NEXT RUN: W4A8 ckpt + b8/b16 e2e arms.
+weight-only (measured at 32B).
+
+### W4A8 e2e (Qwen3-8B, 16k, win512+fixed chain; GPTQ ckpt, pack-quantized)
+
+Ckpt gotcha: llm-compressor saves W4A8 as int-quantized (plain int
+`weight`); vLLM's CT-W4A8 schemes load only pack-quantized
+(`weight_packed`) -> force `quantization_format="pack-quantized"` on save.
+
+| arm | b8 K4 (AR 620.6) | b16 K6 (AR 838.3) |
+|---|---|---|
+| w4win (W4A16 Marlin, ref) | 1124.7 = 1.81x (acc 4.51) | 1503.7 = 1.79x (acc 5.69) |
+| w4a8win / CutlassW4A8 | 993.0 = **1.60x** (acc 4.54) | 1489.0 = 1.78x (acc 5.94) |
+| w4a8win / HummingW4A8 | 1181.3 = **1.90x** (acc 4.58) | 1838.8 = **2.19x** (acc 6.02; repro 1808.1 = 2.16x) |
+
+- **W4A8-Humming is the new dense-batch winner** (b8 +0.09x, b16 +0.40x
+  over w4win) -- the priced batch flip confirmed e2e.
+- **Realization span 1.60x <-> 2.19x at identical beta** (same ckpt, two
+  W4A8 kernels): the strongest single instance of the realization-pricing
+  thesis yet. Kernel choice = the difference between losing and winning
+  the cell.
+- Accept HIGHER than w4win (6.02 vs 5.69 at K6): the e2e ckpt is
+  GPTQ-calibrated while the offline w4a8 gate (.947) used the RTN proxy;
+  the +~.02 beta matches the measured GPTQ calibration gain at 7B (+.019).
+- Cutlass was silently disabled by the harness's Marlin-forcing
+  VLLM_DISABLED_KERNELS default -> that accident surfaced Humming; both
+  kernels then measured deliberately.
 
 ## L1 Calibrated 2:4 pruning — calibration DOUBLES it; still dominated alone; combo marginal
 
@@ -46,6 +71,6 @@ Needle bank (fact at depth 2k, outside any window; Q3-8B, 12 prompts):
 
 | lever | status |
 |---|---|
-| activation quant (fp8-A; W4A8) | IN POOL; e2e next (kernel ready) |
+| activation quant (fp8-A; W4A8) | IN POOL; **e2e-confirmed dense-batch winner** (Humming realization: 1.90x b8 / 2.19x b16 vs w4win 1.81/1.79) |
 | SparseGPT 2:4 (+int4 combo) | alive-pending-realization (kernel absent) |
 | draft-only kvq pool | not selected (regime found but priced out); reference column upgraded with the retrieval row |

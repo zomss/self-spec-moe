@@ -63,8 +63,14 @@ want w4_b1_2k    && run w4s    spec   4 1 2048
 want w4win_b1_2k && run w4wins spec   4 1 2048 $WINENV $FIXENV
 want nospec_b1_2k && run nospecs nospec 0 1 2048
 # --- our regimes (no KnapSpec counterpart)
-want w4a8win_b8  && run w4a8win spec 4 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
-want w4a8win_b16 && run w4a8win spec 6 16 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
+# W4A8 arms: re-enable CutlassW4A8 (the default spec-env disable exists to
+# force Marlin on W4A16 arms; Humming-fallback b16 preserved as *_humming)
+W4A8ENV="W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq VLLM_DISABLED_KERNELS=MacheteLinearKernel,AllSparkLinearKernel"
+want w4a8win_b8  && run w4a8win spec 4 8 16384 $W4A8ENV $WINENV $FIXENV
+want w4a8win_b16 && run w4a8win spec 6 16 16384 $W4A8ENV $WINENV $FIXENV
+# Humming realization (default disable list keeps Cutlass off)
+want w4a8hwin_b8  && run w4a8hwin spec 4 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
+want w4a8hwin_b16 && run w4a8hwin spec 6 16 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
 want nospec_b8   && run nospec nospec 0 8 16384
 want w4win_b8    && run w4win  spec   4 8 16384 $WINENV $FIXENV
 want nospec_b32  && run nospec nospec 0 32 16384
