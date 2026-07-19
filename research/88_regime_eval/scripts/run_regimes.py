@@ -48,11 +48,15 @@ def main():
                 "model": os.path.expanduser(DRAFTS[ARM]),
                 "num_speculative_tokens": K,
                 "draft_tensor_parallel_size": 1}
+    extra = {}
+    if os.environ.get("R88_NO_AUTOTUNE"):
+        extra["kernel_config"] = {"enable_flashinfer_autotune": False}
     llm = LLM(model=MODEL, speculative_config=spec,
               tensor_parallel_size=1, max_model_len=20480,
               gpu_memory_utilization=0.90, max_num_seqs=32,
               enable_prefix_caching=False, disable_log_stats=False,
-              async_scheduling=True, max_num_batched_tokens=8192)
+              async_scheduling=True, max_num_batched_tokens=8192,
+              **extra)
     tok = AutoTokenizer.from_pretrained(MODEL)
 
     want = os.environ.get("R88_REGIMES")
