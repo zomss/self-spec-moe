@@ -247,7 +247,7 @@ Anchor accept 4.46 matches the harness arm's 4.535, validating shape.
 vs KnapSpec's published 1.43x at this cell: **~1.51x, +6%** -- the
 last unmatched h2h cell closes via kernel realization (the same
 Humming-vs-W4 lift the canonical sweep measured at every 32B b1
-cell). Direct harness-protocol confirmation arms running.
+cell). Direct harness-protocol confirmation DEFERRED: the 86 harness stack (no wholechain) wedged 0/3 on w4a8-b1 even on the quiet box -- goes with the library bug report; the anchored number stands (methodology above).
 
 Wedge-pattern refinement: K4 passed 1/3 on the quiet box (intermittent,
 not deterministic); K2 remains 0/6. Odd verify-widths (3, 5) wedge at
