@@ -20,11 +20,14 @@ from regime_datasets import REGIMES, load_regime  # noqa: E402
 
 PHASE = Path(__file__).resolve().parents[1]
 MODEL = os.environ.get("R88_MODEL", "Qwen/Qwen3-8B")
+TP = int(os.environ.get("R88_TP", "1"))
 ARM = os.environ.get("R88_ARM", "off")
 K = int(os.environ.get("R88_K", "6"))
 ITERS = int(os.environ.get("R88_ITERS", "3"))
-DRAFTS = {"w4win": "~/ckpts/Qwen3-8B-W4A16-INT4",
-          "w4a8": "~/ckpts/Qwen3-8B-W4A8-gptq"}
+DRAFTS = {"w4win": os.environ.get(
+              "R88_DRAFT_W4WIN", "~/ckpts/Qwen3-8B-W4A16-INT4"),
+          "w4a8": os.environ.get(
+              "R88_DRAFT_W4A8", "~/ckpts/Qwen3-8B-W4A8-gptq")}
 
 
 def spec_counters(llm):
@@ -47,12 +50,12 @@ def main():
         spec = {"method": "draft_model",
                 "model": os.path.expanduser(DRAFTS[ARM]),
                 "num_speculative_tokens": K,
-                "draft_tensor_parallel_size": 1}
+                "draft_tensor_parallel_size": TP}
     extra = {}
     if os.environ.get("R88_NO_AUTOTUNE"):
         extra["kernel_config"] = {"enable_flashinfer_autotune": False}
     llm = LLM(model=MODEL, speculative_config=spec,
-              tensor_parallel_size=1, max_model_len=20480,
+              tensor_parallel_size=TP, max_model_len=20480,
               gpu_memory_utilization=0.90, max_num_seqs=32,
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192,
