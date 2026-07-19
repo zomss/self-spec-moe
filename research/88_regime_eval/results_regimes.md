@@ -210,3 +210,19 @@ cache (wedges with VLLM_DISABLE_COMPILE_CACHE=1), NOT the build pool
   broken small-M path at TP2 half-width dims), not capture
   interaction. Hum-K2@TP2 recorded as blocked; upstream/library
   report is the fix path. W4A16-K2 (Marlin) unaffected.
+
+### Infra verdict (2026-07-20 02:43): BOX-STATE, not our stack
+
+Differential closed the case: the byte-identical 32B TP2 w4a8-K5 boot
+that succeeded at 19:26 hangs at 02:23 (8/8 night hangs across
+compiled/eager/piecewise x cache-on/off x autotune-on/off x
+parallel/sequential build). Hang site = cuModuleLoad-class driver
+calls inside TP workers; a standalone cuModuleLoad on the same cubin
+completes in 0.02s. Conclusion: driver/box-level resource held by
+co-tenant load after ~23:00 (GPUs 2-7 occupied by other users'
+engines); no code fix applies. The eager pre-warm patch (committed)
+is kept: it removes the in-capture first-use path (the K2 M=3 case)
+and surfaces the environmental hang at boot instead of mid-capture.
+- PARKED pending a quiet box: RKS w4a8 K4/K5 (the KnapSpec-parity
+  reprice) and the 32B R8/R4 Hum-K2 shallow cells.
+- Retry cmd: research/88_regime_eval/scripts/run_rks_hum.sh
