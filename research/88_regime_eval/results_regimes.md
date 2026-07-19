@@ -70,3 +70,63 @@ cells' depth trend (K6 << K4) motivates the K2/K3 shallow probes
   verify path; shallow K; accept-EMA policy would arm/disarm by
   request. EfficientRollout wins here with weight-quant self-spec at
   T=1.0 -- reproduce their operating point on OUR stack.
+
+## Step-1 dig RESULT (2026-07-19): 9/9 regimes beat AR
+
+The two gap regimes both CROSS with existing levers -- no new
+mechanism, just the K axis extended to shallow depths on the Humming
+kernel:
+
+| arm (R4 summarization) | tok/s | vs AR | accept |
+|---|---|---|---|
+| w4win K4 win512 (baseline loss) | 496.0 | 0.84x | 2.70 |
+| w4win K4 win2048 | 463.3 | 0.78x | 2.67 |
+| w4win K4 win8192 (full article) | 478.9 | 0.81x | **4.06** |
+| w4a8-Hum K4 win8192 | 537.1 | 0.91x | 4.21 |
+| w4win K2 win512 | 577.1 | 0.98x | 2.18 |
+| w4a8-Hum K3 win512 | 598.6 | **1.01x** | 2.53 |
+| **w4a8-Hum K2 win512** | **636.5** | **1.08x** | 2.18 |
+
+| arm (R8 RL rollout, T=1.0) | tok/s | vs AR | accept |
+|---|---|---|---|
+| w4win K4 (baseline loss) | 1716.7 | 0.83x | 3.92 |
+| w4a8-Hum K4 | 1894.5 | 0.92x | 3.80 |
+| w4a8-Hum K3 | 2015.1 | 0.97x | 3.28 |
+| **w4a8-Hum K2** | **2161.2** | **1.05x** | 2.64 |
+
+Mechanism findings:
+- ACCEPT IS FRONT-LOADED: per-position f falls fast with depth (R4:
+  f1-2=0.59 vs 0.43 avg at K4; R8-T1.0: f1-2=0.82 vs 0.70). Shallow
+  drafts harvest the good positions and skip the wasted ones -- the
+  low-accept regimes are DEPTH problems, not spec-loses problems.
+- WINDOW STEP-FUNCTION (R4): win2048 buys nothing (2.67 vs 2.70);
+  win8192 (whole article visible) jumps accept to 4.06. But the
+  full-window chain runs at R~1.0 (attention-bound; Humming GEMMs
+  recover only 0.81->0.91) -- full visibility is priced out on both
+  kernels. FUTURE HEADROOM: cheap long-ctx draft attention (kvq_fp8
+  draft ctx, retrieval beta .974 at 4x fewer bytes -- T5) would stack
+  the accept gain on the shallow-K win; the pool lever shelved
+  on-distribution earns its R4 slot here.
+- The compiled policy's option set must include K2/K3 (current tables
+  only price K4/K6) -- required for step-3 runtime adaptation to
+  reach these cells.
+
+## FINAL per-regime-best (8B column, all >= 1.0)
+
+| regime | best setting | speedup |
+|---|---|---|
+| R1 math CoT | W4A8-Hum K6 | 1.42x |
+| R2 conversation | W4A8-Hum K4 | 1.29x |
+| R3 code | W4A8-Hum K4 | 1.34x |
+| R4 summarization | W4A8-Hum K2 | **1.08x** (was 0.84 loss) |
+| R5 RAG QA | W4A8-Hum K4 | 1.42x |
+| R5cot RAG CoT | W4A8-Hum K6 | 1.76x |
+| R6 burst | W4A8-Hum K4 | 1.14x |
+| R7 translation | W4A8-Hum K4 | 1.14x |
+| R8 RL rollout T=1.0 | W4A8-Hum K2 | **1.05x** (was 0.83 loss) |
+
+"The framework finds at least one AR-beating setting" holds at 9/9
+canonical regimes; every winner is reachable from the existing lever
+axes (ckpt x kernel x window x K). One model column (Qwen3-8B), one
+GPU; the MoE/MLA columns keep their measured verdicts (win-K3 1.15x /
+OFF) from prior phases.
