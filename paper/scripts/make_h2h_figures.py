@@ -182,9 +182,56 @@ def fig_serving():
     plt.close(fig)
 
 
+# ---------------- fig E: runtime policy vs statics, three traces (T7) ----------------
+def fig_policy():
+    # aggregate tok/s, fixed-skip stack (82/results_e2.md, 2026-07-19)
+    traces = [
+        ("mixed\n(AIME+docs, b1/8/32)", {"OFF": 955.7, "K4": 976.6,
+                                         "K6": 914.0, "policy": 979.2}),
+        ("long-math RAG\n(rag14k b1/8/16 + aime b32)",
+         {"OFF": 584.4, "K4": 769.8, "K6": 753.5, "policy": 752.2}),
+        ("long-ctx docs\n(doc16k b1/8/16 + aime b32)",
+         {"OFF": 768.1, "K4": 799.5, "K6": 704.9, "policy": 817.8}),
+    ]
+    arms = ["OFF", "K4", "K6", "policy"]
+    cols = {"OFF": C["base"], "K4": "#7cc7f0", "K6": "#2a78d6",
+            "policy": "#0e7a54"}
+    fig, ax = plt.subplots(figsize=(8.2, 4.2), constrained_layout=True)
+    n = len(arms)
+    w = 0.8 / n
+    for j, arm in enumerate(arms):
+        xs = [i + (j - n / 2 + 0.5) * w for i in range(len(traces))]
+        vals = [t[1][arm] / t[1]["OFF"] for t in traces]
+        ax.bar(xs, vals, w * 0.9, color=cols[arm], edgecolor="white",
+               lw=0.5, label=arm if arm != "policy" else "policy (ours)")
+        for x, v in zip(xs, vals):
+            ax.text(x, v + 0.012, f"{v:.2f}", ha="center", fontsize=7.5,
+                    fontweight="bold" if arm == "policy" else "normal")
+    for i, (_, d) in enumerate(traces):
+        winner = max(d, key=d.get)
+        j = arms.index(winner)
+        ax.text(i + (j - n / 2 + 0.5) * w, d[winner] / d["OFF"] + 0.06,
+                "*", ha="center", fontsize=13, color=C["ink"])
+    ax.axhline(1.0, color=C["ink2"], lw=1, ls=":")
+    ax.set_xticks(range(len(traces)), [t[0] for t in traces], fontsize=8.5)
+    ax.set_ylabel("serving throughput vs OFF (AR) on trace")
+    ax.set_ylim(0, 1.55)
+    ax.legend(frameon=False, fontsize=8, ncol=4, loc="upper left")
+    ax.set_title("Runtime selection vs every static (DRAFT, fixed-skip "
+                 "stack) -- one policy config,\nthree different per-trace "
+                 "static winners; policy wins 2/3 outright, -2.3% on the "
+                 "third (* = winner)", loc="left", fontsize=9.5,
+                 fontweight="bold", color=C["ink"])
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    fig.savefig(OUT / "figE_policy.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_h2h()
     fig_regimes()
     fig_frontiers()
     fig_serving()
+    fig_policy()
     print("figures ->", OUT)

@@ -2,7 +2,8 @@
 
 > Every number is a committed measurement (phase artifact in research/).
 > 8-iteration e2e runs unless noted; beta at 1152 paired positions.
-> Figures: figures/figA_headtohead.png, figB_regimes.png, figC_frontiers.png.
+> Figures: figures/figA_headtohead.png, figB_regimes.png,
+> figC_frontiers.png, figD_serving.png, figE_policy.png.
 
 ## T1. Head-to-head vs KnapSpec (published) — all measured arms
 
@@ -139,10 +140,40 @@ target-KV binding, mnb=8192).
   (chain halved + boot-deterministic), async-scheduling force
   (draft_model silently disables it), mnb async-stall avoidance.
 
+## T7. Runtime policy vs statics — three serving traces (fixed-skip
+## stack, 2026-07-19)
+
+Compiled policy (measure-on-deployment cells -> per-step scheduler
+argmax w/ hysteresis + per-request accept EMA) vs every static arm,
+full serving driver, Qwen3-8B. Aggregate tok/s per trace
+(82/results_e2.md, valfx_*.json):
+
+| trace (regime mix) | OFF | K4 | K6 | policy |
+|---|---|---|---|---|
+| mixed (b1 AIME / b8 docs / b32 AIME) | 955.7 | 976.6 | 914.0 | **979.2 (wins)** |
+| long-math RAG (b1/8/16 rag14k + b32 aime) | 584.4 | **769.8** | 753.5 | 752.2 (−2.3%) |
+| long-ctx docs (b1/8/16 doc16k + b32 aime) | 768.1 | 799.5 | 704.9 | **817.8 (wins)** |
+
+- One policy config vs three DIFFERENT per-trace static winners (K4
+  wins long-math, OFF near-wins mixed, no static wins long-ctx): the
+  policy wins 2 of 3 outright, −2.3% on the third. Claim = regret
+  bound (1–3% of per-trace oracle) + occasional outright wins.
+- Compiled cells (fixed skip) span 1.59x (b16/14k K4) to 0.83x
+  (b16/2k): regime deltas within ONE column. Scoping law: intra-column
+  switching ceiling +10.4% max over all workload mixes (predicted from
+  these cells); cross-column fleet ceiling +39.1% — selection across
+  columns is the effectiveness headline, runtime tracking is the
+  regret-bound story.
+- Skip-bug provenance: pre-fix versions of this table (archived
+  *_buggyskip) throttled spec-win cells ~20% and accidentally
+  protected spec-losing cells (alternating K=0 = 50% duty cycle) —
+  both arms and policy re-measured on the corrected stack.
+
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
   rows carry the greedy-only-capture execution gap; cross-system caveat
   (speedup vs own AR both sides); KnapSpec numbers from their paper.
 - T1-T5 are decode-focused cell measurements (harness); T6 is the
-  serving WALL headline. Both needed: cells feed the map, T6 is what a
-  deployment sees.
+  serving WALL headline; T7 is the runtime-selection record. All
+  needed: cells feed the map, T6 is what a deployment sees, T7 is the
+  selector operating without workload knowledge.
