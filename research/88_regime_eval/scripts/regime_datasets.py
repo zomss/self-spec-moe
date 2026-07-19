@@ -137,6 +137,16 @@ def load_regime(rid, tok, n=8, ctx_target=None, seed=0):
                    for i in range(n)]
         return prompts, dict(max_tokens=2048, temperature=1.0, batch=16)
 
+    if rid == "RKS":  # KnapSpec parity cell: b1 x 16k-ctx prose, 160 out
+        lines = [ln.strip() for ln in open(
+            "research/57_large_ep_spec_strategy/data/prompts_ondist.txt")
+            if ln.strip()]
+        target = ctx_target or 16000
+        docs = _c4_docs(tok, n, target)
+        prompts = [_chat(tok, docs[i] + "\n\nNow, a separate task:\n"
+                         + lines[i % len(lines)]) for i in range(n)]
+        return prompts, dict(max_tokens=160, temperature=0.0, batch=1)
+
     raise ValueError(f"unknown regime {rid}")
 
 

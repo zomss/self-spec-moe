@@ -69,6 +69,10 @@ want nospec_b1_t07 && run nospect07 nospec 0 1 16384 W7_TEMP=0.7
 want best_b1_t07 && run bestt07 spec  5 1 16384 W7_TEMP=0.7 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV
 # W4A8 queue arm (map v6.3): default disable list keeps Cutlass off -> Humming
 want w4a8win_b8  && run w4a8win spec 5 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+# b1 prose Humming arms (88 canonical sweep: Humming wins every 32B b1 cell
+# on the serving driver -> re-price the KnapSpec parity cell, their 1.43)
+want w4a8win_b1_k4 && run w4a8win spec 4 1 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b1_k5 && run w4a8win spec 5 1 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
 # b16 cell (8B evidence: the W4A8 win grows with batch; K6 matches 8B b16 geometry)
 want nospec_b16  && run nospec nospec 0 16 16384
 want w4win_b16   && run w4win16 spec  6 16 16384 $WINENV $FIXENV
