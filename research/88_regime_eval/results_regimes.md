@@ -6,22 +6,29 @@
 
 ## E1/E2: AR + current-best levers on every canonical regime
 
-| regime | dataset (b, shape) | AR tok/s | W4+win K4 | W4+win K6 | W4A8-Humming K6 |
-|---|---|---|---|---|---|
-| R1 math CoT | GSM8K+AIME (b1, 1k out) | 149.3 | 1.18x (acc 4.79) | 1.19x (6.69) | **1.42x** (6.71) |
-| R2 conversation | MT-Bench (b1) | 149.7 | 1.04x (4.20) | 1.00x (5.38) | **1.25x** (5.79) |
-| R3 code | HumanEval (b8) | 822.5 | 1.14x (4.77) | 1.14x (6.51) | **1.34x** (6.54) |
-| R4 summarization | CNN/DM 8k-doc (b8) | 591.2 | **0.84x** (2.70) | 0.65x (2.90) | 0.76x (2.93) |
-| R5 RAG QA | NQ-open+14k ctx (b8) | 356.4 | 1.29x (4.21) | 1.25x (5.39) | **1.41x** (5.68) |
-| R5cot RAG CoT | 14k ctx + AIME, 3k out (b8) | 585.7 | 1.51x (4.73) | 1.52x (6.50) | **1.76x** (6.45) |
-| R6 burst | GSM8K (b32, 256 out) | 2737.3 | 1.02x (4.74) | 0.94x (6.49) | **1.11x** (6.53) |
-| R7 translation | WMT14 de-en (b8) | 565.2 | **1.08x** (4.50) | 0.97x (6.04) | 1.05x (6.30) |
-| R8 RL rollout | MATH T=1.0 (b16, 2k out) | 2068.7 | **0.83x** (3.92) | 0.72x (4.82) | 0.79x (4.81) |
+| regime | dataset (b, shape) | AR tok/s | W4+win K4 | W4+win K6 | W4A8-Hum K4 | W4A8-Hum K6 |
+|---|---|---|---|---|---|---|
+| R1 math CoT | GSM8K+AIME (b1, 1k out) | 149.3 | 1.18x (acc 4.79) | 1.19x (6.69) | 1.39x (4.80) | **1.42x** (6.71) |
+| R2 conversation | MT-Bench (b1) | 149.7 | 1.04x (4.20) | 1.00x (5.38) | **1.29x** (4.41) | 1.25x (5.79) |
+| R3 code | HumanEval (b8) | 822.5 | 1.14x (4.77) | 1.14x (6.51) | **1.34x** (4.75) | **1.34x** (6.54) |
+| R4 summarization | CNN/DM 8k-doc (b8) | 591.2 | 0.84x (2.70) | 0.65x (2.90) | **0.94x** (2.71) | 0.76x (2.93) |
+| R5 RAG QA | NQ-open+14k ctx (b8) | 356.4 | 1.29x (4.21) | 1.25x (5.39) | **1.42x** (4.44) | 1.41x (5.68) |
+| R5cot RAG CoT | 14k ctx + AIME, 3k out (b8) | 585.7 | 1.51x (4.73) | 1.52x (6.50) | 1.73x (4.68) | **1.76x** (6.45) |
+| R6 burst | GSM8K (b32, 256 out) | 2737.3 | 1.02x (4.74) | 0.94x (6.49) | **1.14x** (4.78) | 1.11x (6.53) |
+| R7 translation | WMT14 de-en (b8) | 565.2 | 1.08x (4.50) | 0.97x (6.04) | **1.14x** (4.68) | 1.05x (6.30) |
+| R8 RL rollout | MATH T=1.0 (b16, 2k out) | 2068.7 | 0.83x (3.92) | 0.72x (4.82) | **0.92x** (3.80) | 0.79x (4.81) |
 
 (W4A8 arm note: first attempt wedged >70 min in flashinfer autotune at
 warmup; identical retry booted in ~2 min and ran clean -- the
 autotuner stall is NONDETERMINISTIC; watchdog + autotune-off fallback
-added to the runner. W4A8 K4 arm queued to complete per-regime-best.)
+added to the runner.)
+
+K4-Humming UPDATE: the gap table shrinks to near-parity on cost alone
+-- R4 0.84->0.94x, R8 0.83->0.92x (accept UNCHANGED ~2.7/3.8: the gain
+is cheaper drafting + less rejected work at K4, not acceptance).
+W4A8-Hum K4 is the per-regime winner at 6 of 9 regimes; the losing
+cells' depth trend (K6 << K4) motivates the K2/K3 shallow probes
+(queued). Window dig running for the accept side.
 
 ## Reading
 
