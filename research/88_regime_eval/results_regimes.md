@@ -130,3 +130,83 @@ canonical regimes; every winner is reachable from the existing lever
 axes (ckpt x kernel x window x K). One model column (Qwen3-8B), one
 GPU; the MoE/MLA columns keep their measured verdicts (win-K3 1.15x /
 OFF) from prior phases.
+
+## 32B column (TP2): the canonical suite at scale -- lever diversity
+## MEASURED (2026-07-19)
+
+Arms: AR, W4-GPTQ+win K4/K5, W4A8+win K5 (Humming-forced). Same
+datasets, same driver, GPUs 0+1.
+
+| regime | AR tok/s | W4gptq K4 | W4gptq K5 | W4A8-Hum K5 | winner |
+|---|---|---|---|---|---|
+| R1 math CoT | 72.7 | 1.26x | 1.21x | **1.45x** | Hum K5 |
+| R2 conversation | 73.0 | 1.20x | 1.07x | **1.36x** | Hum K5 |
+| R3 code | 395.7 | 1.24x | 1.22x | **1.39x** | Hum K5 |
+| R4 summarization | 321.9 | 0.86x | 0.78x | 0.88x | (gap -> shallow) |
+| R5 RAG QA | 190.4 | **1.13x** | 1.06x | 1.09x | **W4 K4** |
+| R5cot RAG CoT | 376.1 | 1.32x | 1.31x | **1.43x** | Hum K5 |
+| R6 burst | 930.2 | 1.07x | **1.19x** | 1.13x | **W4 K5** |
+| R7 translation | 261.4 | 0.96x | 1.03x | **1.06x** | Hum K5 |
+| R8 RL rollout | 1099.7 | 0.76x | 0.70x | 0.75x | (gap -> shallow) |
+
+Shallow probes on the gap cells (R4/R8, K2-K3 both ckpts):
+
+| cell | W4 K3 | W4 K2 | Hum K3 | Hum K2 |
+|---|---|---|---|---|
+| R4 summarization | 0.92x (2.66) | 0.99x (2.28) | **1.00x** (2.67) | BLOCKED* |
+| R8 rollout T=1.0 | 0.82x (3.05) | 0.95x (2.54) | 0.92x (3.05) | BLOCKED* |
+
+*Hum-K2 at TP2 is unmeasurable pending a Humming library bug (M=3
+GEMM tile hangs in lazy cubin load; 6/6 reproductions across
+autotune-on/off, cache-on/off, parallel/sequential build, wholechain/
+piecewise chain -- see infra note). 32B verdicts: R4 = AT PARITY
+(Hum K3 1.00x; plus W4-K2 0.99x on a working kernel); R8 = NOT
+CLOSED at 32B, best 0.95x (W4 K2) -- the 8B crossing (Hum K2 1.045x)
+predicts a win here once the M=3 tile bug is fixed; the one open
+cell in the two-column campaign.
+
+READINGS (the diversity result):
+- UNLIKE 8B (one dominant point, only K varies), the 32B winners
+  SPLIT ACROSS EVERY AXIS: kernel (Humming takes 5 cells, W4-GPTQ
+  takes 2 -- the flip is batch/decode-share-dependent at TP2: W4
+  holds b8-prefill-heavy RAG and b32 burst), and depth (K4 vs K5
+  split within W4; R7's depth direction INVERTS vs 8B -- K6 killed
+  translation at 8B, K5 rescues it at 32B, accept grows faster with
+  depth at scale).
+- The old "no kernel flip at 32B" verdict (b8/16k prose harness cell)
+  was real but cell-specific: on the canonical suite the same two
+  ckpts trade wins 5-2. Single-cell h2h comparisons UNDERSTATE lever
+  diversity; suite-level measurement was needed to see it.
+- Gap cells: R4 reaches parity at Hum K3 (1.00x, same as the 8B K3
+  crossing); R8 at 32B is HARDER than 8B (best 0.95x at W4 K2 --
+  where 8B crossed at Hum K2 1.045). T=1.0 sampled-accept at TP2 is
+  the one cell class not yet closed by depth alone.
+- Autotune-wedge infra note: the flashinfer autotuner hung at TP2
+  warmup twice on the SAME arm (w4a8 K2) after passing on K3/K5 --
+  arm-nondeterministic; K2-Hum numbers come from the autotune-off
+  fallback (heuristic tactics; sanity-check against the K3 trend
+  before citing).
+
+### Infra: the w4a8 wedge ROOT-CAUSED (Humming lazy cubin load)
+
+Faulthandler stack (SIGABRT on the wedged TP0 worker): main thread
+spins in humming/kernel/humming.py load_cubin -> ops register_kernel
+-> torch._ops.__call__, invoked from INSIDE the AOT-compiled draft
+forward; 16 idle build-pool threads; other rank spin-waits in its
+collective -> deterministic livelock. Humming JIT-builds/loads cubins
+per GEMM shape on FIRST USE; the K2 capture set is the only one whose
+M=3 (batch x qlen) tile at TP2 half-width dims is never touched by an
+eager pass first. Reproduced 5/5 on w4a8+K2+TP2; absent on K3/K5
+(shapes covered eagerly) and on TP1 (8B K2 ran fine). NOT the
+flashinfer autotuner (wedges with autotune off), NOT the compile
+cache (wedges with VLLM_DISABLE_COMPILE_CACHE=1), NOT the build pool
+(wedges with HUMMING_DISABLE_PARALLEL_BUILD=1).
+- PROPER FIX (filed): eager Humming warmup pass per capture shape
+  before draft FULL-CG capture in llm_base_proposer -- matters for
+  step-3 RL at TP2 where K2 is the R8 winner-class depth.
+- MEASUREMENT WORKAROUND ATTEMPTED AND FAILED: the piecewise chain
+  wedges identically (6th repro) -- the hang is the M=3 tile's cubin
+  load itself (likely below the library's min tile M, falling into a
+  broken small-M path at TP2 half-width dims), not capture
+  interaction. Hum-K2@TP2 recorded as blocked; upstream/library
+  report is the fix path. W4A16-K2 (Marlin) unaffected.
