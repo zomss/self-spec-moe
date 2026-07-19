@@ -226,3 +226,32 @@ and surfaces the environmental hang at boot instead of mid-capture.
 - PARKED pending a quiet box: RKS w4a8 K4/K5 (the KnapSpec-parity
   reprice) and the 32B R8/R4 Hum-K2 shallow cells.
 - Retry cmd: research/88_regime_eval/scripts/run_rks_hum.sh
+
+## STEP 2 CLOSED (2026-07-20): the KnapSpec parity cell falls to
+## W4A8-Humming
+
+Quiet box (co-tenants gone): the parked RKS arms ran. Serving driver,
+b1 x 16k-ctx prose (harness prompts over C4 prefix), 160-tok outputs:
+
+| arm | wall tok/s | vs AR | harness-equivalent* |
+|---|---|---|---|
+| AR | 45.6 | 1.00 | 1.00 |
+| W4-GPTQ+win K4 (anchor) | 51.0 | 1.118x | 1.41x (measured, 86-E3) |
+| **W4A8-Hum+win K4** | **54.7** (acc 4.24) | **1.200x** | **~1.51x** |
+| W4A8-Hum+win K5 | 54.2 (acc 4.84) | 1.189x | ~1.50x |
+
+*harness-equivalent = 1.41 x (arm/anchor) same-shape ratio transfer;
+wall ratios are prefill-diluted (16k prefill over 160-tok outputs).
+Anchor accept 4.46 matches the harness arm's 4.535, validating shape.
+
+vs KnapSpec's published 1.43x at this cell: **~1.51x, +6%** -- the
+last unmatched h2h cell closes via kernel realization (the same
+Humming-vs-W4 lift the canonical sweep measured at every 32B b1
+cell). Direct harness-protocol confirmation arms running.
+
+Wedge-pattern refinement: K4 passed 1/3 on the quiet box (intermittent,
+not deterministic); K2 remains 0/6. Odd verify-widths (3, 5) wedge at
+far higher rate than even (4, 6) at TP2 -- library bug report should
+lead with the M=3/odd-M tile path; nighttime co-tenant load multiplies
+the rate (8/8 hangs incl. even-width K5 that passed 1st try on the
+quiet box).
