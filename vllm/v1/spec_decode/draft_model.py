@@ -165,7 +165,54 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 prefix="draft_model",
             )
         self._log_draft_moe_ep_status(model)
+        self._prewarm_jit_linear_kernels(model)
         return model
+
+    @staticmethod
+    def _prewarm_jit_linear_kernels(model: nn.Module) -> None:
+        """Eagerly run every JIT-backed quantized linear (Humming) once per
+        small-M tile class BEFORE the first compiled/captured forward.
+
+        Humming registers/loads cubins lazily on first use of a GEMM
+        shape; when that first use lands inside the torch.compile'd draft
+        forward (both TP ranks simultaneously), the register_kernel path
+        can deadlock against the dispatcher (observed intermittently at
+        TP2, deterministically for the K2 M=3 tile). Registering here --
+        plain eager calls, outside any compiled region -- removes the
+        first-use path entirely.
+        """
+        # Cover every M-tile class the engine can hit: the small chain /
+        # step-0 shapes AND the large prefill/warmup buckets (the warmup
+        # dummy run executes at max_num_batched_tokens, e.g. M=8192).
+        prewarm_ms = (1, 2, 3, 4, 5, 6, 7, 8, 16, 32, 64, 128, 256, 512,
+                      1024, 2048, 4096, 8192)
+        n_layers = 0
+        with torch.no_grad():
+            for mod in model.modules():
+                scheme = getattr(mod, "scheme", None)
+                kernel = getattr(scheme, "kernel", None)
+                if kernel is None or "Humming" not in type(kernel).__name__:
+                    continue
+                in_size = getattr(mod, "input_size_per_partition", None)
+                w = next(
+                    (p for p in mod.parameters() if p.device.type == "cuda"),
+                    None,
+                )
+                if in_size is None or w is None:
+                    continue
+                for m in prewarm_ms:
+                    x = torch.zeros(
+                        (m, in_size), dtype=torch.bfloat16, device=w.device
+                    )
+                    scheme.apply_weights(mod, x, None)
+                n_layers += 1
+        if n_layers:
+            torch.cuda.synchronize()
+            logger.info(
+                "Self-spec draft: pre-warmed JIT linear kernels on %d "
+                "Humming layers x %d M-tiles (eager, pre-capture).",
+                n_layers, len(prewarm_ms),
+            )
 
     @staticmethod
     def _log_draft_moe_ep_status(model: nn.Module) -> None:
