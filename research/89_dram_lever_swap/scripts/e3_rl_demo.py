@@ -65,6 +65,20 @@ def rpc_swap_noisy(worker, path, eps, seed):
                 src.shape, generator=g, dtype=torch.float32)
             src = (src.to(torch.float32) * noise).to(src.dtype)
             n += 1
+        elif (eps > 0 and src.dtype == torch.int32
+              and "weight" in k):
+            # re-quantization drift on the packed int4 weights: flip a
+            # random nibble in an eps/10 fraction of int32 words.
+            p = eps / 10.0
+            flip = torch.rand(src.shape, generator=g) < p
+            nib = torch.randint(1, 16, src.shape, generator=g,
+                                dtype=torch.int32)
+            slot = torch.randint(0, 8, src.shape, generator=g,
+                                 dtype=torch.int32)
+            src = src.bitwise_xor(
+                torch.where(flip, nib << (slot * 4),
+                            torch.zeros_like(nib)))
+            n += 1
         v.copy_(src, non_blocking=True)
     torch.cuda.synchronize()
     return {"noised": n, "ms": (time.perf_counter() - t0) * 1e3}
@@ -82,8 +96,11 @@ def main():
                 "model": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
                 "num_speculative_tokens": int(os.environ.get("E3_K", "4")),
                 "draft_tensor_parallel_size": 1}
+    extra = {}
+    if os.environ.get("R88_NO_AUTOTUNE"):
+        extra["kernel_config"] = {"enable_flashinfer_autotune": False}
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
-              tensor_parallel_size=1, max_model_len=8192,
+              tensor_parallel_size=1, max_model_len=8192, **extra,
               gpu_memory_utilization=0.90, max_num_seqs=32,
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192)
