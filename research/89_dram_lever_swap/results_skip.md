@@ -44,3 +44,14 @@ The 8B skip frontier is much weaker (.849 at budget 4 vs .952 int4)
 -- the 32B positive composition does NOT transfer down-scale; skip's
 value is scale-keyed (deeper stacks tolerate skips), consistent with
 KnapSpec's own scale story.
+
+## skip x Humming: PARKED (co-tenant wedge), quiet-box waiter armed
+
+Both skip+Hum arms wedged at the fresh-compile stage under afternoon
+co-tenant load (K5/K4, rc=124; skip machinery itself verified on the
+Humming draft: 60-layer shared-KV binding + 240-layer pre-warm ran
+clean). Waiter polls for a quiet box (total GPU mem < 2GB) and runs
+K5/K4 with 3 tries + worker cleanup (run_skiphum_retry.sh). If the
++3% skip dividend transfers to Humming, the 32B record cells move
+~1.45->1.50 (b1 math) and the KnapSpec cell ~1.51->1.55
+harness-equivalent.
