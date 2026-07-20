@@ -40,7 +40,7 @@ KV_LIMIT = int(os.environ.get("COMPILE_KV_LIMIT", "330000"))
 CELLS_OUT = os.environ.get("COMPILE_CELLS", "policy_cells.csv")
 TABLE_OUT = os.environ.get("COMPILE_TABLE", "policy_table.json")
 NDEC = 160
-ARM_K = {"off": 0, "k4": 4, "k5": 5, "k6": 6}
+ARM_K = {"off": 0, "k2": 2, "k3": 3, "k4": 4, "k5": 5, "k6": 6}
 ARMING_RENT = 0.015
 
 
