@@ -255,3 +255,67 @@ far higher rate than even (4, 6) at TP2 -- library bug report should
 lead with the M=3/odd-M tile path; nighttime co-tenant load multiplies
 the rate (8/8 hangs incl. even-width K5 that passed 1st try on the
 quiet box).
+
+## Selection accounting: which lever wins where, and what switching
+## is worth (the upper bound for step 3) — 2026-07-20
+
+Per-regime winner, runner-up, and selection margin; composites are
+equal-time-weight harmonic over the 9 regimes (uniform mix).
+
+### 8B: winner = Humming everywhere; selection = DEPTH
+| regime | winner | S | runner-up | margin |
+|---|---|---|---|---|
+| R1 math | Hum K6 | 1.42 | Hum K4 1.39 | +2.6% |
+| R2 conversation | Hum K4 | 1.29 | Hum K6 1.25 | +2.9% |
+| R3 code | Hum K4 | 1.34 | Hum K6 1.34 | +0.1% |
+| R4 summarization | **Hum K2** | 1.08 | Hum K3 1.01 | **+6.3%** |
+| R5 RAG | Hum K4 | 1.42 | Hum K6 1.41 | +0.6% |
+| R5cot | Hum K6 | 1.76 | Hum K4 1.73 | +2.1% |
+| R6 burst | Hum K4 | 1.14 | Hum K6 1.11 | +2.7% |
+| R7 translation | Hum K4 | 1.14 | W4 K4 1.08 | **+6.0%** |
+| R8 RL rollout | **Hum K2** | 1.04 | Hum K3 0.97 | **+7.3%** |
+
+Composites: **oracle 1.260x** vs AR; statics: Hum-K4 1.209, Hum-K6
+1.129, W4-K4 1.068, OFF 1.000, W4-K6 0.979.
+**Switching upper bound: +4.2% over the best static (+26.0% over AR).**
+
+### 32B: winners split across KERNEL x DEPTH x OFF
+| regime | winner | S | runner-up | margin |
+|---|---|---|---|---|
+| R1 math | Hum K5 | 1.45 | W4 K4 1.26 | +14.9% |
+| R2 conversation | Hum K5 | 1.36 | W4 K4 1.20 | +13.3% |
+| R3 code | Hum K5 | 1.39 | W4 K4 1.24 | +11.6% |
+| R4 summarization | Hum K3 | 1.00 | W4 K2 0.99 | +0.8% |
+| R5 RAG | **W4 K4** | 1.13 | Hum K5 1.09 | +3.1% |
+| R5cot | Hum K5 | 1.43 | W4 K4 1.32 | +8.9% |
+| R6 burst | **W4 K5** | 1.19 | Hum K5 1.13 | +4.8% |
+| R7 translation | Hum K5 | 1.06 | W4 K5 1.03 | +2.9% |
+| R8 RL rollout | **OFF** | 1.00 | W4 K2 0.95 | +5.3% vs best spec |
+
+Composites: **oracle 1.198x** vs AR (OFF allowed); statics: Hum-K5
+1.117, W4-K4 1.054, W4-K5 1.022, OFF 1.000.
+**Switching upper bound: +7.3% over the best static (+19.8% over AR).**
+
+### Readings (what step 3 can and cannot deliver)
+- The MEAN switching dividend on a uniform mix is single-digit (+4.2%
+  8B / +7.3% 32B over the best static) -- consistent with the 82
+  scoping law. But the mean hides the structure: the best static
+  LOSES to AR outright at R4/R8 (8B Hum-K4: 0.94/0.92; 32B Hum-K5:
+  0.88/0.75). Selection converts every loss to a win -- the value is
+  concentrated exactly where the static breaks, and per-cell deltas
+  there are +7% (8B R4/R8) to **+33%** (32B R8: OFF vs forced spec).
+- RL-ROLLOUT BOUND (the step-3 regime): the rollout trace lives in
+  the R8/drain cell class, where selection is worth the MOST, not the
+  mean: 8B R8 Hum-K2 1.04 vs static-K4's 0.92 = +14% from depth
+  selection alone; 32B R8 = knowing when to disarm (+33% vs the
+  static that a b1-optimal deployment would pick). A drift trace's
+  realized win depends on its mix; uniform-mix +4-7% is the
+  conservative floor, the R8-cell deltas are the per-phase ceiling.
+- Trace composition is everything: workloads concentrated on deep-ctx
+  CoT (R5cot 1.76) barely need switching (statics near-tie); mixed
+  serving with summarization/translation/burst phases is where the
+  selector pays.
+- 8B vs 32B structure differs: 8B selection = depth only (one kernel
+  dominates); 32B selection spans kernel AND depth AND OFF. The
+  step-3 demo should run BOTH: 8B shows depth-switching, 32B (or the
+  fleet prediction) shows cross-lever value.
