@@ -47,10 +47,22 @@ def rpc_dump(worker, path):
 
 def rpc_swap_noisy(worker, path, eps, seed):
     """Load the fresh snapshot, apply multiplicative noise to scale/norm
-    tensors (staleness emulation), copy in place. eps=0 == fresh."""
+    tensors (staleness emulation), copy in place. eps=0 == fresh.
+
+    The fresh (eps=0) path uses a worker-side PINNED cache stashed on
+    first use -- the production swap path (E0: 113 ms), no disk I/O in
+    the serving loop."""
     import torch
     m = _drafter_model(worker)
-    sd = torch.load(path, map_location="cpu")
+    if eps == 0 and hasattr(worker, "_e3_pinned"):
+        sd = worker._e3_pinned
+    else:
+        sd = torch.load(path, map_location="cpu")
+        if eps == 0 and not hasattr(worker, "_e3_pinned"):
+            worker._e3_pinned = {
+                k: v.pin_memory() if v.device.type == "cpu" else v
+                for k, v in sd.items()}
+            sd = worker._e3_pinned
     g = torch.Generator().manual_seed(seed)
     live = dict(m.state_dict())
     t0 = time.perf_counter()
@@ -111,8 +123,10 @@ def main():
           + "\nPlease reason step by step."}],
         tokenize=False, add_generation_prompt=True, enable_thinking=False)
         for i in range(16)]
-    sp = SamplingParams(max_tokens=1024, temperature=1.0, seed=0,
-                        ignore_eos=True)
+    sp = SamplingParams(
+        max_tokens=int(os.environ.get("E3_MAXTOK", "1024")),
+        temperature=1.0, seed=0,
+        ignore_eos=os.environ.get("E3_EOS", "0") != "1")
 
     def counters():
         acc = drafts = 0
@@ -152,7 +166,39 @@ def main():
 
     # ---- run mode: one arm over the drift schedule ----
     spec_on = os.environ.get("E3_SPEC", "1") == "1"
+    bg_detect = os.environ.get("E3_BG_DETECT", "0") == "1"
     report = {"arm": ARM, "phases": []}
+
+    import threading
+    stop_bg = threading.Event()
+    bg_state = {"fires": 0}
+
+    def detector_loop():
+        # trainer-side controller: poll windowed accept every ~2s and
+        # fire the DRAM refresh RPC mid-serving when it breaks the gate
+        prev_a, prev_d = counters()
+        cooldown = 0.0
+        while not stop_bg.is_set():
+            time.sleep(float(os.environ.get('E3_POLL', '2.0')))
+            a, dd = counters()
+            da, dn = a - prev_a, dd - prev_d
+            prev_a, prev_d = a, dd
+            now = time.monotonic()
+            if dn < 64 or now < cooldown:
+                continue
+            w_acc = 1 + da / dn
+            if w_acc < ACCEPT_GATE:
+                r = llm.collective_rpc(
+                    rpc_swap_noisy, args=(SNAP, 0.0, 0))[0]
+                bg_state["fires"] += 1
+                cooldown = now + 6.0
+                print(f"[E3] bg-detector: accept {w_acc:.2f} < "
+                      f"{ACCEPT_GATE} -> mid-serving refresh "
+                      f"({r['ms']:.0f} ms rpc)", flush=True)
+
+    if spec_on and bg_detect and ARM.startswith("refresh"):
+        threading.Thread(target=detector_loop, daemon=True).start()
+
     for pi, eps in enumerate(EPS):
         if spec_on:
             # the world drifts: stale draft distance grows
@@ -160,8 +206,10 @@ def main():
                 rpc_swap_noisy, args=(SNAP, eps, 100 + pi))[0]
         toks, acc, dt = gen(f"{ARM} phase{pi} eps={eps}")
         entry = {"phase": pi, "eps": eps, "toks": round(toks, 1),
-                 "accept": round(acc, 2), "refreshed": False}
-        if spec_on and ARM.startswith("refresh") and acc < ACCEPT_GATE:
+                 "accept": round(acc, 2), "refreshed": False,
+                 "bg_fires": bg_state["fires"]}
+        if (spec_on and not bg_detect and ARM.startswith("refresh")
+                and acc < ACCEPT_GATE):
             # amortization gate: remaining phases * phase_time * dS
             # >> swap cost (log the math; fire the refresh)
             print(f"[E3] detector: accept {acc:.2f} < {ACCEPT_GATE} "
@@ -173,6 +221,7 @@ def main():
                           "post_toks": round(toks2, 1),
                           "post_accept": round(acc2, 2)})
         report["phases"].append(entry)
+    stop_bg.set()
     out = PHASE / "data" / f"e3_{ARM}.json"
     out.write_text(json.dumps(report, indent=1))
     print("[E3] saved ->", out, flush=True)

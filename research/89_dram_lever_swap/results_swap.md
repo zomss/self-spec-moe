@@ -85,3 +85,34 @@ deep-drift phases, probes re-arm to 2048-2061 post-refresh.
   side, phase-end) each pay one degraded phase per drift step; the
   runtime policy's per-step EMA removes that cost -- detection
   granularity is the difference between 0.81x and 0.96x.
+
+## E3b: BEATING AR — the production configuration (2026-07-21)
+
+The E3a full system sat at 0.96x AR; three measured inefficiencies,
+three fixes, and an ablation trail (drain trace: b16 x AIME T=1.0,
+3072-tok budget, EOS on; same 5-phase drift; AR = 1177.9 tok/s):
+
+| arm | aggregate | vs AR | lesson |
+|---|---|---|---|
+| policy-only (kmax=3 table) | 1181.2 | 1.003x | kmax-padding tax removed: fresh phases 1.04-1.05x |
+| + refresh, 2s poll, disk-load swap (v2) | 1117.3 | 0.948x | client metrics-poll @2s taxes engine ~5%; disk reload stalls |
+| + eager gate 2.9 (v3) | 1052.1 | 0.893x | firing on harmless drift pays stalls for nothing (anti-pattern, measured) |
+| **+ pinned cache, gate 2.45, 10s poll (v4)** | **1242.9** | **1.055x** | swap = 113-116 ms in-loop; drift phases 0.99-1.11x |
+
+v4 per-phase: 1224 / 1261 / 1257 / 1172 / 1308 -- the deep-drift
+phases are nearly free (detect <=10s, 116/114 ms mid-serving pinned
+swap, probes re-arm within the phase; phase-4 hit 1.11x because the
+refresh landed early). BEATS AR (+5.5%), policy-only (+5.2%), and
+every static (stale 0.55-0.76x).
+
+### The recipe that beats AR (all three required)
+1. kmax = the cell's winning option set (K2/K3 filtered table) --
+   verify-width padding at kmax=6 cost 4-5% alone.
+2. Pinned-DRAM swap in the serving loop (E0's 113 ms, verified live
+   at 116/114 ms) -- disk-loading in the RPC costs ~1s/fire.
+3. Detector at drift timescale (10s poll, gate at the S<1 boundary)
+   -- eager gates and tight polls are measured anti-patterns.
+
+Adversarial-cell context stands: this is the map's thinnest cell
+(fresh ceiling ~1.05-1.07x). The same system at the 1.4-1.9x cells
+inherits the same 4-6% staleness bound around a much higher optimum.
