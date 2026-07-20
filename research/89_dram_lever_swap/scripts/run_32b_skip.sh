@@ -32,3 +32,12 @@ run_arm off off 0
 run_arm skipw4_k4 w4win 4 $SKIP
 run_arm skipw4_k5 w4win 5 $SKIP
 echo "=== R89-skip ALL DONE ($(date +%H:%M:%S)) ==="
+
+# appended mid-run (offset-safe): skip composes on ANY ckpt -- if it
+# stacks on Humming like it does on W4 (+3-4%), skip x Hum is the new
+# 32B winner. Measure it.
+export R88_DRAFT_W4A8=$HOME/ckpts/Qwen3-32B-W4A8-gptq
+HUM=VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel
+run_arm skiphum_k5 w4a8 5 $SKIP $HUM
+run_arm skiphum_k4 w4a8 4 $SKIP $HUM
+echo "=== R89-skip HUM arms DONE ($(date +%H:%M:%S)) ==="
