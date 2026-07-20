@@ -1,0 +1,31 @@
+{
+ "baseline": {
+  "toks": 980.6,
+  "accept": 4.735
+ },
+ "identity_swap": {
+  "n_tensors": 723,
+  "swap_ms": 701.7626408487558
+ },
+ "after_identity": {
+  "toks": 1156.6,
+  "accept": 4.768
+ },
+ "corrupt_swap": {
+  "n_tensors": 723,
+  "swap_ms": 721.8287559226155
+ },
+ "after_corrupt": {
+  "toks": 276.1,
+  "accept": 1.0
+ },
+ "restore_swap": {
+  "n_tensors": 723,
+  "swap_ms": 723.3861389104277
+ },
+ "after_restore": {
+  "toks": 1157.7,
+  "accept": 4.758
+ },
+ "VERDICT": "PASS"
+}
