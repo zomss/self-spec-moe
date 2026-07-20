@@ -252,6 +252,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE: bool = False
     VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS: str = ""
+    VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS: str = ""
     VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA: str = ""
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
@@ -1878,6 +1879,13 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # masks draft routing to the per-layer set instead of the EP shard.
     "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS": lambda: os.getenv(
         "VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS", ""
+    ),
+    # Phase 89: skip-set draft (KnapSpec-style layer skip in the self-spec
+    # framework). Comma list of ORIGINAL decoder-layer indices to skip in
+    # the draft (e.g. "2,4,7,16"); indices are preserved so shared-KV
+    # name-binding maps remaining layers to their target twins.
+    "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": lambda: os.getenv(
+        "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS", ""
     ),
     # Phase 83: draft PARTIAL replica -- load ONLY the per-layer resident
     # expert sets ({layer_idx: LongTensor} file) into the draft's replica

@@ -165,8 +165,59 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 prefix="draft_model",
             )
         self._log_draft_moe_ep_status(model)
+        self._apply_skip_layers(model)
         self._prewarm_jit_linear_kernels(model)
         return model
+
+    class _SkipDecoderLayer(nn.Module):
+        """Index-preserving passthrough for a skipped draft decoder layer.
+
+        Matches the Qwen decoder-layer call convention
+        layer(positions, hidden_states, residual) -> (hidden, residual);
+        PPMissingLayer cannot be used interior (it returns args[0]).
+        """
+
+        def forward(self, positions, hidden_states, residual, **kwargs):
+            return hidden_states, residual
+
+    def _apply_skip_layers(self, model: nn.Module) -> None:
+        """KnapSpec-style layer skip for the draft (Phase 89).
+
+        Replaces the configured decoder layers with passthroughs while
+        KEEPING their original ModuleList indices, so every remaining
+        draft layer's name still matches its target twin and shared-KV
+        binding stays correct. The skipped layers' attention registrations
+        are removed from static_forward_context so they contribute no KV
+        spec and are never discovered as draft attn layers. Load-time
+        static: the layer set never changes after boot (CUDA-graph safe).
+        """
+        raw = envs.VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS
+        if not raw:
+            return
+        skip = sorted({int(t) for t in raw.split(",") if t.strip()})
+        layers = getattr(getattr(model, "model", None), "layers", None)
+        if layers is None:
+            raise ValueError(
+                "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS: draft model has no "
+                ".model.layers ModuleList")
+        bad = [i for i in skip if not (0 <= i < len(layers))]
+        if bad:
+            raise ValueError(
+                f"VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS: indices {bad} out of "
+                f"range for {len(layers)} draft layers")
+        sfc = self.vllm_config.compilation_config.static_forward_context
+        removed_attn = 0
+        for i in skip:
+            layers[i] = self._SkipDecoderLayer()
+            prefix = f"draft_model.model.layers.{i}."
+            for name in [n for n in sfc if n.startswith(prefix)]:
+                del sfc[name]
+                removed_attn += 1
+        logger.info(
+            "Self-spec draft: skip-set active -- %d/%d decoder layers "
+            "replaced with passthroughs (indices %s, index-preserving), "
+            "%d forward-context registrations removed.",
+            len(skip), len(layers), skip, removed_attn)
 
     @staticmethod
     def _prewarm_jit_linear_kernels(model: nn.Module) -> None:
