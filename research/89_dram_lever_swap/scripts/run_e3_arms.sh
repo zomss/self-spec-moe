@@ -33,3 +33,11 @@ run_arm off 0
 run_arm stale 1
 run_arm refresh 1
 echo "=== E3 arms DONE ($(date +%H:%M:%S)) ==="
+
+# appended (offset-safe): K2 arms -- the POLICY-SELECTED depth at this
+# cell (b16 short-ctx T=1.0: compiled table + canonical R8 both pick
+# K2, 1.05x vs AR; K4 loses 0.92x). Gate rescaled to K2 accept scale.
+export E3_K=2 E3_GATE=2.45
+run_arm stale_k2 stale 1
+run_arm refresh_k2 refresh 1
+echo "=== E3 K2 arms DONE ($(date +%H:%M:%S)) ==="

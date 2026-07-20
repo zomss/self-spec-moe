@@ -161,7 +161,7 @@ def main():
         toks, acc, dt = gen(f"{ARM} phase{pi} eps={eps}")
         entry = {"phase": pi, "eps": eps, "toks": round(toks, 1),
                  "accept": round(acc, 2), "refreshed": False}
-        if spec_on and ARM == "refresh" and acc < ACCEPT_GATE:
+        if spec_on and ARM.startswith("refresh") and acc < ACCEPT_GATE:
             # amortization gate: remaining phases * phase_time * dS
             # >> swap cost (log the math; fire the refresh)
             print(f"[E3] detector: accept {acc:.2f} < {ACCEPT_GATE} "
