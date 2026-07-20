@@ -15,11 +15,12 @@ export CUDA_VISIBLE_DEVICES=0
 export COMPILE_MODEL=Qwen/Qwen3-8B
 export COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A8-gptq
 export VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel
-export COMPILE_CELLS=research/89_dram_lever_swap/data/policy_cells_hum.csv
-export COMPILE_TABLE=research/89_dram_lever_swap/data/policy_table_hum.json
+export COMPILE_CELLS=policy_cells_hum.csv
+export COMPILE_TABLE=policy_table_hum.json
 for arm in off k2 k3 k4 k6; do
   echo "[e2-compile] arm=$arm ($(date +%H:%M:%S))"
   .venv/bin/python research/82_runtime_switching/scripts/compile_policy.py --measure $arm
 done
 .venv/bin/python research/82_runtime_switching/scripts/compile_policy.py --solve
+cp research/82_runtime_switching/data/policy_cells_hum.csv research/82_runtime_switching/data/policy_table_hum.json research/89_dram_lever_swap/data/ 2>/dev/null
 echo "[e2-compile] DONE ($(date +%H:%M:%S))"
