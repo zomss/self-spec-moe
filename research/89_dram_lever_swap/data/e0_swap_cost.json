@@ -1,0 +1,29 @@
+{
+ "dev": "cuda:0",
+ "ckpts": {
+  "Qwen3-8B-W4A16-INT4": {
+   "GB": 6.07,
+   "disk_to_pinned_s": 6.55,
+   "swap_s": 0.113,
+   "swap_GBps": 53.8,
+   "all_swap_s": [
+    0.119,
+    0.113,
+    0.113
+   ]
+  },
+  "Qwen3-8B-W4A8-gptq": {
+   "GB": 6.07,
+   "disk_to_pinned_s": 6.39,
+   "swap_s": 0.113,
+   "swap_GBps": 53.8,
+   "all_swap_s": [
+    0.114,
+    0.113,
+    0.113
+   ]
+  }
+ },
+ "graph_replay_sees_inplace_copy": true,
+ "graph_replay_bitexact_new_weights": true
+}

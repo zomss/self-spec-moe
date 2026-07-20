@@ -26,10 +26,12 @@ clean_workers () {
   sleep 5
 }
 
-box_quiet () {  # total non-zero co-tenant memory on GPUs 0-7 < 2GB
-  local tot=0
+box_quiet () {  # co-tenant zone (GPUs 2-7) quiet; our own work on
+  # GPUs 0-1 does not block the retry.
+  local tot=0 i=0
   for m in $(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits); do
-    tot=$((tot + m))
+    case $i in 2|3|4|5|6|7) tot=$((tot + m));; esac
+    i=$((i + 1))
   done
   [ $tot -lt 2000 ]
 }
