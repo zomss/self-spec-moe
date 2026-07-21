@@ -26,10 +26,11 @@ def fig_h2h():
                                  ("KnapSpec", 1.28, "knapspec")]),
         ("Qwen3-8B\nb1 T=0.7", [("W4+win (ours)", 1.32, "composed"),
                                 ("KnapSpec*", 1.28, "knapspec")]),
-        ("Qwen3-32B\nb1 prose", [("fp8-Marlin+win", 1.19, "fp8"),
-                                 ("fp8-native+win", 1.26, "fp8"),
-                                 ("W4gptq+win (ours)", 1.41, "composed"),
-                                 ("KnapSpec", 1.43, "knapspec")]),
+        ("Qwen3-32B\nb1 prose", [("fp8-native+win", 1.26, "fp8"),
+                                 ("W4gptq+win", 1.41, "composed"),
+                                 ("KnapSpec", 1.43, "knapspec"),
+                                 ("W4A8-Hum+win*", 1.51, "composed"),
+                                 ("skip x Hum+win* (ours)", 1.57, "composed")]),
         ("Qwen3-32B\nb1 MATH (their task)", [("W4gptq+win K4", 1.54, "composed"),
                                              ("W4gptq+win K5 (ours)", 1.63, "composed"),
                                              ("KnapSpec", 1.43, "knapspec")]),
@@ -56,7 +57,8 @@ def fig_h2h():
     ax.set_ylim(0, 1.85)
     ax.axhline(1.0, color="#e8e7e3", lw=1)
     ax.set_title("Head-to-head vs KnapSpec (published numbers; DRAFT, "
-                 "ours measured 2026-07, 8-iter runs)", loc="left",
+                 "ours measured 2026-07; * = serving-anchored "
+                 "harness-equivalent)", loc="left",
                  color=C["ink"], fontsize=11, fontweight="bold")
     for s in ax.spines.values():
         s.set_visible(False)
@@ -83,6 +85,10 @@ E2E = [
     ("dense", "Q3-32B", 16, 1, "W4gptq+win K4", 1.41, 4.54),
     ("dense", "Q3-32B", 16, 1, "W4gptq+win K5 math", 1.63, 5.36),
     ("dense", "Q3-32B", 16, 8, "W4+win K5", 1.28, 5.20),
+    ("dense", "Q3-32B", 2, 1, "skip x Hum+win K4 math", 1.50, 4.81),
+    ("dense", "Q3-32B", 14, 8, "skip x Hum+win K4 CoT", 1.52, 4.52),
+    ("dense", "Q3-8B", 8, 8, "Hum K2 summarize (was 0.84)", 1.08, 2.18),
+    ("dense", "Q3-8B", 2, 16, "Hum K2 RL T=1.0 (was 0.83)", 1.05, 2.64),
     ("moe", "Q3-30B-A3B", 16, 8, "win K3 fixed-stack", 1.15, 3.77),
     ("moe", "Q3-30B-A3B", 2, 4, "flr50 bf16-partial K2", 1.03, 2.88),
     ("moe", "Q3-30B-A3B", 2, 8, "flr50 (chain-blocked)", 0.63, 2.84),
@@ -228,10 +234,58 @@ def fig_policy():
     plt.close(fig)
 
 
+# ---------------- fig F: RL staleness + DRAM refresh (T9) ----------------
+def fig_rl():
+    # ALL MEASURED per-phase tok/s (89/data e3_*.json, 2026-07-21).
+    # Left: steady b16 trace (E3a). Right: drain trace (E3b).
+    phases = list(range(5))
+    xt = [f"p{i}\ndrift {e}" for i, e in
+          enumerate(["0", ".1", ".2", ".3", ".4"])]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 4.0),
+                                 constrained_layout=True, sharey=False)
+    # E3a steady trace (fixed-length b16)
+    a1.plot(phases, [2097.7] * 5, "-o", color=C["ink2"],
+            label="AR", ms=4)
+    a1.plot(phases, [2166.4, 2096.0, 2037.0, 1268.6, 1070.6], "-o",
+            color="#eb6834", label="stale draft (K2 static)", ms=4)
+    a1.plot(phases, [2033.4, 2015.7, 2056.0, 1978.6, 1969.9], "-o",
+            color="#7cc7f0", label="runtime policy alone", ms=4)
+    a1.set_title("steady trace: staleness -45%;\npolicy floors at "
+                 "0.94-0.98x AR", loc="left", fontsize=9)
+    a1.set_ylabel("serving tok/s (b16 MATH T=1.0)")
+    # E3b drain trace (EOS drain, production config)
+    a2.plot(phases, [1163.6, 1186.8, 1164.3, 1187.8, 1187.7], "-o",
+            color=C["ink2"], label="AR", ms=4)
+    a2.plot(phases, [1212.9, 1241.7, 1154.0, 1144.6, 1158.9], "-o",
+            color="#7cc7f0", label="runtime policy alone", ms=4)
+    a2.plot(phases, [1224.1, 1261.4, 1257.0, 1171.7, 1308.5], "-o",
+            color="#0e7a54", lw=2.2, ms=5,
+            label="full system: policy + DRAM refresh")
+    for x in (3, 4):
+        a2.annotate("refresh\n116/114 ms", (x, [0, 0, 0, 1171.7,
+                    1308.5][x]), textcoords="offset points",
+                    xytext=(-14, -30), fontsize=7, color="#0e7a54")
+    a2.set_title("drain trace (production config):\nfull system "
+                 "1.055x AR aggregate", loc="left", fontsize=9)
+    for ax in (a1, a2):
+        ax.set_xticks(phases, xt, fontsize=8)
+        ax.legend(frameon=False, fontsize=7.5, loc="lower left")
+        ax.grid(axis="y", color="#e8e7e3", lw=0.6)
+        ax.set_axisbelow(True)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+    fig.suptitle("RL-rollout staleness + DRAM lever refresh (DRAFT; "
+                 "all points measured)", x=0.01, ha="left",
+                 fontsize=10.5, fontweight="bold", color=C["ink"])
+    fig.savefig(OUT / "figF_rl_refresh.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_h2h()
     fig_regimes()
     fig_frontiers()
     fig_serving()
     fig_policy()
+    fig_rl()
     print("figures ->", OUT)

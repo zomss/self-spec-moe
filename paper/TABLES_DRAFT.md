@@ -3,7 +3,8 @@
 > Every number is a committed measurement (phase artifact in research/).
 > 8-iteration e2e runs unless noted; beta at 1152 paired positions.
 > Figures: figures/figA_headtohead.png, figB_regimes.png,
-> figC_frontiers.png, figD_serving.png, figE_policy.png.
+> figC_frontiers.png, figD_serving.png, figE_policy.png,
+> figF_rl_refresh.png.
 
 ## T1. Head-to-head vs KnapSpec (published) — all measured arms
 
@@ -33,6 +34,16 @@
 | fp8-Marlin+win | prose | 5/6 | 83.3/82.6 | 5.53/6.29 | 1.19/1.18 (bytes lose to W4) |
 | W4gptq+win, T=0.7 | prose | 4 | 84.0±0.1 | 4.042 | 1.22 (greedy-only capture gap) |
 | W4gptq+win | prose b8 | 5 | 529.6±5.6 | 5.200 | 1.28 (vs 414.9) |
+| W4A8-Humming+win | prose* | 4 | 57.5 wall | 4.33 | **~1.51** (serving-anchored) |
+| **skip{2,4,7,16} x W4A8-Hum+win** | prose* | 4 | 57.5 wall | 4.33 | **~1.57 (+10% vs their 1.43)** |
+
+*Humming rows measured on the serving driver (harness path blocked by
+a Humming library bug at TP2 b1 -- odd-width lazy cubin-load hang,
+filed); harness-equivalent = 1.41 x same-shape wall-ratio transfer
+against the W4gptq+win anchor (anchor accept 4.46 matches the harness
+arm's 4.535). The skip row is the TRIPLE composition: KnapSpec's own
+lever (measured budget-4 greedy set, beta .892) x quantization x
+windowed sparse attention, inside our framework.
 
 ## T2. Prior-phase e2e ledger (Qwen2.5-7B dense; MoE; MLA)
 
@@ -87,10 +98,14 @@ b16** (new batch headline) vs w4win 1.81/1.79; SAME ckpt on CutlassW4A8
 1.60/1.78 -- realization span 1.60<->2.19 at identical beta (kernel choice
 flips the cell). Accept 6.02 vs 5.69 (GPTQ-calibrated ckpt vs RTN proxy).
 
-32B (TP2) W4A8 arm: b8 K5 1.22x vs w4win 1.28x -- **no flip at scale**;
-kernel factor ~1.05 at 32B/TP2 vs 0.945 at 8B (realization factor is
-scale/TP-dependent). b16/16k cell capacity-infeasible at TP2 (KV pool
-185k < 262k) -- 7th residency incident, feasibility filter validated.
+32B (TP2) W4A8 arm: b8/16k-prose K5 1.22x vs w4win 1.28x -- no flip
+AT THAT CELL. SUPERSEDED BY THE CANONICAL SUITE (T8): on 9 regimes
+the same two ckpts trade wins 5-2 (Humming takes b1/short-ctx/long-
+decode; W4-GPTQ holds prefill-heavy b8 RAG and b32 burst) -- the
+kernel-realization factor is BATCH/SHAPE-dependent at TP2, and
+single-cell h2h understates lever diversity. b16/16k cell
+capacity-infeasible at TP2 (KV pool 185k < 262k) -- 7th residency
+incident, feasibility filter validated.
 
 ### T5b. Width-pruning frontier + kvq bound (Q3-8B, C4-profiled, 16k refs)
 
@@ -169,11 +184,67 @@ full serving driver, Qwen3-8B. Aggregate tok/s per trace
   protected spec-losing cells (alternating K=0 = 50% duty cycle) —
   both arms and policy re-measured on the corrected stack.
 
+## T8. Canonical regime suite (Phase 88): the framework finds an
+## AR-beating setting at 9/9 regimes (8B); winners split at 32B
+
+Real datasets per regime (Spec-Bench/KnapSpec/EfficientRollout-
+grounded: GSM8K+AIME, MT-Bench, HumanEval, CNN/DM, NQ-open+ctx,
+WMT14, MATH@T=1.0), serving wall, 2026-07-19/20.
+
+| regime | 8B best (all W4A8-Hum) | 32B best |
+|---|---|---|
+| math CoT b1 | K6 **1.42x** | skip x Hum K4 **1.50x** |
+| conversation b1 | K4 1.29x | Hum K5 1.36x |
+| code b8 | K4 1.34x | Hum K5 1.39x |
+| summarization b8 | K2 **1.08x** (was 0.84 loss) | Hum K3 1.00x |
+| RAG QA b8/14k | K4 1.42x | **W4-GPTQ K4** 1.13x |
+| RAG CoT b8/14k | K6 **1.76x** | skip x Hum K4 **1.52x** |
+| burst b32 | K4 1.14x | **W4-GPTQ K5** 1.19x |
+| translation b8 | K4 1.14x | Hum K5 1.06x |
+| RL rollout b16 T=1.0 | K2 **1.05x** (was 0.83 loss) | OFF (best spec 0.95x)* |
+
+*32B R8 blocked by the Humming odd-width bug (8B evidence predicts a
+win). Key findings: acceptance is FRONT-LOADED in depth (shallow-K
+converts the losing regimes); at 8B one lever dominates and selection
+= depth; at 32B winners split across kernel x depth x composition x
+OFF. Selection accounting: oracle composite 1.26x (8B) / 1.20x (32B)
+vs AR; switching bound over best static +4.2% / +7.3% (uniform mix),
+CONCENTRATED where statics lose outright (per-cell +7-33%).
+
+## T9. RL-rollout staleness + DRAM lever refresh (Phase 89, 8B)
+
+Drift trace (5 phases, calibrated weight-drift, b16 x MATH T=1.0,
+drain shape), full serving driver. Swap mechanics: 6.07GB draft
+pinned-DRAM->GPU **113 ms**; CUDA-graph replay after in-place copy_
+is bit-exact (zero-downtime, no re-capture); live mid-serving swap
+measured 114-116 ms.
+
+| arm | aggregate vs AR |
+|---|---|
+| stale draft, static (never refreshed) | 0.55-0.76x |
+| per-step runtime policy alone | 1.00x |
+| **full system: policy + detector-fired DRAM refresh** | **1.055x** |
+
+The staleness cliff (-45%) is converted to a bound around the
+per-cell fresh optimum; the detector (accept EMA at 10s cadence,
+S<1-boundary gate) fires the refresh mid-serving and probes re-arm
+within the phase. Measured anti-patterns retained: tight polling
+(-5%), eager gates (0.89x), disk-loading in the swap path (~1s/fire).
+The demo cell is the map's THINNEST (fresh ceiling 1.05-1.07x); the
+same protection transfers to the 1.4-1.9x cells.
+
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
   rows carry the greedy-only-capture execution gap; cross-system caveat
   (speedup vs own AR both sides); KnapSpec numbers from their paper.
 - T1-T5 are decode-focused cell measurements (harness); T6 is the
-  serving WALL headline; T7 is the runtime-selection record. All
-  needed: cells feed the map, T6 is what a deployment sees, T7 is the
-  selector operating without workload knowledge.
+  serving WALL headline; T7 is the runtime-selection record; T8 is
+  the canonical-benchmark coverage claim; T9 is the RL/adaptation
+  system. Cells feed the map, T6/T8 are what a deployment sees,
+  T7/T9 are the selector and swap machinery operating live.
+- Composition status (measured): skip x quant x window stacks at 32B
+  (+3-6% on either kernel, accept cost ~0 -- three sub-additivity
+  confirmations); skip priced out at 8B (scale-keyed). kvq draft-ctx
+  flagged as the accept-side headroom for summarization (window
+  accept is a step function of draft ctx; full-ctx priced out at
+  R~1.0 attention-bound).

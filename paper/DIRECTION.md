@@ -104,6 +104,31 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
   reasoning shapes (14k-doc RAG + 3k-token CoT), S_dec 2.13 =
   decode-cell record reproduced in serving. Plus the RL-rollout trace
   (staleness framing).
+- BEAT-ALL-BASELINES PROGRAM (user-set, steps 0-3; DONE 2026-07-21,
+  phases 88-89 -- the paper's new coverage + adaptation spine):
+  * Step 0/1 (T8): canonical regime suite (real prior-work datasets);
+    the framework finds an AR-beating setting at **9/9 8B regimes**
+    (shallow-K converts the two losses: accept is FRONT-LOADED in
+    depth); 32B: 8/9 + winners split across kernel x depth x
+    composition x OFF -- the lever-diversity evidence ON CANONICAL
+    DATA (single-cell h2h understates diversity).
+  * Step 2: KnapSpec closed -- Humming ~1.51x, and the TRIPLE
+    composition (skip x W4A8-Hum x win512, their own lever included)
+    ~**1.57x vs their 1.43x (+10%)**. Composition is scale-keyed:
+    skip stacks at 32B (+3-6%, accept ~0 cost, third sub-additivity
+    confirmation), priced out at 8B.
+  * Step 3 (T9): DRAM lever swap MEASURED -- 113ms pinned swap,
+    graph-replay bit-exact, live mid-serving refresh 114-116ms; the
+    RL drift demo: staleness -45% cliff -> full system (per-step
+    policy + detector-fired refresh) **1.055x over AR** at the map's
+    thinnest cell. Selection accounting: oracle composites 1.26x/
+    1.20x; switching bound +4.2%/+7.3% uniform-mix, CONCENTRATED
+    (+7-33% per-cell) exactly where statics lose -- the RL regime.
+  * Reframe note for Sec C: the RL demo IS now a switching-system win
+    (depth argmax + OFF gate + refresh beat AR and every static);
+    the earlier "-2% drift model refutes switching win" applied to
+    lever-flip switching WITHOUT refresh -- the refresh axis is what
+    converts drift from a threat into the system's home turf.
 - Honest ledger carried (retractions, corrections, one-box scope until
   the hardware column lands).
 
@@ -112,9 +137,12 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
 1. ~~82-E0 toggle-cost table (incl. CPU KV-requant path)~~ DONE
    2026-07-18 — Sec C's core (results_e0.md).
 2. Second-hardware R column (91-min protocol) — validates axis 2.
-3. RL-rollout-style trace eval — Sec D, staged as the STALENESS /
-   training-free-tracking argument (NOT a switching win: the drift
-   model predicts -2%).
+3. ~~RL-rollout-style trace eval~~ DONE 2026-07-21 (89/results_swap
+   E3/E3b): staleness measured (-45% cliff), full system beats AR
+   1.055x with detector-fired 113ms DRAM refresh — supersedes the
+   "-2% no-switching-win" staging: with the REFRESH axis it IS a win.
+   Remaining hygiene: Humming odd-width bug report upstream; direct
+   harness confirmation of the anchored 32B Humming rows.
 4. ~~Switching demo on a regime-shifting trace~~ RUN 2026-07-18
    (82/results_e2.md): FAIL-HONEST on an OFF-heavy real-data trace --
    omniscient switching ceiling was only +1.7% over static-OFF (the one
