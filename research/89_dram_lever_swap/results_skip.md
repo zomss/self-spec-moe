@@ -55,3 +55,27 @@ K5/K4 with 3 tries + worker cleanup (run_skiphum_retry.sh). If the
 +3% skip dividend transfers to Humming, the 32B record cells move
 ~1.45->1.50 (b1 math) and the KnapSpec cell ~1.51->1.55
 harness-equivalent.
+
+## skip x Humming: MEASURED (quiet-box waiter, 2026-07-21) — the
+## triple composition takes every cell
+
+| cell | plain Hum K5 | skip+Hum K5 | skip+Hum K4 |
+|---|---|---|---|
+| RKS (KnapSpec b1 prose) | 1.189 | 1.221 (4.90) | **1.245** (4.33) |
+| R1 (b1 math) | 1.45 | 1.493 (5.70) | **1.496** (4.81) |
+| R5cot (b8 14k CoT) | 1.43 | 1.483 (5.35) | **1.520** (4.52) |
+
+- The skip dividend TRANSFERS to the Humming kernel (+3-6% relative,
+  accept cost ~0 again) -- the composition is kernel-independent.
+- NEW 32B RECORDS: b1 math 1.50x, deep-CoT 1.52x, and the KnapSpec
+  cell at harness-equivalent **~1.57x vs their published 1.43x
+  (+10%)** -- their lever, composed with quantization AND windowed
+  sparse attention AND the kernel realization, inside our framework.
+- The 32B winner class is now a TRIPLE composition: layer-skip x
+  weight-quant(W4A8-Humming) x sparse-attention(win512) -- all three
+  lever families the user named, measured stacking. The 8B verdict
+  (skip priced out at small scale) still stands: composition depth is
+  scale-keyed.
+- Odd-width note: skip+Hum K4 (width 5) booted clean on the quiet box
+  first try -- consistent with contention-multiplied intermittency
+  rather than a hard block for K4 (K2 remains 0/6).

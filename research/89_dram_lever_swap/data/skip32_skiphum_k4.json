@@ -1,0 +1,41 @@
+{
+ "arm": "w4a8",
+ "K": 4,
+ "model": "Qwen/Qwen3-32B",
+ "RKS": {
+  "toks": 57.5,
+  "all": [
+   57.3,
+   57.5,
+   57.5
+  ],
+  "accept": 4.33,
+  "batch": 1,
+  "max_tokens": 160,
+  "temp": 0.0
+ },
+ "R1": {
+  "toks": 109.8,
+  "all": [
+   109.7,
+   109.8,
+   110.3
+  ],
+  "accept": 4.81,
+  "batch": 1,
+  "max_tokens": 1024,
+  "temp": 0.0
+ },
+ "R5cot": {
+  "toks": 561.7,
+  "all": [
+   553.8,
+   561.7,
+   564.0
+  ],
+  "accept": 4.52,
+  "batch": 8,
+  "max_tokens": 3072,
+  "temp": 0.0
+ }
+}
