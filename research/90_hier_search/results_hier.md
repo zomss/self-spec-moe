@@ -114,3 +114,41 @@ Reading:
        absorbs non-additivity that analytic scores assume away.
   Stage-3 theory: BanditSpec/Not-a-Bandit regret results are the
        citable foundation for our switch-cost-aware bandit.
+
+## E1e (2026-07-23): CLaSp-class objective — REFUTED as a screen at
+## the same grade as everything else; the ~0.35 ceiling looks
+## intrinsic
+
+Continuous on-policy hidden-state cosine (the literature's surviving
+proxy class), 69 configs (36 singles + the 33 committed arms) on the
+86 on-policy refs:
+
+| test | result |
+|---|---|
+| singles vs committed LOO beta | rho 0.368 (p=.04) — same grade as binary micro-LOO (0.344) |
+| arms raw | 0.941 — size confound (as always) |
+| within-round, per size | +0.667 / +0.214 / -0.714 / -0.500 / -0.200 — no reliable ranking |
+| pooled within-size | 0.924 — **INVALID: pooling whole-set (cos, beta) pairs across rounds reintroduces the size confound**; flagged so it is never cited |
+| greedy-set overlap | 0-1 of k (like all other screens) |
+
+Readings:
+- The continuous-observable hypothesis FAILED: cos (continuous) and
+  argmax agreement (binary) converge to the same ~0.34-0.37 singles
+  correlation on identical refs/positions. The ceiling is not an
+  observable-choice artifact — it is the intrinsic fidelity of
+  subsampled on-policy signals at the 1-2 accept-% resolution the
+  ranking requires. FOUR proxy classes now measured against the same
+  committed record; all prior-grade, none screen-grade.
+- Deeper sets show the cos objective DEGRADING (negative rho at
+  sizes 4-6): as drafts diverge, hidden-state similarity stops
+  tracking argmax agreement — a second mechanism (beyond
+  non-additivity) capping similarity-based selection at depth. This
+  is also a caution for CLaSp/KnapSpec-style objectives at
+  aggressive skip budgets.
+- SCOPE NOTE (fair to CLaSp): its deployment value is context-LOCAL
+  re-optimization per verify window — a runtime adaptation mechanism,
+  not an offline search screen. Our test evaluates the offline-screen
+  role only. Per-context set re-optimization remains a legitimate
+  stage-3 lever candidate (with citation), orthogonal to this verdict.
+- Remaining untested route: E1f (learned config->beta predictor on
+  the committed record). Everything analytic is now closed.
