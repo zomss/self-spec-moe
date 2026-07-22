@@ -79,3 +79,38 @@ q38b_/q332b_ locality+importance CSVs (E1), q38b_acceptproxy.csv
 (Taylor + micro-LOO), e1c.json (pair/ctx probes: ctx-invariance
 CONFIRMED 2k vs 8k; adjacency super-additivity observed),
 e1d_onpolicy.json (on-policy singles), rankcorr.json.
+
+## Related work survey (2026-07-23): the field converged on the same
+## three properties our E1 arc measured
+
+| method | selection mechanism | proxy class |
+|---|---|---|
+| Draft&Verify (orig. Self-SD) | Bayesian opt over layer sets, objective = MEASURED time/verified-token on calib data | direct measurement |
+| SWIFT (ICLR'25) | on-the-fly random search + interval BayesOpt DURING serving; LLM-generated tokens as ground truth | direct, ON-POLICY, in-the-loop |
+| CLaSp (ACL'25) | per-verify-step DP over layers, objective = hidden-state alignment vs LAST VERIFICATION's states | similarity proxy, but ON-POLICY + context-local, refreshed every verify |
+| KNN-SSD | precomputed per-DOMAIN layer-set library + KNN input matching | pool + selector (== our per-regime pools) |
+| KnapSpec (our h2h baseline) | knapsack: value = cosine sim per layer (ADDITIVE), weight = latency; corrected by r=5 recent-step empirical accept | offline-class additive surrogate + on-policy accept patch |
+| SpecDec++ | trained acceptance-prediction head (per-token) for adaptive draft length | LEARNED proxy from measured acceptance |
+| BanditSpec / Not-a-Bandit | online drafter selection, regret guarantees | bandit (external-drafter pools) |
+| HAWQ line (quant) | Hessian-trace per-layer sensitivity | offline second-order score (task loss) |
+
+Reading:
+- NOBODY ships a working OFFLINE geometry score for acceptance. The
+  successful selectors are (a) on-policy, (b) in-the-serving-loop /
+  context-local, (c) measurement-anchored or learned from measured
+  acceptance — the exact three properties E1 isolated (sign-flip
+  on-policy; non-additivity; resolution). Our negative result matches
+  the field's evolution away from offline scoring.
+- KnapSpec's additive cosine knapsack is PRECISELY the surrogate
+  class our control refutes (singles don't compose, rho -0.09) — a
+  mechanistic explanation for why our measured-search configs beat
+  their number (~1.57 vs 1.43 with their own lever included).
+- Three upgrade candidates for our stage 2, in order of promise:
+  E1e: CLaSp-style ON-POLICY context-local similarity DP — the
+       similarity proxy re-based on live verification states; test
+       against our committed greedy record before adoption.
+  E1f: learned config->beta predictor (SpecDec++ class, per-config):
+       train on our 100+ committed (config, beta) pairs; learning
+       absorbs non-additivity that analytic scores assume away.
+  Stage-3 theory: BanditSpec/Not-a-Bandit regret results are the
+       citable foundation for our switch-cost-aware bandit.
