@@ -152,3 +152,45 @@ Readings:
   stage-3 lever candidate (with citation), orthogonal to this verdict.
 - Remaining untested route: E1f (learned config->beta predictor on
   the committed record). Everything analytic is now closed.
+
+## E1f (2026-07-23): learned config->beta predictor — REFUTED; the
+## proxy program is now CLOSED with a five-way falsification
+
+Ridge + RBF-kernel-ridge on structural features (size, adjacency,
+runs, position thirds) + per-layer score aggregates; leakage-strict
+leave-one-ROUND-out eval; trained on all committed pairs (8B n=65,
+32B n=93).
+
+| model | within-round mean rho |
+|---|---|
+| 8B full-features (ridge / krr) | 0.081 / -0.146 |
+| 8B additive product-of-singles baseline | 0.125 |
+| 32B shared-features (ridge / krr) | 0.215 / -0.102 |
+| 8B->32B TRANSFER (krr, clean split) | 0.429 (mixed signs; prior-grade curiosity) |
+
+Root cause: learning non-additive interaction structure needs
+training data of the same kind the predictor is meant to replace —
+at 65-93 measured configs the model cannot beat the additive
+baseline it was built to transcend. The one positive note (cross-
+model transfer 0.43 on shared features) suggests weak universal
+structure (position/adjacency effects partially transfer across
+scale) — usable as a cold-start PRIOR for a new column's first
+greedy round, nothing more.
+
+### FINAL VERDICT — the proxy graveyard (all vs the same committed record)
+
+| class | representative | best within-round fidelity |
+|---|---|---|
+| offline geometry | angular distance, raw attn mass | INVERTED (-0.77 singles) |
+| gradient/first-order | margin-Taylor | inverted off-policy (-0.47) |
+| subsampled objective (binary) | on-policy micro-LOO | 0.34 singles / ~0 rounds |
+| subsampled objective (continuous) | CLaSp-class cos | 0.37 singles / ~0 rounds |
+| learned predictor | ridge/krr on committed pairs | 0.08-0.22 CV; 0.43 transfer |
+
+Acceptance-importance CANNOT be scored at screen grade by any tested
+method: it must be measured — on-policy, conditionally, at full-ref
+resolution. Proxies serve as round-ordering priors (0.3-0.4 grade)
+and cross-model cold-start only. This is C2's central empirical
+theorem, exhaustively supported, and it mechanistically explains the
+h2h margin over surrogate-driven selection (KnapSpec's additive
+cosine knapsack sits in the refuted class).
