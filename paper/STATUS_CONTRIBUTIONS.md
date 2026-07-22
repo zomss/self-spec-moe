@@ -19,6 +19,12 @@ The four contributions as stated by the user (2026-07-21):
 
 ## Work items (the task list)
 
+0. **[C2] Phase 90 (hierarchical search)** — the C2 hardening per
+   the 2026-07-23 discussion: analytic-cost prefilter -> importance-
+   proxy shortlist (rank-validated vs committed betas) -> direct beta
+   -> per-regime pools -> switch-cost-aware bandit. First target: R4
+   heterogeneous per-layer/head windows (accept headroom 4.06 at
+   priced-out cost; free-toggle lever). research/90_hier_search.
 1. **[C2] Cost-to-onboard table** — assemble from committed timings:
    beta column cost, e2e arm cost, compile-policy cost per cell,
    solve cost -> "zero to compiled policy on a new column = X
