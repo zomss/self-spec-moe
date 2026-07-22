@@ -1,0 +1,143 @@
+{
+ "p1a_32b": {
+  "n_arms": 33,
+  "spearman_damage_vs_negbeta": 0.965,
+  "p": 1.13e-19,
+  "greedy_order": {
+   "greedy1": {
+    "greedy": [
+     4
+    ],
+    "proxy_bottomk": [
+     18
+    ],
+    "overlap": 0
+   },
+   "greedy2": {
+    "greedy": [
+     4,
+     7
+    ],
+    "proxy_bottomk": [
+     18,
+     19
+    ],
+    "overlap": 0
+   },
+   "greedy3": {
+    "greedy": [
+     4,
+     7,
+     16
+    ],
+    "proxy_bottomk": [
+     17,
+     18,
+     19
+    ],
+    "overlap": 0
+   },
+   "greedy4": {
+    "greedy": [
+     2,
+     4,
+     7,
+     16
+    ],
+    "proxy_bottomk": [
+     16,
+     17,
+     18,
+     19
+    ],
+    "overlap": 1
+   }
+  }
+ },
+ "p1a_8b": {
+  "n_arms": 33,
+  "spearman_damage_vs_negbeta": 0.958,
+  "p": 2.65e-18,
+  "greedy_order": {
+   "greedy1": {
+    "greedy": [
+     5
+    ],
+    "proxy_bottomk": [
+     32
+    ],
+    "overlap": 0
+   },
+   "greedy3": {
+    "greedy": [
+     4,
+     5,
+     6
+    ],
+    "proxy_bottomk": [
+     31,
+     32,
+     33
+    ],
+    "overlap": 0
+   },
+   "greedy5": {
+    "greedy": [
+     3,
+     4,
+     5,
+     6,
+     12
+    ],
+    "proxy_bottomk": [
+     26,
+     27,
+     31,
+     32,
+     33
+    ],
+    "overlap": 0
+   },
+   "greedy7": {
+    "greedy": [
+     3,
+     4,
+     5,
+     6,
+     7,
+     11,
+     12
+    ],
+    "proxy_bottomk": [
+     26,
+     27,
+     29,
+     30,
+     31,
+     32,
+     33
+    ],
+    "overlap": 0
+   }
+  }
+ },
+ "p1b_step": {
+  "beyond_mass": {
+   "128": 0.2895,
+   "512": 0.2068,
+   "2048": 0.1382,
+   "4096": 0.0958
+  },
+  "frac_of_beyond512_captured_by_2048": 0.332
+ },
+ "p1b_task": {
+  "beyond512_c4": 0.1145,
+  "beyond512_cnndm": 0.1432
+ },
+ "p2_concentration": {
+  "pairs_total": 1152,
+  "pairs_for_70pct": 499,
+  "fraction": 0.433,
+  "verdict": "FAIL"
+ }
+}
