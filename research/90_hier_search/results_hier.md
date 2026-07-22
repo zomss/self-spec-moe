@@ -194,3 +194,41 @@ and cross-model cold-start only. This is C2's central empirical
 theorem, exhaustively supported, and it mechanistically explains the
 h2h margin over surrogate-driven selection (KnapSpec's additive
 cosine knapsack sits in the refuted class).
+
+## E3 (2026-07-24): heterogeneous per-layer windows — REFUTED by its
+## own gate; window-need is COLLECTIVE, not localized
+
+Direct conditional on-policy search on R4 refs (CNN/DM 8k articles ->
+the target's own greedy summaries; per-layer full-vs-win512+sink16
+masks; agreement at the 96 on-policy tail positions):
+
+| config | agreement | % of gap |
+|---|---|---|
+| all-full (ceiling) | 0.9878 | 100 |
+| all-win512 (the accept-2.70 regime) | 0.6007 | 0 |
+| top2 relief {10,24} | 0.5938 | **-2%** |
+| top4 / top6 | 0.6042 | +1% |
+| top9 | 0.6146 | +4% |
+| top12 (1/3 of the network) | 0.6215 | +5% |
+| rand9 control | 0.6319 | +8% |
+| bottom9 control | 0.6198 | +5% |
+
+- P3 (>=70% of gap at <=9 layers): FAILED decisively — and the
+  controls beat the relief-ranked sets: singles relief is noise;
+  no small full-context layer subset exists.
+- MECHANISM: the summarization accept gain from context is
+  super-modular/collective — partial relief fails in BOTH axes
+  (ctx-space: win2048 flat, measured earlier; layer-space: this
+  table). The draft needs the article EVERYWHERE or the gain does
+  not materialize. Also the final proxy-vs-measured data point:
+  measured relief ranks mid/late layers (10,24,21,28...) while raw
+  far-mass ranked early layers (1-6) — disjoint, as the E1 arc
+  predicted.
+- E4 (per-layer scratchpad engine surgery): CANCELED by
+  build-on-selection — the lever died at the beta gate, zero engine
+  cost spent.
+- CONSEQUENCE for R4 headroom: cheap-far-context-EVERYWHERE is the
+  only surviving direction — i.e. the kvq draft-context lever
+  (fp8 KV, retrieval beta .974 at 4x fewer bytes, already flagged in
+  the pool) — compress all layers' far context rather than give few
+  layers full context. Hetero-window is closed at 8B.
