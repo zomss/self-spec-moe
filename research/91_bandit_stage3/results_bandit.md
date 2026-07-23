@@ -120,3 +120,36 @@ tax) but the Marlin lever itself is dominated by Humming K3 arms
 0.5-0.9 vs Humming 0.35-0.6; b16/2k all-suboptions <1.0). The
 K-grid extension is worth +3% WITHIN a lever; kernel choice is worth
 more; the Humming-K4 variant stays blocked by the odd-width bug.
+
+## E6: GRPO-shaped rollout — TARGET MET (2026-07-23)
+
+Shape: 16 AIME prompts x group 8 (n=8), T=1.0, 8k budget, b64 cap,
+1 H100. Thinking-mode = the reasoning-RL rollout shape (avg ~7.1k
+tok/seq). EfficientRollout's headline: rollout -19.6% (1.24x) on
+veRL/A100x8, alpha .982, gamma 8.2.
+
+| arm (thinking shape) | rollout s | tok/s | vs AR |
+|---|---|---|---|
+| AR | 281.5 | 3225.8 | 1.000 |
+| policy v1 (kmax8, b32-capped table) | - | - | 0.85x (non-think) |
+| policy v2 (kmax3, b64 pinned OFF) | 276.3 | 3334.6 | 1.034x |
+| **policy v3 (b64 cells MEASURED -> K2)** | **223.2** | **4073.0** | **1.263x = -20.7%** |
+
+- MATCHES/BEATS their -19.6% at the equivalent per-GPU shape, at
+  accept f~0.77-0.88 (they need alpha .982) -- the map's cell-true
+  pricing substitutes for their acceptance advantage.
+- The iteration chain is the method demonstrated: three failures,
+  all COVERAGE failures, each fixed by measuring a missing cell
+  (b64 hole -> kmax discipline -> b64/2k = 1.124 not OFF); zero
+  tuning. The final config: K2 armed at b64 (near-uniform-length
+  thinking rollouts NEVER drain -- b64 is the whole trace; the
+  "drain tail" story was wrong for reasoning-RL shapes, measured).
+- Non-think shape (avg 1.7k tok): 0.97x -- short-gen rollouts are
+  genuinely thin; shape matters more than any mechanism.
+- Drift arms at this shape: eps<=.35 costs only ~8%; refresh-vs-
+  stale within boot noise -- the staleness cliff (E3: -45%) needs
+  deeper drift; E6 drift arms recorded as context.
+- vs EfficientRollout mechanisms: their toggle == our OFF-gate
+  (now with measured b64 cells), their per-step requant (1.3-2.6s)
+  vs our detector-fired 113ms refresh, their gamma-adapt == our
+  argmax; our addition: the compiled per-cell map + drift detector.

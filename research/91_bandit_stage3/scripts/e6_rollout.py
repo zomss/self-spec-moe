@@ -58,7 +58,8 @@ def main():
     prompts = [tok.apply_chat_template(
         [{"role": "user", "content": ds[i]["Question"]
           + "\nPlease reason step by step."}],
-        tokenize=False, add_generation_prompt=True, enable_thinking=False)
+        tokenize=False, add_generation_prompt=True,
+        enable_thinking=os.environ.get("E6_THINK", "0") == "1")
         for i in range(N_PROMPTS)]
     sp = SamplingParams(n=GROUP, max_tokens=MAX_TOK, temperature=1.0,
                         seed=0)

@@ -1,0 +1,26 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "draft": "/home/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+ "ndec": 160,
+ "arming_rent": 0.015,
+ "cells": [
+  {
+   "batch": 64,
+   "ctx": 2000,
+   "options": [
+    {
+     "K": 2,
+     "R": 0.757,
+     "S_ref": 1.124,
+     "f_ref": 0.913
+    },
+    {
+     "K": 3,
+     "R": 0.796,
+     "S_ref": 1.073,
+     "f_ref": 0.879
+    }
+   ]
+  }
+ ]
+}
