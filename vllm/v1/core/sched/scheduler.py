@@ -1249,6 +1249,14 @@ class Scheduler(SchedulerInterface):
             if best_k == 0 and probing and nz_best_k:
                 best_k = nz_best_k
             self._sd_policy_k = best_k
+            if envs.VLLM_SELF_SPEC_GATE_DEBUG:
+                cell = self._sd_policy_cell or {}
+                logger.info(
+                    "[kpick] step=%d n_run=%d cell=b%s/c%s f=%.3f K=%d",
+                    getattr(self, "_sd_kpick_step", 0), n_run,
+                    cell.get("batch"), cell.get("ctx"), f_live, best_k)
+                self._sd_kpick_step = getattr(
+                    self, "_sd_kpick_step", 0) + 1
             num_spec_tokens_to_schedule = min(best_k, self.num_spec_tokens)
         if (
             self._sd_policy is None

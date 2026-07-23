@@ -252,11 +252,13 @@ sides (their per-step requant == our fresh).
   prices are compiled on generic decode grids (never fitted on the
   eval trace); only COVERAGE was extended when the trace exposed
   unpriced regimes -- the audit loop as deployment practice.
-- EVAL PROTOCOL (what switches, measured): per-step nearest-cell
-  lookup on (batch band, mean ctx) = regime switching; live pooled
-  accept EMA sets f in the argmax = real-acceptance switching;
-  OFF-gate via S<1; boot-level levers (ckpt/kernel/window/kmax)
-  declared fixed per arm.
+- EVAL PROTOCOL, VALIDATED BY TRACE (E6-val, 7438 logged per-step
+  decisions at 1.278x): 8 cells traversed as the rollout drains
+  (b128/2k -> b1/8k); K follows BOTH regime (Q1 94% K2 -> Q4 49% K3
+  with depth) and live acceptance (b8/2k f=.95 -> K3; b1/8k f=.586
+  -> 74% OFF). Survivor-bias finding: the drain tail is LOW-accept
+  (hardest sequences last) -- live-acceptance switching catches what
+  cell pricing cannot. Boot-level levers declared fixed per arm.
 
 The staleness cliff (-45%) is converted to a bound around the
 per-cell fresh optimum; the detector (accept EMA at 10s cadence,

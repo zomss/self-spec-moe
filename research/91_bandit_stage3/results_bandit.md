@@ -169,3 +169,30 @@ FINAL RL PAIR for the paper: realistic reasoning rollout **1.300x
 .982); adversarial drift trace 1.090x +- 0.044 with the 113ms
 refresh. The E6 chain 0.85 -> 1.034 -> 1.263 -> 1.300: every step a
 measured cell, zero tuning.
+
+## E6-val: per-step K-selection trace (the eval-protocol artifact)
+
+Winning arm rerun with [kpick] logging: 4121.5 tok/s (1.278x --
+replicates 1.300 within noise, logging on). 7438 per-step decisions:
+
+| cell visited | steps | K histogram | mean f_live |
+|---|---|---|---|
+| b128/2k | 3470 | K0 23% / K2 76% | .789 |
+| b64/2k | 2431 | K0 36% / K2 64% | .773 |
+| b16/8k | 473 | K2 51% / K3 49% | .771 |
+| b48/6k | 373 | K3 100% | .696 |
+| b32/6k | 260 | K3 100% | .750 |
+| b1/8k (tail) | 201 | **K0 74%** / K3 22% | **.586** |
+| b8/8k | 190 | K2 99% | .815 |
+| b8/2k | 40 | K3 100% | .948 |
+
+Quarters: Q1 94% K2 -> Q2 48% OFF / 52% K2 -> Q4 49% K3. The
+selection is demonstrably (a) REGIME-driven (8 cells traversed as
+batch drains and ctx deepens; K2->K3 with depth) and (b)
+ACCEPTANCE-driven (mean-f per cell spans .586-.948 and K follows:
+b8/2k f=.95 -> K3; b1/8k f=.586 -> 74% OFF). BONUS FINDING --
+survivor bias: the drain TAIL is LOW-accept (hardest sequences
+finish last, f .586 vs .77-.95 elsewhere); cell prices alone call
+the tail spec-heaven, live acceptance says its content is adverse --
+the OFF-gate catches what pricing cannot. Real-acceptance switching
+is not optional at rollout tails.
