@@ -1224,7 +1224,14 @@ class Scheduler(SchedulerInterface):
                     self._sd_bandit_sample = _random.betavariate(
                         max(a_p, 1e-3), max(b_p, 1e-3))
                 f_live = self._sd_bandit_sample
-                probing = False
+                # Minimal probe FLOOR (E5e finding): exploration serves
+                # DETECTION, not just estimation -- with probes fully
+                # off, a disarmed bandit starves the drift detector's
+                # evidence window (censored feedback) and refresh never
+                # fires. 4/256 keeps the accept signal alive at ~1.6%
+                # duty (vs argmax's 8/128 = 6.3%).
+                probing = (self._sd_gate_step % 256) < 4
+                self._sd_gate_step += 1
             # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
             # score is always 1.0 -- staying ON requires S >= 1.0, and
             # only ARMING (or switching K) pays the 2% margin.
