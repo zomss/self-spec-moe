@@ -105,7 +105,8 @@ def main():
     spec = None
     if os.environ.get("E3_SPEC", "1") == "1":
         spec = {"method": "draft_model",
-                "model": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
+                "model": os.path.expanduser(os.environ.get(
+                    "E3_DRAFT", "~/ckpts/Qwen3-8B-W4A8-gptq")),
                 "num_speculative_tokens": int(os.environ.get("E3_K", "4")),
                 "draft_tensor_parallel_size": 1}
     extra = {}
@@ -125,7 +126,7 @@ def main():
         for i in range(16)]
     sp = SamplingParams(
         max_tokens=int(os.environ.get("E3_MAXTOK", "1024")),
-        temperature=1.0, seed=0,
+        temperature=1.0, seed=int(os.environ.get("E3_SEED", "0")),
         ignore_eos=os.environ.get("E3_EOS", "0") != "1")
 
     def counters():

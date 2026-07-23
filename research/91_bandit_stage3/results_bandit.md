@@ -90,3 +90,33 @@ discipline confirmed once more, now for the CONTROLLER itself.
 
 Remaining (parked): kmax=4 K-grid via Marlin (Humming multi-width
 wedge); multi-seed paired runs if the final table needs tighter CIs.
+
+## Multi-seed CIs + Marlin K-grid (2026-07-23, closes the phase)
+
+Per-seed paired ratios (same-GPU AR anchor per seed; seed0 = the
+original pair):
+
+| seed | argmax | bandit+floor |
+|---|---|---|
+| 0 | 1.042x | 0.996x |
+| 1 | 1.097x | 1.036x |
+| 2 | 1.130x | 1.095x |
+| **mean +- sd** | **1.090 +- 0.044** | **1.043 +- 0.050** |
+
+- BOTH controllers beat AR on every seed (the RL win is robust:
+  argmax mean 1.090x, bandit 1.043x on the drift trace with refresh).
+- The argmax lead (~4.7 points) is consistent across all three seeds
+  (paired: +4.6/+6.1/+3.5) -- real, not noise. FINAL stage-3 verdict
+  unchanged: the tuned policy is the measured optimum; the principled
+  bandit lands within ~5% carrying zero hand-tuned parameters.
+- Note the multi-seed argmax mean (1.090x) UPGRADES the headline RL
+  number from the single-seed 1.055x.
+
+Marlin K-grid (the parked kmax-4 question on the wedge-free kernel):
+marlin_k4 1178 vs marlin_k3 1143 hmean (+3.1%) -- kmax=4 nets
+POSITIVE on Marlin (the ctx-progression gain outweighs the padding
+tax) but the Marlin lever itself is dominated by Humming K3 arms
+(1174-1300) at this cell, as the compiled tables price (W4A16 R
+0.5-0.9 vs Humming 0.35-0.6; b16/2k all-suboptions <1.0). The
+K-grid extension is worth +3% WITHIN a lever; kernel choice is worth
+more; the Humming-K4 variant stays blocked by the odd-width bug.
