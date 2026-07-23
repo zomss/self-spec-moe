@@ -236,10 +236,25 @@ sides (their per-step requant == our fresh).
 | system | rollout speedup |
 |---|---|
 | EfficientRollout (published; 8xA100, alpha .982, gamma 8.2) | -19.6% (1.24x) |
+| **EfficientRollout METHOD, reproduced same-stack/same-trace** (W4-RTN Marlin draft, full-ctx, roofline toggle + gamma schedule) | **0.764x** (accept 3.34) |
 | ours, b32-capped table (coverage hole) | 0.85x |
 | ours, + kmax discipline + b64 pinned OFF | 1.034x |
 | ours, + b64 cell measured (K2 1.124) | 1.263x |
 | **ours, + b32/48 deep-ctx cells (K3 late-rollout)** | **1.300x (-24.2%)** |
+
+SAME-STACK COMPARISON (the decisive row pair): their method loses to
+AR on H100 at this shape -- acceptance is FINE (3.34; the full-ctx
+draft drafts well); the COST model breaks: (a) full-context draft
+KV-read at b64 x deep ctx is exactly the term win512 removes, (b)
+the analytic roofline toggle (A100-ridge assumptions) keeps SD armed
+where measured H100 cells price it negative. Same-stack gap: 1.70x
+(ours/theirs); even granting their toggle a generous OFF above b48
+(~1.0), ours leads by 30 points. Deviations disclosed: sym-RTN
+(asym unloadable), static 2-tier gamma approximating their adapt,
+shared-KV on (+4.5% in their favor). Their published -19.6% is real
+ON THEIR HARDWARE; the method does not transfer unmeasured -- the
+measure-on-deployment thesis demonstrated on the reference system
+itself (hardware axis, T11-class evidence).
 
 - +4.6 points over their headline at f~0.8 where they need alpha
   .982: cell-true pricing substitutes for acceptance; refresh 113ms
