@@ -253,6 +253,13 @@ class Scheduler(SchedulerInterface):
         # (compile_policy.py). Replaces the hand rules; nearest-cell
         # lookup with a short debounce against boundary flapping.
         self._sd_policy: list | None = None
+        # Phase 91 (stage-3 bandit): discounted Beta posterior over the
+        # arithmetic accept fraction f, replacing the point-EMA + probe
+        # bursts with Thompson sampling when VLLM_SELF_SPEC_BANDIT=1.
+        # Optimistic prior Beta(9,1) (mean .9) per the measured
+        # optimistic-init doctrine; exploration emerges from posterior
+        # widening while parked OFF (evidence decays to the prior).
+        self._sd_bandit_ab: list[float] = [9.0, 1.0]
         self._sd_policy_cell: dict | None = None
         self._sd_policy_pending = None
         self._sd_policy_dwell = 0
@@ -1197,6 +1204,17 @@ class Scheduler(SchedulerInterface):
             # reveal -- and a probe's volume can't lift a pessimistic
             # EMA past the arming margin. Discovery beats prior here.
             cur_k = getattr(self, "_sd_policy_k", 0)
+            if envs.VLLM_SELF_SPEC_BANDIT:
+                # Thompson: sample f from the discounted posterior and
+                # argmax S under the sample. Exploration is calibrated
+                # by posterior width (no probe bursts needed): parked
+                # OFF, evidence decays toward Beta(9,1) and optimistic
+                # samples re-arm naturally.
+                import random as _random
+                a_p, b_p = self._sd_bandit_ab
+                f_live = _random.betavariate(max(a_p, 1e-3),
+                                             max(b_p, 1e-3))
+                probing = False
             # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
             # score is always 1.0 -- staying ON requires S >= 1.0, and
             # only ARMING (or switching K) pays the 2% margin.
@@ -1829,6 +1847,16 @@ class Scheduler(SchedulerInterface):
                     self._sd_req_ema[req_id] = (
                         (1 - w) * ema + w * num_accepted / num_draft_tokens
                     )
+                    if envs.VLLM_SELF_SPEC_BANDIT:
+                        # Phase 91: discounted Beta posterior over f.
+                        # Same half-life as the EMA (24 drafted tok);
+                        # pseudo-count floor keeps the optimistic prior
+                        # Beta(9,1) reachable as evidence decays.
+                        a, b = self._sd_bandit_ab
+                        d = 0.5 ** (num_draft_tokens / 24.0)
+                        a = 9.0 + (a - 9.0) * d + num_accepted
+                        b = 1.0 + (b - 1.0) * d + num_rejected
+                        self._sd_bandit_ab = [a, b]
                 # num_computed_tokens represents the number of tokens
                 # processed in the current step, considering scheduled
                 # tokens and rejections. If some tokens are rejected,
