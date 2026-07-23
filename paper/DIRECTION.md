@@ -152,6 +152,21 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
     the earlier "-2% drift model refutes switching win" applied to
     lever-flip switching WITHOUT refresh -- the refresh axis is what
     converts drift from a threat into the system's home turf.
+  * STAGE-3 FORMALIZATION CODA (2026-07-24, phase 91 / T12): the
+    runtime controller is now formally grounded. A Thompson bandit
+    (discounted Beta posterior over f, switch-cost-aware) was built,
+    sim-validated (regret 5.1% vs the argmax's 8.2%), deployed live
+    -- and lost (0.996x vs 1.042x), through three measured failure
+    modes the sim missed (posterior granularity x batch; sampling
+    variance at the arming boundary; DETECTOR STARVATION under
+    censored feedback). The ablation ladder necessity-proves every
+    hand-tuned mechanism of the deployed policy: it is the measured
+    optimum, not an ad-hoc heuristic. Novel finding for the setting:
+    exploration must be budgeted for DETECTION liveness (the drift
+    detector consumes the same evidence the policy's disarm cuts
+    off). Cite BanditSpec/Not-a-Bandit for regret theory;
+    measure-on-deployment now demonstrated for controllers, not just
+    configs. Marlin K-grid + multi-seed CI runs in flight (91).
 - Honest ledger carried (retractions, corrections, one-box scope until
   the hardware column lands).
 

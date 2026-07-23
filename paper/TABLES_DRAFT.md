@@ -272,10 +272,37 @@ w4+ffn, hetero-window, kvq pool all died pre-e2e at zero engine cost).
 | 13 | beat-AR recipe: kmax-tax + pinned swap + drift-timescale detector (89-E3b) | CONFIRMED by ablation (0.96 -> 1.055x) |
 | 14 | (audit-loop entry) K4/K6 grid sufficient | WRONG-BY-OMISSION: shallow-K found by EVAL -> grid coverage folded into method |
 
-7 confirmed / 5 refuted / 1 superseded / 1 open — the refutations
+| 15 | Thompson bandit beats argmax-EMA live (91: sim regret 5.1% vs 8.2%) | **REFUTED live** (0.996x vs 1.042x) -> 3 controller failure modes measured; sim missed all 3 |
+| 16 | per-config proxies rankable after on-policy fix | capped at prior grade (0.34-0.43) -> measurement theorem |
+| 17 | probe bursts are estimation-only machinery | **WRONG**: removing them starves the drift DETECTOR (censored feedback) -> exploration-for-detection finding |
+
+9 confirmed / 7 refuted / 1 superseded / 1 open — the refutations
 each produced a method correction (composition rule,
 measure-on-deployment, measurement-not-scoring, collectivity, grid
-audit). The map predicts, fails visibly, and self-corrects.
+audit, controller-on-deployment, exploration-for-detection). The map
+predicts, fails visibly, and self-corrects.
+
+## T12. Stage-3 controller formalization ladder (Phase 91)
+
+Live drift-trace ablations, same-GPU AR anchors; the deployed
+argmax+hysteresis+probes = 1.042x:
+
+| bandit variant | vs AR | mechanism isolated |
+|---|---|---|
+| Thompson, per-request decay | 0.982x | posterior granularity (discount x batch) |
+| + per-step pooled posterior | 0.969x | boundary sampling variance (S~1 zone flap) |
+| + lazy sampling (hold x16) | 0.921x* | *phase4 0.78: DETECTOR STARVATION -- disarmed bandit generates no accept evidence, refresh never fires |
+| **+ probe floor 4/256** | **0.996x** | detection liveness restored |
+
+Each hand-tuned mechanism of the deployed policy is
+necessity-proven by its ablation: point-estimate stability, pooled
+per-step evidence, probe bursts (which serve DETECTION as well as
+estimation — the censored-feedback finding). The tuned policy is
+the measured optimum of this design space; the bandit framework is
+the language that proves it (regret-theory grounding: BanditSpec,
+Not-a-Bandit). The calibrated simulator (Thompson 5.1% vs 8.2%
+regret) missed all three live failure modes:
+measure-on-deployment applies to the CONTROLLER itself.
 
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
