@@ -45,9 +45,14 @@ def main():
     spec = None
     if ARM != "off":
         spec = {"method": "draft_model",
-                "model": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
+                "model": os.path.expanduser(os.environ.get(
+                    "E6_DRAFT", "~/ckpts/Qwen3-8B-W4A8-gptq")),
                 "num_speculative_tokens": int(os.environ.get("E6_K", "8")),
                 "draft_tensor_parallel_size": 1}
+        if os.environ.get("E6_SCHEDULE"):
+            spec["num_speculative_tokens_per_batch_size"] = [
+                tuple(int(x) for x in t.split(":"))
+                for t in os.environ["E6_SCHEDULE"].split(",")]
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
               tensor_parallel_size=1, max_model_len=MAX_TOK + 512,
               gpu_memory_utilization=0.90, max_num_seqs=int(os.environ.get("E6_MAXSEQS", "64")),
