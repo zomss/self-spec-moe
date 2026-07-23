@@ -225,6 +225,39 @@ measured 114-116 ms.
 | per-step runtime policy alone | 1.00x |
 | **full system: policy + detector-fired DRAM refresh** | **1.090x +- 0.044 (3 seeds)** |
 
+### T9b. Realistic reasoning-rollout benchmark (Phase 91 E6, the
+### EfficientRollout comparison)
+
+GRPO-shaped per-GPU rollout: 16 AIME prompts x group 8, T=1.0, 8k
+budget, thinking mode (avg ~7.1k tok/seq, near-uniform lengths -> the
+rollout LIVES at b64; no drain tail), 1xH100, fresh drafter both
+sides (their per-step requant == our fresh).
+
+| system | rollout speedup |
+|---|---|
+| EfficientRollout (published; 8xA100, alpha .982, gamma 8.2) | -19.6% (1.24x) |
+| ours, b32-capped table (coverage hole) | 0.85x |
+| ours, + kmax discipline + b64 pinned OFF | 1.034x |
+| ours, + b64 cell measured (K2 1.124) | 1.263x |
+| **ours, + b32/48 deep-ctx cells (K3 late-rollout)** | **1.300x (-24.2%)** |
+
+- +4.6 points over their headline at f~0.8 where they need alpha
+  .982: cell-true pricing substitutes for acceptance; refresh 113ms
+  vs their 1.3-2.6s requant.
+- Ablations refuted at this shape: win4096 draft (accept FLAT at
+  2.66 -- third collectivity/on-policy confirmation: self-generated
+  traces need no far ctx), maxseqs-48 waves (parallelism > cell
+  gain), non-thinking short-gen rollouts (0.97x -- honestly thin).
+- The 0.85 -> 1.30 chain: four measured cells, zero tuning. Cell
+  prices are compiled on generic decode grids (never fitted on the
+  eval trace); only COVERAGE was extended when the trace exposed
+  unpriced regimes -- the audit loop as deployment practice.
+- EVAL PROTOCOL (what switches, measured): per-step nearest-cell
+  lookup on (batch band, mean ctx) = regime switching; live pooled
+  accept EMA sets f in the argmax = real-acceptance switching;
+  OFF-gate via S<1; boot-level levers (ckpt/kernel/window/kmax)
+  declared fixed per arm.
+
 The staleness cliff (-45%) is converted to a bound around the
 per-cell fresh optimum; the detector (accept EMA at 10s cadence,
 S<1-boundary gate) fires the refresh mid-serving and probes re-arm
