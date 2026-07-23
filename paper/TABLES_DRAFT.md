@@ -233,6 +233,50 @@ within the phase. Measured anti-patterns retained: tight polling
 The demo cell is the map's THINNEST (fresh ceiling 1.05-1.07x); the
 same protection transfers to the 1.4-1.9x cells.
 
+## T10. Cost to onboard a new (model, hardware) column (measured
+## wall times, single H100 unless noted)
+
+| stage | what | measured cost | provenance |
+|---|---|---|---|
+| on-policy refs | 6-12 prompts x 16k target-greedy gens | ~3-6 min | 90-E3 ref gen (6 refs / 3 min) |
+| beta singles pool screen | ~10 lever singles, full protocol | ~30-60 min | 86-E1 (91 measurements) |
+| LOO layer profile | 36-64 configs | 36 cfgs ~2.7 min at screen grade; full protocol ~1-2 h | 90-e1d (2.7 min); 86 beta_profile (416 meas.) |
+| iterative-greedy sets | 5 rounds x pool-8 conditional | ~40 cfgs, same per-config rates | 86 beta_greedy (436 meas.) |
+| deployment R + policy table | boot + T(1+N)-T(1) grid per arm | **5-7 min/arm; 5-arm table ~35 min** | 88/89 compile logs |
+| e2e winner arms | 8-iter serving runs | ~8-15 min/arm, winners only | 86/88 run logs |
+| hardware R column (protocol) | second-hardware onboarding | **91 min** (protocol, blocked on access) | 79/86 |
+
+Screening-grade conditional measurement is ~4-5 s/config (90-e1e:
+69 configs / 4.6 min at 16k ctx); full-resolution ~2-5 min/config.
+Zero-to-compiled-policy on a new model column: **~2-4 GPU-hours**;
+adding a hardware column: ~1.5 h. The map is cheap because the
+expensive thing (e2e) is built only for winners (build-on-selection:
+w4+ffn, hetero-window, kvq pool all died pre-e2e at zero engine cost).
+
+## T11. Pre-registration scorecard (predict -> measure -> correct)
+
+| # | prediction (registered before measurement) | outcome |
+|---|---|---|
+| 1 | QK-norm rule: kvq_fp8 beta ~.97 on Qwen3-8B (86-P1) | CONFIRMED (.985) |
+| 2 | skip-beta scale-dependence, 8B between 7B/32B (86-P2) | CONFIRMED (.849 between .817/.892) |
+| 3 | 8B b1 winner quant-led ~1.28-1.35 (86-P3) | CONFIRMED, conservative (1.42 w/ window) |
+| 4 | 32B composition 1.5-1.6x > KnapSpec 1.43 (86-P4) | CONFIRMED (1.54-1.63 math; 1.57 prose triple) |
+| 5 | skip DOMINATED at 32B (product-beta pricing) | **REFUTED** -> cross-family rule: never price compositions by product; measure composed beta |
+| 6 | 32B harness cells transfer to serving (+10.4% switching) | **REFUTED** (1.63 harness -> 0.99 deployed) -> measure-on-deployment |
+| 7 | fleet cross-column +39.1% | PREDICTION (labeled, unrun) |
+| 8 | RL drift refutes switching win (-2%) | SUPERSEDED: true for lever-flip alone; WITH the refresh axis the system wins (1.055x) |
+| 9 | proxy scores rank acceptance (90-P1, gate .7) | **REFUTED 5 ways** (inverted / 0.34 / 0.37 / 0.22) |
+| 10 | far-attention mass concentrated <=25% heads (90-P2) | **REFUTED** (diffuse; mass sits in skippable layers) |
+| 11 | window-band structure explains win2048 flatline (90-P1b) | SUPPORTED (67% of missing mass beyond 2048) |
+| 12 | hetero-window recovers >=70% gap at <=9 layers (90-P3) | **REFUTED** (4-5%; controls beat ranked sets; collective) |
+| 13 | beat-AR recipe: kmax-tax + pinned swap + drift-timescale detector (89-E3b) | CONFIRMED by ablation (0.96 -> 1.055x) |
+| 14 | (audit-loop entry) K4/K6 grid sufficient | WRONG-BY-OMISSION: shallow-K found by EVAL -> grid coverage folded into method |
+
+7 confirmed / 5 refuted / 1 superseded / 1 open — the refutations
+each produced a method correction (composition rule,
+measure-on-deployment, measurement-not-scoring, collectivity, grid
+audit). The map predicts, fails visibly, and self-corrects.
+
 ## Notes / flags
 - DRAFT: iteration counts modest (4-8); b32 8B AR capacity-capped; T=0.7
   rows carry the greedy-only-capture execution gap; cross-system caveat

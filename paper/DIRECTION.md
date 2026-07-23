@@ -69,9 +69,32 @@ Owner's mental model (recorded verbatim in spirit, refined against data):
   the taxonomy-complete pool, the realization-priced model, the LCB
   selector + audit loop. The current 9.4k-word draft compresses to
   ~40% here; maps become the INPUT to the system, not the headline.
-- Sec B (search): the corrected recipe vs profile-then-solve, with the
-  KnapSpec head-to-head (our backtest's m=0 row IS their recipe) and the
-  91-min protocol.
+- Sec B (search) — REWRITTEN 2026-07-24 after phase 90: the claim is
+  a measured THEOREM, not a recipe preference. "Acceptance-importance
+  cannot be scored, only measured — on-policy, conditionally, at
+  full-ref resolution." Supported by the five-way proxy falsification
+  (T11 #9: offline geometry INVERTED -0.77; margin-Taylor inverted
+  off-policy; binary/continuous on-policy subsampling both ~0.35;
+  learned predictor 0.08-0.22 with the data-circularity argument),
+  the non-additivity control (perfect singles score -0.09 on set
+  growth), and TWO mechanism discoveries: (a) ref-distribution
+  dependence (off-policy scoring inverts rankings — the E1d sign
+  flip), (b) collectivity (window-need is super-modular: partial
+  relief fails in ctx-space AND layer-space; 90-E3 controls beat
+  measured-ranked sets). Corollaries: compression-literature
+  importance does not transfer to draft construction
+  (perplexity-importance != acceptance-importance, measured); and
+  KnapSpec's additive-cosine knapsack sits in the refuted class —
+  the mechanistic explanation for our h2h margin. The amended
+  three-stage scheme: analytic cost x measured kernel factor ->
+  conditional on-policy beta (proxies only as round-ordering priors,
+  0.3-0.4 grade; cross-model transfer 0.43 as cold-start) ->
+  per-regime pools + switch-cost-aware adaptation. Cost: T10 —
+  zero-to-compiled-policy ~2-4 GPU-hours/column; 91-min hardware
+  protocol. Audit loop as first-class method component (T11: 5
+  refutations -> 5 corrections). Literature: field converged to
+  measurement-based selection (SWIFT/CLaSp/KNN-SSD/BanditSpec cited;
+  Draft&Verify BayesOpt as the direct-measurement ancestor).
 - Sec C (switching system) — REFRAMED 2026-07-19 after the gap
   prediction (82/scripts/predict_switch_gap.py, measured cells only):
   * The EFFECTIVENESS headline is CROSS-COLUMN selection: one global

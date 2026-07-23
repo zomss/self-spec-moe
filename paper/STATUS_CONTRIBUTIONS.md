@@ -13,24 +13,23 @@ The four contributions as stated by the user (2026-07-21):
 | # | claim | status | evidence anchor | open gap |
 |---|---|---|---|---|
 | C1 | no single lever | **CLOSED** | T2/T3 (arch: dense/MoE/MLA, wrong-lever 30-60% loss); T8 (32B kernel split 5-2, depth inversion, triple composition scale-keyed; 9 regimes need K2-K6 + OFF) | hardware axis argued, measured on ONE box (2nd-HW column pending) |
-| C2 | efficient search | **SUPPORTED, unconsolidated** | beta harness (1152 pos, no e2e); domination pruning + build-on-selection (w4+ffn never built); 91-min protocol; KnapSpec-recipe backtest; measure-on-deployment (32B transfer failure as positive evidence) | (a) no single cost-to-onboard NUMBER; (b) shallow-K found by EVAL not search -> grid coverage is part of the method, present as audit loop |
+| C2 | efficient search | **CLOSED (2026-07-24, phase 90)** | the measurement theorem (five-way proxy falsification + non-additivity control + on-policy/collectivity mechanisms); T10 cost-to-onboard (~2-4 GPU-h/column); T11 scorecard (7 confirmed/5 refuted->corrected); KnapSpec surrogate-class explanation of the h2h margin; literature convergence corroboration | E1f transfer-prior (0.43) optional footnote; bandit formalization (stage 3) still queued |
 | C3 | switching + adaptation system | **CLOSED** | E0 toggle table; compiled policy (regret 1-3%, wins 2/3 traces); 113ms pinned swap, bit-exact graph replay, live refresh 114-116ms, detector-fired | per-step switching = K/OFF + same-layout refresh; cross-kernel = priced boot-class transition (not hot) -- state precisely |
 | C4 | non-RL + RL effectiveness | **CLOSED w/ framing discipline** | non-RL: 1.80x/1.90x serving wall, 9/9 regimes, policy trace wins; RL: 1.055x over AR under drift, staleness -45% -> noise, beat-AR recipe + measured anti-patterns | (a) drift EMULATED (calibrated perturbation), not live trainer; (b) demo ran the thinnest cell -- lead with staleness-bound + concentration (+7-33%), not the +5.5% |
 
 ## Work items (the task list)
 
-0. **[C2] Phase 90 (hierarchical search)** — the C2 hardening per
-   the 2026-07-23 discussion: analytic-cost prefilter -> importance-
-   proxy shortlist (rank-validated vs committed betas) -> direct beta
-   -> per-regime pools -> switch-cost-aware bandit. First target: R4
-   heterogeneous per-layer/head windows (accept headroom 4.06 at
-   priced-out cost; free-toggle lever). research/90_hier_search.
-1. **[C2] Cost-to-onboard table** — assemble from committed timings:
+0. ~~[C2] Phase 90 (hierarchical search)~~ DONE 2026-07-24: proxy
+   program closed (five-way falsification -> the measurement
+   theorem); hetero-window refuted by its own gate (collectivity);
+   E4 canceled at zero cost; R4 headroom -> kvq draft-ctx.
+1. ~~[C2] Cost-to-onboard table~~ DONE -> T10:
    beta column cost, e2e arm cost, compile-policy cost per cell,
    solve cost -> "zero to compiled policy on a new column = X
    GPU-hours". No new GPU work; data exists in phase logs
    (86 91-min protocol, 88/89 compile runs ~5-7 min/arm/cell-grid).
-2. **[C2] Pre-registration scorecard** — table of every explicit
+2. ~~[C2] Pre-registration scorecard~~ DONE -> T11 (14 entries):
+   originally: table of every explicit
    prediction vs outcome: 86 P1-P4 (QK-norm rule, skip scale-dep,
    quant-led 8B, 32B composition ~1.5-1.6x), the skip-domination
    prediction (REFUTED by measurement -> composition win), the 32B
