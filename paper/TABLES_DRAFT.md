@@ -223,7 +223,7 @@ measured 114-116 ms.
 |---|---|
 | stale draft, static (never refreshed) | 0.55-0.76x |
 | per-step runtime policy alone | 1.00x |
-| **full system: policy + detector-fired DRAM refresh** | **1.055x** |
+| **full system: policy + detector-fired DRAM refresh** | **1.090x +- 0.044 (3 seeds)** |
 
 The staleness cliff (-45%) is converted to a bound around the
 per-cell fresh optimum; the detector (accept EMA at 10s cadence,
@@ -293,6 +293,12 @@ argmax+hysteresis+probes = 1.042x:
 | + per-step pooled posterior | 0.969x | boundary sampling variance (S~1 zone flap) |
 | + lazy sampling (hold x16) | 0.921x* | *phase4 0.78: DETECTOR STARVATION -- disarmed bandit generates no accept evidence, refresh never fires |
 | **+ probe floor 4/256** | **0.996x** | detection liveness restored |
+
+Multi-seed paired (3 seeds, same-GPU anchors): argmax 1.090+-0.044
+vs bandit+floor 1.043+-0.050 -- both beat AR on EVERY seed; the
+~4.7-point argmax lead is seed-consistent. Marlin K-grid probe:
+kmax=4 nets +3.1% within the W4A16 lever (ctx-progression > padding
+tax) but kernel choice dominates the K-grid extension.
 
 Each hand-tuned mechanism of the deployed policy is
 necessity-proven by its ablation: point-estimate stability, pooled
