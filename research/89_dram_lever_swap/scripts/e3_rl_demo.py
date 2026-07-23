@@ -196,7 +196,7 @@ def main():
                       f"{ACCEPT_GATE} -> mid-serving refresh "
                       f"({r['ms']:.0f} ms rpc)", flush=True)
 
-    if spec_on and bg_detect and ARM.startswith("refresh"):
+    if spec_on and bg_detect:
         threading.Thread(target=detector_loop, daemon=True).start()
 
     for pi, eps in enumerate(EPS):

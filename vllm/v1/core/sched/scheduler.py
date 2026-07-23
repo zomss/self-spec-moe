@@ -260,6 +260,7 @@ class Scheduler(SchedulerInterface):
         # optimistic-init doctrine; exploration emerges from posterior
         # widening while parked OFF (evidence decays to the prior).
         self._sd_bandit_ab: list[float] = [9.0, 1.0]
+        self._sd_bandit_step: list[float] = [0.0, 0.0, 0.0]
         self._sd_policy_cell: dict | None = None
         self._sd_policy_pending = None
         self._sd_policy_dwell = 0
@@ -1205,15 +1206,24 @@ class Scheduler(SchedulerInterface):
             # EMA past the arming margin. Discovery beats prior here.
             cur_k = getattr(self, "_sd_policy_k", 0)
             if envs.VLLM_SELF_SPEC_BANDIT:
-                # Thompson: sample f from the discounted posterior and
-                # argmax S under the sample. Exploration is calibrated
-                # by posterior width (no probe bursts needed): parked
-                # OFF, evidence decays toward Beta(9,1) and optimistic
-                # samples re-arm naturally.
+                # LAZY Thompson (E5e): sample f from the discounted
+                # posterior every RESAMPLE steps and hold it between
+                # samples. Per-step sampling was measured to flap arms
+                # in the boundary zone (S near 1): the sample's noise
+                # crosses the arming threshold step-to-step. Holding
+                # the sample amortizes the variance while posterior
+                # widening (parked OFF) still drives calibrated
+                # exploration at the resample cadence.
                 import random as _random
-                a_p, b_p = self._sd_bandit_ab
-                f_live = _random.betavariate(max(a_p, 1e-3),
-                                             max(b_p, 1e-3))
+                n_rs = envs.VLLM_SELF_SPEC_BANDIT_RESAMPLE
+                step_i = getattr(self, "_sd_bandit_stepi", 0)
+                self._sd_bandit_stepi = step_i + 1
+                if step_i % max(n_rs, 1) == 0 or not hasattr(
+                        self, "_sd_bandit_sample"):
+                    a_p, b_p = self._sd_bandit_ab
+                    self._sd_bandit_sample = _random.betavariate(
+                        max(a_p, 1e-3), max(b_p, 1e-3))
+                f_live = self._sd_bandit_sample
                 probing = False
             # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
             # score is always 1.0 -- staying ON requires S >= 1.0, and
@@ -1282,6 +1292,7 @@ class Scheduler(SchedulerInterface):
                 self._sd_batch_band = band
                 self._sd_req_ema.clear()
                 self._sd_gated_off = False
+                self._sd_bandit_ab = [9.0, 1.0]
             probing = (
                 self._sd_gate_step % self._sd_probe_interval
                 < self._sd_probe_burst
@@ -1298,6 +1309,17 @@ class Scheduler(SchedulerInterface):
             self._sd_accept_ema = sum(
                 self._sd_req_ema.get(rid, 1.0) for rid in run_ids
             ) / max(len(run_ids), 1)
+            if envs.VLLM_SELF_SPEC_BANDIT:
+                # Per-STEP posterior update (Phase 91): one decay per
+                # step's pooled evidence, half-life 24 drafted tokens.
+                acc_s, rej_s, drafted_s = self._sd_bandit_step
+                if drafted_s > 0:
+                    a, b = self._sd_bandit_ab
+                    d = 0.5 ** (drafted_s / (24.0 * max(len(run_ids), 1)))
+                    a = 9.0 + (a - 9.0) * d + acc_s / max(len(run_ids), 1)
+                    b = 1.0 + (b - 1.0) * d + rej_s / max(len(run_ids), 1)
+                    self._sd_bandit_ab = [a, b]
+                    self._sd_bandit_step = [0.0, 0.0, 0.0]
             # Per-cell threshold: the break-even acceptance falls with
             # context (window-draft R ~ 1/ctx) -- switch to the long-ctx
             # bound above the configured context.
@@ -1848,15 +1870,15 @@ class Scheduler(SchedulerInterface):
                         (1 - w) * ema + w * num_accepted / num_draft_tokens
                     )
                     if envs.VLLM_SELF_SPEC_BANDIT:
-                        # Phase 91: discounted Beta posterior over f.
-                        # Same half-life as the EMA (24 drafted tok);
-                        # pseudo-count floor keeps the optimistic prior
-                        # Beta(9,1) reachable as evidence decays.
-                        a, b = self._sd_bandit_ab
-                        d = 0.5 ** (num_draft_tokens / 24.0)
-                        a = 9.0 + (a - 9.0) * d + num_accepted
-                        b = 1.0 + (b - 1.0) * d + num_rejected
-                        self._sd_bandit_ab = [a, b]
+                        # Phase 91: accumulate step-level evidence; the
+                        # posterior update (with its 24-drafted-token
+                        # half-life) is applied ONCE per step below --
+                        # applying the decay per request multiplied it
+                        # by the batch size (measured: posterior stuck
+                        # near-prior, arm flapping).
+                        self._sd_bandit_step[0] += num_accepted
+                        self._sd_bandit_step[1] += num_rejected
+                        self._sd_bandit_step[2] += num_draft_tokens
                 # num_computed_tokens represents the number of tokens
                 # processed in the current step, considering scheduled
                 # tokens and rejections. If some tokens are rejected,

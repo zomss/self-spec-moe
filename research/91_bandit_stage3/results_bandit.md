@@ -1,0 +1,55 @@
+# Phase 91 results — RL push + stage-3 bandit (DRAFT, in progress)
+
+## E5a: calibrated simulator (2026-07-24)
+
+Thompson (discounted Beta posterior) vs the deployed argmax-EMA on
+the calibrated drift world: regret 5.08% vs 8.22% (kmax3), 10.0% vs
+15.8% (kmax4); SW-UCB comparable to Thompson. Sim caution: kmax4's
+oracle is higher but tracking costs eat it at a static cell.
+
+## E5d: live 2x2 on the drift trace (GPU 6, same-boot AR anchor
+## 1194.7 hmean) — INTERIM
+
+| arm | phases (tok/s) | hmean | vs AR |
+|---|---|---|---|
+| argmax_k3 (deployed) | 1082/1251/1360/1215/1361 | 1245 | 1.042x |
+| bandit per-step, BUGGY per-request decay | 1243/1223/1019/1208/1206 | 1174 | 0.982x |
+| bandit per-step, fixed per-step decay | 1288/1167/1101/1249/1022 | 1157 | 0.969x |
+| bandit lazy-16 (E5e) | INTERRUPTED (GPUs reserved) | - | - |
+| argmax_k4 / bandit_k4 | BLOCKED: Humming odd-width wedge at TP1 w/ multi-width {1,3,4,5} capture (2x 30-min boot hangs at the lazy-cubin signature) | - | - |
+
+### Measured findings (the sim-to-real gap, itself the story)
+
+1. POSTERIOR GRANULARITY: applying the discount per REQUEST
+   multiplies it by batch size (b16: half-life 24 -> ~1.5 drafted
+   tok) -> near-prior, high-variance posterior -> arm flapping
+   (phase2 1019). Fixed to per-step pooled evidence.
+2. SAMPLING VARIANCE AT THE BOUNDARY: even fixed, per-step Thompson
+   samples swing S across the arming threshold in the mid-drift zone
+   (phase2 1101 < AR) -- argmax's point estimate is immune. Where
+   the posterior is decisive (fresh, post-refresh), Thompson matches
+   or beats argmax (phase0 1288 = best fresh phase of the program;
+   phase3 1249 > argmax 1215). Fix implemented: LAZY Thompson
+   (VLLM_SELF_SPEC_BANDIT_RESAMPLE=16, hold the sample between
+   resamples) -- the standard batched-TS variance amortization.
+   RUN PENDING (GPU return).
+3. REFRESH-TIMING LUCK is a real cross-arm variance source (phase-4
+   spans 1022-1361 by where the 10s-poll refresh lands in the
+   phase); paired analysis must use phases 0-3 or multi-seed runs.
+4. K-GRID (RL headroom item 1): both kmax=4 arms wedge-blocked --
+   NEW bug datum: the odd-width lazy-cubin hang reaches TP1 when the
+   MULTI-WIDTH capture set includes width 5 ({1,3,4,5}); single-width
+   K4 at TP1 ran fine in phase 88. Unblocked route: W4A16/Marlin
+   K-grid table (kernel unaffected).
+
+## Interim verdict
+
+The hand-tuned argmax+hysteresis remains the measured live leader
+(1.042x). The bandit's value so far: (a) it subsumes probe
+bursts/thresholds with one principled mechanism at a measured cost
+that iteration is closing (0.982 -> 0.969 is within phase-timing
+noise of each other; lazy-16 pending); (b) the sim-to-real gap
+decomposition (granularity, boundary variance, timing luck) is
+precisely the calibration data a principled stage-3 section needs.
+Queue on GPU return: E5e lazy-16 arm; optional Marlin K-grid;
+multi-seed phase-0-3 paired comparison for the final table.
