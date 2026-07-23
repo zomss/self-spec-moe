@@ -153,3 +153,19 @@ veRL/A100x8, alpha .982, gamma 8.2.
   (now with measured b64 cells), their per-step requant (1.3-2.6s)
   vs our detector-fired 113ms refresh, their gamma-adapt == our
   argmax; our addition: the compiled per-cell map + drift detector.
+
+## E6d (2026-07-23): the gap OPENED — 1.300x / -24.2% vs their -19.6%
+
+vs the E6c AR anchor (3225.8 tok/s, 281.5s), thinking rollout:
+
+| arm | tok/s | vs AR | verdict |
+|---|---|---|---|
+| **w512@b64 + b32/48 deep cells** | **4192.4** | **1.300x (-24.2%)** | deep-cell gain delivered (1.263 -> 1.300) |
+| w4096@b64 | 3079.2 | 0.955x | REFUTED: accept UNCHANGED (2.66 = w512's) — collectivity again: wider window buys zero accept on self-generated traces (the on-policy E1d lesson: drafts need little far ctx for their own text); R rose -> net loss |
+| w512@maxseqs48 | 3512.0 | 1.089x | concurrency capping loses: AR parallelism > cell gain; b64 stands |
+
+FINAL RL PAIR for the paper: realistic reasoning rollout **1.300x
+(-24.2% vs their -19.6%, +4.6 points)** at f~0.8 (they need alpha
+.982); adversarial drift trace 1.090x +- 0.044 with the 113ms
+refresh. The E6 chain 0.85 -> 1.034 -> 1.263 -> 1.300: every step a
+measured cell, zero tuning.
