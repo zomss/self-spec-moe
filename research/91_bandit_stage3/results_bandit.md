@@ -196,3 +196,26 @@ finish last, f .586 vs .77-.95 elsewhere); cell prices alone call
 the tail spec-heaven, live acceptance says its content is adverse --
 the OFF-gate catches what pricing cannot. Real-acceptance switching
 is not optional at rollout tails.
+
+## E6-effroll: EfficientRollout's method on OUR stack (same trace)
+
+W4A16-RTN Marlin draft, full-ctx window (8192), their roofline
+toggle+gamma (b<=16:K7, b17-64:K3) vs the same AR anchor:
+
+| method (same stack, same rollout) | tok/s | vs AR |
+|---|---|---|
+| EfficientRollout method | 2465.8 (accept 3.34) | **0.764x** |
+| ours (measured cells + win512 + live-accept) | 4192.4 | **1.300x** |
+
+Their method LOSES to AR on H100 at this shape: accept is fine
+(3.34 -- full-ctx draft drafts well) but the full-context draft's
+KV-read at b64 x deep ctx is exactly the cost our win512 removes,
+and the roofline toggle (analytic, A100-derived assumptions) keeps
+SD on where measured cells price it negative. Same-stack advantage
+of our system: 1.70x over their method (even granting their toggle
+a generous OFF at b>48, ~1.0 -> ours +30%). Caveats disclosed:
+sym-RTN, static 2-tier gamma, shared-KV on (+4.5% their favor),
+H100 not A100 -- the hardware axis is PART of the finding: their
+method's roofline was tuned to A100's ridge; ours re-measures per
+deployment. Their published -19.6% is real ON THEIR HARDWARE; the
+method does not transfer unmeasured -- the map thesis, once more.
