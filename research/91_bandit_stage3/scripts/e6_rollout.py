@@ -50,7 +50,7 @@ def main():
                 "draft_tensor_parallel_size": 1}
     llm = LLM(model="Qwen/Qwen3-8B", speculative_config=spec,
               tensor_parallel_size=1, max_model_len=MAX_TOK + 512,
-              gpu_memory_utilization=0.90, max_num_seqs=64,
+              gpu_memory_utilization=0.90, max_num_seqs=int(os.environ.get("E6_MAXSEQS", "64")),
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192)
     tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
