@@ -248,3 +248,24 @@ A100's 2x-lower compute:bandwidth ridge makes it viable there.
 Their drafter DESIGN is A100-shaped; transferring it to H100
 requires the windowed-draft lever -- i.e., the transfer fix IS one
 of our levers, and pricing it needed measurement, not rooflines.
+
+### LABEL CORRECTION (2026-07-24, user catch): ctrl-A is NOT their
+### method
+
+Their paper REJECTS sparse-attention drafting (SS B.2: tau 3-4 vs
+5.18 for full-attention W4, measured on A100) -- their method is
+full-context W4 by design. Corrected reading:
+- THEIR METHOD (faithful, full-ctx): 0.764x as-emulated / 0.857x
+  with corrected toggle -- does not transfer to H100 (with the
+  scratchpad-emulation caveat bounding how bad; native would land
+  somewhere in 0.86-1.0).
+- ctrl-A = HYBRID (their policy + OUR windowed draft): 1.224x --
+  not their method; it shows the window lever is what RESCUES their
+  approach on H100, and isolates our policy-layer advantage at
+  +7.6 pts holding the draft equal.
+- THE DEEPER POINT: their own SS B.2 lever ranking (full-ctx beats
+  window) was measured on A100 and INVERTS on H100 -- the same
+  paper's internal lever comparison flips across hardware. Lever
+  selection is hardware-keyed; no single lever, no analytic
+  transfer: C1 + measure-on-deployment, witnessed by the reference
+  system's own design choice.

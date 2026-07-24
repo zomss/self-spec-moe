@@ -236,7 +236,7 @@ sides (their per-step requant == our fresh).
 | system | rollout speedup |
 |---|---|
 | EfficientRollout (published; 8xA100, alpha .982, gamma 8.2) | -19.6% (1.24x) |
-| **EfficientRollout METHOD, reproduced same-stack/same-trace** (W4-RTN Marlin draft, full-ctx, roofline toggle + gamma schedule) | **0.764x** (accept 3.34) |
+| **EfficientRollout METHOD (faithful: full-ctx W4 draft -- their SS B.2 rejects windowed drafting), same-stack/same-trace** | **0.764x** (0.857x corrected toggle; emulation caveat)  |
 | ours, b32-capped table (coverage hole) | 0.85x |
 | ours, + kmax discipline + b64 pinned OFF | 1.034x |
 | ours, + b64 cell measured (K2 1.124) | 1.263x |
@@ -251,9 +251,14 @@ where measured H100 cells price it negative. DECOMPOSED (controls): full-ctx-dra
 win512 draft = 1.224x -- reproducing their A100 headline on H100);
 toggle/padding term ~9 pts (0.857 with OFF>b48). The 1.70x raw gap
 overstates: our win8192 emulation adds a scratchpad-gather tax a
-native full-ctx drafter would not pay (disclosed). FAIR same-stack
-method gap: ctrl-A 1.224 vs ours 1.300 = +7.6 points, attributable
-to measured cells + live-accept tail OFF. Deviations disclosed: sym-RTN
+native full-ctx drafter would not pay (disclosed). ctrl-A (1.224x) is a HYBRID -- their policy +
+OUR windowed draft, NOT their method (their SS B.2 rejects windowed
+drafting, measured on A100): it shows the window lever RESCUES their
+approach on H100 and isolates our policy-layer edge (+7.6 pts,
+measured cells + live-accept tail OFF, draft held equal). Deepest
+point: their own B.2 lever ranking (full-ctx > window) INVERTS on
+H100 -- the reference paper's internal lever comparison flips across
+hardware: C1 + measure-on-deployment, witnessed by their design. Deviations disclosed: sym-RTN
 (asym unloadable), static 2-tier gamma approximating their adapt,
 shared-KV on (+4.5% in their favor). Their published -19.6% is real
 ON THEIR HARDWARE; the method does not transfer unmeasured -- the
