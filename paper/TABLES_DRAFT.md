@@ -247,9 +247,13 @@ AR on H100 at this shape -- acceptance is FINE (3.34; the full-ctx
 draft drafts well); the COST model breaks: (a) full-context draft
 KV-read at b64 x deep ctx is exactly the term win512 removes, (b)
 the analytic roofline toggle (A100-ridge assumptions) keeps SD armed
-where measured H100 cells price it negative. Same-stack gap: 1.70x
-(ours/theirs); even granting their toggle a generous OFF above b48
-(~1.0), ours leads by 30 points. Deviations disclosed: sym-RTN
+where measured H100 cells price it negative. DECOMPOSED (controls): full-ctx-draft term ~46 pts (their policy +
+win512 draft = 1.224x -- reproducing their A100 headline on H100);
+toggle/padding term ~9 pts (0.857 with OFF>b48). The 1.70x raw gap
+overstates: our win8192 emulation adds a scratchpad-gather tax a
+native full-ctx drafter would not pay (disclosed). FAIR same-stack
+method gap: ctrl-A 1.224 vs ours 1.300 = +7.6 points, attributable
+to measured cells + live-accept tail OFF. Deviations disclosed: sym-RTN
 (asym unloadable), static 2-tier gamma approximating their adapt,
 shared-KV on (+4.5% in their favor). Their published -19.6% is real
 ON THEIR HARDWARE; the method does not transfer unmeasured -- the

@@ -219,3 +219,32 @@ H100 not A100 -- the hardware axis is PART of the finding: their
 method's roofline was tuned to A100's ridge; ours re-measures per
 deployment. Their published -19.6% is real ON THEIR HARDWARE; the
 method does not transfer unmeasured -- the map thesis, once more.
+
+## E6-effroll DECOMPOSED (2026-07-24): the 0.764 was mostly the
+## full-ctx draft; honest same-stack method gap = +7.6 points
+
+| arm (same stack/trace, vs AR 3225.8) | tok/s | vs AR |
+|---|---|---|
+| their method as-published emulation (full-ctx draft, roofline toggle) | 2465.8 | 0.764x |
+| ctrl-B: + toggle OFF>b48 + no padding tax (full-ctx draft kept) | 2765.5 | 0.857x |
+| **ctrl-A: their toggle/gamma/ckpt + win512 draft** | **3948.7** | **1.224x** |
+| ours (measured cells + live-accept + win512) | 4192.4 | 1.300x |
+
+Decomposition of the 54-point gap: full-context draft cost ~46 pts
+(0.764->1.224 holding their policy fixed) -- CONFLATES real physics
+(draft KV-read at b64 x 7k) with OUR scratchpad-gather emulation tax;
+we cannot separate them without a native paged full-ctx drafter, so
+the 1.70x same-stack claim is RETRACTED as overstated. Toggle
+boundary + kmax padding ~9 pts (0.764->0.857). The FAIR same-stack
+method comparison is ctrl-A vs ours: **1.224 vs 1.300 = +7.6 points
+from measured cells + live-accept tail OFF** (their policy never
+disarms the low-accept survivor tail figG exposed).
+
+Hardware verdict (the user's question): YES, largely -- ctrl-A at
+1.224x on H100 essentially REPRODUCES their A100 headline (1.24x)
+once the draft is windowed, and ctrl-B shows a full-ctx draft is
+unaffordable on H100 even with a corrected toggle (0.857) while
+A100's 2x-lower compute:bandwidth ridge makes it viable there.
+Their drafter DESIGN is A100-shaped; transferring it to H100
+requires the windowed-draft lever -- i.e., the transfer fix IS one
+of our levers, and pricing it needed measurement, not rooflines.
