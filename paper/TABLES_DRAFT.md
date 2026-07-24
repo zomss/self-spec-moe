@@ -258,7 +258,20 @@ approach on H100 and isolates our policy-layer edge (+7.6 pts,
 measured cells + live-accept tail OFF, draft held equal). Deepest
 point: their own B.2 lever ranking (full-ctx > window) INVERTS on
 H100 -- the reference paper's internal lever comparison flips across
-hardware: C1 + measure-on-deployment, witnessed by their design. Deviations disclosed: sym-RTN
+hardware: C1 + measure-on-deployment, witnessed by their design.
+
+GENERALIZATION CLAIM (stated precisely): their SYSTEM hard-codes an
+A100-shaped lever choice (full-ctx drafting is affordable only where
+the compute:bandwidth ridge is low, ~156 vs H100's ~295) and does
+not transfer; our METHOD generalizes by construction -- the config
+is deployment-specific on purpose, re-derived by the 91-min
+protocol. Within-record evidence: winners flip across kernel
+availability (Humming<->Marlin), TP degree, scale, and now the
+A100<->H100 axis via their B.2. PRE-REGISTERED (needs A100 access):
+compiled on A100, our map should SELECT their lever (full-ctx W4
+draft) at rollout shapes -- our method reproducing their design
+choice on their hardware would demonstrate generalization in the
+strongest form; failure would bound the claim. Deviations disclosed: sym-RTN
 (asym unloadable), static 2-tier gamma approximating their adapt,
 shared-KV on (+4.5% in their favor). Their published -19.6% is real
 ON THEIR HARDWARE; the method does not transfer unmeasured -- the
