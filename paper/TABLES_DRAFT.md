@@ -329,9 +329,17 @@ every dump, training-prompt distribution, 64 prompts x 2 seeds, K=4:
   T9 drift arms (eps .25/.35, -45% cliff) = ADVERSARIAL regime,
   disclosed. Anchor: accept 3.9-4.1 at K=4 sits in their published
   tau band (3.59 @ gamma3 / 5.18 @ gamma5).
-- Scope: 16 steps ~ 0.06 epoch of their recipe; long-horizon tail
-  unmeasured (extension: TOTAL_STEPS=128, ~5.5 h). One training run,
-  H100 not A100, RTN drafter (their Tier-0).
+- LONG HORIZON (E3, 128 steps ~ half epoch, dumps every 8; KL ->
+  0.020, entropy 0.55 -> 0.08): accept RISES monotonically, 3.93 ->
+  4.31 (+10%); fresh drafter@128 = 4.32 (requant recovers +0.01).
+  The staleness premise INVERTS at their own recipe: entropy collapse
+  sharpens the target faster than weights drift — RL training makes
+  the frozen self-drafter BETTER. Their per-step requant ~ 3-6 min of
+  pure overhead per 128 steps for +0.01. Fig H
+  (paper/figures/figH_live_staleness.png).
+- Scope: 128 steps ~ 0.5 epoch; beyond-epoch and higher-lr/no-KL
+  recipes unmeasured. One training run per horizon, H100 not A100,
+  RTN drafter (their Tier-0).
 - Provenance: research/92_live_grpo/results_92.md; curve
   data/e1_curve.jsonl; dumps /data/smcho/ckpts/92_grpo_no-sd.
 

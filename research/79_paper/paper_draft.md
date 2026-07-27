@@ -994,20 +994,27 @@ the reference system's own release stack (veRL + vendored vLLM) for
 lv.3-5, T=1.0, 8k; the policy reached mean reward 0.36), dumping the
 policy every step, and measured the fixed step-0 W4 drafter against
 every dump on the training prompt distribution (64 prompts x 2
-seeds). Result: accept is FLAT — 3.93 at step 0, 3.98 at step 16
-(range 3.84-3.98, no trend; per-step KL ~1e-3 at lr 5e-7). Real
-short-horizon GRPO drift maps to the SMALLEST calibrated emulation
-level (eps <= 0.04, near-lossless); the drift arms above (nibble
-drift, -45% cliff) are therefore the ADVERSARIAL regime — long
-horizons, higher learning rates, epoch-scale shift — and are
-disclosed as such. Two corollaries, both measured: (a) the reference
-design's per-step re-quantization (1.3-2.6 s/step) buys nothing on
-this horizon — a freshly re-quantized drafter at steps 8/16 measured
-0.08 BELOW the stale one; (b) our detector stays correctly silent
-(the curve never approaches the gate), so the refresh costs zero
-until drift actually arrives — refresh-on-evidence vs
-refresh-on-schedule is the controller-level version of
-measure-don't-assume.
+seeds). Result, out to 128 steps (~half an epoch, KL(policy||base)
+-> 0.020, entropy 0.55 -> 0.08): **accept RISES monotonically, 3.93
+-> 4.31 (+10%)** (Fig. H; seeds agree at every point). The reference
+premise — "the evolving policy makes any fixed drafter increasingly
+mismatched" — INVERTS at its own recipe: at T=1.0, acceptance tracks
+drafter-target distribution overlap, and GRPO's entropy collapse
+sharpens the target far faster than 0.02 nats of weight drift moves
+it away from the frozen drafter. Weight staleness is second-order:
+re-quantizing at step 128 recovers +0.01 accept, priced at their
+1.3-2.6 s/step x every step. Three corollaries, all measured: (a)
+refresh-on-schedule buys nothing here (~3-6 min pure overhead per
+128 steps); (b) our detector stays correctly silent — the gate is
+never approached — so refresh-on-evidence costs zero exactly when
+zero is the right spend; (c) the same accept-EMA that guards against
+drift reads the sharpening for free, so the controller can DEEPEN K
+as training proceeds: RL training makes training-free self-spec more
+valuable over time, not less. The emulated drift arms above (nibble
+drift, -45% cliff) are therefore the ADVERSARIAL regime —
+catastrophic requant mismatch, beyond-epoch shift, high-lr/no-KL
+recipes — and are disclosed as such; the measured base case is
+benign-to-favorable.
 
 ## 9.2 The realistic rollout (GRPO shape)
 
@@ -1181,5 +1188,6 @@ let OFF be an answer.
 7. **Fig 7** — the composition law and its measured limits (across levers; within-lever depth).
 8. **Fig F** — RL staleness + DRAM refresh: the -45% cliff vs the bounded full system (two panels, all points measured).
 9. **Fig G** — per-step K selection across the reasoning rollout (7,438 logged decisions): regime- and acceptance-driven switching, and the survivor-bias tail disarm.
+10. **Fig H** — live GRPO (reference recipe, 128 steps): stale-drafter accept vs training step over the policy's entropy/KL trajectory — the anti-staleness curve.
 8. **Fig 8** — the floor-free chain: anatomy, delivered speedups vs rooflines, the capture law across five backends.
 

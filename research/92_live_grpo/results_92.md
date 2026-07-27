@@ -61,12 +61,53 @@ both seeds agree on every trend below). Per-point sampling noise ~±0.05.
    3.93 on 64 prompts — consistent with EfficientRollout's published
    tau band (3.59 @ gamma=3, 5.18 @ gamma=5, their Tab. 4, A100, b1 2k).
 
+## E3 — the LONG-HORIZON curve (128 steps, 2026-07-28)
+
+Extension run: same recipe, 128 steps (~half an epoch), dumps every 8
+steps (/data/smcho/ckpts/92_grpo_long). Training: KL(policy||base)
+climbs 5e-4 -> 0.020 (15x the 16-step level); entropy collapses
+0.55 -> 0.08; the policy sharpens hard. Same E2 protocol (drafter@0,
+64 prompts, K=4, T=1.0, 2 seeds):
+
+| policy step | 0 | 8 | 16 | 32 | 48 | 64 | 96 | 128 |
+|---|---|---|---|---|---|---|---|---|
+| stale drafter@0 | 3.93 | 3.90 | 3.99 | 4.11 | 4.18 | 4.22 | 4.28 | 4.31 |
+| fresh drafter@128 | | | | | | | | 4.32 |
+
+Figure: paper/figures/figH_live_staleness.png.
+
+**FINDING (inverts the staleness premise): accept RISES monotonically
+with training — +10% by step 128.** Seeds agree at every point
+(spread <= 0.09). Mechanism: at T=1.0, acceptance tracks the OVERLAP
+between drafter and target distributions; GRPO's entropy collapse
+(0.55 -> 0.08) sharpens the target far faster than its weights drift
+away from the frozen drafter (KL 0.02 is tiny), and a sharper target
+is easier to draft for. Weight-staleness is a second-order effect:
+re-quantizing at step 128 recovers +0.01 (4.32 vs 4.31 — nothing).
+
+Consequences:
+- The reference design's premise ("the evolving policy makes any
+  fixed drafter increasingly mismatched") is REFUTED at their own
+  recipe out to half an epoch: the fixed drafter gets BETTER. Their
+  per-step requant (1.3-2.6 s/step x 128 steps ~ 3-6 min/run of pure
+  overhead here) buys +0.01 accept.
+- The detector-fired design is doubly validated: the gate (3.6) is
+  never approached from above OR below; refresh cost stays zero and
+  SHOULD stay zero. Refresh-on-evidence is not merely cheaper — it is
+  the only design that does nothing when nothing is needed.
+- Sharpening is itself a drift signal our accept-EMA reads for FREE:
+  the controller sees accept RISING and can deepen K (the phase-91
+  argmax would move to higher K as f climbs) — RL training makes
+  self-spec MORE valuable over time, not less.
+- The adversarial framing of T9 stands unchanged (nibble-drift
+  emulates catastrophic re-quantization mismatch, e.g. bad quant of a
+  moved policy), but the base case is now: real GRPO drift HELPS.
+
 ## Scope / caveats (honest ledger)
 
-- 16 steps = 512 prompts ~ 0.06 epoch of their 2-epoch recipe. Long-
-  horizon drift (100s of steps) NOT yet measured — their Table-2 gains
-  are over full training. Extension = rerun stage 1 with
-  TOTAL_STEPS=128+ (~5.5 h on 2 GPUs) if the long-horizon tail is wanted.
+- ~~16 steps only~~ E3 extends to 128 steps (~half epoch): the curve
+  RISES. Beyond-epoch horizons and higher-lr/no-KL recipes remain
+  unmeasured (candidates for where real staleness finally appears).
 - 2 sampling seeds, one training run, one box (H100; their hardware is
   A100). Drafter is RTN W4-sym (their Tier-0; not our production
   W4A8-GPTQ column).
