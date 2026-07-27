@@ -32,8 +32,13 @@ per-chain execution constants), emits its own measurement queue, and in
 its first audited round the end-to-end layer corrected the offline layer
 three times — including retiring one of our own levers whose gate proved
 circular. A 91-GPU-minute profiling protocol recovers the map within
-2.6% of a full profile. Profiles nominate, measurements confirm; the
-audit loop is the contribution.
+2.6% of a full profile. At the regime that motivated the map — RL
+rollouts — the deployed system delivers a 1.30x rollout speedup
+(beating the reference system's published 1.24x, whose A100-shaped
+drafter design loses to AR on H100 unmeasured) and bounds draft
+staleness to ~4% via a 113 ms detector-fired weight refresh where
+the reference pays seconds per step. Profiles nominate, measurements
+confirm; the audit loop is the contribution.
 
 ---
 
@@ -1152,5 +1157,7 @@ let OFF be an answer.
 5. **Fig 5** — the (R, β) plane with iso-speedup contours: why cost-only maps mislead.
 6. **Fig 6** — β portability slopegraph: only fp8 weight-quant is flat.
 7. **Fig 7** — the composition law and its measured limits (across levers; within-lever depth).
+8. **Fig F** — RL staleness + DRAM refresh: the -45% cliff vs the bounded full system (two panels, all points measured).
+9. **Fig G** — per-step K selection across the reasoning rollout (7,438 logged decisions): regime- and acceptance-driven switching, and the survivor-bias tail disarm.
 8. **Fig 8** — the floor-free chain: anatomy, delivered speedups vs rooflines, the capture law across five backends.
 
