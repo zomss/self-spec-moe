@@ -18,6 +18,7 @@ STEPS=("$@")
 
 export HF_HOME=/data/smcho/huggingface
 export CUDA_VISIBLE_DEVICES=$GPU
+export PATH="$REPO/.venv/bin:$PATH"   # engine compile shells out to ninja
 cd "$REPO"
 
 run_one() {  # <target> <draft|-> <tag>

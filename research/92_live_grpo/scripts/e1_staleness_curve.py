@@ -49,7 +49,8 @@ def main():
         spec = {"method": "draft_model", "model": DRAFT,
                 "num_speculative_tokens": K,
                 "draft_tensor_parallel_size": 1}
-    llm = LLM(model=TARGET, speculative_config=spec,
+    # veRL dumps are fp32; serve bf16 exactly like the veRL rollout does
+    llm = LLM(model=TARGET, speculative_config=spec, dtype="bfloat16",
               tensor_parallel_size=1, max_model_len=8192,
               gpu_memory_utilization=0.90, max_num_seqs=16,
               enable_prefix_caching=False, disable_log_stats=False,
