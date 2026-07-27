@@ -165,8 +165,11 @@ dominates) is likewise absent there.
 
 **Weight quantization.** EfficientRollout (reproduced in our record as the
 dense weight-quant win) and QuantSpec-adjacent work; our delta is the
-parity verdict on sparse MoE (18 cells, two kernels — §4-F2) and fp8's
-status as the ONLY architecture-portable β (§5-F5).
+parity verdict on sparse MoE (18 cells, two kernels — §4-F2), fp8's
+status as the ONLY architecture-portable β (§5-F5), and the same-stack
+RL comparison of §9: their full-context-drafter design is viable only
+below the A100-class compute:bandwidth ridge and does not transfer to
+H100 unmeasured (their own §B.2 lever ranking inverts across the two).
 
 **KV-cache quantization.** The KIVI line studies K/V asymmetry for the
 TARGET; our draft-only fp8 read flips sign across architectures, and the
@@ -953,7 +956,88 @@ the section's thesis in one exhibit: profiling changes what the map says;
 execution decides what the deployment collects; and the gaps between
 them are quantified, named, and lever-external.
 
-# §9 Discussion, limitations, and open surface
+# §9 The runtime system under RL rollouts
+
+The map's final test is the regime that motivated it (§1): RL rollout
+generation, where the draft goes stale as the policy trains and the
+batch/context regime shifts within every rollout. Two benchmarks, both
+on the full serving driver.
+
+## 9.1 The staleness bound (adversarial cell)
+
+Drift trace (calibrated weight-nibble drift, b16 x MATH T=1.0 — the
+THINNEST cell in the map, fresh ceiling 1.05-1.07x), 3 seeds,
+same-GPU AR anchors:
+
+| arm | vs AR |
+|---|---|
+| stale draft, static | 0.55-0.76x |
+| per-step policy alone | 1.00x |
+| **policy + detector-fired DRAM refresh** | **1.090x +- 0.044** |
+
+The staleness cliff (-45%) is converted to a ~4% bound around the
+per-cell fresh optimum. Mechanics, all measured: 6.07 GB draft pinned
+in DRAM, swap 113 ms (54 GB/s); CUDA-graph replay after in-place
+copy_ is bit-exact (zero downtime, no re-capture); live mid-serving
+refresh 114-116 ms, fired by an accept-EMA detector at drift
+timescale. Measured anti-patterns retained: tight polling (-5%),
+eager gates (0.89x), disk-loading in the swap path (~1 s/fire).
+
+## 9.2 The realistic rollout (GRPO shape)
+
+16 math prompts x group 8, T=1.0, 8k budget, thinking-mode CoT (avg
+~7.1k tok/seq — near-uniform lengths: the rollout LIVES at b64; no
+drain tail), 1x H100:
+
+| system | rollout speedup |
+|---|---|
+| EfficientRollout, published (8x A100, alpha .982) | 1.24x |
+| their method, faithful, same-stack (full-ctx W4 draft) | 0.764x (0.857x corrected toggle; emulation caveat) |
+| hybrid: their policy + our windowed draft | 1.224x |
+| **ours (measured cells + live-accept argmax)** | **1.300x (-24.2%)** |
+
+The 0.85 -> 1.30 chain was four measured cells, zero tuning; cell
+prices are compiled on generic decode grids, never fitted on the eval
+trace. The eval protocol is trace-validated (7,438 logged per-step
+decisions, Fig. G): K follows BOTH regime (Q1 94% K2 -> Q4 49% K3 as
+context deepens) and live acceptance (f=.95 -> K3; f=.586 -> 74%
+OFF). New finding: rollout drain tails are LOW-accept (survivor bias
+— the hardest sequences finish last); cell prices alone call the tail
+spec-favorable, live acceptance disarms — real-acceptance switching
+is load-bearing.
+
+## 9.3 The reference comparison, decomposed
+
+Their published 1.24x is real on A100 and their POLICY layer is sound
+(1.224x when given an H100-viable draft); their DRAFTER design
+(full-context, their §B.2 explicitly rejects windowed drafting) is
+affordable only below A100's compute:bandwidth ridge (~156 vs H100's
+~295) and loses to AR on H100. The like-for-like edge of our system
+is +7.6 points (measured cells + the live-accept tail gate), and our
+refresh (113 ms, fired on measured drift) replaces their per-step
+re-quantization (1.3-2.6 s). Generalization claim, stated precisely:
+their SYSTEM hard-codes an A100-shaped lever choice; our METHOD
+re-derives the choice per deployment (91-min protocol).
+PRE-REGISTERED: compiled on A100, our map should SELECT their lever
+at rollout shapes — the strongest form of the cross-hardware test
+(blocked on A100 access; failure would bound the claim).
+
+## 9.4 The controller, formalized
+
+A Thompson bandit (discounted Beta posterior over f, switch-cost
+aware) was built, sim-validated (regret 5.1% vs the deployed
+argmax's 8.2%), and deployed — and lost live (1.043 +- 0.050 vs
+1.090 +- 0.044), through three measured failure modes the simulator
+missed: posterior-update granularity (x batch), sampling variance at
+the arming boundary, and DETECTOR STARVATION under censored feedback
+(a disarmed bandit generates no accept evidence, so the drift
+detector never fires — exploration must be budgeted for detection,
+not just estimation). The ablation ladder necessity-proves each
+hand-tuned mechanism of the deployed policy: it is the measured
+optimum of this design space, and measure-on-deployment holds for
+the CONTROLLER itself.
+
+# §10 Discussion, limitations, and open surface
 
 
 **One box, one stack.** All measurements are single-node H100 ×4 on one
@@ -1032,7 +1116,7 @@ amortization arithmetic for hysteresis. Scoped as follow-on work; this
 paper establishes the maps, the selector, and that the selected configs
 deliver.
 
-# §10 Conclusion
+# §11 Conclusion
 
 
 "Should this deployment self-speculate, and with what?" is answerable by
