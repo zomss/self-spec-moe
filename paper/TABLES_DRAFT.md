@@ -305,6 +305,36 @@ within the phase. Measured anti-patterns retained: tight polling
 The demo cell is the map's THINNEST (fresh ceiling 1.05-1.07x); the
 same protection transfers to the 1.4-1.9x cells.
 
+### T9c. LIVE-GRPO staleness grounding (Phase 92, 2026-07-27; DRAFT)
+
+Stage 1: the reference system's release stack (veRL 0.7 fork +
+vendored vLLM 0.11.2) run REAL — their exact Qwen2.5-7B GRPO recipe
+(MATH lv.3-5, group 8, 8k, T=1.0, lr 5e-7) on 2x H100, 16 steps,
+policy dumped every step (learned: mean reward 0.36, KL -> 1.4e-3).
+Stage 2: our stack, accept of the FIXED step-0 RTN-W4 drafter vs
+every dump, training-prompt distribution, 64 prompts x 2 seeds, K=4:
+
+| policy step | 0 | 1 | 2 | 4 | 8 | 12 | 16 |
+|---|---|---|---|---|---|---|---|
+| stale drafter@0 | 3.93 | 3.93 | 3.93 | 3.84 | 3.95 | 3.86 | 3.98 |
+| fresh drafter@step | = | | | | 3.83 | | 3.88 |
+
+- Staleness over 16 real steps: ZERO within noise (+-0.05); their
+  per-step requant (1.3-2.6 s/step booked) buys nothing here — fresh
+  measures 0.08 BELOW stale at both probed steps.
+- Detector validation-by-silence: the curve never nears the gate
+  (3.6) -> zero refresh fires, correctly. Refresh-on-evidence vs
+  their refresh-on-schedule.
+- Calibration: real 16-step drift ~ eps <= 0.04 on the T9 knob; the
+  T9 drift arms (eps .25/.35, -45% cliff) = ADVERSARIAL regime,
+  disclosed. Anchor: accept 3.9-4.1 at K=4 sits in their published
+  tau band (3.59 @ gamma3 / 5.18 @ gamma5).
+- Scope: 16 steps ~ 0.06 epoch of their recipe; long-horizon tail
+  unmeasured (extension: TOTAL_STEPS=128, ~5.5 h). One training run,
+  H100 not A100, RTN drafter (their Tier-0).
+- Provenance: research/92_live_grpo/results_92.md; curve
+  data/e1_curve.jsonl; dumps /data/smcho/ckpts/92_grpo_no-sd.
+
 ## T10. Cost to onboard a new (model, hardware) column (measured
 ## wall times, single H100 unless noted)
 

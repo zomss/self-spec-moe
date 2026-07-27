@@ -988,6 +988,27 @@ refresh 114-116 ms, fired by an accept-EMA detector at drift
 timescale. Measured anti-patterns retained: tight polling (-5%),
 eager gates (0.89x), disk-loading in the swap path (~1 s/fire).
 
+**The drift model is grounded on LIVE training (phase 92).** We ran
+the reference system's own release stack (veRL + vendored vLLM) for
+16 real GRPO steps of its exact Qwen2.5-7B recipe (2x H100, MATH
+lv.3-5, T=1.0, 8k; the policy reached mean reward 0.36), dumping the
+policy every step, and measured the fixed step-0 W4 drafter against
+every dump on the training prompt distribution (64 prompts x 2
+seeds). Result: accept is FLAT — 3.93 at step 0, 3.98 at step 16
+(range 3.84-3.98, no trend; per-step KL ~1e-3 at lr 5e-7). Real
+short-horizon GRPO drift maps to the SMALLEST calibrated emulation
+level (eps <= 0.04, near-lossless); the drift arms above (nibble
+drift, -45% cliff) are therefore the ADVERSARIAL regime — long
+horizons, higher learning rates, epoch-scale shift — and are
+disclosed as such. Two corollaries, both measured: (a) the reference
+design's per-step re-quantization (1.3-2.6 s/step) buys nothing on
+this horizon — a freshly re-quantized drafter at steps 8/16 measured
+0.08 BELOW the stale one; (b) our detector stays correctly silent
+(the curve never approaches the gate), so the refresh costs zero
+until drift actually arrives — refresh-on-evidence vs
+refresh-on-schedule is the controller-level version of
+measure-don't-assume.
+
 ## 9.2 The realistic rollout (GRPO shape)
 
 16 math prompts x group 8, T=1.0, 8k budget, thinking-mode CoT (avg
@@ -1020,7 +1041,8 @@ affordable only below A100's compute:bandwidth ridge (~156 vs H100's
 ~295) and loses to AR on H100. The like-for-like edge of our system
 is +7.6 points (measured cells + the live-accept tail gate), and our
 refresh (113 ms, fired on measured drift) replaces their per-step
-re-quantization (1.3-2.6 s). Generalization claim, stated precisely:
+re-quantization (1.3-2.6 s) — which §9.1's live-training measurement
+shows is unnecessary at real drift rates on a 16-step horizon. Generalization claim, stated precisely:
 their SYSTEM hard-codes an A100-shaped lever choice; our METHOD
 re-derives the choice per deployment (91-min protocol).
 PRE-REGISTERED: compiled on A100, our map should SELECT their lever
