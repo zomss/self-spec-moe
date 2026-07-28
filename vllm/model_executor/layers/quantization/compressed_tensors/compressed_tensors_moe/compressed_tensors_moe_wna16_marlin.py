@@ -64,6 +64,10 @@ class CompressedTensorsWNA16MarlinMoEMethod(CompressedTensorsMoEMethod):
         self.packed_factor = 32 // weight_quant.num_bits
         self.strategy = weight_quant.strategy
         self.group_size = weight_quant.group_size
+        # compressed-tensors serializes CHANNEL strategy with
+        # group_size=None; the Marlin path uses -1 for channel-wise.
+        if self.group_size is None and self.strategy == "channel":
+            self.group_size = -1
         self.actorder = weight_quant.actorder
 
         self.quant_type = (

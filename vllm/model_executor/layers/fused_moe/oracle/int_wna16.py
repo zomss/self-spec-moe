@@ -955,6 +955,10 @@ def convert_to_wna16_moe_kernel_format(
             num_bits = quant_config.num_bits
             pack_factor = 32 // quant_config.num_bits
             group_size = quant_config.group_size
+            # compressed-tensors serializes CHANNEL strategy with
+            # group_size=None; Marlin uses -1 for channel-wise.
+            if group_size is None:
+                group_size = -1
             actorder = quant_config.actorder
         else:
             raise TypeError(
