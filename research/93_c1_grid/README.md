@@ -149,8 +149,23 @@ works — R6 EOS'd naturally at ~76 tok, clip 0.0; batch sweep +
 preemption counters + per-dataset in/out length stats in every cell).
 
 **STEP 1 CLOSED.** Every lever class is realized e2e on every
-architecture; every quant format has a probed kernel row. Next:
-Step 2 (search-derived skip sets for MoE/MLA) on go.
+architecture; every quant format has a probed kernel row.
+
+## Step 2 results — search-derived skip sets (2026-07-28)
+
+Phase-86 measured iterative-greedy (on-policy 16k refs, conditional
+beta, pool-8), the search that survived phase-90's proxy
+falsification. Grid arms use budget-2 and budget-4 sets:
+
+| model | budget-2 set (beta) | budget-4 set (beta) | dense ref @4 |
+|---|---|---|---|
+| MoE 30B-A3B (48L) | {15,23} (.9297) | {13,15,23,24} (.8872) | 8B .849 / 32B .892 |
+| MLA V2-Lite (27L) | {10,11} (.9948) | {10,11,16,22} (.9852) | - |
+
+MLA skips are near-FREE (beta .985 at 15% of draft depth dropped) --
+the strongest per-budget skip tolerance measured on any architecture;
+notable because MLA self-spec is cost-bound, not accept-bound.
+Data: data/skip_search_{moe,mla}.csv. **STEP 2 CLOSED.**
 
 ## Decision log
 
