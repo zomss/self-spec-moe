@@ -172,12 +172,13 @@ class DraftModelProposer(SpecDecodeBaseProposer):
     class _SkipDecoderLayer(nn.Module):
         """Index-preserving passthrough for a skipped draft decoder layer.
 
-        Matches the Qwen decoder-layer call convention
-        layer(positions, hidden_states, residual) -> (hidden, residual);
+        Matches the decoder-layer call convention
+        layer(positions, hidden_states, residual, ...) -> (hidden, residual);
+        extra positionals (e.g. DeepSeek-V2's llama_4_scaling) are ignored.
         PPMissingLayer cannot be used interior (it returns args[0]).
         """
 
-        def forward(self, positions, hidden_states, residual, **kwargs):
+        def forward(self, positions, hidden_states, residual, *args, **kwargs):
             return hidden_states, residual
 
     def _apply_skip_layers(self, model: nn.Module) -> None:
