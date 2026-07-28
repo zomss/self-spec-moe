@@ -1,0 +1,27 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "tag": "smoke_dense_kvq",
+ "draft": "self",
+ "K": 2,
+ "window": 0,
+ "skip": "",
+ "ceiling": 128,
+ "draft_kv_dtype": "fp8",
+ "cells": [
+  {
+   "rid": "R6",
+   "batch": 1,
+   "toks": 78.2,
+   "all": [
+    78.2
+   ],
+   "accept": 2.939,
+   "clip_ratio": 0.0,
+   "out_tok_p50": 96,
+   "out_tok_p95": 96,
+   "prompt_tok_p50": 82,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ]
+}

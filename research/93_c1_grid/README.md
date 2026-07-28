@@ -114,36 +114,43 @@ cols=10944 stays bf16 by ignore, disclosed).
 | MoE 30B (TP2) | attn->Machete; EXPERTS->Marlin-MoE int4 / FP8-MoE (proper fast paths, no Humming for experts — recorded); router bf16 by design |
 | MLA | pending ckpts |
 
-**Lever smokes** (R6 b1 K2, accept):
+**Lever smokes** (R6 b1 K2, accept; FINAL after engine fixes):
 | lever | dense | MoE (TP2) | MLA |
 |---|---|---|---|
 | self bf16 | (known-good) | implied by window/skip | 3.00 |
-| window 512 | (known-good) | 2.96 | **CRASH** (native, scratchpad x MLA compressed KV) |
-| skip | (known-good) | 2.89 | 2.80 (after fork fix: _SkipDecoderLayer extra-positional) |
-| quant W4 | 2.91 | **BROKEN 1.07** | pending (likely same bug: V2-Lite FFN is MoE) |
-| quant FP8 | - | **BROKEN 1.00** | pending |
+| window 512 | (known-good) | 2.96 | 3.00 short-ctx / 1.83 @8k (truncation priced) |
+| skip | (known-good) | 2.89 | 2.80 (fork fix: _SkipDecoderLayer extra-positional) |
+| quant W4 | 2.91 | 2.96 (after fix) | 2.93 (after fix) |
+| quant FP8 | - | 2.85 (after fix) | (ckpt ready) |
+| kvq draft-fp8 | 2.94 (NEW build) | (ready) | (ready) |
 
-**ENGINE ITEM 1 (critical path): quantized fused-MoE drafter produces
-garbage logits.** Bisection: ckpt correct as target at TP1 AND TP2;
-bf16 MoE draft correct; dense quant draft correct; eager draft
-identical (not graph capture); both Marlin-int4 and FP8-MoE methods
-broken -> generic to quant-MoE x the draft engine build/run path.
-Repro: smoke_moe_w4 command in logs/. Blocks the quant class on
-MoE and (expected) MLA. Est. fix 0.5-1.5 days.
-
-**ENGINE ITEM 2: window x MLA native crash** during draft-model load
-(phase-69 scratchpad assumes standard paged KV; MLA compressed KV
-needs the phase-63-style handling). Fix est. 0.5-1 day, or record the
-cell as engine-unrealized (beta 0.922 exists from the emulation
-harness).
-
-**ENGINE ITEM 3: kv-quant has NO e2e realization** (beta-harness arm
-only; known record). Draft-side kv-fp8 build est. 1-2 days, or drop
-the class from v1 with the honest exclusion note.
+**ENGINE ITEMS — ALL RESOLVED (2026-07-28, user-approved fix+build):**
+1. Quant fused-MoE drafter garbage (accept ~1.0) — ROOT CAUSE: ckpt
+   ignore lists carry unprefixed explicit names; under the
+   "draft_model." module prefix nothing matched, so IGNORED layers
+   (the MoE ROUTER GATE) silently built quantized and loaded garbage.
+   FIX: strip the draft prefix in should_ignore_layer (3bf8c5e6a).
+   MoE W4 1.07->2.96; FP8 1.00->2.85; MLA W4 2.93. Found via
+   tensor-level diff (diag_moe_draft_weights.py).
+2. window x MLA "crash" — NOT A BUG: the original failure was an
+   OOM-kill coincidence (concurrent 30B CPU quantization); reruns
+   pass at short AND long ctx (truncation exercised: 1.83 @ 8k).
+   Note: MLA window arms run the plain chain (FULLCG scratchpad
+   stack remains GQA-only; cost recorded per arm).
+3. kvq e2e BUILT: VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8 quantizes ONLY
+   the draft's KV pool (own cache group; target + verify stay exact
+   = lossless); FA3 metadata builder fixed for per-group quantized
+   caches (712517903). Smoke accept 2.94 (kvq beta .985 anchor).
+Plus: Marlin-MoE channel-wise loading fixed (group_size None->-1,
+07d90c140) — W8-INT8-chan ckpts load on both MoE-FFN models.
 
 **Harness**: run_grid.py validated (uncapped gen + clip-ratio audit
 works — R6 EOS'd naturally at ~76 tok, clip 0.0; batch sweep +
 preemption counters + per-dataset in/out length stats in every cell).
+
+**STEP 1 CLOSED.** Every lever class is realized e2e on every
+architecture; every quant format has a probed kernel row. Next:
+Step 2 (search-derived skip sets for MoE/MLA) on go.
 
 ## Decision log
 

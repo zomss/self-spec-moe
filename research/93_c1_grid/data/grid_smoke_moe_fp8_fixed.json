@@ -1,0 +1,26 @@
+{
+ "model": "Qwen/Qwen3-30B-A3B",
+ "tag": "smoke_moe_fp8_fixed",
+ "draft": "/home/smcho/ckpts/Qwen3-30B-A3B-FP8-dynamic",
+ "K": 2,
+ "window": 0,
+ "skip": "",
+ "ceiling": 128,
+ "cells": [
+  {
+   "rid": "R6",
+   "batch": 1,
+   "toks": 15.3,
+   "all": [
+    15.3
+   ],
+   "accept": 2.852,
+   "clip_ratio": 0.0,
+   "out_tok_p50": 76,
+   "out_tok_p95": 76,
+   "prompt_tok_p50": 82,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ]
+}
