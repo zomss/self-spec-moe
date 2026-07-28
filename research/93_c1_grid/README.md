@@ -93,8 +93,57 @@ max-token cap (ceiling 16k + clip audit). Batch swept per §Claim.
 
 ## Budget
 
-Stage A ~1 GPU-day; Stage B ~2-3 GPU-days (GPUs 0/1; MoE TP2 uses
-both); ckpt builds CPU-only. Multi-seed winners +~20%.
+Stage A ~1 GPU-day; Stage B ~2-3 GPU-days on **GPUs 6-7** (user
+allocation 2026-07-28; MoE TP2 uses both); ckpt builds CPU-only.
+Multi-seed winners +~20%.
+
+## Gate-1 feasibility report (Step 1, 2026-07-28)
+
+**Checkpoint ladder** (CPU builds, completeness-gated):
+dense 8B: W4A16-INT4, W4A8-gptq, W8A16-INT8-sym, W8A16-FP8,
+FP8-dynamic — ALL READY. MoE 30B: W4A16 + FP8-dynamic READY,
+W8-INT8-chan rebuilding (Marlin-MoE int8 requires CHANNEL-wise;
+group-128 asserts). MLA V2-Lite: ladder building (native transformers
+classes — remote code broken on new transformers; layer-0 down_proj
+cols=10944 stays bf16 by ignore, disclosed).
+
+**Kernel matrix** (measured on the LOADED model, data/kernel_matrix.jsonl):
+| arch | format -> kernel |
+|---|---|
+| dense 8B | W4A16->Machete; W4A8->CutlassW4A8 (default) / Humming (VLLM_DISABLED_KERNELS force); W8A16-INT8->Machete; W8A16-FP8->Marlin-FP8 (VLLM_TEST_FORCE_FP8_MARLIN=1); FP8-dyn->W8A8Fp8 |
+| MoE 30B (TP2) | attn->Machete; EXPERTS->Marlin-MoE int4 / FP8-MoE (proper fast paths, no Humming for experts — recorded); router bf16 by design |
+| MLA | pending ckpts |
+
+**Lever smokes** (R6 b1 K2, accept):
+| lever | dense | MoE (TP2) | MLA |
+|---|---|---|---|
+| self bf16 | (known-good) | implied by window/skip | 3.00 |
+| window 512 | (known-good) | 2.96 | **CRASH** (native, scratchpad x MLA compressed KV) |
+| skip | (known-good) | 2.89 | 2.80 (after fork fix: _SkipDecoderLayer extra-positional) |
+| quant W4 | 2.91 | **BROKEN 1.07** | pending (likely same bug: V2-Lite FFN is MoE) |
+| quant FP8 | - | **BROKEN 1.00** | pending |
+
+**ENGINE ITEM 1 (critical path): quantized fused-MoE drafter produces
+garbage logits.** Bisection: ckpt correct as target at TP1 AND TP2;
+bf16 MoE draft correct; dense quant draft correct; eager draft
+identical (not graph capture); both Marlin-int4 and FP8-MoE methods
+broken -> generic to quant-MoE x the draft engine build/run path.
+Repro: smoke_moe_w4 command in logs/. Blocks the quant class on
+MoE and (expected) MLA. Est. fix 0.5-1.5 days.
+
+**ENGINE ITEM 2: window x MLA native crash** during draft-model load
+(phase-69 scratchpad assumes standard paged KV; MLA compressed KV
+needs the phase-63-style handling). Fix est. 0.5-1 day, or record the
+cell as engine-unrealized (beta 0.922 exists from the emulation
+harness).
+
+**ENGINE ITEM 3: kv-quant has NO e2e realization** (beta-harness arm
+only; known record). Draft-side kv-fp8 build est. 1-2 days, or drop
+the class from v1 with the honest exclusion note.
+
+**Harness**: run_grid.py validated (uncapped gen + clip-ratio audit
+works — R6 EOS'd naturally at ~76 tok, clip 0.0; batch sweep +
+preemption counters + per-dataset in/out length stats in every cell).
 
 ## Decision log
 

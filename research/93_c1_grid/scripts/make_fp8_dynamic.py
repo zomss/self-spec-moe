@@ -15,13 +15,16 @@ from llmcompressor.modifiers.quantization import QuantizationModifier
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 SRC = os.environ["SRC_MODEL"]
+# default NATIVE classes: V2-Lite remote code breaks on new
+# transformers (is_torch_fx_available removed); native deepseek_v2 exists
+TRUST = os.environ.get("TRUST_REMOTE", "0") == "1"
 OUT = os.environ["OUT_DIR"]
 IGNORE = os.environ.get(
     "IGNORE", "lm_head,re:.*mlp.gate$,re:.*shared_expert_gate$").split(",")
 
 model = AutoModelForCausalLM.from_pretrained(
-    SRC, dtype="bfloat16", trust_remote_code=True)
-tok = AutoTokenizer.from_pretrained(SRC, trust_remote_code=True)
+    SRC, dtype="bfloat16", trust_remote_code=TRUST)
+tok = AutoTokenizer.from_pretrained(SRC, trust_remote_code=TRUST)
 recipe = QuantizationModifier(
     targets="Linear", scheme="FP8_DYNAMIC", ignore=IGNORE)
 oneshot(model=model, recipe=recipe)

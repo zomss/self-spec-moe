@@ -73,7 +73,8 @@ def main():
                 "model": MODEL if DRAFT == "self"
                 else os.path.expanduser(DRAFT),
                 "num_speculative_tokens": K,
-                "draft_tensor_parallel_size": TP}
+                "draft_tensor_parallel_size":
+                    int(os.environ.get("G93_DRAFT_TP", str(TP)))}
     llm = LLM(model=MODEL, speculative_config=spec,
               tensor_parallel_size=TP, max_model_len=MAXLEN,
               gpu_memory_utilization=0.90, max_num_seqs=max(BATCHES),
