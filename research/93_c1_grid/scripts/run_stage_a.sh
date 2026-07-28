@@ -12,7 +12,7 @@ ARCH=${1:?usage: run_stage_a.sh dense|mla|moe}
 REPO=/data/smcho/self-spec-moe
 PHASE=$REPO/research/93_c1_grid
 P82DATA=$REPO/research/82_runtime_switching/data
-COMPILE=$REPO/research/82_runtime_switching/scripts/compile_policy.py
+COMPILE=$PHASE/scripts/compile_cells_93.py
 export HF_HOME=/data/smcho/huggingface
 export PATH="$REPO/.venv/bin:$PATH"
 cd "$REPO"
