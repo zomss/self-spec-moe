@@ -71,6 +71,24 @@ case "$ARCH" in
   *) echo "unknown arch $ARCH"; exit 1;;
 esac
 
+# Kill every smcho compute process on THIS run's GPUs (by nvidia-smi
+# pid, not name patterns: orphaned EngineCores keep their spawn cmdline
+# so pgrep -f misses them; observed 75 GiB held after a timeout kill).
+gpu_cleanup() {
+  local uuids
+  uuids=$(nvidia-smi --query-gpu=index,uuid --format=csv,noheader |
+    awk -F', ' -v g="$GPU" 'BEGIN{n=split(g,a,",");for(i=1;i<=n;i++)w[a[i]]=1} w[$1]{print $2}')
+  while read -r pid uuid _; do
+    pid=${pid%,}; uuid=${uuid%,}
+    echo "$uuids" | grep -q "$uuid" || continue
+    [ "$(ps -o user= -p "$pid" 2>/dev/null)" = "smcho" ] || continue
+    kill "$pid" 2>/dev/null || true
+    sleep 2
+    kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
+  done < <(nvidia-smi --query-compute-apps=pid,gpu_uuid --format=csv,noheader | tr -d ',')
+  sleep 3
+}
+
 run_one() {  # <lever> <karm> <draft> <extra-envs>
   local lever=$1 karm=$2 draft=$3 extra=$4
   local csv="cells_93_${ARCH}_${lever}.csv"
@@ -86,10 +104,7 @@ run_one() {  # <lever> <karm> <draft> <extra-envs>
       $extra timeout 3600 .venv/bin/python "$COMPILE" --measure "$karm" \
       >> "$PHASE/logs/stage_a_${ARCH}.log" 2>&1 \
       || echo "[A:$ARCH] FAIL $lever/$karm (continuing)"
-  for pid in $(pgrep -u "$USER" -f "VLLM::EngineC[o]re" || true); do
-    kill "$pid" 2>/dev/null || true
-  done
-  sleep 5
+  gpu_cleanup
 }
 
 # AR baseline once per arch (no draft; K=0)
