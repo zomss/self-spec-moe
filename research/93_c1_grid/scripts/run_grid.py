@@ -88,6 +88,8 @@ def main():
     rids = want.split(",") if want else REGIMES
     out = {"model": MODEL, "tag": TAG, "draft": DRAFT, "K": K if spec else 0,
            "window": WINDOW, "skip": SKIP, "ceiling": CEILING,
+           "draft_kv_dtype": os.environ.get(
+               "VLLM_SELF_SPEC_DRAFT_KV_DTYPE", ""),
            "cells": []}
     for rid in rids:
         n_load = NLOAD_LONG if rid in LONG_CTX else max(BATCHES)

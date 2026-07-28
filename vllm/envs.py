@@ -258,6 +258,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA: str = ""
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
+    VLLM_SELF_SPEC_DRAFT_KV_DTYPE: str = ""
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
     VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD: float = 0.0
     VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL: int = 64
@@ -1918,6 +1919,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # warning. 0 -> off (default). See research/62_window_kv_draft.
     "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_KV_WINDOW", "0")
+    ),
+    # Phase 93: DRAFT-only KV cache dtype (the kvq lever, e2e realization).
+    # e.g. "fp8" quantizes the DRAFT's own KV cache; the target's KV (and
+    # the verify pass) stays at the model dtype, so self-spec remains
+    # lossless. draft_model method only; incompatible with SHARED_KV
+    # (a shared cache cannot have two dtypes). "" -> off (default).
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": lambda: os.getenv(
+        "VLLM_SELF_SPEC_DRAFT_KV_DTYPE", ""
     ),
     # Phase 82 E1: accept-feedback OFF gate (content axis of the regime
     # detector). When the EMA of the per-step draft acceptance fraction

@@ -94,9 +94,33 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 self.vllm_config.model_config.quantization,
             )
 
+        # Phase 93 (kvq lever, e2e): DRAFT-only KV cache dtype. The draft's
+        # attention layers read cache_config.cache_dtype at construction, so
+        # overriding it HERE quantizes only the draft's own KV pool; the
+        # target's cache (and the verify pass) keeps the model dtype --
+        # self-spec stays lossless. Incompatible with SHARED_KV (one shared
+        # cache cannot carry two dtypes).
+        cache_config = base.cache_config
+        draft_kv_dtype = envs.VLLM_SELF_SPEC_DRAFT_KV_DTYPE
+        if draft_kv_dtype:
+            if envs.VLLM_SELF_SPEC_SHARED_KV:
+                raise ValueError(
+                    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE is incompatible with "
+                    "VLLM_SELF_SPEC_SHARED_KV (the draft shares the "
+                    "target's cache; it cannot have its own dtype)."
+                )
+            cache_config = replace(cache_config, cache_dtype=draft_kv_dtype)
+            logger.info(
+                "Self-spec draft: DRAFT-only KV cache dtype = %s "
+                "(target KV stays %s).",
+                draft_kv_dtype,
+                base.cache_config.cache_dtype,
+            )
+
         return replace(
             base,
             quant_config=quant_config,
+            cache_config=cache_config,
             parallel_config=replace(
                 spec.draft_parallel_config,
                 rank=self.vllm_config.parallel_config.rank,

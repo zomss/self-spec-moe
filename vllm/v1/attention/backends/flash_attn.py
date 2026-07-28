@@ -466,6 +466,16 @@ class FlashAttentionMetadataBuilder(AttentionMetadataBuilder[FlashAttentionMetad
             cache_dtype = self.cache_config.cache_dtype
             if is_quantized_kv_cache(cache_dtype):
                 qkv_dtype = current_platform.fp8_dtype()
+            elif self.kv_cache_dtype in (
+                torch.uint8,
+                current_platform.fp8_dtype(),
+            ):
+                # Per-GROUP quantized cache (e.g. the self-spec draft's
+                # fp8 KV under VLLM_SELF_SPEC_DRAFT_KV_DTYPE) while the
+                # global cache_dtype stays "auto": the spec's storage
+                # dtype (uint8) is not a valid FA3 qkv dtype -- map it
+                # to the platform fp8 type.
+                qkv_dtype = current_platform.fp8_dtype()
             else:
                 qkv_dtype = self.kv_cache_dtype
             if aot_schedule:
