@@ -1,99 +1,110 @@
-# Phase 93 — C1 grid: method x regime x architecture (COLLECTION; no runs yet)
+# Phase 93 — C1 grid v2: no best self-spec policy across regimes, per architecture
 
-Goal (user, 2026-07-28): show that for the three architectures (dense,
-MoE, MLA) there is NO best self-spec policy across regimes. Step 1 =
-collect the representative methods and the per-regime datasets; runs
-are GATED on explicit go.
+Design of record (v2, 2026-07-28; supersedes v1 after user review).
+Runs are gated: Gate 1 (arm list) -> Gate 2 (Stage-B scope) -> Gate 3
+(final evidence review).
 
-## 1. Architectures and models
+## Claim under test
 
-| arch | model | why this one | draft ckpts on disk |
+For each of three architectures (dense, MoE, MLA), no single self-spec
+configuration wins across the regime surface. "Regime" is factored as:
+
+1. **Dataset character** — the dataset determines input and output
+   context. Generation is NOT length-limited: natural EOS under a
+   generous ceiling (16k, raised if it ever binds), with the **clip
+   ratio logged per run** to prove the ceiling never shaped the data.
+   (Watch item: V2-Lite at T=0 may loop on some datasets; the clip
+   audit surfaces this rather than hiding it.)
+2. **Batch size** — a separately swept axis on EVERY dataset:
+   b in {1, 4, 8, 16, 32, 64, 128}, capped per dataset by KV
+   feasibility (e.g. 14k-ctx datasets cap near b32 on one H100 for
+   8B). Infeasible cells are RECORDED as capacity-bound, not skipped
+   silently.
+
+## Architectures / models
+
+| arch | model | TP | notes |
 |---|---|---|---|
-| dense | Qwen3-8B | richest kernel support (Humming/Cutlass/Marlin/Machete); T8 column partially exists | W4A16-INT4, W4A8-gptq, W8A16-FP8, sparse24 |
-| MoE | Qwen3-30B-A3B (A3B active) | measured in T2/T3 (window 1.15x, flr50 flip); EP/expert axis | NONE (must build) |
-| MLA | DeepSeek-V2-Lite | measured in T2/T3 (self-spec loses at accept 5.9 -- the cost-bound witness) | NONE (must build) |
+| dense | Qwen3-8B | 1 | richest kernel support; partial prior coverage (T8 quant column — superseded by this grid's protocol: prior rows were length-capped) |
+| MoE | Qwen3-30B-A3B | 2 | expert axis; Humming dense-kernel fallback expected on expert GEMMs |
+| MLA | DeepSeek-V2-Lite | 1 | the cost-bound witness; expected honest outcome: OFF wins many cells — that IS policy-diversity evidence |
 
-## 2. Representative method per lever class (the roster)
+## Method roster v2 (all self-spec: draft induced from the target itself)
 
-One representative per class, chosen for (a) class-representativeness,
-(b) runnability in the fork on ALL three arches, (c) prior
-measurement anchors:
+| class | arms | notes |
+|---|---|---|
+| weight quant | W4A16-GPTQ (dense), W4A16-RTN (all), W8A16-INT8, FP8 W8A8 (weight+activation), W4A8 | the 4/8-bit x weight-only/weight+activation ladder; each format on its BEST AVAILABLE kernel per arch, kernel recorded per cell (the efficiency defense: same-ckpt kernel span 1.60-2.19x is measured; hiding the axis invites the "badly implemented" review) |
+| kv quant | kvq_fp8 (draft-side KV cache) | boot-level toggle |
+| sparse attention | draft window in {128, 512, 2048, 8192} | window range per user; accept-vs-width is a known step function — the grid captures the curve |
+| weight pruning | SEARCH-DERIVED layer-skip sets, budgets {2, 4} | search = measured iterative-greedy conditional-beta growth (phase-86 protocol; the mechanism that survived phase-90's proxy falsification). Dense sets exist (T4); MoE/MLA sets derived in Step 2. NOT naive contiguous skip. |
+| arch-native (MoE) | flr50 expert restriction | draft from target's own restricted expert set (phase 83) |
+| control | OFF (= AR) | always an arm |
 
-| class | representative | realization in fork | dense | MoE | MLA | anchor (T3 beta) |
-|---|---|---|---|---|---|---|
-| weight quant | W4A16-INT4 drafter (GPTQ if ckpt exists, else RTN-sym; llmcompressor) | separate quantized ckpt as draft_model; kernel auto (Machete/Marlin) | YES (ckpt exists; also W4A8-Humming as kernel-flip arm) | build ckpt (~30-60 min CPU) | build ckpt | .952 / .972 / .997 |
-| kv quant | kvq_fp8 (draft-side KV cache fp8) | boot-level draft kv_cache_dtype | YES | YES | YES | .985 / .971 / .997 |
-| sparse attention | win512 (draft KV window) | fork window lever (hot-switchable) | YES | YES | YES | .975 / .971 / .922 |
-| weight pruning | greedy layer-skip set, budgets {2,4} (per-model frontier, T4) | VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS (index-preserving) | YES (budget sets known) | YES (sets to derive: ~30 min beta screen) | YES (sets to derive) | frontier known for dense only |
-| (arch-native pruning variant) | flr50 expert restriction | MoE-only (phase 83) | - | YES (measured 1.03x flip / 0.63x wrong-cell) | - | .953 |
-| (model-free control) | ngram | MLA-relevant (best measured spec there, 0.78x) | optional | optional | YES | - |
+K grid per arm: {2, 4, 6}, probe-adaptive +1 on ties. Verify widths
+avoiding the Humming odd-verify-width bug rows at TP2.
 
-Excluded and why (recorded so reviewers see the pool was principled):
-- width pruning (ffn25 etc.): beta measured (T5b) but e2e realization
-  never built (died pre-e2e by build-on-selection); not runnable.
-- 2:4 SparseGPT: kernel absent in the fork (marlin_24 combo pending).
-- EAGLE/Medusa-class trained drafts: out of scope by the paper's
-  training-free premise (kept as a reference row elsewhere).
+**Excluded, with reasons**: ngram (model-free lookup — NOT self-spec;
+user ruling 2026-07-28); width pruning (no e2e realization in fork);
+2:4 SparseGPT (kernel absent); trained drafts (EAGLE-class — outside
+the training-free premise; reference row lives elsewhere).
 
-Per-lever K grid: K in {2, 4, 6} (T8: shallow-K is load-bearing;
-deeper saturates). OFF/AR is always an arm. Verify widths avoid the
-Humming odd-width bug rows on TP2.
+## Datasets (phase-88 canonical loaders; caps REMOVED for this grid)
 
-## 3. Regime -> dataset matrix (canonical, phase 88 loaders)
-
-All loaders exist in research/88_regime_eval/scripts/regime_datasets.py
-(HF datasets cached under /data). Prompt formatting adapts per model
-tokenizer (chat template where the model has one; V2-Lite = base-style).
-
-| regime | dataset (real, prior-work-grounded) | shape | gen spec |
+| id | dataset | input character | output character |
 |---|---|---|---|
-| R1 math CoT | GSM8K test + AIME 1983-2024 | b1 | 1024 tok, T=0 |
-| R2 conversation | MT-Bench first turns | b1 | 512 tok, T=0 |
-| R3 code | HumanEval | b8 | 512 tok, T=0 |
-| R4 summarization | CNN/DailyMail 3.0.0, packed to ~8k ctx | b8/8k | 512 tok, T=0 |
-| R5 RAG QA | NQ-open questions over real C4 doc context ~14k | b8/14k | 512 tok, T=0 |
-| R5cot RAG CoT | AIME problems over C4 context ~14k | b8/14k | 3072 tok, T=0 |
-| R6 burst | GSM8K concise answers | b32/2k | 256 tok, T=0 |
-| R7 translation | WMT14 de-en test | b8 | 512 tok, T=0 |
-| R8 RL rollout | AIME, T=1.0 (EfficientRollout shape) | b16 | 2048 tok, T=1.0 |
+| R1 | GSM8K + AIME | short question | CoT, natural length |
+| R2 | MT-Bench first turns | short prompt | conversational |
+| R3 | HumanEval | function stub | code completion |
+| R4 | CNN/DailyMail packed ~8k | long multi-doc | short summaries |
+| R5 | NQ-open over C4 ~14k | very long ctx | short answer + explain |
+| R5cot | AIME over C4 ~14k | very long ctx | long CoT |
+| R6 | GSM8K concise | short | very short |
+| R7 | WMT14 de-en | medium | medium (length-coupled) |
+| R8 | AIME @ T=1.0 | short | long, high-entropy (RL shape) |
 
-(RKS KnapSpec-parity cell exists as a 10th loader; used for h2h, not
-part of the no-best-policy grid.)
+Gen spec per dataset: temperature as above (T=0 except R8), NO
+max-token cap (ceiling 16k + clip audit). Batch swept per §Claim.
 
-## 4. What already exists vs what is NEW
+## Step-by-step plan
 
-- Dense column: T8 gives 9-regime winners for the QUANT lever family
-  (W4A8-Hum x K) + skip compositions at 32B. Missing at 8B per-regime:
-  win512, kvq_fp8, skip-set as standalone arms. So even dense needs
-  the 3 remaining classes run per-regime.
-- MoE column: NOTHING per-regime (only 16k/2k cells). Needs full grid
-  + W4 ckpt build + skip-set beta screen (frontier not measured).
-- MLA column: NOTHING per-regime. Same needs. Expectation from cells:
-  many regimes -> OFF/ngram wins (that IS the finding: the best
-  "policy" on MLA is mostly not to draft -- diversity includes OFF).
+- **Step 0 (this doc)** — design of record. DONE when committed.
+- **Step 1 — engineering readiness (~1 day, CPU + smoke)**:
+  (a) build MoE/MLA drafter ckpts: W4A16-RTN, W8A16-INT8, FP8;
+  (b) kernel matrix: which kernel actually executes per format x arch
+  (probe + record; prewarm Humming); (c) smoke kvq/window/skip on
+  MoE + MLA (5-min boots); (d) harness: uncapped gen + clip-ratio
+  logging + batch-sweep loop + KV-feasibility precheck.
+  -> **Gate 1: feasibility matrix reviewed, arm list confirmed.**
+- **Step 2 — search-derived skip sets** for MoE/MLA (phase-86 greedy
+  protocol, ~1-2 h GPU each).
+- **Step 3 — Stage A: compiled cell grids** per arch x arm over
+  batch x ctx (82/88 compile protocol, ~5-7 min/arm-grid, ~1 day).
+  Output: batch-sweep surfaces, predicted winners + K per cell.
+  -> **Gate 2: predicted winner maps reviewed, Stage-B scope set.**
+- **Step 4 — Stage B: e2e serving confirms (~2-3 days)**: dataset x
+  batch {1, 8, 32, max-feasible} x {AR + each class at selected K},
+  uncapped gen, 8-iter, multi-seed on winners, FULL tables kept.
+- **Step 5 — analysis + packaging (half day)**: winner maps
+  (dataset x batch -> lever/K/OFF), distinct-winner counts,
+  wrong-lever cost distribution, batch-crossover points ->
+  paper/data/c1_grid_*.json + visualization (winner heatmaps multi
+  3:1; crossover curves single 1.5:1) + paper/c1.md update.
+  -> **Gate 3: final review before this supersedes T8 in the paper.**
 
-## 5. Proposed run protocol (for go/no-go — NOT started)
+## Budget
 
-Per arch: for each regime x lever-class arm, short probe at K
-{2,4,6} (2 iters) -> pick K -> 8-iter confirm for AR + every class at
-its best K. Report per-regime winner + full class table (not just
-winners) since the claim is about the whole policy surface.
+Stage A ~1 GPU-day; Stage B ~2-3 GPU-days (GPUs 0/1; MoE TP2 uses
+both); ckpt builds CPU-only. Multi-seed winners +~20%.
 
-Rough budget (serving runs ~8-12 min each; probes ~3 min):
-- dense 8B (3 new classes x 9 regimes): probes ~2.7 h + confirms ~5 h => ~8 h, GPUs 0/1
-- MoE 30B (4 classes + flr50): ckpt build ~1 h CPU + skip screen ~0.5 h + ~12 h (TP2 => GPUs 0+1 both)
-- MLA V2-Lite (4 classes + ngram): ckpt build ~0.5 h + ~9 h (TP1)
-Total ~30 GPU-hours wall over ~3-4 days interleaved. Multi-seed on
-winners only (+~20%).
+## Decision log
 
-Open decisions for the go call:
-1. Dense at 8B only, or also refresh the 32B column with the two
-   missing classes (kvq, win512 per-regime)? (+~10 h TP2)
-2. GPTQ or RTN for the MoE/MLA W4 ckpts? (RTN = fast + matches
-   EfficientRollout Tier-0; GPTQ = +0.13 beta at 32B but hours of
-   calibration; proposal: RTN now, GPTQ only if W4 loses cells it
-   should win)
-3. K grid {2,4,6} everywhere, or add K3/K5 where probes are close?
-   (proposal: probe-adaptive, +1 K only on ties)
-4. n=8 prompts per regime (phase-88 default) or n=16 for tighter
-   per-regime numbers? (proposal: n=8 probes, n=16 confirms)
+- 2026-07-28 (user): regime = dataset character; generation UNCAPPED;
+  batch swept 1->128 as its own axis.
+- 2026-07-28 (user): ngram excluded (not self-spec); quant ladder must
+  include activation quant + 8-bit, stack efficiency defensible;
+  window as a range; pruning must be search-based.
+- 2026-07-28 (agreed): GPTQ at dense only, RTN for MoE/MLA v1 (GPTQ
+  escalation only if W4 loses cells it should win); probe-adaptive K;
+  n=8 probes / n=16 confirms.
+- OPEN (Gate-2 material): whether to also refresh the 32B dense
+  column under the uncapped protocol (+~10 h TP2).
