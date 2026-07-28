@@ -62,10 +62,16 @@ cp.load_ctx_prompts = cached_load_ctx_prompts
 
 
 def main():
+    import os
     ap = argparse.ArgumentParser()
     ap.add_argument("--measure", required=True, choices=list(cp.ARM_K))
     a = ap.parse_args()
     cp.measure(a.measure)
+    # rows are appended inside measure(); skip vLLM teardown entirely
+    # (observed: engine shuts down cleanly, then the process hangs in
+    # atexit for the rest of the 1h timeout)
+    sys.stdout.flush()
+    os._exit(0)
 
 
 if __name__ == "__main__":
