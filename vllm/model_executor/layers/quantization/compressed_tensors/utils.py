@@ -55,6 +55,15 @@ def should_ignore_layer(
     if layer_name is None:
         return False
 
+    # Self-spec draft models build under the "draft_model." module prefix,
+    # but checkpoint ignore lists carry unprefixed names (often expanded to
+    # explicit layer names by the quantizer). Match against the unprefixed
+    # name, or ignored layers (e.g. MoE router gates) silently build
+    # QUANTIZED in the draft and load garbage (phase 93: accept collapsed
+    # to ~1.0 on every quantized MoE drafter).
+    if layer_name.startswith("draft_model."):
+        layer_name = layer_name.removeprefix("draft_model.")
+
     # layer_name = model.layers.0.self_attn.qkv_proj
     # proj_name = qkv_proj
     proj_name = layer_name.split(".")[-1]

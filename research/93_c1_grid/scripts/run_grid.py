@@ -80,6 +80,7 @@ def main():
               gpu_memory_utilization=0.90, max_num_seqs=max(BATCHES),
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192,
+              enforce_eager=os.environ.get("G93_ENFORCE_EAGER") == "1",
               trust_remote_code=True)
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 
