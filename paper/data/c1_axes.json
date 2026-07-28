@@ -1,0 +1,39 @@
+{
+  "description": "C1 synthesis: the four measured axis-flips plus the hardware axis. Each entry is a case where the winning lever CHANGES when one deployment axis moves, with the cost of not switching.",
+  "provenance": "T1/T5/T8/T9b (paper/arxiv/TABLES_DRAFT.md); phases 75/80/86/88/91",
+  "axes": [
+    {
+      "axis": "architecture",
+      "flip": "dense: quant+window 1.91x | MoE: window-only 1.15x, dense-chain 0.63x | MLA: everything loses, OFF wins (self-draft 0.56x at accept 5.9)",
+      "wrong_lever_cost": "30-60%",
+      "data": "c1_arch_ledger.json"
+    },
+    {
+      "axis": "scale",
+      "flip": "layer-skip composition: 32B +3-6% on either kernel (accept cost ~0); 8B priced out at every measured cell (best 1.32x vs 1.42x incumbent)",
+      "numbers": {"triple_composition_32b": 1.57, "knapspec_published_32b": 1.43, "skip_beta_at_budget4": {"7B": 0.817, "8B": 0.849, "32B": 0.892}},
+      "note": "pre-registration #5 (skip dominated at 32B by product-beta pricing) REFUTED -> never price compositions by product"
+    },
+    {
+      "axis": "kernel_realization",
+      "flip": "SAME W4A8 ckpt, identical beta: 1.60x (CutlassW4A8) vs 2.19x (Humming) at 8B b16; 32B canonical suite kernel winners split 5-2 (Humming takes b1/short-ctx/long-decode, W4-GPTQ holds prefill-heavy b8 RAG and b32 burst)",
+      "numbers": {"span_8b_b16": [1.60, 2.19], "serving_wall_span": [1.52, 1.80], "split_32b": "5-2"}
+    },
+    {
+      "axis": "regime_batch_ctx_content",
+      "flip": "9 regimes need K2-K6 plus OFF; naive K4 grid LOSES two regimes (summarization 0.84x, RL rollout 0.83x) that shallow-K converts (1.08x, 1.05x); compiled cells within one column span 1.59x to 0.83x",
+      "data": "c1_regime_winners.json"
+    },
+    {
+      "axis": "hardware",
+      "flip": "EfficientRollout's lever (full-ctx W4 draft): published 1.24x on 8xA100; faithful same-stack on H100 0.764x (0.857x corrected toggle; emulation caveat) -- loses to AR. Their own SS B.2 lever ranking (full-ctx > window) INVERTS on H100. Hybrid (their policy + win512) 1.224x on H100.",
+      "numbers": {"a100_published": 1.24, "h100_faithful": 0.764, "h100_corrected_toggle": 0.857, "h100_hybrid_window": 1.224, "compute_bandwidth_ridge": {"A100": 156, "H100": 295}},
+      "status": "same-stack measured on H100; A100 side is their published number. PRE-REGISTERED: our map compiled on A100 should SELECT their lever at rollout shapes (blocked on A100 access)."
+    }
+  ],
+  "deployment_value": {
+    "cross_column_fleet": "+39.1% (labeled PREDICTION from measured cells)",
+    "intra_column_ceiling": "+10.4%",
+    "reading": "selection across columns is the effectiveness headline; runtime switching within a column is a regret-bound story"
+  }
+}

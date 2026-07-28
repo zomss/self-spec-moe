@@ -1,0 +1,32 @@
+{
+  "description": "C1 acceptance-surface evidence: per-model beta (draft-vs-target agreement factor) for single levers at 16k, and skip-set greedy frontiers. No column ranks the same across models -- the raw diversity evidence beneath the e2e winners.",
+  "provenance": "T3/T4 (paper/arxiv/TABLES_DRAFT.md); phase 86 beta protocol, 1152 paired positions",
+  "beta_singles_16k": {
+    "models": ["Qwen2.5-7B", "Qwen3-8B", "Qwen3-32B", "Qwen3-30B-MoE", "V2-Lite-MLA"],
+    "levers": {
+      "win512":        [0.978, 0.975, 0.971, 0.971, 0.922],
+      "win128":        [0.976, 0.975, 0.961, 0.969, 0.576],
+      "kvq_fp8":       [0.841, 0.985, 0.988, 0.971, 0.997],
+      "q_fp8_Wonly":   [0.978, 0.991, 0.992, 0.993, 1.000],
+      "q_int4_RTN":    [0.924, 0.952, 0.839, 0.972, 0.997],
+      "q_int4_GPTQ":   [0.9427, null, 0.9731, null, null],
+      "skip125_contig":[0.448, 0.754, 0.659, 0.695, 0.966],
+      "skip25_contig": [0.09, 0.537, 0.235, 0.40, 0.32],
+      "lr50_flr50":    [null, null, null, 0.953, 0.975]
+    },
+    "notes": {
+      "kvq_fp8_Q2.5": "0.841 explained by missing QK-norm (the architecture-split law; pre-registered and confirmed on Qwen3: 0.985)",
+      "q_int4_GPTQ_32B": "+0.134 over RTN at 32B -- calibration is scale-keyed",
+      "win128_MLA": "0.576 -- window collapses on MLA; the lever is architecture-conditional"
+    }
+  },
+  "skip_frontiers_greedy": {
+    "budgets": [1, 2, 3, 4, 5, 6, 7],
+    "models": {
+      "Qwen2.5-7B_28L": {"beta": [0.954, 0.908, 0.869, 0.817, 0.761, 0.659, 0.557], "contiguous_ref": 0.448},
+      "Qwen3-8B_36L":  {"beta": [0.951, 0.923, 0.885, 0.849, 0.813, 0.773, 0.694], "contiguous_ref": 0.754},
+      "Qwen3-32B_64L": {"beta": [0.976, 0.954, 0.912, 0.892, 0.833, 0.800, 0.770], "contiguous_ref": 0.659}
+    },
+    "note": "skip tolerance is scale-keyed (32B > 8B > 7B at every budget) -- feeds the scale-axis flip in c1_axes.json"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "description": "C1 architecture axis: end-to-end speedups per architecture with best-lever and wrong-lever outcomes. The same lever family moves from 1.91x (dense) to 0.56x (MLA) -- lever choice is architecture-keyed.",
+  "provenance": "T2 (paper/arxiv/TABLES_DRAFT.md); phases 79/81/83/85; 8-iteration e2e unless noted",
+  "rows": [
+    {"model": "Qwen2.5-7B", "arch": "dense", "cell": "b32/16k", "config": "W4+win512 K6 fixed chain", "speedup": 1.91, "accept": 5.649, "role": "best", "provenance": "81-E3"},
+    {"model": "Qwen2.5-7B", "arch": "dense", "cell": "b32/16k", "config": "W4+win512 K4", "speedup": 1.85, "accept": 4.291, "role": "alt", "provenance": "81-E3"},
+    {"model": "Qwen2.5-7B", "arch": "dense", "cell": "b8/16k", "config": "W4+win512 K4/K6", "speedup": [1.64, 1.52], "accept": [4.38, 5.64], "role": "alt", "provenance": "81-E3"},
+    {"model": "Qwen2.5-7B", "arch": "dense", "cell": "b16/32k", "config": "W4+win512 K4", "speedup": 2.77, "speedup_ci": 0.48, "accept": 4.33, "role": "best-longctx", "provenance": "79-e3x32"},
+    {"model": "Qwen3-30B-A3B", "arch": "MoE", "cell": "b8/16k", "config": "win512 K3 fixed-stack", "speedup": 1.15, "accept": 3.766, "role": "best", "provenance": "81 MoE check"},
+    {"model": "Qwen3-30B-A3B", "arch": "MoE", "cell": "b4/2k", "config": "flr50 bf16-partial K2", "speedup": 1.03, "speedup_ci": 0.10, "accept": 2.882, "role": "delivered-flip", "provenance": "83-E2c"},
+    {"model": "Qwen3-30B-A3B", "arch": "MoE", "cell": "b8/2k, b32/2k", "config": "flr50 (dense-chain, wrong cell)", "speedup": [0.63, 0.64], "accept": [2.84, 2.79], "role": "wrong-lever", "provenance": "83-E2c chain-blocked"},
+    {"model": "DeepSeek-V2-Lite", "arch": "MLA", "cell": "b32/16k", "config": "self-draft K5 (beta~1)", "speedup": 0.56, "accept": 5.916, "role": "wrong-lever", "note": "chain-bound: OFF is the measured winner for self-spec; accept is near-perfect and it still loses", "provenance": "79"},
+    {"model": "DeepSeek-V2-Lite", "arch": "MLA", "cell": "b32/16k", "config": "ngram K4 (model-free)", "speedup": 0.78, "accept": 2.846, "role": "best-spec (still < AR)", "note": "CPU-lookup psi=2.4", "provenance": "85-v6q"}
+  ],
+  "headline": {
+    "wrong_lever_cost_range": "30-60%",
+    "examples": {"MLA self-spec": 0.56, "MoE dense-chain at b8-32/2k": 0.63},
+    "fleet_claim": "one global lever config across a dense+MoE+MLA fleet leaves +39.1% on the table (labeled PREDICTION from measured cells, T11 #7)",
+    "intra_column_switching_ceiling": "+10.4% max (8B, fixed-skip cells) -- cross-COLUMN selection is where the money is"
+  }
+}

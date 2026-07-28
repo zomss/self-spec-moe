@@ -1,0 +1,25 @@
+{
+  "description": "C1 regime axis: canonical 9-regime suite (phase 88). Best AR-relative serving-wall speedup per regime and the winning lever config. 8B = Qwen3-8B (all winners on the W4A8-Humming kernel; selection = depth K). 32B = Qwen3-32B TP2 (winners split across kernel x depth x composition x OFF).",
+  "provenance": "T8 (paper/arxiv/TABLES_DRAFT.md); research/88_regime_eval; serving wall-clock, real datasets (GSM8K+AIME, MT-Bench, HumanEval, CNN/DM, NQ-open+ctx, WMT14, MATH@T=1.0), 2026-07-19/20",
+  "flags": "DRAFT; 32B RL-rollout spec arms blocked by the Humming odd-verify-width bug (best measured spec 0.95x, OFF wins)",
+  "regimes": [
+    {"id": "R1", "regime": "math CoT", "shape": "b1", "best_8b": {"lever": "W4A8-Hum", "K": 6, "speedup": 1.42}, "best_32b": {"lever": "skip x Hum", "K": 4, "speedup": 1.50}},
+    {"id": "R2", "regime": "conversation", "shape": "b1", "best_8b": {"lever": "W4A8-Hum", "K": 4, "speedup": 1.29}, "best_32b": {"lever": "Hum", "K": 5, "speedup": 1.36}},
+    {"id": "R3", "regime": "code", "shape": "b8", "best_8b": {"lever": "W4A8-Hum", "K": 4, "speedup": 1.34}, "best_32b": {"lever": "Hum", "K": 5, "speedup": 1.39}},
+    {"id": "R4", "regime": "summarization", "shape": "b8", "best_8b": {"lever": "W4A8-Hum", "K": 2, "speedup": 1.08, "naive_grid_K4": 0.84}, "best_32b": {"lever": "Hum", "K": 3, "speedup": 1.00}},
+    {"id": "R5", "regime": "RAG QA", "shape": "b8/14k", "best_8b": {"lever": "W4A8-Hum", "K": 4, "speedup": 1.42}, "best_32b": {"lever": "W4-GPTQ", "K": 4, "speedup": 1.13}},
+    {"id": "R5cot", "regime": "RAG CoT", "shape": "b8/14k", "best_8b": {"lever": "W4A8-Hum", "K": 6, "speedup": 1.76}, "best_32b": {"lever": "skip x Hum", "K": 4, "speedup": 1.52}},
+    {"id": "R6", "regime": "burst", "shape": "b32", "best_8b": {"lever": "W4A8-Hum", "K": 4, "speedup": 1.14}, "best_32b": {"lever": "W4-GPTQ", "K": 5, "speedup": 1.19}},
+    {"id": "R7", "regime": "translation", "shape": "b8", "best_8b": {"lever": "W4A8-Hum", "K": 4, "speedup": 1.14}, "best_32b": {"lever": "Hum", "K": 5, "speedup": 1.06}},
+    {"id": "R8", "regime": "RL rollout T=1.0", "shape": "b16", "best_8b": {"lever": "W4A8-Hum", "K": 2, "speedup": 1.05, "naive_grid_K4": 0.83}, "best_32b": {"lever": "OFF", "K": 0, "speedup": 1.00, "best_spec": 0.95, "note": "spec arms Humming-bug-blocked"}}
+  ],
+  "summary": {
+    "ar_beating_8b": "9/9",
+    "ar_beating_32b": "8/9 (R8 = OFF is the correct selection)",
+    "k_range_needed": [2, 6],
+    "mechanism": "acceptance is FRONT-LOADED in depth; shallow-K converts the two naive-grid losses (0.84->1.08, 0.83->1.05)",
+    "kernel_split_32b": {"W4A8-Humming": 5, "W4-GPTQ": 2, "note": "+2 skip-composition cells; single-cell h2h understates diversity"},
+    "oracle_composite_vs_ar": {"8b": 1.26, "32b": 1.20},
+    "switching_bound_over_best_static": {"uniform_mix_8b": "+4.2%", "uniform_mix_32b": "+7.3%", "per_cell_where_statics_lose": "+7-33%"}
+  }
+}
