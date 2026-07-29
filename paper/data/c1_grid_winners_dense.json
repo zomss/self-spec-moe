@@ -1,0 +1,118 @@
+{
+ "arch": "dense",
+ "protocol": "Stage-A compiled cells (decode T(1+N)-T(1), batch 1-128 x ctx {2k,8k,14k}); S vs same-boot AR; winner incl. OFF",
+ "winners": {
+  "b1/c2000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.221,
+   "accept": 2.791,
+   "n_arms": 39
+  },
+  "b1/c8000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.244,
+   "accept": 4.676,
+   "n_arms": 39
+  },
+  "b1/c14000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.281,
+   "accept": 2.944,
+   "n_arms": 39
+  },
+  "b4/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.252,
+   "accept": 4.653,
+   "n_arms": 39
+  },
+  "b4/c8000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.159,
+   "accept": 2.855,
+   "n_arms": 39
+  },
+  "b4/c14000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.147,
+   "accept": 2.903,
+   "n_arms": 39
+  },
+  "b8/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.177,
+   "accept": 4.657,
+   "n_arms": 39
+  },
+  "b8/c8000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.102,
+   "accept": 2.9,
+   "n_arms": 39
+  },
+  "b8/c14000": {
+   "lever": "win512",
+   "K": 2,
+   "S": 1.261,
+   "accept": 2.908,
+   "n_arms": 39
+  },
+  "b16/c2000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.149,
+   "accept": 2.912,
+   "n_arms": 39
+  },
+  "b16/c8000": {
+   "lever": "win2048",
+   "K": 4,
+   "S": 1.179,
+   "accept": 4.753,
+   "n_arms": 39
+  },
+  "b16/c14000": {
+   "lever": "win2048",
+   "K": 4,
+   "S": 1.423,
+   "accept": 4.778,
+   "n_arms": 39
+  },
+  "b32/c2000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.062,
+   "accept": 2.903,
+   "n_arms": 39
+  },
+  "b32/c8000": {
+   "lever": "win2048",
+   "K": 4,
+   "S": 1.323,
+   "accept": 4.774,
+   "n_arms": 39
+  },
+  "b64/c2000": {
+   "lever": "w4a8hum",
+   "K": 2,
+   "S": 1.004,
+   "accept": 2.91,
+   "n_arms": 39
+  },
+  "b128/c2000": {
+   "lever": "win128",
+   "K": 2,
+   "S": 1.078,
+   "accept": 2.668,
+   "n_arms": 39
+  }
+ }
+}
