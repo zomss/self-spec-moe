@@ -21,52 +21,68 @@ BATCHES="1,4,8,16,32,64,128"
 CTXS="2000,8000,14000"
 KS="k2 k4 k6"
 
+# Production-stack env bundles (the "fixed stack" every winning record
+# number used -- T5/T6/T8 arms ran WITH these; without them drafts pay
+# naive-path costs e.g. their own prefill. Discovered the hard way:
+# the first Stage-A pass measured OFF-everywhere).
+COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=1 VLLM_SELF_SPEC_CPU_ORCH=1"
+# shared-KV full-context stack (quant + skip arms): target-KV binding,
+# no draft prefill, piecewise chain (FULLCG needs a window -> not here;
+# the plain-chain cost IS the honest full-ctx realization)
+SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
+# windowed scratchpad stack (GQA window arms): + FULLCG + wholechain
+winstack() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16 VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1"; }
+# MLA window arms: scratchpad/FULLCG is GQA-only -> plain chain + window
+winplain() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16"; }
+# kvq: draft OWNS its KV (fp8) -> no shared-KV, draft pays prefill
+KVQSTACK="$COMMON VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
+
 declare -A ARMS
 case "$ARCH" in
   dense)
     MODEL="Qwen/Qwen3-8B"; TP=1; KVLIM=260000
     GPU="${STAGEA_GPU:-6}"
-    ARMS[w4a16]="$HOME/ckpts/Qwen3-8B-W4A16-INT4|"
-    ARMS[w4a8cut]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|"
-    ARMS[w4a8hum]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
-    ARMS[w8int8]="$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym|"
-    ARMS[w8fp8]="$HOME/ckpts/Qwen3-8B-W8A16-FP8|VLLM_TEST_FORCE_FP8_MARLIN=1"
-    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-8B-FP8-dynamic|"
-    ARMS[win128]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=128"
-    ARMS[win512]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=512"
-    ARMS[win2048]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=2048"
-    ARMS[win8192]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=8192"
-    ARMS[skipb2]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"
-    ARMS[skipb4]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,4,8,10"
-    ARMS[kvq]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8"
+    ARMS[w4a16]="$HOME/ckpts/Qwen3-8B-W4A16-INT4|$SHARED"
+    ARMS[w4a8cut]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|$SHARED"
+    ARMS[w4a8hum]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+    ARMS[w8int8]="$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym|$SHARED"
+    ARMS[w8fp8]="$HOME/ckpts/Qwen3-8B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-8B-FP8-dynamic|$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"
+    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,4,8,10"
+    ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   mla)
     MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; KVLIM=250000
     GPU="${STAGEA_GPU:-7}"
-    ARMS[w4a16]="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|"
-    ARMS[w8chan]="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|"
-    ARMS[fp8dyn]="$HOME/ckpts/DeepSeek-V2-Lite-FP8-dynamic|"
-    ARMS[win128]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=128"
-    ARMS[win512]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=512"
-    ARMS[win2048]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=2048"
-    ARMS[win8192]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=8192"
-    ARMS[skipb2]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11"
-    ARMS[skipb4]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11,16,22"
-    ARMS[kvq]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8"
+    ARMS[w4a16]="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+    ARMS[w8chan]="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|$SHARED"
+    ARMS[fp8dyn]="$HOME/ckpts/DeepSeek-V2-Lite-FP8-dynamic|$SHARED"
+    ARMS[win128]="$MODEL|$(winplain 128)"
+    ARMS[win512]="$MODEL|$(winplain 512)"
+    ARMS[win2048]="$MODEL|$(winplain 2048)"
+    ARMS[win8192]="$MODEL|$(winplain 8192)"
+    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11"
+    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11,16,22"
+    ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   moe)
     MODEL="Qwen/Qwen3-30B-A3B"; TP=2; KVLIM=130000
     GPU="${STAGEA_GPU:-6,7}"
-    ARMS[w4a16]="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|"
-    ARMS[w8chan]="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|"
-    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-30B-A3B-FP8-dynamic|"
-    ARMS[win128]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=128"
-    ARMS[win512]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=512"
-    ARMS[win2048]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=2048"
-    ARMS[win8192]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_WINDOW=8192"
-    ARMS[skipb2]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=15,23"
-    ARMS[skipb4]="$MODEL|VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=13,15,23,24"
-    ARMS[kvq]="$MODEL|VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8"
+    ARMS[w4a16]="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED"
+    ARMS[w8chan]="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
+    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-30B-A3B-FP8-dynamic|$SHARED"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=15,23"
+    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=13,15,23,24"
+    ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   *) echo "unknown arch $ARCH"; exit 1;;
 esac
