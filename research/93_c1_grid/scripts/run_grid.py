@@ -149,6 +149,14 @@ def main():
                   f"accept={cell['accept']} clip={cell['clip_ratio']} "
                   f"out_p50={cell['out_tok_p50']} "
                   f"preempt={cell['preemptions']}", flush=True)
+        # incremental save: a timeout mid-sweep must not destroy the
+        # datasets already measured (lost 25 cells to a looping-model
+        # 6h-timeout on MLA before this)
+        _p = os.environ.get("G93_OUT", str(
+            PHASE / "data" / f"grid_{TAG or 'run'}.json"))
+        Path(_p).parent.mkdir(exist_ok=True)
+        Path(_p).write_text(json.dumps(out, indent=1))
+    out["complete"] = True
     path = os.environ.get("G93_OUT", str(
         PHASE / "data" / f"grid_{TAG or 'run'}.json"))
     Path(path).parent.mkdir(exist_ok=True)

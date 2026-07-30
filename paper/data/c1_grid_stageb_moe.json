@@ -1,0 +1,303 @@
+{
+ "arch": "moe",
+ "protocol": "Stage-B e2e serving on real datasets, uncapped gen (MLA: ceiling 2048, base model loops at T=0 -- disclosed); S vs same-protocol AR",
+ "winners": {
+  "R1/b1": {
+   "winner": "OFF",
+   "S": 0.654,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.654,
+   "accept": 2.913,
+   "ar_toks": 237.0,
+   "clip": 0.0
+  },
+  "R1/b8": {
+   "winner": "OFF",
+   "S": 0.9,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.9,
+   "accept": 2.933,
+   "ar_toks": 811.0,
+   "clip": 0.0
+  },
+  "R1/b32": {
+   "winner": "OFF",
+   "S": 0.98,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.98,
+   "accept": 2.947,
+   "ar_toks": 1601.5,
+   "clip": 0.0
+  },
+  "R1/b64": {
+   "winner": "w4a16_k2",
+   "S": 1.278,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.278,
+   "accept": 2.954,
+   "ar_toks": 969.7,
+   "clip": 0.047
+  },
+  "R2/b1": {
+   "winner": "OFF",
+   "S": 0.713,
+   "best_spec": "win8192_k3",
+   "best_spec_S": 0.713,
+   "accept": 4.0,
+   "ar_toks": 218.2,
+   "clip": 0.0
+  },
+  "R2/b8": {
+   "winner": "OFF",
+   "S": 0.882,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.882,
+   "accept": 2.805,
+   "ar_toks": 522.7,
+   "clip": 0.0
+  },
+  "R2/b32": {
+   "winner": "w4a16_k3",
+   "S": 1.172,
+   "best_spec": "w4a16_k3",
+   "best_spec_S": 1.172,
+   "accept": 3.668,
+   "ar_toks": 1056.3,
+   "clip": 0.0
+  },
+  "R2/b64": {
+   "winner": "w4a16_k2",
+   "S": 1.034,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.034,
+   "accept": 2.876,
+   "ar_toks": 2018.0,
+   "clip": 0.0
+  },
+  "R3/b1": {
+   "winner": "OFF",
+   "S": 0.72,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.72,
+   "accept": 2.973,
+   "ar_toks": 219.2,
+   "clip": 0.0
+  },
+  "R3/b8": {
+   "winner": "OFF",
+   "S": 0.958,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.958,
+   "accept": 2.944,
+   "ar_toks": 762.6,
+   "clip": 0.0
+  },
+  "R3/b32": {
+   "winner": "w4a16_k3",
+   "S": 1.018,
+   "best_spec": "w4a16_k3",
+   "best_spec_S": 1.018,
+   "accept": 3.902,
+   "ar_toks": 1891.0,
+   "clip": 0.0
+  },
+  "R3/b64": {
+   "winner": "win8192_k3",
+   "S": 1.024,
+   "best_spec": "win8192_k3",
+   "best_spec_S": 1.024,
+   "accept": 3.992,
+   "ar_toks": 2422.5,
+   "clip": 0.0
+  },
+  "R4/b1": {
+   "winner": "OFF",
+   "S": 0.758,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.758,
+   "accept": 2.854,
+   "ar_toks": 203.1,
+   "clip": 0.0
+  },
+  "R4/b8": {
+   "winner": "OFF",
+   "S": 0.936,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.936,
+   "accept": 2.866,
+   "ar_toks": 727.7,
+   "clip": 0.0
+  },
+  "R4/b32": {
+   "winner": "OFF",
+   "S": 0.998,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.998,
+   "accept": 2.856,
+   "ar_toks": 1565.9,
+   "clip": 0.0
+  },
+  "R5/b1": {
+   "winner": "OFF",
+   "S": 0.792,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.792,
+   "accept": 2.858,
+   "ar_toks": 178.9,
+   "clip": 0.0
+  },
+  "R5/b8": {
+   "winner": "OFF",
+   "S": 0.915,
+   "best_spec": "win2048_k3",
+   "best_spec_S": 0.915,
+   "accept": 3.812,
+   "ar_toks": 484.8,
+   "clip": 0.0
+  },
+  "R5/b32": {
+   "winner": "OFF",
+   "S": 0.96,
+   "best_spec": "win2048_k3",
+   "best_spec_S": 0.96,
+   "accept": 3.835,
+   "ar_toks": 793.0,
+   "clip": 0.0
+  },
+  "R5cot/b1": {
+   "winner": "OFF",
+   "S": 0.747,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.747,
+   "accept": 2.953,
+   "ar_toks": 217.5,
+   "clip": 0.0
+  },
+  "R5cot/b8": {
+   "winner": "OFF",
+   "S": 0.888,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.888,
+   "accept": 2.956,
+   "ar_toks": 624.2,
+   "clip": 0.0
+  },
+  "R5cot/b32": {
+   "winner": "w4a16_k2",
+   "S": 1.18,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.18,
+   "accept": 2.952,
+   "ar_toks": 1021.4,
+   "clip": 0.0
+  },
+  "R6/b1": {
+   "winner": "OFF",
+   "S": 0.584,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.584,
+   "accept": 2.951,
+   "ar_toks": 219.1,
+   "clip": 0.0
+  },
+  "R6/b8": {
+   "winner": "OFF",
+   "S": 0.958,
+   "best_spec": "w4a16_k3",
+   "best_spec_S": 0.958,
+   "accept": 3.871,
+   "ar_toks": 608.4,
+   "clip": 0.0
+  },
+  "R6/b32": {
+   "winner": "w4a16_k2",
+   "S": 1.288,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.288,
+   "accept": 2.946,
+   "ar_toks": 888.8,
+   "clip": 0.0
+  },
+  "R6/b64": {
+   "winner": "OFF",
+   "S": 0.985,
+   "best_spec": "w4a16_k3",
+   "best_spec_S": 0.985,
+   "accept": 3.889,
+   "ar_toks": 2051.7,
+   "clip": 0.0
+  },
+  "R7/b1": {
+   "winner": "OFF",
+   "S": 0.411,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.411,
+   "accept": 2.75,
+   "ar_toks": 211.2,
+   "clip": 0.0
+  },
+  "R7/b8": {
+   "winner": "OFF",
+   "S": 0.748,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.748,
+   "accept": 2.886,
+   "ar_toks": 523.9,
+   "clip": 0.0
+  },
+  "R7/b32": {
+   "winner": "OFF",
+   "S": 0.944,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.944,
+   "accept": 2.906,
+   "ar_toks": 1216.5,
+   "clip": 0.0
+  },
+  "R7/b64": {
+   "winner": "OFF",
+   "S": 0.946,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.946,
+   "accept": 2.928,
+   "ar_toks": 2077.3,
+   "clip": 0.0
+  },
+  "R8/b1": {
+   "winner": "OFF",
+   "S": 0.634,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.634,
+   "accept": 2.749,
+   "ar_toks": 241.9,
+   "clip": 0.0
+  },
+  "R8/b8": {
+   "winner": "w4a16_k2",
+   "S": 1.025,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.025,
+   "accept": 2.711,
+   "ar_toks": 745.2,
+   "clip": 0.0
+  },
+  "R8/b32": {
+   "winner": "OFF",
+   "S": 0.858,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.858,
+   "accept": 2.661,
+   "ar_toks": 1592.3,
+   "clip": 0.0
+  },
+  "R8/b64": {
+   "winner": "OFF",
+   "S": 0.932,
+   "best_spec": "w4a16_k3",
+   "best_spec_S": 0.932,
+   "accept": 3.321,
+   "ar_toks": 2207.4,
+   "clip": 0.0
+  }
+ }
+}

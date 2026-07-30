@@ -1,0 +1,303 @@
+{
+ "arch": "mla",
+ "protocol": "Stage-B e2e serving on real datasets, uncapped gen (MLA: ceiling 2048, base model loops at T=0 -- disclosed); S vs same-protocol AR",
+ "winners": {
+  "R1/b1": {
+   "winner": "OFF",
+   "S": 0.666,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.666,
+   "accept": 2.999,
+   "ar_toks": 245.8,
+   "clip": 1.0
+  },
+  "R1/b8": {
+   "winner": "OFF",
+   "S": 0.916,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.916,
+   "accept": 2.999,
+   "ar_toks": 963.7,
+   "clip": 1.0
+  },
+  "R1/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.105,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.105,
+   "accept": 2.998,
+   "ar_toks": 2369.7,
+   "clip": 0.875
+  },
+  "R1/b64": {
+   "winner": "w8chan_k2",
+   "S": 1.051,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.051,
+   "accept": 2.998,
+   "ar_toks": 4434.4,
+   "clip": 0.922
+  },
+  "R2/b1": {
+   "winner": "OFF",
+   "S": 0.632,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.632,
+   "accept": 2.982,
+   "ar_toks": 258.6,
+   "clip": 0.75
+  },
+  "R2/b8": {
+   "winner": "OFF",
+   "S": 0.938,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.938,
+   "accept": 2.99,
+   "ar_toks": 812.9,
+   "clip": 0.75
+  },
+  "R2/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.141,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.141,
+   "accept": 2.995,
+   "ar_toks": 2414.9,
+   "clip": 0.906
+  },
+  "R2/b64": {
+   "winner": "w8chan_k2",
+   "S": 1.063,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.063,
+   "accept": 2.995,
+   "ar_toks": 4250.2,
+   "clip": 0.891
+  },
+  "R3/b1": {
+   "winner": "OFF",
+   "S": 0.598,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.598,
+   "accept": 2.999,
+   "ar_toks": 244.5,
+   "clip": 1.0
+  },
+  "R3/b8": {
+   "winner": "OFF",
+   "S": 0.818,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.818,
+   "accept": 2.999,
+   "ar_toks": 935.9,
+   "clip": 1.0
+  },
+  "R3/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.026,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.026,
+   "accept": 2.999,
+   "ar_toks": 2319.3,
+   "clip": 0.906
+  },
+  "R3/b64": {
+   "winner": "w8chan_k2",
+   "S": 1.077,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.077,
+   "accept": 2.999,
+   "ar_toks": 4196.4,
+   "clip": 0.906
+  },
+  "R4/b1": {
+   "winner": "OFF",
+   "S": 0.69,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.69,
+   "accept": 2.999,
+   "ar_toks": 228.1,
+   "clip": 1.0
+  },
+  "R4/b8": {
+   "winner": "OFF",
+   "S": 0.939,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.939,
+   "accept": 2.999,
+   "ar_toks": 853.4,
+   "clip": 1.0
+  },
+  "R4/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.047,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.047,
+   "accept": 2.999,
+   "ar_toks": 1951.4,
+   "clip": 1.0
+  },
+  "R5/b1": {
+   "winner": "OFF",
+   "S": 0.673,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.673,
+   "accept": 3.0,
+   "ar_toks": 229.1,
+   "clip": 1.0
+  },
+  "R5/b8": {
+   "winner": "OFF",
+   "S": 0.924,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.924,
+   "accept": 2.997,
+   "ar_toks": 806.4,
+   "clip": 1.0
+  },
+  "R5/b32": {
+   "winner": "OFF",
+   "S": 0.685,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.685,
+   "accept": 2.998,
+   "ar_toks": 1699.3,
+   "clip": 1.0
+  },
+  "R5cot/b1": {
+   "winner": "OFF",
+   "S": 0.668,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.668,
+   "accept": 2.997,
+   "ar_toks": 228.9,
+   "clip": 1.0
+  },
+  "R5cot/b8": {
+   "winner": "OFF",
+   "S": 0.932,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.932,
+   "accept": 2.997,
+   "ar_toks": 785.4,
+   "clip": 1.0
+  },
+  "R5cot/b32": {
+   "winner": "OFF",
+   "S": 0.695,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.695,
+   "accept": 2.998,
+   "ar_toks": 1654.8,
+   "clip": 1.0
+  },
+  "R6/b1": {
+   "winner": "OFF",
+   "S": 0.522,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.522,
+   "accept": 2.999,
+   "ar_toks": 259.0,
+   "clip": 1.0
+  },
+  "R6/b8": {
+   "winner": "OFF",
+   "S": 0.913,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.913,
+   "accept": 2.999,
+   "ar_toks": 980.3,
+   "clip": 1.0
+  },
+  "R6/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.132,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.132,
+   "accept": 2.999,
+   "ar_toks": 2469.7,
+   "clip": 0.938
+  },
+  "R6/b64": {
+   "winner": "w8chan_k2",
+   "S": 1.086,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.086,
+   "accept": 2.999,
+   "ar_toks": 4466.9,
+   "clip": 0.938
+  },
+  "R7/b1": {
+   "winner": "OFF",
+   "S": 0.631,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.631,
+   "accept": 2.999,
+   "ar_toks": 259.3,
+   "clip": 1.0
+  },
+  "R7/b8": {
+   "winner": "OFF",
+   "S": 0.914,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.914,
+   "accept": 3.0,
+   "ar_toks": 969.1,
+   "clip": 1.0
+  },
+  "R7/b32": {
+   "winner": "w8chan_k2",
+   "S": 1.063,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.063,
+   "accept": 2.999,
+   "ar_toks": 2646.4,
+   "clip": 1.0
+  },
+  "R7/b64": {
+   "winner": "w8chan_k2",
+   "S": 1.022,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 1.022,
+   "accept": 2.999,
+   "ar_toks": 4747.2,
+   "clip": 1.0
+  },
+  "R8/b1": {
+   "winner": "OFF",
+   "S": 0.374,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.374,
+   "accept": 1.718,
+   "ar_toks": 243.6,
+   "clip": 0.0
+  },
+  "R8/b8": {
+   "winner": "OFF",
+   "S": 0.491,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.491,
+   "accept": 1.893,
+   "ar_toks": 504.4,
+   "clip": 0.208
+  },
+  "R8/b32": {
+   "winner": "OFF",
+   "S": 0.427,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.427,
+   "accept": 1.888,
+   "ar_toks": 1435.0,
+   "clip": 0.24
+  },
+  "R8/b64": {
+   "winner": "OFF",
+   "S": 0.486,
+   "best_spec": "w8chan_k2",
+   "best_spec_S": 0.486,
+   "accept": 1.822,
+   "ar_toks": 2670.2,
+   "clip": 0.208
+  }
+ }
+}

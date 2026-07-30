@@ -4,7 +4,7 @@
 # prompts over batch x ctx cells (82/88 compile protocol). Resumable:
 # skips (arm, K) whose rows already exist in the per-arm CSV.
 #
-# Usage: run_stage_a.sh {dense|mla|moe}
+# Usage: run_stage_a_mla2 (capture-light MLA)
 # GPUs: dense/mla -> one of 6/7 via STAGEA_GPU; moe -> 6,7 (TP2).
 set -uo pipefail
 
@@ -35,7 +35,9 @@ winstack() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAF
 # MLA window arms: scratchpad/FULLCG is GQA-only -> plain chain + window
 winplain() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16"; }
 # kvq: draft OWNS its KV (fp8) -> no shared-KV, draft pays prefill
-KVQSTACK="$COMMON VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
+KVQSTACK="$COMMON VLLM_SELF_SPEC_DRAFT_KV_DTYPE=fp8 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
+MLASHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
+winplain2() { echo "$MLASHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16"; }
 
 declare -A ARMS
 case "$ARCH" in
@@ -48,26 +50,26 @@ case "$ARCH" in
     ARMS[w8int8]="$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym|$SHARED"
     ARMS[w8fp8]="$HOME/ckpts/Qwen3-8B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
     ARMS[fp8dyn]="$HOME/ckpts/Qwen3-8B-FP8-dynamic|$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1"
-    ARMS[win128]="$MODEL|$(winplain 128)"
-    ARMS[win512]="$MODEL|$(winplain 512)"
-    ARMS[win2048]="$MODEL|$(winplain 2048)"
-    ARMS[win8192]="$MODEL|$(winplain 8192)"
-    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"
-    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,4,8,10"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"
+    ARMS[skipb4]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,4,8,10"
     ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   mla)
     MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; KVLIM=250000
     GPU="${STAGEA_GPU:-7}"
-    ARMS[w4a16]="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
-    ARMS[w8chan]="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|$SHARED"
-    ARMS[fp8dyn]="$HOME/ckpts/DeepSeek-V2-Lite-FP8-dynamic|$SHARED"
-    ARMS[win128]="$MODEL|$(winplain 128)"
-    ARMS[win512]="$MODEL|$(winplain 512)"
-    ARMS[win2048]="$MODEL|$(winplain 2048)"
-    ARMS[win8192]="$MODEL|$(winplain 8192)"
-    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11"
-    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11,16,22"
+    ARMS[w4a16]="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|$MLASHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+    ARMS[w8chan]="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|$MLASHARED"
+    ARMS[fp8dyn]="$HOME/ckpts/DeepSeek-V2-Lite-FP8-dynamic|$MLASHARED"
+    ARMS[win128]="$MODEL|$(winplain2 128)"
+    ARMS[win512]="$MODEL|$(winplain2 512)"
+    ARMS[win2048]="$MODEL|$(winplain2 2048)"
+    ARMS[win8192]="$MODEL|$(winplain2 8192)"
+    ARMS[skipb2]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11"
+    ARMS[skipb4]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=10,11,16,22"
     ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   moe)
@@ -76,12 +78,12 @@ case "$ARCH" in
     ARMS[w4a16]="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED"
     ARMS[w8chan]="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
     ARMS[fp8dyn]="$HOME/ckpts/Qwen3-30B-A3B-FP8-dynamic|$SHARED"
-    ARMS[win128]="$MODEL|$(winplain 128)"
-    ARMS[win512]="$MODEL|$(winplain 512)"
-    ARMS[win2048]="$MODEL|$(winplain 2048)"
-    ARMS[win8192]="$MODEL|$(winplain 8192)"
-    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=15,23"
-    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=13,15,23,24"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=15,23"
+    ARMS[skipb4]="$MODEL|$MLASHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=13,15,23,24"
     ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
   *) echo "unknown arch $ARCH"; exit 1;;

@@ -167,6 +167,77 @@ the strongest per-budget skip tolerance measured on any architecture;
 notable because MLA self-spec is cost-bound, not accept-bound.
 Data: data/skip_search_{moe,mla}.csv. **STEP 2 CLOSED.**
 
+## Gate-2 package — Stage A complete (2026-07-30)
+
+All three arch columns measured on production-honest realizations
+(batch 1-128 x ctx {2k,8k,14k}, K {2,4,6}, decode cells vs same-boot
+AR). Winner maps: paper/figures/c1_winner_map_{dense,mla,moe}.png;
+machine-readable: paper/data/c1_grid_winners_*.json.
+
+**Dense (13 arms): winners SPLIT across the surface.** Humming-W4A8
+owns low-batch/short-ctx (K2/K4, 1.06-1.28x); WINDOWS take over as
+batch x ctx grows (win2048-K4 1.32x @ b32/8k, 1.42x @ b16/14k;
+win512-K2 1.26x @ b8/14k; win128-K2 @ b128/2k); quant decays to
+parity by b64/2k. >=4 distinct winners + near-OFF cells in ONE
+architecture.
+
+**MLA (9 arms): OFF wins everywhere but one marginal cell** (w8chan
+K2 1.03 @ b32/2k). Accept is never the problem; the chain cost is —
+the honest per-arch verdict from the record, reproduced by the grid.
+
+**MoE (10 arms): OFF wins the measured grid; crossover sits just
+beyond its corner.** S climbs monotonically with batch AND ctx (b1/2k
+0.68 -> b32/2k 0.98, b8/14k 0.94, accepts healthy 2.9-6.5); the
+record's fixed-stack win (win-K3 1.15x @ b8/16k) lies past the 14k
+ceiling at an unmeasured K. Cross-arch: three qualitatively different
+policy surfaces = the no-universal-policy claim at the map level.
+
+**Realization ledger (all disclosed):** window arms = plain chain
+(fast-stack scratchpad has a racy IMA at grid shapes on the current
+tree — top known-issue, affects T6/T8 reproduction); fp8dyn = draft-
+eager (inductor copy_misaligned_inputs bug on the compiled draft);
+MLA w4a16 = Machete-forced (Marlin draft-path N=576 shape bug); MoE
+w4a16 = Marlin-forced (Machete TP2-shard create_arguments bug); kvq
+realized on dense+MoE (MLA: capture assert, deferred). Every
+substitution applies to a whole arm uniformly.
+
+**Stage-B scope options:** (a) full: 9 datasets x b{1,8,32,max} x
+{AR + top-2 arms/cell}, uncapped gen, ~2-3 GPU-days; (b) trimmed:
+dense full + MoE/MLA at 4 spot cells each (~1.5 days); (c) pre-step:
+extend MoE ctx to 16k+ and add K3 cells (~3h) before scoping.
+
+
+## Step 5 — Stage B complete: the real-data C1 result (2026-07-30)
+
+All three arches confirmed on the 9 canonical datasets x batch
+{1,8,32,64}, uncapped generation (clip-audited), AR + winner arms:
+
+| arch | spec beats AR | winning configs | pattern |
+|---|---|---|---|
+| dense 8B | **32/33 cells** | 5 (Hum-K2/K4, win512-K2, win128-K2, win2048-K4) | lever AND depth flip by dataset x batch; long-ctx datasets hand high-batch cells to windows |
+| MLA V2-Lite | **11/33** | w8chan-K2 only | batch-keyed: OFF at b<=8, W8-quant wins b>=32 (1.02-1.14x) EXCEPT T=1.0 sampling (R8: 0.37-0.49) |
+| MoE 30B | **8/33** | w4a16-K2/K3, win8192-K3 | OFF-dominant; quant wins concentrate at b32-b64 on short-output datasets (1.02-1.29x) |
+
+Three architectures, three qualitatively different policy surfaces —
+C1 on real data. Figures: paper/figures/c1_stageb_map_{arch}.png;
+data: paper/data/c1_grid_stageb_{arch}.json.
+
+**Prediction-vs-confirmation (C2 evidence):** the Stage-A synthetic
+cells UNDER-predicted high-batch quant wins on MLA (predicted OFF
+everywhere; real data: 11 wins) and MoE (predicted 0; real: 8) —
+real prompt-length distributions differ from packed-C4 cells.
+Measure-on-deployment, demonstrated at grid scale.
+
+**Protocol findings:** V2-Lite (base model) LOOPS at T=0 on 8/9
+datasets (clip ~1.0 at any ceiling) -> MLA column measured at
+ceiling 2048, disclosed (the output-length axis collapses for base
+models; T=1.0 R8 alone generates naturally). Dense/MoE: clip 0
+everywhere (natural EOS).
+
+**GATE 3 READY.** Remaining hygiene: scratchpad racy-IMA debug (top
+known-issue), Humming K2 wedge (retry-recoverable), kvq x MLA
+capture, fp8dyn compiled-draft inductor bug (all ledgered).
+
 ## Decision log
 
 - 2026-07-28 (user): regime = dataset character; generation UNCAPPED;

@@ -1,0 +1,303 @@
+{
+ "arch": "dense",
+ "protocol": "Stage-B e2e serving on real datasets, uncapped gen (MLA: ceiling 2048, base model loops at T=0 -- disclosed); S vs same-protocol AR",
+ "winners": {
+  "R1/b1": {
+   "winner": "w4a8hum_k2",
+   "S": 1.313,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.313,
+   "accept": 2.964,
+   "ar_toks": 149.8,
+   "clip": 0.0
+  },
+  "R1/b8": {
+   "winner": "w4a8hum_k4",
+   "S": 1.411,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.411,
+   "accept": 4.845,
+   "ar_toks": 790.3,
+   "clip": 0.0
+  },
+  "R1/b32": {
+   "winner": "w4a8hum_k4",
+   "S": 1.152,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.152,
+   "accept": 4.816,
+   "ar_toks": 2741.0,
+   "clip": 0.0
+  },
+  "R1/b64": {
+   "winner": "w4a8hum_k2",
+   "S": 1.42,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.42,
+   "accept": 2.968,
+   "ar_toks": 676.5,
+   "clip": 0.016
+  },
+  "R2/b1": {
+   "winner": "w4a8hum_k2",
+   "S": 1.292,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.292,
+   "accept": 2.829,
+   "ar_toks": 147.2,
+   "clip": 0.0
+  },
+  "R2/b8": {
+   "winner": "w4a8hum_k2",
+   "S": 1.296,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.296,
+   "accept": 2.814,
+   "ar_toks": 458.8,
+   "clip": 0.0
+  },
+  "R2/b32": {
+   "winner": "w4a8hum_k2",
+   "S": 1.32,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.32,
+   "accept": 2.856,
+   "ar_toks": 1202.9,
+   "clip": 0.0
+  },
+  "R2/b64": {
+   "winner": "w4a8hum_k2",
+   "S": 1.347,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.347,
+   "accept": 2.883,
+   "ar_toks": 2337.7,
+   "clip": 0.0
+  },
+  "R3/b1": {
+   "winner": "w4a8hum_k4",
+   "S": 1.209,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.209,
+   "accept": 4.751,
+   "ar_toks": 149.5,
+   "clip": 0.0
+  },
+  "R3/b8": {
+   "winner": "w4a8hum_k4",
+   "S": 1.241,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.241,
+   "accept": 4.759,
+   "ar_toks": 821.2,
+   "clip": 0.0
+  },
+  "R3/b32": {
+   "winner": "w4a8hum_k4",
+   "S": 1.115,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.115,
+   "accept": 4.746,
+   "ar_toks": 2864.8,
+   "clip": 0.0
+  },
+  "R3/b64": {
+   "winner": "OFF",
+   "S": 0.959,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 0.959,
+   "accept": 4.753,
+   "ar_toks": 4048.9,
+   "clip": 0.0
+  },
+  "R4/b1": {
+   "winner": "w4a8hum_k4",
+   "S": 1.267,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.267,
+   "accept": 4.489,
+   "ar_toks": 135.8,
+   "clip": 0.0
+  },
+  "R4/b8": {
+   "winner": "w4a8hum_k2",
+   "S": 1.189,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.189,
+   "accept": 2.875,
+   "ar_toks": 558.6,
+   "clip": 0.0
+  },
+  "R4/b32": {
+   "winner": "win128_k2",
+   "S": 1.089,
+   "best_spec": "win128_k2",
+   "best_spec_S": 1.089,
+   "accept": 2.199,
+   "ar_toks": 1007.3,
+   "clip": 0.0
+  },
+  "R5/b1": {
+   "winner": "w4a8hum_k4",
+   "S": 1.202,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.202,
+   "accept": 4.455,
+   "ar_toks": 116.1,
+   "clip": 0.0
+  },
+  "R5/b8": {
+   "winner": "win512_k2",
+   "S": 1.114,
+   "best_spec": "win512_k2",
+   "best_spec_S": 1.114,
+   "accept": 2.905,
+   "ar_toks": 363.0,
+   "clip": 0.0
+  },
+  "R5/b32": {
+   "winner": "win512_k2",
+   "S": 1.15,
+   "best_spec": "win512_k2",
+   "best_spec_S": 1.15,
+   "accept": 2.899,
+   "ar_toks": 494.9,
+   "clip": 0.0
+  },
+  "R5cot/b1": {
+   "winner": "w4a8hum_k4",
+   "S": 1.302,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.302,
+   "accept": 4.811,
+   "ar_toks": 126.8,
+   "clip": 0.0
+  },
+  "R5cot/b8": {
+   "winner": "win2048_k4",
+   "S": 1.208,
+   "best_spec": "win2048_k4",
+   "best_spec_S": 1.208,
+   "accept": 4.943,
+   "ar_toks": 403.2,
+   "clip": 0.0
+  },
+  "R5cot/b32": {
+   "winner": "win128_k2",
+   "S": 1.238,
+   "best_spec": "win128_k2",
+   "best_spec_S": 1.238,
+   "accept": 2.82,
+   "ar_toks": 611.0,
+   "clip": 0.0
+  },
+  "R6/b1": {
+   "winner": "w4a8hum_k2",
+   "S": 1.28,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.28,
+   "accept": 2.968,
+   "ar_toks": 149.1,
+   "clip": 0.0
+  },
+  "R6/b8": {
+   "winner": "w4a8hum_k2",
+   "S": 1.341,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.341,
+   "accept": 2.957,
+   "ar_toks": 684.0,
+   "clip": 0.0
+  },
+  "R6/b32": {
+   "winner": "w4a8hum_k4",
+   "S": 1.289,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.289,
+   "accept": 4.782,
+   "ar_toks": 1795.8,
+   "clip": 0.0
+  },
+  "R6/b64": {
+   "winner": "w4a8hum_k2",
+   "S": 1.313,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.313,
+   "accept": 2.936,
+   "ar_toks": 3165.8,
+   "clip": 0.0
+  },
+  "R7/b1": {
+   "winner": "w4a8hum_k2",
+   "S": 1.025,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.025,
+   "accept": 2.931,
+   "ar_toks": 143.4,
+   "clip": 0.0
+  },
+  "R7/b8": {
+   "winner": "w4a8hum_k2",
+   "S": 1.227,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.227,
+   "accept": 2.968,
+   "ar_toks": 561.7,
+   "clip": 0.0
+  },
+  "R7/b32": {
+   "winner": "w4a8hum_k2",
+   "S": 1.142,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.142,
+   "accept": 2.915,
+   "ar_toks": 1879.9,
+   "clip": 0.0
+  },
+  "R7/b64": {
+   "winner": "w4a8hum_k2",
+   "S": 1.132,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.132,
+   "accept": 2.924,
+   "ar_toks": 3116.4,
+   "clip": 0.0
+  },
+  "R8/b1": {
+   "winner": "w4a8hum_k2",
+   "S": 1.209,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.209,
+   "accept": 2.676,
+   "ar_toks": 148.6,
+   "clip": 0.0
+  },
+  "R8/b8": {
+   "winner": "w4a8hum_k4",
+   "S": 1.183,
+   "best_spec": "w4a8hum_k4",
+   "best_spec_S": 1.183,
+   "accept": 4.153,
+   "ar_toks": 695.3,
+   "clip": 0.0
+  },
+  "R8/b32": {
+   "winner": "w4a8hum_k2",
+   "S": 1.279,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.279,
+   "accept": 2.629,
+   "ar_toks": 1472.3,
+   "clip": 0.0
+  },
+  "R8/b64": {
+   "winner": "w4a8hum_k2",
+   "S": 1.081,
+   "best_spec": "w4a8hum_k2",
+   "best_spec_S": 1.081,
+   "accept": 2.636,
+   "ar_toks": 1976.5,
+   "clip": 0.0
+  }
+ }
+}

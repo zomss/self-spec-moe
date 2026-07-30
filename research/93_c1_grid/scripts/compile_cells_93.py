@@ -16,6 +16,7 @@ import argparse
 import glob
 import gzip
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -59,6 +60,68 @@ def cached_load_ctx_prompts(tok, n, target_tok):
 
 
 cp.load_ctx_prompts = cached_load_ctx_prompts
+
+# COMPILE_KMAX: boot the engine at kmax with the per-batch-size K
+# schedule pinning the measured K (the PRODUCTION realization -- E6/T8
+# shallow-K arms ran this way; fixed-K2 wholechain boots are an
+# unvalidated graph shape and IMA at b>=64).
+_kmax = os.environ.get("COMPILE_KMAX")
+if _kmax:
+    _real_measure0 = cp.measure
+
+    def _measure_ksched(arm):
+        k = cp.ARM_K[arm]
+        if k and k < int(_kmax):
+            import vllm.config.speculative  # noqa: F401
+
+            from vllm import LLM as _LLM
+            orig_init = _LLM.__init__
+
+            def patched(self, *a, **kw):
+                sc = kw.get("speculative_config")
+                if sc:
+                    sc = dict(sc)
+                    sc["num_speculative_tokens"] = int(_kmax)
+                    sc["num_speculative_tokens_per_batch_size"] = [
+                        (1, 100000, k)]
+                    kw["speculative_config"] = sc
+                return orig_init(self, *a, **kw)
+
+            _LLM.__init__ = patched
+            try:
+                return _real_measure0(arm)
+            finally:
+                _LLM.__init__ = orig_init
+        return _real_measure0(arm)
+
+    cp.measure = _measure_ksched
+
+# COMPILE_MML: override the hardcoded max_model_len=20480 (window/
+# scratchpad IMA discriminator: E6's validated stack ran mml 8704).
+_mml = os.environ.get("COMPILE_MML")
+if _mml:
+    import functools
+
+    _real_measure = cp.measure
+
+    def _measure_mml(arm):
+        from vllm import LLM as _LLM
+        import vllm
+
+        orig_init = _LLM.__init__
+
+        @functools.wraps(orig_init)
+        def patched(self, *a, **kw):
+            kw["max_model_len"] = int(_mml)
+            return orig_init(self, *a, **kw)
+
+        _LLM.__init__ = patched
+        try:
+            return _real_measure(arm)
+        finally:
+            _LLM.__init__ = orig_init
+
+    cp.measure = _measure_mml
 
 
 def main():

@@ -13,6 +13,7 @@ export PATH="$REPO/.venv/bin:$PATH"
 cd "$REPO"
 
 BATCHES="${STAGEB_BATCHES:-1,8,32,64}"
+CEIL=""
 
 COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=1 VLLM_SELF_SPEC_CPU_ORCH=1"
 SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
@@ -35,6 +36,9 @@ case "$ARCH" in
     ;;
   mla)
     MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; GPU="${STAGEB_GPU:-7}"; MAXLEN=24576
+    # base model loops at T=0 on 8/9 datasets (clip ~1.0 at any ceiling);
+    # ceiling 2048 measures the same steady-state cost at sane wall.
+    CEIL=2048
     ARMLIST=(
       "off|off|0|||"
       "w8chan_k2|$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|2|||$SHARED"
@@ -48,8 +52,8 @@ case "$ARCH" in
       "off|off|0|||"
       "w4a16_k2|$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
       "w4a16_k3|$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|3|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
+      "win2048_k3|self|3|2048||$(winplain 2048)"
       "win8192_k3|self|3|8192||$(winplain 8192)"
-      "w8chan_k3|$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|3|||$SHARED"
     )
     ;;
   *) echo "unknown arch"; exit 1;;
@@ -69,12 +73,12 @@ gpu_cleanup() {
 for spec in "${ARMLIST[@]}"; do
   IFS='|' read -r name draft k window skip extra <<< "$spec"
   out="$PHASE/data/stageb_${ARCH}_${name}.json"
-  if [ -s "$out" ]; then echo "[B:$ARCH] skip $name (done)"; continue; fi
+  if [ -s "$out" ] && grep -q '"complete": true' "$out"; then echo "[B:$ARCH] skip $name (done)"; continue; fi
   echo "[B:$ARCH] run $name"
   env CUDA_VISIBLE_DEVICES=$GPU G93_MODEL="$MODEL" G93_TP=$TP \
       G93_DRAFT="$draft" G93_K="${k:-0}" G93_WINDOW="${window:-0}" \
       G93_SKIP="$skip" G93_BATCHES="$BATCHES" G93_ITERS=3 \
-      G93_CEILING=16384 G93_MAXLEN=$MAXLEN G93_TAG="stageb_${ARCH}_${name}" \
+      G93_CEILING=${CEIL:-16384} G93_MAXLEN=$MAXLEN G93_TAG="stageb_${ARCH}_${name}" \
       G93_OUT="$out" $extra timeout 21600 .venv/bin/python \
       "$PHASE/scripts/run_grid.py" \
       >> "$PHASE/logs/stage_b_${ARCH}.log" 2>&1 \
