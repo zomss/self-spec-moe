@@ -2932,26 +2932,25 @@ class SpecDecodeBaseProposer:
         runner = self.runner
         assert runner is not None
         blk = runner.input_batch.block_table[self.kv_cache_gid].get_device_tensor(n)
-        n_cols = blk.shape[1]
         block_size = self.block_size
         n_sink = -(-self._kv_window_sinks // block_size)
         rows = max(self.max_batch_size, n)
-        if (
-            self._win_block_table is None
-            or self._win_block_table.shape[1] != n_cols
-            or self._win_block_table.shape[0] < rows
-        ):
+        # Phase 93 IMA fix: fixed max-width allocation, identical to
+        # _apply_draft_kv_window (captured graphs hold these pointers;
+        # never reallocate).
+        max_cols = -(-self.max_model_len // block_size)
+        if self._win_block_table is None:
             self._win_block_table = torch.zeros(
-                (rows, n_cols), dtype=blk.dtype, device=self.device
+                (rows, max_cols), dtype=blk.dtype, device=self.device
             )
             self._win_seq_lens = torch.zeros(
                 rows, dtype=runner.seq_lens.dtype, device=self.device
             )
             self._win_col_arange = torch.arange(
-                n_cols, device=self.device
+                max_cols, device=self.device
             ).unsqueeze(0)
             self._win_src_cols = torch.zeros(
-                (rows, n_cols), dtype=torch.long, device=self.device
+                (rows, max_cols), dtype=torch.long, device=self.device
             )
             self._win_col_ge_sink = (self._win_col_arange >= n_sink).to(torch.long)
         self._win_block_table[:n].zero_()
@@ -2985,25 +2984,30 @@ class SpecDecodeBaseProposer:
         n_last = -(-(self._kv_window + tokens_drafted) // block_size)
         src_bt = cad.block_table_tensor
         n_cols = src_bt.shape[1]
-        if (
-            self._win_block_table is None
-            or self._win_block_table.shape[1] != n_cols
-            or self._win_block_table.shape[0] < bs
-        ):
+        # Phase 93 IMA fix: the buffers are read by CAPTURED graphs through
+        # capture-time pointers, so they must NEVER be reallocated after the
+        # first capture ("data change, not shape change"). The runner's block
+        # table WIDTH grows dynamically as sequences lengthen; the old
+        # width-tracking realloc freed the captured pointers mid-serving
+        # (racy IMA, batch/mml-dependent). Allocate ONCE at the maximum
+        # width and operate on left-slices.
+        max_cols = -(-self.max_model_len // block_size)
+        assert n_cols <= max_cols, (n_cols, max_cols)
+        if self._win_block_table is None:
             rows = max(self.max_batch_size, bs)
             self._win_block_table = torch.zeros(
-                (rows, n_cols), dtype=src_bt.dtype, device=self.device
+                (rows, max_cols), dtype=src_bt.dtype, device=self.device
             )
             self._win_seq_lens = torch.zeros(
                 rows, dtype=cad.seq_lens.dtype, device=self.device
             )
             self._win_col_arange = torch.arange(
-                n_cols, device=self.device
+                max_cols, device=self.device
             ).unsqueeze(0)
             # Phase 65: persistent gather-index buffer + (col >= n_sink) mask
             # (n_sink is constant for the proposer's lifetime).
             self._win_src_cols = torch.zeros(
-                (rows, n_cols), dtype=torch.long, device=self.device
+                (rows, max_cols), dtype=torch.long, device=self.device
             )
             self._win_col_ge_sink = (
                 self._win_col_arange >= n_sink
@@ -3020,11 +3024,19 @@ class SpecDecodeBaseProposer:
             torch.clamp(n_total - n_last, min=n_sink), n_total
         )
         dropped = torch.clamp(start_last - n_sink, min=0)
-        src_cols = self._win_src_cols[:bs]
-        torch.mul(self._win_col_ge_sink, dropped.unsqueeze(1), out=src_cols)
-        src_cols += self._win_col_arange
+        # left-slices of the fixed max-width buffers (see alloc note above)
+        src_cols = self._win_src_cols[:bs, :n_cols]
+        torch.mul(
+            self._win_col_ge_sink[:, :n_cols],
+            dropped.unsqueeze(1),
+            out=src_cols,
+        )
+        src_cols += self._win_col_arange[:, :n_cols]
         src_cols.clamp_(max=n_cols - 1)
-        torch.gather(src_bt[:bs], 1, src_cols, out=self._win_block_table[:bs])
+        torch.gather(
+            src_bt[:bs], 1, src_cols,
+            out=self._win_block_table[:bs, :n_cols],
+        )
         self._win_seq_lens[:bs] = (seq_lens - dropped * block_size).to(
             self._win_seq_lens.dtype
         )

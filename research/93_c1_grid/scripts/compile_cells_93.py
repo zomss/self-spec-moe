@@ -96,6 +96,31 @@ if _kmax:
 
     cp.measure = _measure_ksched
 
+# COMPILE_GPU_UTIL: override gpu_memory_utilization=0.90 (needed under
+# compute-sanitizer, whose instrumentation eats device memory).
+_util = os.environ.get("COMPILE_GPU_UTIL")
+if _util:
+    _real_measure_u = cp.measure
+
+    def _measure_util(arm):
+        import functools
+
+        from vllm import LLM as _LLM
+        orig_init = _LLM.__init__
+
+        @functools.wraps(orig_init)
+        def patched(self, *a, **kw):
+            kw["gpu_memory_utilization"] = float(_util)
+            return orig_init(self, *a, **kw)
+
+        _LLM.__init__ = patched
+        try:
+            return _real_measure_u(arm)
+        finally:
+            _LLM.__init__ = orig_init
+
+    cp.measure = _measure_util
+
 # COMPILE_MML: override the hardcoded max_model_len=20480 (window/
 # scratchpad IMA discriminator: E6's validated stack ran mml 8704).
 _mml = os.environ.get("COMPILE_MML")
