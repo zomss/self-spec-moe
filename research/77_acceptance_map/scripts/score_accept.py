@@ -50,6 +50,10 @@ MODELS = {
     # trust=False: transformers 5.x has NATIVE deepseek_v2 (standard cache,
     # decompressed K/V; kv_a_layernorm on the KV path -> "normed-KV" family)
     "mla": dict(hf="deepseek-ai/DeepSeek-V2-Lite", trust=False, moe=True, layers=27),
+    # phase 93 cross-family column (Instruct: base models loop at T=0)
+    "llama": dict(hf="NousResearch/Meta-Llama-3.1-8B-Instruct", trust=False,
+                  moe=False, layers=32),
+    "q3_32b": dict(hf="Qwen/Qwen3-32B", trust=False, moe=False, layers=64),
 }
 DEFAULT_ARMS = {
     False: "win128,win512,win2048,skip125,skip25,skip375,skip50,kvq_fp8,q_int4,q_fp8",

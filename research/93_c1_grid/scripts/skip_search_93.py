@@ -48,7 +48,8 @@ class LayerSet:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True, choices=["moe", "mla"])
+    ap.add_argument("--model", required=True,
+                    choices=["moe", "mla", "llama", "q3_32b"])
     ap.add_argument("--stage", required=True, choices=["profile", "greedy"])
     a = ap.parse_args()
 
@@ -119,6 +120,12 @@ def main():
                 col[c] = float(row["beta_greedy"])
         print(f"[93-skip:{a.model}] FINAL budget-{BUDGET} set: "
               f"{sorted(chosen)}", flush=True)
+        # sidecar for the grid drivers: budget-2 and budget-4 sets
+        import json as _json
+        b2 = ",".join(map(str, sorted(chosen[:2])))
+        b4 = ",".join(map(str, sorted(chosen[:4])))
+        (PHASE / "data" / f"skipsets_{a.model}.json").write_text(
+            _json.dumps({"b2": b2, "b4": b4}))
 
 
 if __name__ == "__main__":

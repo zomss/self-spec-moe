@@ -84,6 +84,39 @@ case "$ARCH" in
     ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=13,15,23,24"
     ARMS[kvq]="$MODEL|$KVQSTACK"
     ;;
+  llama)
+    MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; TP=1; KVLIM=260000
+    GPU="${STAGEA_GPU:-7}"
+    SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b2'])" 2>/dev/null || echo "2,8")
+    SB4=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b4'])" 2>/dev/null || echo "2,4,8,10")
+    ARMS[w4a16]="$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|$SHARED"
+    ARMS[w8int8]="$HOME/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|$SHARED"
+    ARMS[fp8dyn]="$HOME/ckpts/Llama31-8B-Instruct-FP8-dynamic|$SHARED"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=$SB2"
+    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=$SB4"
+    ARMS[kvq]="$MODEL|$KVQSTACK"
+    ;;
+  q3_32b)
+    MODEL="Qwen/Qwen3-32B"; TP=2; KVLIM=130000
+    GPU="${STAGEA_GPU:-6,7}"
+    SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b2'])" 2>/dev/null || echo "2,8")
+    SB4=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b4'])" 2>/dev/null || echo "2,4,8,10")
+    ARMS[w4gptq]="$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|$SHARED"
+    ARMS[w4a8]="$HOME/ckpts/Qwen3-32B-W4A8-gptq|$SHARED"
+    ARMS[w4a8hum]="$HOME/ckpts/Qwen3-32B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+    ARMS[w8fp8]="$HOME/ckpts/Qwen3-32B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+    ARMS[win128]="$MODEL|$(winstack 128)"
+    ARMS[win512]="$MODEL|$(winstack 512)"
+    ARMS[win2048]="$MODEL|$(winstack 2048)"
+    ARMS[win8192]="$MODEL|$(winstack 8192)"
+    ARMS[skipb2]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=$SB2"
+    ARMS[skipb4]="$MODEL|$SHARED VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=$SB4"
+    ARMS[kvq]="$MODEL|$KVQSTACK"
+    ;;
   *) echo "unknown arch $ARCH"; exit 1;;
 esac
 
