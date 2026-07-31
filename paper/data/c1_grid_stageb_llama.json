@@ -1,0 +1,297 @@
+{
+ "arch": "llama",
+ "protocol": "Stage-B e2e serving on real datasets, uncapped gen (MLA: ceiling 2048, base model loops at T=0 -- disclosed); S vs same-protocol AR",
+ "winners": {
+  "R1/b1": {
+   "winner": "w4a16_k2",
+   "S": 1.222,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.222,
+   "accept": 2.912,
+   "ar_toks": 152.0,
+   "clip": 0.0
+  },
+  "R1/b8": {
+   "winner": "w4a16_k2",
+   "S": 1.318,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.318,
+   "accept": 2.913,
+   "ar_toks": 647.6,
+   "clip": 0.0
+  },
+  "R1/b32": {
+   "winner": "w4a16_k2",
+   "S": 1.26,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.26,
+   "accept": 2.919,
+   "ar_toks": 2271.3,
+   "clip": 0.0
+  },
+  "R1/b64": {
+   "winner": "w4a16_k4",
+   "S": 1.233,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.233,
+   "accept": 4.885,
+   "ar_toks": 642.5,
+   "clip": 0.042
+  },
+  "R2/b1": {
+   "winner": "w4a16_k2",
+   "S": 1.167,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.167,
+   "accept": 2.834,
+   "ar_toks": 160.6,
+   "clip": 0.0
+  },
+  "R2/b8": {
+   "winner": "w4a16_k2",
+   "S": 1.152,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.152,
+   "accept": 2.812,
+   "ar_toks": 529.6,
+   "clip": 0.0
+  },
+  "R2/b32": {
+   "winner": "SUSPECT",
+   "S": 7.365,
+   "reason": "AR baseline anomalously slow",
+   "accept": 4.418
+  },
+  "R2/b64": {
+   "winner": "OFF",
+   "S": 0.15,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 0.15,
+   "accept": 4.754,
+   "ar_toks": 3097.0,
+   "clip": 0.0
+  },
+  "R3/b1": {
+   "winner": "w4a16_k4",
+   "S": 1.229,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.229,
+   "accept": 4.855,
+   "ar_toks": 159.3,
+   "clip": 0.0
+  },
+  "R3/b8": {
+   "winner": "w4a16_k4",
+   "S": 1.282,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.282,
+   "accept": 4.866,
+   "ar_toks": 815.1,
+   "clip": 0.0
+  },
+  "R3/b32": {
+   "winner": "w4a16_k4",
+   "S": 1.165,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.165,
+   "accept": 4.828,
+   "ar_toks": 2437.7,
+   "clip": 0.0
+  },
+  "R3/b64": {
+   "winner": "w4a16_k4",
+   "S": 1.086,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.086,
+   "accept": 4.771,
+   "ar_toks": 3340.4,
+   "clip": 0.0
+  },
+  "R4/b1": {
+   "winner": "w4a16_k4",
+   "S": 1.163,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.163,
+   "accept": 4.522,
+   "ar_toks": 145.4,
+   "clip": 0.0
+  },
+  "R4/b8": {
+   "winner": "w4a16_k4",
+   "S": 1.116,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.116,
+   "accept": 4.565,
+   "ar_toks": 617.6,
+   "clip": 0.0
+  },
+  "R4/b32": {
+   "winner": "win512_k2",
+   "S": 1.116,
+   "best_spec": "win512_k2",
+   "best_spec_S": 1.116,
+   "accept": 2.319,
+   "ar_toks": 1182.2,
+   "clip": 0.0
+  },
+  "R5/b1": {
+   "winner": "OFF",
+   "S": 0.992,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.992,
+   "accept": 2.592,
+   "ar_toks": 61.7,
+   "clip": 0.0
+  },
+  "R5/b8": {
+   "winner": "OFF",
+   "S": 0.94,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.94,
+   "accept": 2.774,
+   "ar_toks": 142.8,
+   "clip": 0.0
+  },
+  "R5/b32": {
+   "winner": "w4a16_k2",
+   "S": 1.011,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.011,
+   "accept": 2.803,
+   "ar_toks": 167.7,
+   "clip": 0.0
+  },
+  "R5cot/b1": {
+   "winner": "w4a16_k4",
+   "S": 1.257,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.257,
+   "accept": 4.919,
+   "ar_toks": 139.7,
+   "clip": 0.25
+  },
+  "R5cot/b8": {
+   "winner": "w4a16_k2",
+   "S": 1.687,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.687,
+   "accept": 2.92,
+   "ar_toks": 284.1,
+   "clip": 0.25
+  },
+  "R5cot/b32": {
+   "winner": "win512_k2",
+   "S": 1.572,
+   "best_spec": "win512_k2",
+   "best_spec_S": 1.572,
+   "accept": 2.963,
+   "ar_toks": 444.3,
+   "clip": 0.094
+  },
+  "R6/b1": {
+   "winner": "w4a16_k2",
+   "S": 1.145,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 1.145,
+   "accept": 2.865,
+   "ar_toks": 159.6,
+   "clip": 0.0
+  },
+  "R6/b8": {
+   "winner": "w4a16_k4",
+   "S": 1.109,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.109,
+   "accept": 4.615,
+   "ar_toks": 693.3,
+   "clip": 0.0
+  },
+  "R6/b32": {
+   "winner": "w4a16_k4",
+   "S": 1.17,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.17,
+   "accept": 4.703,
+   "ar_toks": 1905.0,
+   "clip": 0.0
+  },
+  "R6/b64": {
+   "winner": "SUSPECT",
+   "S": 11.992,
+   "reason": "AR baseline anomalously slow",
+   "accept": 4.982
+  },
+  "R7/b1": {
+   "winner": "OFF",
+   "S": 0.883,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.883,
+   "accept": 3.0,
+   "ar_toks": 150.9,
+   "clip": 0.0
+  },
+  "R7/b8": {
+   "winner": "w4a16_k4",
+   "S": 1.132,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.132,
+   "accept": 4.738,
+   "ar_toks": 668.1,
+   "clip": 0.0
+  },
+  "R7/b32": {
+   "winner": "w4a16_k4",
+   "S": 1.055,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.055,
+   "accept": 4.67,
+   "ar_toks": 2096.2,
+   "clip": 0.0
+  },
+  "R7/b64": {
+   "winner": "w4a16_k4",
+   "S": 1.002,
+   "best_spec": "w4a16_k4",
+   "best_spec_S": 1.002,
+   "accept": 4.727,
+   "ar_toks": 3547.7,
+   "clip": 0.0
+  },
+  "R8/b1": {
+   "winner": "OFF",
+   "S": 0.974,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.974,
+   "accept": 2.378,
+   "ar_toks": 160.6,
+   "clip": 0.0
+  },
+  "R8/b8": {
+   "winner": "w8int8_k2",
+   "S": 1.141,
+   "best_spec": "w8int8_k2",
+   "best_spec_S": 1.141,
+   "accept": 1.652,
+   "ar_toks": 359.8,
+   "clip": 0.0
+  },
+  "R8/b32": {
+   "winner": "OFF",
+   "S": 0.281,
+   "best_spec": "win512_k2",
+   "best_spec_S": 0.281,
+   "accept": 1.488,
+   "ar_toks": 1315.7,
+   "clip": 0.0
+  },
+  "R8/b64": {
+   "winner": "OFF",
+   "S": 0.374,
+   "best_spec": "w4a16_k2",
+   "best_spec_S": 0.374,
+   "accept": 1.481,
+   "ar_toks": 2026.4,
+   "clip": 0.0
+  }
+ }
+}

@@ -238,6 +238,26 @@ everywhere (natural EOS).
 known-issue), Humming K2 wedge (retry-recoverable), kvq x MLA
 capture, fp8dyn compiled-draft inductor bug (all ledgered).
 
+
+## Llama column (phase 93 cross-family, 2026-08-01)
+
+Llama-3.1-8B-Instruct (dense GQA, 32L). Skip search: {3,8} b2 / {3,4,6,8}
+b4 (beta .82 — dense-like tolerance, well below MLA's .985). Stage B on
+9 datasets: 24/33 cells CLEAN spec wins across 5 configs (w4a16-K2/K4
+dominant, w8int8-K2, win512-K2, win2048-K4 at high-batch long-ctx) --
+a rich surface like dense 8B, confirming the cross-family generality
+of C1.
+
+DATA-INTEGRITY FLAG (shared-box contention): 5 cells corrupted by
+co-tenant GPU throughput noise -- 2 with AR baseline ~10x too slow
+(R2/b32 S=7.4, R6/b64 S=12.0 -- physically impossible, marked SUSPECT
+and excluded), 3 with AR/spec ratio <0.5 (R2/b64, R8/b32, R8/b64;
+R8 is T=1.0 where spec genuinely weakens, but the magnitude is
+noise-suspect). These need an AR-baseline RE-MEASURE on a quiet GPU
+(queued behind the 32B block). The 24 clean cells are trustworthy;
+the win-count is provisional pending the re-measure. Physical sanity
+gate (S>3 => AR-suspect) now in the winner-map generator.
+
 ## Decision log
 
 - 2026-07-28 (user): regime = dataset character; generation UNCAPPED;

@@ -41,6 +41,16 @@ for arch in (sys.argv[1:] or ["dense", "mla", "moe"]):
             continue
         s, n, a = ranked[0]
         i, j = RIDS.index(rid), batches.index(b)
+        # physical sanity: decode spec speedup cannot exceed ~K+1; S>3
+        # means the AR denominator was corrupted (co-tenant contention on
+        # the shared box). Mark suspect; exclude from the win count.
+        if s > 3.0:
+            S[i, j] = np.nan
+            lab[i, j] = "AR?\nsuspect"
+            winners[f"{rid}/b{b}"] = {
+                "winner": "SUSPECT", "S": round(s, 3),
+                "reason": "AR baseline anomalously slow", "accept": a}
+            continue
         if s > 1.0:
             S[i, j] = s
             lab[i, j] = f"{n.replace('_', chr(10))}\n{s:.2f}"

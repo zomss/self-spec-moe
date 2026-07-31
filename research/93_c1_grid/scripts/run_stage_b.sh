@@ -22,7 +22,23 @@ winplain() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAF
 
 # arm spec: name|draft|K|window|skip|extra-envs
 declare -a ARMLIST
+# STAGEB_ARMS: optional comma-list of arm names to run (for splitting one
+# arch's Stage B across two GPUs). Empty = all.
+ARMFILTER="${STAGEB_ARMS:-}"
 case "$ARCH" in
+  llama)
+    MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; TP=1
+    GPU="${STAGEB_GPU:-7}"; MAXLEN=24576
+    SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b2'])" 2>/dev/null || echo "3,8")
+    ARMLIST=(
+      "off|off|0|||"
+      "w4a16_k2|$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|2|||$SHARED"
+      "w4a16_k4|$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|4|||$SHARED"
+      "w8int8_k2|$HOME/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|2|||$SHARED"
+      "win512_k2|self|2|512||$(winplain 512)"
+      "win2048_k4|self|4|2048||$(winplain 2048)"
+    )
+    ;;
   dense)
     MODEL="Qwen/Qwen3-8B"; TP=1; GPU="${STAGEB_GPU:-6}"; MAXLEN=32768
     ARMLIST=(
@@ -72,6 +88,7 @@ gpu_cleanup() {
 
 for spec in "${ARMLIST[@]}"; do
   IFS='|' read -r name draft k window skip extra <<< "$spec"
+  if [ -n "$ARMFILTER" ] && ! echo ",$ARMFILTER," | grep -q ",$name,"; then continue; fi
   out="$PHASE/data/stageb_${ARCH}_${name}.json"
   if [ -s "$out" ] && grep -q '"complete": true' "$out"; then echo "[B:$ARCH] skip $name (done)"; continue; fi
   echo "[B:$ARCH] run $name"
