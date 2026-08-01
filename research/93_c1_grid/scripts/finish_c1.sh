@@ -25,12 +25,12 @@ complete() {  # $1=arch : all its Stage-B arm jsons carry the marker?
 # 32B Stage B: up to 6 passes (Humming K4 wedge + co-tenant transients)
 for pass in 1 2 3 4 5 6; do
   n=$(grep -l '"complete": true' $PHASE/data/stageb_q3_32b_*.json 2>/dev/null | wc -l)
-  echo "[finish] q3_32b pass $pass: $n/6 arms complete"
-  [ "$n" -ge 6 ] && break
+  echo "[finish] q3_32b pass $pass: $n/5 arms complete"
+  [ "$n" -ge 5 ] && break
   wait_free
   STAGEB_GPU=6,7 bash $PHASE/scripts/run_stage_b.sh q3_32b >> $LOG/stage_b_q3_32b.log 2>&1 || true
 done
-echo "Q32B-STAGEB-FINAL: $(grep -l '"complete": true' $PHASE/data/stageb_q3_32b_*.json 2>/dev/null | wc -l)/6"
+echo "Q32B-STAGEB-FINAL: $(grep -l '"complete": true' $PHASE/data/stageb_q3_32b_*.json 2>/dev/null | wc -l)/5"
 
 # Llama AR re-measure: 3 cleared cells (off + 2 arms), GPU 6, up to 4 passes
 for pass in 1 2 3 4; do

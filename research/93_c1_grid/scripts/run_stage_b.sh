@@ -75,11 +75,15 @@ case "$ARCH" in
   q3_32b)
     MODEL="Qwen/Qwen3-32B"; TP=2; GPU="${STAGEB_GPU:-6,7}"; MAXLEN=24576
     SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b2'])" 2>/dev/null || echo "7,16")
+    # quant e2e arm routed to Machete (W4A16-GPTQ), NOT Humming: the
+    # Humming odd-width kernel wedges at TP2 (K4/K6=width 5/7, lazy-cubin
+    # livelock, co-tenant-load-sensitive). Humming's faster number stands
+    # from Stage A (w4a8hum-K4 1.09-1.51x compiled); this gives a clean
+    # uncapped e2e on a non-wedging kernel (conservative vs Humming).
     ARMLIST=(
       "off|off|0|||"
-      "w4a8hum_k4|$HOME/ckpts/Qwen3-32B-W4A8-gptq|4|||$SHARED $HUM"
-      "w4a8hum_k6|$HOME/ckpts/Qwen3-32B-W4A8-gptq|6|||$SHARED $HUM"
-      "w8fp8_k6|$HOME/ckpts/Qwen3-32B-W8A16-FP8|6|||$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+      "w4gptq_k4|$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|4|||$SHARED"
+      "w4gptq_k6|$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|6|||$SHARED"
       "win512_k4|self|4|512||$(winplain 512)"
       "skipb2_k4|self|4||$SB2|$SHARED"
     )
