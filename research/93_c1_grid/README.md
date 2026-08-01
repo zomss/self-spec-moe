@@ -258,6 +258,28 @@ noise-suspect). These need an AR-baseline RE-MEASURE on a quiet GPU
 the win-count is provisional pending the re-measure. Physical sanity
 gate (S>3 => AR-suspect) now in the winner-map generator.
 
+
+## C1 COMPLETE — five-architecture Stage B (2026-08-02, C1-FINISH-DONE)
+
+All five columns measured on real datasets, uncapped gen, single levers:
+
+| arch | clean wins | configs |
+|---|---|---|
+| dense Qwen3-8B | 32/33 | 5 (Hum-W4A8 K2/K4, win128/512/2048) |
+| Llama-3.1-8B | 23/33 (+1 suspect) | 5 (W4A16 K2/K4, W8-INT8, win512/2048) |
+| Qwen3-32B | 25/33 | 3 e2e (W4-GPTQ K4/K6, skip) + Humming Stage-A |
+| MoE 30B-A3B | 8/33 | 3 (W4A16 K2/K3, win8192-K3) |
+| MLA V2-Lite | 11/33 | 1 (W8-chan K2) |
+
+Five distinct surfaces; no universal single lever. 32B quant e2e via
+Machete (Humming TP2 odd-width wedge = kernel bug; Humming fast number
+from Stage A stands). Llama R2/b32 flagged suspect (shared-box AR
+noise, S>3 gate) and excluded. RESULT PACKAGE: paper/data/
+c1_grid_stageb_*.json + paper/figures/c1_stageb_map_*.png + paper/c1.md.
+
+OPEN (non-blocking): Humming odd-width upstream report; wholechain
+single-launch IMA (deferred throughput opt); A100 hardware column
+(the one axis still H100-only); compositions = C2.
 ## Decision log
 
 - 2026-07-28 (user): regime = dataset character; generation UNCAPPED;
