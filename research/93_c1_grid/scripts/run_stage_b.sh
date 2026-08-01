@@ -72,6 +72,18 @@ case "$ARCH" in
       "win8192_k3|self|3|8192||$(winplain 8192)"
     )
     ;;
+  q3_32b)
+    MODEL="Qwen/Qwen3-32B"; TP=2; GPU="${STAGEB_GPU:-6,7}"; MAXLEN=24576
+    SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b2'])" 2>/dev/null || echo "7,16")
+    ARMLIST=(
+      "off|off|0|||"
+      "w4a8hum_k4|$HOME/ckpts/Qwen3-32B-W4A8-gptq|4|||$SHARED $HUM"
+      "w4a8hum_k6|$HOME/ckpts/Qwen3-32B-W4A8-gptq|6|||$SHARED $HUM"
+      "w8fp8_k6|$HOME/ckpts/Qwen3-32B-W8A16-FP8|6|||$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+      "win512_k4|self|4|512||$(winplain 512)"
+      "skipb2_k4|self|4||$SB2|$SHARED"
+    )
+    ;;
   *) echo "unknown arch"; exit 1;;
 esac
 
