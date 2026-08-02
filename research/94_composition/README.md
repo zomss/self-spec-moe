@@ -128,6 +128,50 @@ which makes the search problem harder and more interesting than the
 registered P1 assumed. C2 proceeds with the amended framing:
 *find whether AND what to compose, per cell.*
 
+
+## P3 check -> a CONFOUND IN OUR OWN GATE-1 COMPARISON (2026-08-02)
+
+Inverting R from measured cells (R = ((accept/S) - 1)/K) to test cost
+additivity produced absurd errors (mean |err| 41%, worst +410%). The
+inversion is correct; the INPUTS were not comparable. Two causes,
+found by chasing the outliers:
+
+1. **Realization mismatch (the serious one).** The engine only allows
+   the FULLCG scratchpad chain WHEN A WINDOW IS SET
+   (llm_base_proposer: "FULLCG requires KV_WINDOW > 0"). C1 measured
+   its window SINGLES with winplain (no FULLCG -- an IMA-era
+   conservative choice, since the IMA was only localized/fixed later).
+   Phase-94 COMPOSITIONS use FULLCG. So every window-containing
+   composition ran on a FASTER CHAIN than the window singles it was
+   compared against. At overhead-bound cells this dominates: llama
+   w4a16 single at b1/2k measured S=0.37, but the SAME ckpt in
+   w4a16 x win512 gave S=1.19 -- a window cannot make a draft 3x
+   faster; the chain realization did.
+2. **Overhead-bound cells are NOT corruption.** 32% of single-lever
+   (cell,arm,K) rows invert to R>1.5 (MLA 93%, MoE 41%). At b1/short
+   ctx a target step is tiny and the draft chain's fixed cost exceeds
+   it -- the documented fixed-overhead floor (phases 72/73). Those
+   rows are real physics and explain why OFF wins there; they must be
+   analyzed per-regime, not pooled or filtered as bad data.
+
+**Consequence for Gate 1**: P1's best-single-vs-best-composition
+comparison is SAFE against slow singles (a slow arm is never the max)
+but is INFLATED wherever the winning composition contained a window
+and the best single did not -- it partly measures FULLCG, not
+composition. The reported peaks (+18-26%, all at window-containing
+compositions) must be re-derived on matched realizations.
+
+**CONTROL RUNNING**: re-measure window singles (win512, win2048) WITH
+FULLCG on all three arches (scripts/rematch_window_singles.sh), then
+redo P1 and P3 on matched data. Note the coupling is real and stays
+in the paper either way: the fast chain is only AVAILABLE with the
+window lever, so "window brings FULLCG" is part of that lever's
+deployment value -- but the mechanism claim (composing cost terms
+helps) requires the matched comparison.
+
+P3 verdict: DEFERRED until matched data exists. Pooled additive vs
+product errors (41% vs 40%) are uninformative while realizations mix.
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
