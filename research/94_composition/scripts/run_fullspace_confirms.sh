@@ -54,8 +54,11 @@ for name, ks in sorted(plan.items()):
     print(f"{name}|{draft}|{' '.join(extra)}|{','.join(map(str, ks))}")
 PY
 
+STRIDE="${FS_STRIDE:-1}"; OFFSET="${FS_OFFSET:-0}"; IDX=0
 while IFS='|' read -r name draft extra ks; do
   [ -z "$name" ] && continue
+  if [ $(( IDX % STRIDE )) -ne "$OFFSET" ]; then IDX=$((IDX+1)); continue; fi
+  IDX=$((IDX+1))
   draft="${draft/\$HOME/$HOME}"
   [ "$draft" = "MODEL" ] && draft="$MODEL"
   extra="${extra/HUM/$HUM}"
@@ -79,4 +82,4 @@ while IFS='|' read -r name draft extra ks; do
   done
 done < /tmp/fs_plan.txt
 cp -f "$P82DATA"/fs_dense_*.csv "$PHASE/data/" 2>/dev/null
-echo "[FS] FULLSPACE-CONFIRMS-DONE"
+echo "[FS] FULLSPACE-CONFIRMS-DONE offset=$OFFSET"
