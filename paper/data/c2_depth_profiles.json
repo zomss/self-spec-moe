@@ -1,0 +1,1054 @@
+{
+ "dense": {
+  "win128": {
+   "tau_by_K": {
+    "2": 2.6342,
+    "4": 3.8637,
+    "6": 4.8297
+   },
+   "cell_CV_by_K": {
+    "2": 0.0617,
+    "4": 0.1084,
+    "6": 0.1496
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8171
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.6148
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.483
+    }
+   ],
+   "decay_pct": -40.9,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "fp8dyn": {
+   "tau_by_K": {
+    "2": 2.9473,
+    "4": 4.821,
+    "6": 6.6026
+   },
+   "cell_CV_by_K": {
+    "2": 0.0034,
+    "4": 0.0093,
+    "6": 0.02
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9737
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9368
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8908
+    }
+   ],
+   "decay_pct": -8.5,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w8int8": {
+   "tau_by_K": {
+    "2": 1.0379,
+    "4": 1.0381,
+    "6": 1.0381
+   },
+   "cell_CV_by_K": {
+    "2": 0.0102,
+    "4": 0.0106,
+    "6": 0.0105
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.0189
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.0001
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.0
+    }
+   ],
+   "decay_pct": -100.0,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "skipb4": {
+   "tau_by_K": {
+    "2": 2.8059,
+    "4": 4.3571,
+    "6": 5.6892
+   },
+   "cell_CV_by_K": {
+    "2": 0.0214,
+    "4": 0.0354,
+    "6": 0.0615
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9029
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7756
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.666
+    }
+   ],
+   "decay_pct": -26.2,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w4a16": {
+   "tau_by_K": {
+    "2": 2.8443,
+    "4": 4.4566,
+    "6": 5.9798
+   },
+   "cell_CV_by_K": {
+    "2": 0.0216,
+    "4": 0.0339,
+    "6": 0.0416
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9221
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.8062
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.7616
+    }
+   ],
+   "decay_pct": -17.4,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w4a8hum": {
+   "tau_by_K": {
+    "2": 2.8954,
+    "4": 4.6555,
+    "6": 6.2813
+   },
+   "cell_CV_by_K": {
+    "2": 0.0121,
+    "4": 0.0247,
+    "6": 0.0369
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9477
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.88
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8129
+    }
+   ],
+   "decay_pct": -14.2,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "skipb2": {
+   "tau_by_K": {
+    "2": 2.9011,
+    "4": 4.7033,
+    "6": 6.3284
+   },
+   "cell_CV_by_K": {
+    "2": 0.0168,
+    "4": 0.0224,
+    "6": 0.0321
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9506
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9011
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8126
+    }
+   ],
+   "decay_pct": -14.5,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w8fp8": {
+   "tau_by_K": {
+    "2": 2.9721,
+    "4": 4.8843,
+    "6": 6.7402
+   },
+   "cell_CV_by_K": {
+    "2": 0.0049,
+    "4": 0.012,
+    "6": 0.0141
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.986
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9561
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.9279
+    }
+   ],
+   "decay_pct": -5.9,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win512": {
+   "tau_by_K": {
+    "2": 2.7946,
+    "4": 4.3916,
+    "6": 5.699
+   },
+   "cell_CV_by_K": {
+    "2": 0.0545,
+    "4": 0.0879,
+    "6": 0.1296
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8973
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7985
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.6537
+    }
+   ],
+   "decay_pct": -27.1,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "kvq": {
+   "tau_by_K": {
+    "2": 2.9124,
+    "4": 4.7224,
+    "6": 6.4279
+   },
+   "cell_CV_by_K": {
+    "2": 0.0122,
+    "4": 0.0298,
+    "6": 0.0371
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9562
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.905
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8528
+    }
+   ],
+   "decay_pct": -10.8,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w4a8cut": {
+   "tau_by_K": {
+    "2": 2.8845,
+    "4": 4.5886,
+    "6": 6.1844
+   },
+   "cell_CV_by_K": {
+    "2": 0.0095,
+    "4": 0.0293,
+    "6": 0.0372
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9423
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.852
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.7979
+    }
+   ],
+   "decay_pct": -15.3,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win2048": {
+   "tau_by_K": {
+    "2": 2.9588,
+    "4": 4.8673,
+    "6": 6.7302
+   },
+   "cell_CV_by_K": {
+    "2": 0.0068,
+    "4": 0.0184,
+    "6": 0.0268
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9794
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9543
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.9315
+    }
+   ],
+   "decay_pct": -4.9,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win8192": {
+   "tau_by_K": {
+    "2": 2.9827,
+    "4": 4.9493,
+    "6": 6.8953
+   },
+   "cell_CV_by_K": {
+    "2": 0.0054,
+    "4": 0.0124,
+    "6": 0.0142
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9913
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9833
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.973
+    }
+   ],
+   "decay_pct": -1.8,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "hum_x_skipb2": {
+   "tau_by_K": {
+    "2": 2.8701,
+    "4": 4.5373
+   },
+   "cell_CV_by_K": {
+    "2": 0.0254,
+    "4": 0.0498
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9351
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.8336
+    }
+   ],
+   "decay_pct": -10.9,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "hum_x_win512": {
+   "tau_by_K": {
+    "2": 2.7209,
+    "4": 4.175
+   },
+   "cell_CV_by_K": {
+    "2": 0.0684,
+    "4": 0.1024
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8604
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7271
+    }
+   ],
+   "decay_pct": -15.5,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "w4a16_x_win512": {
+   "tau_by_K": {
+    "2": 2.7116,
+    "4": 4.0959
+   },
+   "cell_CV_by_K": {
+    "2": 0.0591,
+    "4": 0.092
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8558
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.6921
+    }
+   ],
+   "decay_pct": -19.1,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "win512_x_skipb2": {
+   "tau_by_K": {
+    "2": 2.7146,
+    "4": 4.165
+   },
+   "cell_CV_by_K": {
+    "2": 0.0656,
+    "4": 0.1144
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8573
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7252
+    }
+   ],
+   "decay_pct": -15.4,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "hum_x_win512_x_skipb2": {
+   "tau_by_K": {
+    "2": 2.6999,
+    "4": 4.1235
+   },
+   "cell_CV_by_K": {
+    "2": 0.0639,
+    "4": 0.1116
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8499
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7118
+    }
+   ],
+   "decay_pct": -16.2,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  }
+ },
+ "llama": {
+  "w8int8": {
+   "tau_by_K": {
+    "2": 1.8418,
+    "4": 2.0479,
+    "6": 2.0724
+   },
+   "cell_CV_by_K": {
+    "2": 0.0959,
+    "4": 0.1391,
+    "6": 0.1402
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.4209
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.103
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.0123
+    }
+   ],
+   "decay_pct": -97.1,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "fp8dyn": {
+   "tau_by_K": {
+    "2": 2.9355,
+    "4": 4.7797,
+    "6": 6.571
+   },
+   "cell_CV_by_K": {
+    "2": 0.0077,
+    "4": 0.013,
+    "6": 0.0223
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9678
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9221
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8956
+    }
+   ],
+   "decay_pct": -7.5,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win512": {
+   "tau_by_K": {
+    "2": 2.7262,
+    "4": 4.1468,
+    "6": 5.2579
+   },
+   "cell_CV_by_K": {
+    "2": 0.0634,
+    "4": 0.1092,
+    "6": 0.143
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8631
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7103
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.5556
+    }
+   ],
+   "decay_pct": -35.6,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w4a16": {
+   "tau_by_K": {
+    "2": 2.8624,
+    "4": 4.4939,
+    "6": 6.0314
+   },
+   "cell_CV_by_K": {
+    "2": 0.0071,
+    "4": 0.0252,
+    "6": 0.031
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9312
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.8158
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.7687
+    }
+   ],
+   "decay_pct": -17.5,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "skipb2": {
+   "tau_by_K": {
+    "2": 2.8956,
+    "4": 4.5847,
+    "6": 6.1685
+   },
+   "cell_CV_by_K": {
+    "2": 0.0124,
+    "4": 0.0318,
+    "6": 0.0448
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9478
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.8446
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.7919
+    }
+   ],
+   "decay_pct": -16.4,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "skipb4": {
+   "tau_by_K": {
+    "2": 2.7884,
+    "4": 4.1989,
+    "6": 5.3809
+   },
+   "cell_CV_by_K": {
+    "2": 0.0168,
+    "4": 0.0377,
+    "6": 0.047
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8942
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7053
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.591
+    }
+   ],
+   "decay_pct": -33.9,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win128": {
+   "tau_by_K": {
+    "2": 2.5782,
+    "4": 3.7563,
+    "6": 4.5747
+   },
+   "cell_CV_by_K": {
+    "2": 0.0589,
+    "4": 0.0974,
+    "6": 0.1174
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.7891
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.589
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.4092
+    }
+   ],
+   "decay_pct": -48.1,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win8192": {
+   "tau_by_K": {
+    "2": 2.9768,
+    "4": 4.8911,
+    "6": 6.8013
+   },
+   "cell_CV_by_K": {
+    "2": 0.0067,
+    "4": 0.0216,
+    "6": 0.0267
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9884
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9572
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.9551
+    }
+   ],
+   "decay_pct": -3.4,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "win2048": {
+   "tau_by_K": {
+    "2": 2.9146,
+    "4": 4.6869,
+    "6": 6.3344
+   },
+   "cell_CV_by_K": {
+    "2": 0.0244,
+    "4": 0.0638,
+    "6": 0.0901
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9573
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.8861
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.8238
+    }
+   ],
+   "decay_pct": -13.9,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "kvq": {
+   "tau_by_K": {
+    "2": 2.9126,
+    "4": 4.7436,
+    "6": 6.4396
+   },
+   "cell_CV_by_K": {
+    "2": 0.0134,
+    "4": 0.0178,
+    "6": 0.0334
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9563
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.9155
+    },
+    {
+     "depth_from": 5,
+     "depth_to": 6,
+     "p_mean": 0.848
+    }
+   ],
+   "decay_pct": -11.3,
+   "n_cells": {
+    "2": 16,
+    "4": 16,
+    "6": 16
+   }
+  },
+  "w4a16_x_win512": {
+   "tau_by_K": {
+    "2": 2.6566,
+    "4": 3.903
+   },
+   "cell_CV_by_K": {
+    "2": 0.0723,
+    "4": 0.1365
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8283
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.6232
+    }
+   ],
+   "decay_pct": -24.8,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "w4a16_x_skipb2": {
+   "tau_by_K": {
+    "2": 2.7971,
+    "4": 4.2986
+   },
+   "cell_CV_by_K": {
+    "2": 0.0157,
+    "4": 0.036
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8986
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7507
+    }
+   ],
+   "decay_pct": -16.5,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "w4a16_x_win2048": {
+   "tau_by_K": {
+    "2": 2.8249,
+    "4": 4.3922
+   },
+   "cell_CV_by_K": {
+    "2": 0.0262,
+    "4": 0.0557
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.9124
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.7837
+    }
+   ],
+   "decay_pct": -14.1,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  },
+  "w4a16_x_win512_x_skipb2": {
+   "tau_by_K": {
+    "2": 2.6116,
+    "4": 3.8094
+   },
+   "cell_CV_by_K": {
+    "2": 0.082,
+    "4": 0.125
+   },
+   "depth_bands": [
+    {
+     "depth_from": 1,
+     "depth_to": 2,
+     "p_mean": 0.8058
+    },
+    {
+     "depth_from": 3,
+     "depth_to": 4,
+     "p_mean": 0.5989
+    }
+   ],
+   "decay_pct": -25.7,
+   "n_cells": {
+    "2": 8,
+    "4": 8
+   }
+  }
+ }
+}

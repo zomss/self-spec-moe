@@ -232,6 +232,81 @@ interaction term), measure acceptance, rank by LCB, confirm.
 P2 (sub-additive acceptance) remains confirmed and still gives a
 sound UPPER bound for elimination -- the pruning that survives.
 
+
+## SEARCH STRATEGY — the definition of record (user factorization, 2026-08-02)
+
+The search separates the three quantities by how they behave, not by
+where they appear in the config:
+
+| stage | quantity | depends on | how obtained |
+|---|---|---|---|
+| A | COST R | cell (batch x ctx) | analytic nomination + CHEAP measurement (no on-policy refs needed) -> iso-cost feasible set |
+| B | ACCEPTANCE p_i (per depth) | regime/content ONLY -- NOT the cell | measurement only (phase-90 theorem); amortized over the whole grid |
+| C | K, and the final pick | neither (derived) | S(K) = tau(K)/(K*R(K)+1), argmax over K in closed form; rank; confirm top-1 |
+
+**Why K separates cleanly.** With a SCALAR f, dS/dK = (f-R)/(KR+1)^2
+is sign-constant -> optimal K would always be K_max or OFF, which
+contradicts every measured cell. Acceptance DECAYS with depth, and
+that is what creates the interior argmax. Measured decay from K2->K6
+(paper/data/c2_depth_profiles.json): win8192 -1.8%, win2048 -4.9%,
+w8fp8 -5.9%, w4a8hum -14.2%, win512 -27.1%, skipb4 -26.2%, win128
+-40.9%. So Stage B must yield p_1..p_Kmax, not a scalar; tau(K) then
+reconstructs for every K <= K_max (verified: reconstruction error
+0.00%).
+
+**Why the cost stage emits a SET, not a config.** Two compositions at
+equal R can differ sharply in acceptance (win2048 p_early .979 vs
+win128 .817). "Minimum composition that reaches the latency bar"
+underdetermines the choice; cost defines the FEASIBLE SET, acceptance
+RANKS within it.
+
+**Cell-independence of acceptance (measured).** Median CV of accept
+across all batch x ctx cells, per (arm, K): dense 2.2%, llama 3.3%,
+32B 2.3%, MoE 3.2%. So ONE profile per (composition, regime) serves
+the entire cell grid. This is the amortization that makes the budget
+claim plausible: the expensive measurement is paid per COMPOSITION,
+not per (composition x cell x K). Exception: hard-truncated windows at
+deep K (win128-K6 CV 15%) -- content dependence returns there.
+
+**Unification with C3**: Stage C is exactly what the deployed
+scheduler already computes per step (argmax_K S_K(f)); offline it uses
+the profiled f, online it substitutes the live accept-EMA. Same
+formula; C2 supplies the profile, C3 tracks its drift.
+
+## STAGE-B COST REDUCTION (measured basis)
+
+Stage B is the expensive stage. Four reductions, in order of leverage:
+
+**1. Predict composed acceptance from SINGLES (combinatorial collapse).**
+Measured f_comp vs product of single-lever f (n=134 pairs):
+median ratio **1.039**, p10 1.007, p90 1.125, and f_comp EXCEEDS the
+product in **128/134** cases. So composed acceptance is the product
+times a small, TIGHT correction (~1.04). Stage B therefore profiles
+the ~N single levers and PREDICTS the ~N^k compositions, measuring
+only the 2-3 finalists. This collapses Stage B from #compositions to
+#levers.
+
+**2. BOUND-DIRECTION CORRECTION (supersedes an earlier claim in this
+doc).** Because f_comp >= product, the product is a LOWER bound, not
+an upper bound -- it can ADMIT ("even at its worst this beats the
+incumbent -> promote unmeasured") but it CANNOT eliminate. The sound
+elimination bound is f_comp <= min(f_a, f_b), which holds in 117/134
+cases at 2% tolerance (median f_comp/min 0.979, p90 1.027); the
+violations are all quant x window at b1/short ctx, so the deployed
+rule uses min(f_a,f_b) x 1.03 as a safe upper bound.
+
+**3. Amortize the engine boot, not the measurement.** Per-config cost
+is dominated by model load + graph capture, not by scoring. The beta
+harness already manipulates layer sets in-process (LayerSet); extend
+that to windows so ONE load per quant checkpoint sweeps all
+window x skip variants.
+
+**4. Screening grade first.** T10 records ~4-5 s/config at screening
+resolution vs 2-5 min at full. Rank the shortlist at screening grade,
+promote only the finalists to full resolution; successive-halving on
+the position budget (eliminate by LCB as positions stream) cuts
+another 3-5x.
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
