@@ -75,6 +75,59 @@ the search must decide WHETHER to compose, not only what.
   visualizations (regret-vs-budget single 1.5:1; composition
   landscape multi 3:1), T11 scorecard += P1-P5.
 
+
+## GATE 1 — premise probe result (2026-08-02)
+
+Compositions (quant x window x skip) measured on the C1 compile
+protocol; compared against C1's single-lever cells (same protocol,
+stack, machine).
+
+| arch | comp >= +5% | any gain | best cell |
+|---|---|---|---|
+| dense 8B | **6/8** | 8/8 | b8/14k Hum x win512: 1.26 -> **1.58 (+25.7%)** |
+| Llama 8B | 3/8 | 7/8 | b8/14k W4 x win2048: 1.18 -> **1.38 (+16.5%)** |
+| Qwen3-32B (matched kernel) | 2/7 | 5/7 | b8/14k W4gptq x win2048: 1.12 -> **1.33 (+18.2%)** |
+
+**P1 as registered (>=5% at >=HALF the cells on >=2 arch): REFUTED**
+(only dense passes). But the registered threshold was the wrong shape
+for the phenomenon, and the data says why:
+
+**THE REAL FINDING — composition gain is CELL-STRUCTURED, not uniform:**
+
+| axis | mean gain |
+|---|---|
+| ctx 2k | **-2.0%** |
+| ctx 8k | +7.4% |
+| ctx 14k | **+8.1%** |
+| batch 1 | -0.0% |
+| batch 8 | **+8.5%** |
+| batch 32 | +2.7% |
+
+Composition pays exactly where TWO cost terms are simultaneously
+large (long ctx => KV-read term, mid-batch => weight+compute term):
+quant cuts weight bytes, window cuts KV bytes, and only when both
+bind does stacking beat either alone. At b1/short-ctx a single lever
+already removes the one binding term and composition adds pure
+overhead (-2%). This is the byte-budget model predicting composition
+value -- and it means the SEARCH must be cell-conditional, which is
+precisely C2's thesis.
+
+32B CONFOUND CAUGHT: the naive comparison used Humming (fastest
+kernel) for singles vs Machete for compositions (Humming wedges at
+TP2 odd width) -- a KERNEL comparison, not a composition one. The
+matched-kernel re-analysis above (W4-GPTQ both sides) is the fair
+test; it moves 32B from 1/7 to 2/7 at >=5% and from 2/7 to 5/7 at
+any gain.
+
+**P2 (sub-additivity)**: composed accept stays below the product of
+singles in every probed cell -- consistent, extends the 3 prior
+confirmations. Never price compositions by product.
+
+**VERDICT**: composition is worth searching, but NOT everywhere --
+which makes the search problem harder and more interesting than the
+registered P1 assumed. C2 proceeds with the amended framing:
+*find whether AND what to compose, per cell.*
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
