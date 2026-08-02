@@ -307,6 +307,73 @@ promote only the finalists to full resolution; successive-halving on
 the position budget (eliminate by LCB as positions stream) cuts
 another 3-5x.
 
+
+## GATE 2 (part 1) — llama oracle + search, and a BUDGET-METRIC correction
+
+### Demonstration 1 (complete factorial, llama): composition wins where predicted
+
+| cell | best single | best composition | gain |
+|---|---|---|---|
+| b1/2k | W4A16 1.19 | +win512 1.19 | -0.3% |
+| b8/8k | W4A16 1.12 | **W4A16+win2048+skip 1.31** | **+17.5%** |
+| b8/14k | win2048 1.16 | **W4A16+win2048+skip 1.36** | **+17.1%** |
+| b32/2k | W4A16 0.97 | **W4A16+win512+skip 1.05** | **+8.5%** |
+| b32/8k | win2048 1.23 | **W4A16+win512+skip 1.38** | **+12.0%** |
+
+4/8 cells >= +5%; the Gate-1 cell-structure reproduces exactly on a
+COMPLETE space. Two things the exhaustive sweep bought: the winners
+are mostly TRIPLES (not nominated in the hand-picked probe), and at
+b32/2k composition RESCUES a cell where the best single loses to AR
+(0.97 -> 1.05).
+
+### Composed-from-singles prediction is WIDER than first reported
+
+| composed of | median | p10 | p90 |
+|---|---|---|---|
+| 2 levers | 1.059 | 1.002 | 1.289 |
+| 3 levers | 1.130 | 0.976 | 1.385 |
+
+(Supersedes the 134-pair opportunistic estimate of median 1.039 /
+p90 1.125.) The correction GROWS with lever count. Usable for
+SHORTLISTING, not for picking the winner -> Stage B confirms ~5, not
+2-3.
+
+### Search results (llama, honest boot-based budget)
+
+| method | mean regret | worst | budget |
+|---|---|---|---|
+| best-single-only (the C1 policy) | 7.06% | 14.86% | - |
+| search, confirm top-1 | 2.71% | 7.71% | 14/36 boots |
+| search, confirm top-3 | 1.43% | 7.71% | 17/36 |
+| search, confirm top-5 | **0.00%** | **0.00%** | 19/36 |
+| random @ equal budget | 11.9-26.4% | - | same |
+
+The search finds the EXACT optimum in every cell at 53% of exhaustive,
+and beats the C1 single-lever policy 5-10x on regret at any budget.
+
+### P4's threshold was measured against the wrong denominator
+
+R is NOT cell-stable (measured CV 14.5%, p90 19% -- unlike acceptance
+at 2-3%), so Stage A must measure cost per cell; and our protocol
+measures ALL cells in ONE boot per (config,K), so the honest unit is
+BOOTS, not (config,cell,K) triples.
+
+With that unit the reduced oracle cannot test "<=10% of exhaustive":
+it holds only 18 configs, of which 6 are singles -- the search must
+boot the singles regardless, so its floor is ~39% of this space. The
+reduced oracle simply lacks combinatorial explosion to avoid.
+
+**The correct claim, which IS demonstrated:**
+> search cost is O(#levers + #confirmations), INDEPENDENT of
+> #compositions.
+
+llama: 5 single profiles + up to 14 confirmations = 19 boots, and that
+number does not grow if the composition count does. Extrapolated to
+the deployable space (~16 singles, ~1384 compositions, 1400 configs):
+~21 boots = **~1.5% of exhaustive**. P4 is therefore RESTATED as a
+scaling claim, tested by construction here and to be demonstrated
+directly on the full space in Step 3.
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
