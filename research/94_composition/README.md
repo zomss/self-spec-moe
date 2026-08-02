@@ -374,6 +374,40 @@ the deployable space (~16 singles, ~1384 compositions, 1400 configs):
 scaling claim, tested by construction here and to be demonstrated
 directly on the full space in Step 3.
 
+
+## GATE 2 (complete) — both oracles 36/36, search evaluated (2026-08-02)
+
+Dense oracle required 3 refill passes; root cause of the failures was a
+**torch-compile CACHE-KEY COLLISION** (artifacts loaded with the wrong
+arity: "too many values to unpack (expected 9)"), reproducing on a
+freshly cleared 32 GB cache and fixed by giving the config an isolated
+VLLM_CACHE_ROOT (18 cells, 0 errors). Same root cause retro-explains
+the copy_misaligned_inputs IndexError that hit fp8dyn in C1 and win512
+in the phase-94 control: ONE bug, three campaigns.
+
+### Demonstration 1 (complete factorials)
+dense 6/8 cells >= +5% (peak +31.1% at b8/14k, 1.24 -> 1.63);
+llama 4/8 (peak +17.5%). Cell structure holds on both.
+
+### Demonstration 2 (search vs oracle)
+| method | dense | llama |
+|---|---|---|
+| best-single-only (C1 policy) | 10.84% | 7.06% |
+| search top-1 | 4.51% | 2.71% |
+| search top-5 | 2.58% | **0.00%** |
+| random @ equal budget | 6.4-19.5% | 11.9-26.4% |
+
+Dense keeps 2.58% residual regret where llama reaches 0 -- consistent
+with P3 (dense's cost interactions are larger, so Stage-A ranking is
+noisier and needs more confirmations). Composition gains are ALSO
+larger on dense: more to win, harder to find.
+
+Figures: paper/figures/c2_regret_vs_budget.png,
+c2_composition_gain.png. Package: paper/c2.md.
+
+**GATE 2 PASSED** -> Step 3 (full-space demonstration + the remaining
+baselines: product-of-singles ranking P5, proxy ranking, KnapSpec).
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
