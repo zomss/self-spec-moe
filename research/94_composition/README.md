@@ -172,6 +172,66 @@ helps) requires the matched comparison.
 P3 verdict: DEFERRED until matched data exists. Pooled additive vs
 product errors (41% vs 40%) are uninformative while realizations mix.
 
+
+## P1 + P3 RE-DERIVED ON MATCHED DATA (2026-08-02)
+
+### The realization confound: measured, and SMALL
+
+Control: the same window singles re-measured on the FULLCG chain
+(40 paired cells, dense+llama). FULLCG vs plain = **mean -0.5%,
+range -6.4% to +3.8%**. The chain realization is worth a few percent,
+NOT the 3x my llama-w4a16 outlier suggested. Two separate causes for
+that outlier instead: dense fp8dyn ran DRAFT-EAGER (the inductor
+compiled-draft bug -> a genuinely crippled realization, S=0.15), and
+llama w4a16's 2k cells look like one bad boot. Neither affects
+best-vs-best comparisons (a slow arm is never the max).
+
+### P1: UNCHANGED by the control -> Gate-1 conclusion stands
+
+| arch | >= +5% (before) | >= +5% (matched) |
+|---|---|---|
+| dense | 6/8 | **6/8** |
+| llama | 3/8 | **3/8** |
+| 32B (matched kernel) | 2/7 | 2/7 |
+
+Peaks essentially identical (dense b8/14k +25.7%; llama b8/14k
++16.5% -> +20.2%). The cell-structure finding (composition pays at
+mid-batch x long-ctx, costs at b1/short) is confirmed on controlled
+data. **P1 as registered: still REFUTED (uniform gain); the
+cell-conditional phenomenon is the result.**
+
+### P3: cost is NOT cleanly additive -> nomination needs a correction
+
+Baseline-free test (R_0 was never measured, so instead: is lever B's
+cost effect the same wherever it is added?):
+
+| lever | base-dependence of its cost effect |
+|---|---|
+| dense +win512 | median **20.3%** of the effect |
+| dense +skipb2 | median **67.0%** of the effect (worst 134%) |
+
+The cost effect of adding a window depends measurably on which quant
+it is added to; for skip the dependence is as large as the effect
+itself, and can flip SIGN (b32/2k K4: -0.039 on Humming vs +0.136 on
+win512). **P3 REFUTED as stated** -- cost terms interact, they do not
+simply add.
+
+**Consequence for the search (Stage 1)**: the additive byte model is
+usable as a NOMINATOR but not as a sound pruning bound on its own.
+Two options, to be decided at the oracle:
+  (a) widen the Stage-1 bound by the measured interaction spread
+      (~20% for window, ~70% for skip) -- keeps pruning sound, prunes
+      less;
+  (b) learn a per-(arch,lever-pair) interaction correction from the
+      oracle and price with it -- prunes more, needs the oracle data
+      we are about to collect anyway.
+Either way the ACCEPTANCE side stays measurement-only (phase 90), so
+the search's structure is unchanged: predict cost (now with an
+interaction term), measure acceptance, rank by LCB, confirm.
+
+P2 (sub-additive acceptance) remains confirmed and still gives a
+sound UPPER bound for elimination -- the pruning that survives.
+
 ## Protocol
 
 Same compile-cell protocol as C1 Stage A (decode T(1+N)-T(1), batch x
