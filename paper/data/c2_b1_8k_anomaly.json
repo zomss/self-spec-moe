@@ -1,0 +1,126 @@
+{
+ "finding": "the b1/c8000 tau collapse is a single-document content draw, not a context-length effect",
+ "content_cv_by_window": {
+  "win128": 12.4,
+  "win512": 8.6,
+  "win8192": 1.3
+ },
+ "window_single_resample_ctx8000": {
+  "off0": 2.239,
+  "off16": 2.891,
+  "off32": 2.963
+ },
+ "suspect_cells": [
+  "dense/win128/b1/c8000",
+  "dense/win512/b1/c8000",
+  "llama/win128/b1/c8000",
+  "llama/win512/b1/c8000"
+ ],
+ "composition_resample": {
+  "dense": {
+   "comp": "q-hum_w-512_s-none",
+   "cell": "b1/c8000",
+   "K": 2,
+   "samples": [
+    {
+     "sample": "orig(off0)",
+     "tau_comp": 2.239,
+     "tau_single": 2.846,
+     "S_comp": 1.024,
+     "S_single": 1.209,
+     "comp_wins": false
+    },
+    {
+     "sample": "off16",
+     "tau_comp": 2.84,
+     "tau_single": 2.863,
+     "S_comp": 1.27,
+     "S_single": 1.209,
+     "comp_wins": true
+    },
+    {
+     "sample": "off32",
+     "tau_comp": 2.839,
+     "tau_single": 2.875,
+     "S_comp": 1.295,
+     "S_single": 1.209,
+     "comp_wins": true
+    }
+   ]
+  },
+  "llama": {
+   "comp": "q-w4a16_w-512_s-none",
+   "cell": "b1/c8000",
+   "K": 2,
+   "samples": [
+    {
+     "sample": "orig(off0)",
+     "tau_comp": 2.192,
+     "tau_single": 2.875,
+     "S_comp": 0.941,
+     "S_single": 1.192,
+     "comp_wins": false
+    },
+    {
+     "sample": "off16",
+     "tau_comp": 2.839,
+     "tau_single": 2.927,
+     "S_comp": 1.223,
+     "S_single": 1.192,
+     "comp_wins": true
+    },
+    {
+     "sample": "off32",
+     "tau_comp": 2.565,
+     "tau_single": 2.695,
+     "S_comp": 1.202,
+     "S_single": 1.192,
+     "comp_wins": true
+    }
+   ]
+  }
+ },
+ "c1_cell_corrections": {
+  "dense/win128": {
+   "draws": [
+    2.12,
+    2.353,
+    2.607
+   ],
+   "mean": 2.36,
+   "cv_pct": 10.3,
+   "orig_error_pct": -10.2
+  },
+  "dense/win512": {
+   "draws": [
+    2.239,
+    2.891,
+    2.963
+   ],
+   "mean": 2.698,
+   "cv_pct": 14.8,
+   "orig_error_pct": -17.0
+  },
+  "llama/win128": {
+   "draws": [
+    2.064,
+    2.789,
+    2.741
+   ],
+   "mean": 2.531,
+   "cv_pct": 16.0,
+   "orig_error_pct": -18.5
+  },
+  "llama/win512": {
+   "draws": [
+    2.091,
+    2.789,
+    2.789
+   ],
+   "mean": 2.556,
+   "cv_pct": 15.8,
+   "orig_error_pct": -18.2
+  }
+ },
+ "protocol_rule": "b1 cells are measured from ONE document (the loader tiles docs[0] to the batch size), so any content-sensitive arm needs >=3 document draws at b1. Content-insensitive arms (quant, skip, kv-quant, wide windows) do not: their across-content CV is ~1-3%."
+}

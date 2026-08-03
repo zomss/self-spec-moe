@@ -1,0 +1,97 @@
+{
+ "arch": "q3_32b",
+ "protocol": "Stage-A compiled cells (decode T(1+N)-T(1), batch 1-128 x ctx {2k,8k,14k}); S vs same-boot AR; winner incl. OFF",
+ "winners": {
+  "b1/c2000": {
+   "lever": "w8fp8",
+   "K": 6,
+   "S": 1.253,
+   "accept": 6.913,
+   "n_arms": 30
+  },
+  "b1/c8000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.506,
+   "accept": 4.969,
+   "n_arms": 30
+  },
+  "b1/c14000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.463,
+   "accept": 4.791,
+   "n_arms": 30
+  },
+  "b4/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.272,
+   "accept": 4.65,
+   "n_arms": 30
+  },
+  "b4/c8000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.338,
+   "accept": 4.725,
+   "n_arms": 30
+  },
+  "b4/c14000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.269,
+   "accept": 4.576,
+   "n_arms": 30
+  },
+  "b8/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.274,
+   "accept": 4.602,
+   "n_arms": 30
+  },
+  "b8/c8000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.159,
+   "accept": 4.656,
+   "n_arms": 30
+  },
+  "b8/c14000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.239,
+   "accept": 4.707,
+   "n_arms": 30
+  },
+  "b16/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.204,
+   "accept": 4.61,
+   "n_arms": 30
+  },
+  "b16/c8000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.098,
+   "accept": 4.633,
+   "n_arms": 30
+  },
+  "b32/c2000": {
+   "lever": "w4a8hum",
+   "K": 4,
+   "S": 1.089,
+   "accept": 4.596,
+   "n_arms": 30
+  },
+  "b64/c2000": {
+   "lever": "OFF",
+   "K": 0,
+   "S": 1.0,
+   "accept": null,
+   "n_arms": 30
+  }
+ }
+}

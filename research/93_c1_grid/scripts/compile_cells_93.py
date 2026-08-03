@@ -46,12 +46,17 @@ def _pack_docs(tok, n, target_tok):
 
 
 def cached_load_ctx_prompts(tok, n, target_tok):
+    # COMPILE_DOC_OFFSET: skip the first N packed docs -> a DIFFERENT
+    # content sample at the same context length (content-vs-system probe)
+    off = int(os.environ.get("COMPILE_DOC_OFFSET", "0"))
     slug = re.sub(r"[^A-Za-z0-9]+", "_", cp.MODEL)
-    cache = PHASE / "data" / f"prompts_cache_{slug}_{target_tok}.json"
+    suffix = f"_off{off}" if off else ""
+    cache = PHASE / "data" / f"prompts_cache_{slug}_{target_tok}{suffix}.json"
     if cache.exists():
         docs = json.loads(cache.read_text())
     else:
-        docs = _pack_docs(tok, N_UNIQUE, target_tok)
+        docs = _pack_docs(tok, N_UNIQUE + off, target_tok)[off:] or \
+            _pack_docs(tok, N_UNIQUE, target_tok)
         cache.parent.mkdir(exist_ok=True)
         cache.write_text(json.dumps(docs))
         print(f"[93-compile] cached {len(docs)} docs -> {cache}",
