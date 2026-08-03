@@ -37,12 +37,18 @@ for arch in ("dense", "llama"):
         b = int(key.split("/")[0][1:])
         c = int(key.split("/c")[1])
         i, j = ctxs.index(c), batches.index(b)
-        S[i, j] = r["S_comp"]
-        single = fmt(r["best_single"].rsplit("-K", 1)[0])
-        kc = r["best_comp"].rsplit("-K", 1)[1]
-        lab[i, j] = (f"{fmt(r['best_comp'].rsplit('-K', 1)[0])}\n"
-                     f"K{kc}  {r['S_comp']:.2f}\n"
-                     f"({single} {r['S_single']:.2f}, {r['gain_pct']:+.0f}%)")
+        # the search selects over the UNION of singles and compositions;
+        # a single legitimately wins some cells.
+        comp_wins = r["S_comp"] >= r["S_single"]
+        win = r["best_comp"] if comp_wins else r["best_single"]
+        S[i, j] = max(r["S_comp"], r["S_single"])
+        other = r["best_single"] if comp_wins else r["best_comp"]
+        oth_s = r["S_single"] if comp_wins else r["S_comp"]
+        kind = "composition" if comp_wins else "SINGLE"
+        lab[i, j] = (f"{fmt(win.rsplit('-K', 1)[0])} K{win.rsplit('-K', 1)[1]}"
+                     f"  {S[i, j]:.2f}\n[{kind}]\n"
+                     f"(next: {fmt(other.rsplit('-K', 1)[0])} {oth_s:.2f},"
+                     f" {r['gain_pct']:+.0f}%)")
 
     fig, ax = style.multi_fig()
     im = ax.imshow(S, cmap="RdYlGn", vmin=0.95, vmax=1.7, aspect="auto")
@@ -61,7 +67,8 @@ for arch in ("dense", "llama"):
     ax.grid(False)
     ax.set_xlabel("batch")
     ax.set_ylabel("context")
-    ax.set_title(f"{arch}: C2 winning COMPOSITION per cell "
-                 f"(displaced single in parentheses)")
+    nc = sum(1 for r in rows if r["S_comp"] >= r["S_single"])
+    ax.set_title(f"{arch}: C2 winner per cell over singles + compositions "
+                 f"({nc}/{len(rows)} cells won by a composition)")
     fig.colorbar(im, ax=ax, shrink=0.85, label="S vs AR")
     style.save(fig, f"c2_winner_map_{arch}")
