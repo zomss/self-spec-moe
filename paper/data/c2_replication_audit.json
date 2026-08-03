@@ -1,0 +1,162 @@
+{
+ "dense": {
+  "cells": [
+   {
+    "cell": "b1/c2000",
+    "r1_argmax": "q-hum_w-512_s-b2-K2",
+    "r2_argmax": "q-hum_w-2048_s-none-K4",
+    "same": false,
+    "S_r2_best": 1.305,
+    "S_r1pick_on_r2": 1.22,
+    "regret_of_r1_decision_pct": 6.51
+   },
+   {
+    "cell": "b1/c8000",
+    "r1_argmax": "q-hum_w-2048_s-b2-K4",
+    "r2_argmax": "q-hum_w-512_s-none-K2",
+    "same": false,
+    "S_r2_best": 1.327,
+    "S_r1pick_on_r2": 1.275,
+    "regret_of_r1_decision_pct": 3.91
+   },
+   {
+    "cell": "b1/c14000",
+    "r1_argmax": "q-hum_w-2048_s-b2-K4",
+    "r2_argmax": "q-hum_w-none_s-b2-K4",
+    "same": false,
+    "S_r2_best": 1.336,
+    "S_r1pick_on_r2": 1.328,
+    "regret_of_r1_decision_pct": 0.57
+   },
+   {
+    "cell": "b8/c2000",
+    "r1_argmax": "q-hum_w-512_s-b2-K2",
+    "r2_argmax": "q-hum_w-512_s-none-K2",
+    "same": false,
+    "S_r2_best": 1.171,
+    "S_r1pick_on_r2": 1.113,
+    "regret_of_r1_decision_pct": 4.94
+   },
+   {
+    "cell": "b8/c8000",
+    "r1_argmax": "q-hum_w-2048_s-none-K2",
+    "r2_argmax": "q-hum_w-512_s-none-K2",
+    "same": false,
+    "S_r2_best": 1.363,
+    "S_r1pick_on_r2": 1.307,
+    "regret_of_r1_decision_pct": 4.12
+   },
+   {
+    "cell": "b8/c14000",
+    "r1_argmax": "q-hum_w-512_s-none-K4",
+    "r2_argmax": "q-hum_w-2048_s-b2-K2",
+    "same": false,
+    "S_r2_best": 1.27,
+    "S_r1pick_on_r2": 1.026,
+    "regret_of_r1_decision_pct": 19.24
+   },
+   {
+    "cell": "b32/c2000",
+    "r1_argmax": "q-hum_w-none_s-b2-K2",
+    "r2_argmax": "q-hum_w-512_s-b2-K2",
+    "same": false,
+    "S_r2_best": 1.17,
+    "S_r1pick_on_r2": 1.074,
+    "regret_of_r1_decision_pct": 8.25
+   },
+   {
+    "cell": "b32/c8000",
+    "r1_argmax": "q-hum_w-512_s-none-K2",
+    "r2_argmax": "q-hum_w-512_s-none-K4",
+    "same": false,
+    "S_r2_best": 1.577,
+    "S_r1pick_on_r2": 1.535,
+    "regret_of_r1_decision_pct": 2.65
+   }
+  ],
+  "same_argmax": 0,
+  "n_cells": 8,
+  "mean_regret_of_r1_decision_pct": 6.274,
+  "worst_pct": 19.24
+ },
+ "llama": {
+  "cells": [
+   {
+    "cell": "b1/c2000",
+    "r1_argmax": "q-w4a16_w-none_s-none-K2",
+    "r2_argmax": "q-w4a16_w-512_s-b2-K2",
+    "same": false,
+    "S_r2_best": 1.17,
+    "S_r1pick_on_r2": 1.08,
+    "regret_of_r1_decision_pct": 7.67
+   },
+   {
+    "cell": "b1/c8000",
+    "r1_argmax": "q-w4a16_w-2048_s-none-K2",
+    "r2_argmax": "q-w4a16_w-none_s-b2-K4",
+    "same": false,
+    "S_r2_best": 1.314,
+    "S_r1pick_on_r2": 1.21,
+    "regret_of_r1_decision_pct": 7.88
+   },
+   {
+    "cell": "b1/c14000",
+    "r1_argmax": "q-w4a16_w-512_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-512_s-b2-K2",
+    "same": true,
+    "S_r2_best": 1.259,
+    "S_r1pick_on_r2": 1.259,
+    "regret_of_r1_decision_pct": 0.0
+   },
+   {
+    "cell": "b8/c2000",
+    "r1_argmax": "q-w4a16_w-none_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-none_s-none-K2",
+    "same": false,
+    "S_r2_best": 1.11,
+    "S_r1pick_on_r2": 1.083,
+    "regret_of_r1_decision_pct": 2.39
+   },
+   {
+    "cell": "b8/c8000",
+    "r1_argmax": "q-w4a16_w-2048_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-512_s-b2-K2",
+    "same": false,
+    "S_r2_best": 1.245,
+    "S_r1pick_on_r2": 1.122,
+    "regret_of_r1_decision_pct": 9.84
+   },
+   {
+    "cell": "b8/c14000",
+    "r1_argmax": "q-w4a16_w-2048_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-512_s-b2-K2",
+    "same": false,
+    "S_r2_best": 1.288,
+    "S_r1pick_on_r2": 1.251,
+    "regret_of_r1_decision_pct": 2.88
+   },
+   {
+    "cell": "b32/c2000",
+    "r1_argmax": "q-w4a16_w-512_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-512_s-b2-K2",
+    "same": true,
+    "S_r2_best": 1.05,
+    "S_r1pick_on_r2": 1.05,
+    "regret_of_r1_decision_pct": 0.0
+   },
+   {
+    "cell": "b32/c8000",
+    "r1_argmax": "q-w4a16_w-512_s-b2-K2",
+    "r2_argmax": "q-w4a16_w-512_s-none-K2",
+    "same": false,
+    "S_r2_best": 1.373,
+    "S_r1pick_on_r2": 1.363,
+    "regret_of_r1_decision_pct": 0.74
+   }
+  ],
+  "same_argmax": 2,
+  "n_cells": 8,
+  "mean_regret_of_r1_decision_pct": 3.925,
+  "worst_pct": 9.84
+ }
+}
