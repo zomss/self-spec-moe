@@ -304,6 +304,17 @@ class SpeculativeConfig:
                 # Convert to tuple to make it hashable
                 factors.append(tuple(layer_ids))
 
+        # The draft model is compiled into its own graph (prefix
+        # "draft_model"), so its config belongs in the key. Without it, two
+        # runs sharing a target model but differing in the draft checkpoint
+        # -- e.g. a W4A16 and a W8A16 quantization of the same weights --
+        # hash identically and silently load each other's compiled draft
+        # graph, which produces a working engine and garbage drafts.
+        factors.append(self.method)
+        factors.append(self.num_speculative_tokens)
+        if self.draft_model_config is not None:
+            factors.append(self.draft_model_config.compute_hash())
+
         hash_str = safe_hash(str(factors).encode(), usedforsecurity=False).hexdigest()
         return hash_str
 

@@ -1,0 +1,56 @@
+{
+ "mechanism": "SpeculativeConfig.compute_hash() omitted draft_model_config, so two runs differing only in the draft checkpoint hashed identically and shared the compiled draft_model graph",
+ "fix": "vllm/config/speculative.py: add method, num_speculative_tokens, draft_model_config.compute_hash()",
+ "ab_test": {
+  "shared_cache_root": true,
+  "order": [
+   "w4a16",
+   "w8int8"
+  ],
+  "cache_keys": {
+   "prefix": [
+    "d823dbac92"
+   ],
+   "postfix": [
+    "5a4ce1c257",
+    "ab06c82d87"
+   ]
+  },
+  "results": {
+   "prefix": {
+    "w4a16": {
+     "tau": 2.623,
+     "decode_toks": 153.3
+    },
+    "w8int8": {
+     "tau": 1.039,
+     "decode_toks": 55.0
+    }
+   },
+   "postfix": {
+    "w4a16": {
+     "tau": 2.623,
+     "decode_toks": 153.3
+    },
+    "w8int8": {
+     "tau": 2.981,
+     "decode_toks": 153.2
+    }
+   }
+  }
+ },
+ "c1_log_evidence": {
+  "0530511650": [
+   "W4A16-INT4",
+   "W8A16-INT8-sym"
+  ],
+  "5b6a2174b5": [
+   "W4A16-INT4",
+   "W8A16-INT8-sym"
+  ],
+  "7cd76306f0": [
+   "FP8-dynamic",
+   "W4A8-gptq"
+  ]
+ }
+}
