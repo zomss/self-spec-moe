@@ -14,6 +14,9 @@
 # Usage: run_oracle.sh {dense|llama} ; Env: ORACLE_GPU
 set -uo pipefail
 ARCH=${1:?usage: run_oracle.sh dense|llama}
+# ORACLE_REP=<n>: independent replication on a fresh document
+# sample (COMPILE_DOC_OFFSET), written to oracle<REP>_* CSVs.
+REP="${ORACLE_REP:-}"
 REPO=/data/smcho/self-spec-moe
 PHASE=$REPO/research/94_composition
 P82DATA=$REPO/research/82_runtime_switching/data
@@ -56,7 +59,7 @@ gpu_cleanup() {
 
 run_cfg() {  # <name> <draft> <extra> <karm>
   local name=$1 draft=$2 extra=$3 karm=$4
-  local csv="oracle_${ARCH}_${name}.csv"
+  local csv="oracle${REP}_${ARCH}_${name}.csv"
   if [ -f "$P82DATA/$csv" ] && grep -q "^${karm}," "$P82DATA/$csv"; then
     echo "[O:$ARCH] skip $name/$karm"; return 0
   fi
@@ -65,9 +68,11 @@ run_cfg() {  # <name> <draft> <extra> <karm>
       COMPILE_DRAFT="$draft" COMPILE_TP=$TP \
       COMPILE_BATCHES="1,8,32" COMPILE_CTXS="2000,8000,14000" \
       COMPILE_KV_LIMIT=$KVLIM COMPILE_CELLS="$csv" \
-      COMPILE_TABLE="oracle_${ARCH}_${name}.json" \
+      COMPILE_TABLE="oracle${REP}_${ARCH}_${name}.json" \
+      COMPILE_DOC_OFFSET="${ORACLE_DOC_OFFSET:-0}" \
+      VLLM_CACHE_ROOT="/data/smcho/vllm_cache_orc${REP}/${name}_${karm}" \
       $extra timeout 3600 .venv/bin/python "$COMPILE" --measure "$karm" \
-      >> "$PHASE/logs/oracle_${ARCH}.log" 2>&1 \
+      >> "$PHASE/logs/oracle${REP}_${ARCH}.log" 2>&1 \
       || echo "[O:$ARCH] FAIL $name/$karm"
   gpu_cleanup
 }
@@ -94,5 +99,5 @@ for q in none $Q1_NAME $Q2_NAME; do
     done
   done
 done
-cp -f "$P82DATA"/oracle_${ARCH}_*.csv "$PHASE/data/" 2>/dev/null
-echo "[O:$ARCH] ORACLE-${ARCH}-DONE"
+cp -f "$P82DATA"/oracle${REP}_${ARCH}_*.csv "$PHASE/data/" 2>/dev/null
+echo "[O:$ARCH] ORACLE${REP}-${ARCH}-DONE"
