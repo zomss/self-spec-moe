@@ -1,0 +1,37 @@
+{
+ "cell": "b1/c8000",
+ "selection_unchanged": true,
+ "note": "the oracle winner at this cell uses win2048, which is content-insensitive; correcting every win512 config upward by the measured 20-22% draw error promotes none of them into the top 6, so the SELECTION cannot move. This validates the reported MARGIN.",
+ "per_arch": {
+  "dense": {
+   "winner": "q-hum_w-2048_s-b2-K4",
+   "single": "q-hum_w-none_s-none-K4",
+   "gains_pct": [
+    7.5,
+    4.5,
+    5.4,
+    3.2
+   ],
+   "mean_gain_pct": 5.2,
+   "sd": 1.8,
+   "sem": 0.9,
+   "n_draws": 4,
+   "robust": true
+  },
+  "llama": {
+   "winner": "q-w4a16_w-2048_s-none-K2",
+   "single": "q-w4a16_w-none_s-none-K2",
+   "gains_pct": [
+    4.9,
+    0.1,
+    4.1,
+    -3.1
+   ],
+   "mean_gain_pct": 1.5,
+   "sd": 3.7,
+   "sem": 1.9,
+   "n_draws": 4,
+   "robust": false
+  }
+ }
+}

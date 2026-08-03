@@ -27,8 +27,8 @@ gpu_cleanup() {
     kill "$p" 2>/dev/null; sleep 2; kill -0 "$p" 2>/dev/null && kill -9 "$p" 2>/dev/null
   done; sleep 3
 }
-for OFF in 16 32; do
-  for WIN in 512 0; do   # WIN=0 -> the quant-only SINGLE, same documents (control)
+for OFF in ${AN_OFFSETS:-16 32}; do
+  for WIN in ${AN_WINS:-512 0}; do   # WIN=0 -> the quant-only SINGLE, same documents (control)
     tag="comp_${ARCH}_off${OFF}_w${WIN}"
     csv="anom_${tag}.csv"
     [ -f "$P82DATA/$csv" ] && grep -q '^k2,' "$P82DATA/$csv" && { echo "[ANOMC] skip $tag"; continue; }
