@@ -3,10 +3,29 @@
 
 Implements the factorization of record:
   A COST      cell-dependent, cheap to measure (no on-policy refs)
+  A' PRUNE    acceptance-free feasibility bound (see below)
   B ACCEPT    cell-INDEPENDENT (measured CV 2-3%), measurement-only,
               profiled PER DEPTH; composed values PREDICTED from
               singles, then confirmed for the finalists
   C K         derived in closed form: argmax_K tau(K)/(K*R(K)+1)
+
+Stage A' -- acceptance-free feasibility prune. From S = tau/(K*R+1) and
+tau <= K+1 (perfect acceptance), the best speedup ANY acceptance rate can
+buy is bounded by cost alone:
+      S_max = (K+1) / (K*R + 1)
+so a config is hopeless iff S_max <= target (for target=1 this is just
+R >= 1: a draft that costs a full target step can never pay). The bound is
+one-sided, and additive R OVER-estimates cost, so the prune is already
+conservative-biased; GAMMA relaxes R further for safety. Measured: removes
+31.9% (dense) / 36.5% (llama) of the space with 0/8 cells losing their
+optimum.
+
+Stage C ranking uses BOTH rankers and confirms their UNION, because neither
+generalizes: "ours" (product-of-singles acceptance, additive cost) penalises
+multi-lever configs and wins where optima are PAIRS (dense 0.59% vs knapspec
+1.84%); "knapspec" (summed value x summed savings) favours multi-lever and
+wins where optima are TRIPLES (llama 0.48% vs ours 2.30%). The union is
+near-best on both at ~5 confirmations.
 
 Budget accounting: every measurement the search requests is charged.
   - cost probe of one config at one cell            : 1 cost-unit
@@ -76,8 +95,38 @@ def S_pred(tau, R, K):
     return tau / (K * R + 1.0)
 
 
-def run_search(cells, ar, budget_units, seed=0):
-    """Returns (chosen per cell, cost_units, accept_units).
+def S_ceiling(R, K):
+    """Best speedup ANY acceptance rate can reach at this cost (tau=K+1)."""
+    return (K + 1.0) / (K * R + 1.0)
+
+
+def score_ours(tau, R, K, *_):
+    """Physical model: product-of-singles acceptance over additive cost."""
+    return S_pred(tau, R, K) if (tau and R) else None
+
+
+def score_knapspec(tau, R, K, prof, R_meas, R0, parts):
+    """Knapsack heuristic: summed acceptance value x summed cost savings.
+
+    Opposite bias to score_ours -- both terms GROW with lever count, so it
+    favours multi-lever configs and wins where the optima are triples.
+    """
+    if R0 is None or not parts:
+        return None
+    val = cost = 0.0
+    for p in parts:
+        t = prof.get(p, {}).get(K)
+        r = R_meas.get((p, K))
+        if t is None or r is None:
+            return None
+        val += (t - 1) / K
+        cost += max(R0 - r, 0)
+    return val * (1 + cost)
+
+
+def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
+               ranker="union"):
+    """Returns (chosen per cell, boots, accept_units, stats).
 
     Stage B is charged ONCE per config profiled (cell-independent);
     Stage A cost probes are charged per (config, cell).
@@ -122,6 +171,7 @@ def run_search(cells, ar, budget_units, seed=0):
             prof[c] = taus
 
     chosen, cost_units = {}, 0
+    stats = {"pruned": 0, "considered": 0, "confirms": 0, "cells": 0}
     booted = set()          # (config,K) pairs actually measured
     for c in singles + ["q-none_w-none_s-none"]:
         for K in Ks:
@@ -158,28 +208,58 @@ def run_search(cells, ar, budget_units, seed=0):
                 if R0 is None or any(r is None for r in rs):
                     continue
                 Rs[(c, K)] = max(sum(rs) - (len(rs) - 1) * R0, 0.05)
-        # ---- Stage C: rank by predicted S using profiled/predicted tau ----
-        ranked = []
+        # ---- Stage A': acceptance-free feasibility prune ----
+        # S_max = (K+1)/(K*R+1) bounds the speedup at ANY acceptance rate,
+        # so this needs no profile. R is relaxed by gamma because additive
+        # cost over-estimates (measured +14% pairs / +30% triples), and an
+        # over-estimate would prune configs that are actually feasible.
+        feasible = {}
         for (c, K), R in Rs.items():
-            tau = prof.get(c, {}).get(K)
-            if tau:
-                ranked.append((S_pred(tau, R, K), c, K))
-        ranked.sort(reverse=True)
-        # ---- confirm the top-N by real measurement (budget-limited) ----
+            if S_ceiling(R / gamma, K) > target:
+                feasible[(c, K)] = R
+            else:
+                stats["pruned"] += 1
+        stats["considered"] += len(Rs)
+
+        # ---- Stage C: rank the survivors with BOTH rankers ----
+        R0_by_K = {K: R_meas.get(("q-none_w-none_s-none", K)) for K in Ks}
+        ranks = {}
+        for key, fn in (("ours", score_ours), ("knapspec", score_knapspec)):
+            r = []
+            for (c, K), R in feasible.items():
+                tau = prof.get(c, {}).get(K)
+                q, w, s_ = parse(c)
+                parts = [single_name(d, v) for d, v in
+                         (("q", q), ("w", w), ("s", s_)) if v != "none"]
+                sc = fn(tau, R, K, prof, R_meas, R0_by_K.get(K), parts)
+                if sc is not None:
+                    r.append((sc, c, K))
+            r.sort(reverse=True)
+            ranks[key] = [(c, K) for _, c, K in r]
+
+        # ---- confirm: union of both rankers' top-N (neither generalizes) ----
         n_confirm = max(1, int(budget_units))
+        if ranker == "union":
+            half = max(1, n_confirm // 2 + n_confirm % 2)
+            cand = list(dict.fromkeys(ranks["ours"][:half]
+                                      + ranks["knapspec"][:half]))
+        else:
+            cand = ranks[ranker][:n_confirm]
+
         best = None
-        for _, c, K in ranked[:n_confirm]:
+        for (c, K) in cand:
             v = arms.get((c, K))
             if not v:
                 continue
+            booted.add((c, K))
             s_true = v[0] / ar[cell]
             if best is None or s_true > best[0]:
                 best = (s_true, c, K)
-        for _, c, K in ranked[:n_confirm]:
-            booted.add((c, K))
+        stats["confirms"] += len(cand)
+        stats["cells"] += 1
         if best:
             chosen[cell] = best
-    return chosen, len(booted), accept_units
+    return chosen, len(booted), accept_units, stats
 
 
 def oracle_best(cells, ar):
@@ -221,12 +301,20 @@ def baseline_random(cells, ar, n_try, seed=0):
     return out
 
 
-def regret(found, oracle):
+def regret(found, oracle, truth_S=None):
+    """Mean/worst regret vs the oracle best.
+
+    With truth_S ({cell: {(config,K): S_mean}}), the CHOSEN config is also
+    re-scored on the 2-sample mean -- otherwise a pick would be credited
+    with its lucky single-sample value against a 2-sample target.
+    """
     rs = []
     for cell, o in oracle.items():
         f = found.get(cell)
-        if f:
-            rs.append((o[0] - f[0]) / o[0] * 100)
+        if not f:
+            continue
+        s = truth_S[cell].get((f[1], f[2]), 0.0) if truth_S else f[0]
+        rs.append((o[0] - s) / o[0] * 100)
     return sum(rs) / len(rs) if rs else None, max(rs) if rs else None
 
 
@@ -234,6 +322,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("arch")
     ap.add_argument("--confirms", type=int, nargs="+", default=[1, 2, 3, 5])
+    ap.add_argument("--gamma", type=float, default=1.15,
+                    help="relax additive R by this factor before pruning "
+                         "(it over-estimates cost by 14-30%%)")
+    ap.add_argument("--target", type=float, default=1.0,
+                    help="minimum speedup worth keeping; prune if the "
+                         "acceptance-free ceiling cannot reach it")
+    ap.add_argument("--ranker", choices=["union", "ours", "knapspec"],
+                    default="union")
+    ap.add_argument("--truth", metavar="ARCH2", default=None,
+                    help="second independent content sample of the same arch; "
+                         "regret is then scored against the 2-sample mean "
+                         "instead of one sample's argmax, which is upward "
+                         "biased (winner's curse over ~36 noisy configs)")
     a = ap.parse_args()
 
     cells, ar = load(a.arch)
@@ -241,6 +342,23 @@ def main():
         print(f"no oracle data for {a.arch}")
         return
     orc = oracle_best(cells, ar)
+    truth_S = None
+    if a.truth:
+        cells2, ar2 = load(a.truth)
+        # per-config mean S over the two samples, then its argmax
+        truth_S, orc = {}, {}
+        for cell in set(cells) & set(cells2):
+            if cell not in ar or cell not in ar2:
+                continue
+            common = set(cells[cell]) & set(cells2[cell])
+            if not common:
+                continue
+            Sm = {k: (cells[cell][k][0] / ar[cell]
+                      + cells2[cell][k][0] / ar2[cell]) / 2 for k in common}
+            truth_S[cell] = Sm
+            b = max(Sm, key=Sm.get)
+            orc[cell] = (Sm[b], b[0], b[1])
+        print(f"[scoring against the 2-sample truth: {a.arch} + {a.truth}]")
     n_configs = len({n for c in cells.values() for n, _ in c})
     n_arms = len({(n, k) for c in cells.values() for n, k in c})   # BOOTS
     n_singles = len({n for c in cells.values() for n, _ in c if n_active(n) <= 1})
@@ -250,30 +368,37 @@ def main():
           f"exhaustive = {n_arms} boots ===\n")
 
     bs = baseline_best_single(cells, ar)
-    m, w = regret(bs, orc)
+    m, w = regret(bs, orc, truth_S)
     print(f"best-single-only (C1 policy)   : mean regret {m:5.2f}%  worst {w:5.2f}%")
 
     rows = []
     for nc in a.confirms:
-        found, cu, au = run_search(cells, ar, nc)  # cu=cost probes, au=profiles
-        m, w = regret(found, orc)
+        found, cu, au, st = run_search(cells, ar, nc, gamma=a.gamma,
+                                       target=a.target, ranker=a.ranker)
+        m, w = regret(found, orc, truth_S)
         # budget: confirmations + accept profiles, vs exhaustive arms
         used = cu       # cu is now the BOOT count (singles + confirmations)
         frac = used / n_arms * 100
         rnd = baseline_random(cells, ar, nc)
-        mr, wr = regret(rnd, orc)
+        mr, wr = regret(rnd, orc, truth_S)
+        pr = 100 * st["pruned"] / st["considered"] if st["considered"] else 0
         print(f"search (confirm top-{nc})        : mean regret {m:5.2f}%  "
               f"worst {w:5.2f}%  | budget {used:4d}/{n_arms} ({frac:4.1f}%)"
               f" [boots: {au} singles-profiled + {cu-au} confirmed]"
+              f"  | pruned {pr:4.1f}% pre-profile"
               f"  | random@same {mr:5.2f}%")
         rows.append({"confirms": nc, "mean_regret_pct": m, "worst_regret_pct": w,
                      "budget_arms": used, "budget_frac_pct": frac,
                      "random_mean_regret_pct": mr,
-                     "accept_profiles": au})
+                     "accept_profiles": au, "ranker": a.ranker,
+                     "pruned_pct": round(pr, 2),
+                     "mean_confirms_per_cell": round(
+                         st["confirms"] / st["cells"], 2) if st["cells"] else 0})
     OUT.mkdir(exist_ok=True)
     (OUT / f"c2_search_{a.arch}.json").write_text(json.dumps(
         {"arch": a.arch, "n_configs": n_configs, "n_oracle_arms": n_arms,
-         "best_single_regret_pct": regret(bs, orc)[0], "curve": rows}, indent=1))
+         "best_single_regret_pct": regret(bs, orc, truth_S)[0],
+         "curve": rows}, indent=1))
     print(f"\nwrote {OUT}/c2_search_{a.arch}.json")
 
 
