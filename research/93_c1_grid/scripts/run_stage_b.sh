@@ -58,6 +58,12 @@ case "$ARCH" in
     ARMLIST=(
       "off|off|0|||"
       "w8chan_k2|$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|2|||$SHARED"
+      # added after the cache-key fix: Stage-A originally reported w4a16 at
+      # S~0.11 (a 9x slowdown) so it was never promoted to Stage B. Corrected,
+      # it wins 13/14 Stage-A cells, so the Stage-B arm set was selected from
+      # corrupt data and must include it.
+      "w4a16_k2|$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+      "w4a16_k4|$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|4|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
       "skipb2_k2|self|2||10,11|$SHARED"
     )
     ;;
