@@ -24,9 +24,9 @@ gpu_cleanup() {
     kill "$p" 2>/dev/null; sleep 2; kill -0 "$p" 2>/dev/null && kill -9 "$p" 2>/dev/null
   done; sleep 3
 }
-for WIN in 128 512 2048; do
-  for VARIANT in old new; do
-    EXTRA=""; [ "$VARIANT" = old ] && EXTRA="W7_WIN_FULL_GATHER=1"
+for WIN in ${AB_WINS:-128 512 2048}; do
+  for VARIANT in ${AB_VARIANTS:-old new}; do
+    EXTRA=""; case "$VARIANT" in old|old2) EXTRA="W7_WIN_FULL_GATHER=1";; esac
     csv="ab_win${WIN}_${VARIANT}.csv"
     [ -f "$P82DATA/$csv" ] && grep -q '^k2,' "$P82DATA/$csv" && { echo "[AB] skip win$WIN/$VARIANT"; continue; }
     echo "[AB] measure win$WIN / $VARIANT"
