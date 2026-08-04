@@ -20,12 +20,13 @@ conservative-biased; GAMMA relaxes R further for safety. Measured: removes
 31.9% (dense) / 36.5% (llama) of the space with 0/8 cells losing their
 optimum.
 
-Stage C ranking uses BOTH rankers and confirms their UNION, because neither
-generalizes: "ours" (product-of-singles acceptance, additive cost) penalises
-multi-lever configs and wins where optima are PAIRS (dense 0.59% vs knapspec
-1.84%); "knapspec" (summed value x summed savings) favours multi-lever and
-wins where optima are TRIPLES (llama 0.48% vs ours 2.30%). The union is
-near-best on both at ~5 confirmations.
+Stage C can rank with one rule or with the UNION of several. No rule
+generalises: over FOUR architectures each of ours / knapspec / product_rank
+wins somewhere and none wins more than two (dense 0.46/1.77/1.21, llama
+1.61/0.79/1.70, mla 0.94/9.68/0.41, moe 0.69/3.85/0.34). The union was
+adopted as a minimax choice on two architectures, but at four its worst case
+(union2 1.64%, union3 1.64%) does not beat plain "ours" (1.61%), so the
+default is "ours" and --ranker union remains available but unrecommended.
 
 Budget accounting: every measurement the search requests is charged.
   - cost probe of one config at one cell            : 1 cost-unit
@@ -329,7 +330,10 @@ def main():
                     help="minimum speedup worth keeping; prune if the "
                          "acceptance-free ceiling cannot reach it")
     ap.add_argument("--ranker", choices=["union", "ours", "knapspec"],
-                    default="union")
+                    default="ours",
+                    help="default reverted to 'ours': the union was adopted "
+                         "as minimax on TWO arches, but at four its worst "
+                         "case (1.64%%) does not beat plain ours (1.61%%)")
     ap.add_argument("--truth", metavar="ARCH2", default=None,
                     help="second independent content sample of the same arch; "
                          "regret is then scored against the 2-sample mean "
