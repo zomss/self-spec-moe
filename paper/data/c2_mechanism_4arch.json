@@ -1,0 +1,58 @@
+{
+ "DENSE": {
+  "lever_counts": {
+   "3": 4,
+   "2": 4
+  },
+  "regret": {
+   "ours": 0.463,
+   "knapspec": 1.768,
+   "product_rank": 1.214
+  },
+  "predicted": "ours",
+  "confirmed": true,
+  "best": "ours"
+ },
+ "LLAMA": {
+  "lever_counts": {
+   "2": 4,
+   "3": 4
+  },
+  "regret": {
+   "ours": 1.615,
+   "knapspec": 0.793,
+   "product_rank": 1.703
+  },
+  "predicted": "ours",
+  "confirmed": false,
+  "best": "knapspec"
+ },
+ "MLA": {
+  "lever_counts": {
+   "2": 7
+  },
+  "regret": {
+   "ours": 0.939,
+   "knapspec": 9.678,
+   "product_rank": 0.414
+  },
+  "predicted": "ours",
+  "confirmed": true,
+  "best": "product_rank"
+ },
+ "MoE": {
+  "lever_counts": {
+   "0": 2,
+   "2": 4,
+   "3": 1
+  },
+  "regret": {
+   "ours": 0.694,
+   "knapspec": 3.851,
+   "product_rank": 0.344
+  },
+  "predicted": "ours",
+  "confirmed": true,
+  "best": "product_rank"
+ }
+}
