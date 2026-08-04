@@ -13,6 +13,7 @@
 #
 # Usage: run_oracle.sh {dense|llama} ; Env: ORACLE_GPU
 set -uo pipefail
+WIN_FULLCG=1   # GQA arches use the FULLCG scratchpad; MLA/MoE do not
 ARCH=${1:?usage: run_oracle.sh dense|llama}
 # ORACLE_REP=<n>: independent replication on a fresh document
 # sample (COMPILE_DOC_OFFSET), written to oracle<REP>_* CSVs.
@@ -35,6 +36,27 @@ case "$ARCH" in
     Q1_EXTRA="VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
     Q2_NAME=w4a16; Q2_CKPT=$HOME/ckpts/Qwen3-8B-W4A16-INT4; Q2_EXTRA=""
     SKIPSET="2,8"
+    ;;
+  mla)
+    # MLA: scratchpad/FULLCG is GQA-only -> windows run PLAIN (matches C1
+    # Stage A). TP1.
+    MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; KVLIM=250000
+    GPU="${ORACLE_GPU:-1}"
+    Q1_NAME=w4a16; Q1_CKPT=$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym
+    Q1_EXTRA="VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+    Q2_NAME=w8chan; Q2_CKPT=$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan
+    Q2_EXTRA=""
+    SKIPSET="10,11"; WIN_FULLCG=0
+    ;;
+  moe)
+    # MoE: TP2, so it needs both GPUs. Windows PLAIN as in C1 Stage A.
+    MODEL="Qwen/Qwen3-30B-A3B"; TP=2; KVLIM=130000
+    GPU="${ORACLE_GPU:-0,1}"
+    Q1_NAME=w4a16; Q1_CKPT=$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym
+    Q1_EXTRA=""
+    Q2_NAME=w8chan; Q2_CKPT=$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan
+    Q2_EXTRA=""
+    SKIPSET="15,23"; WIN_FULLCG=0
     ;;
   llama)
     MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; TP=1; KVLIM=260000
@@ -78,6 +100,7 @@ run_cfg() {  # <name> <draft> <extra> <karm>
 }
 
 # full factorial: quant{none,Q1,Q2} x window{none,512,2048} x skip{none,b2}
+STRIDE="${ORACLE_STRIDE:-1}"; OFFSET="${ORACLE_OFFSET:-0}"; IDX=0
 for q in none $Q1_NAME $Q2_NAME; do
   case $q in
     none)      qd="$MODEL"; qe="";;
@@ -86,7 +109,8 @@ for q in none $Q1_NAME $Q2_NAME; do
   esac
   for w in none 512 2048; do
     if [ "$w" = none ]; then we=""; else
-      we="VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$w VLLM_SELF_SPEC_DRAFT_KV_SINKS=16 VLLM_SELF_SPEC_DRAFT_FULLCG=1"
+      we="VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$w VLLM_SELF_SPEC_DRAFT_KV_SINKS=16"
+      [ "$WIN_FULLCG" = "1" ] && we="$we VLLM_SELF_SPEC_DRAFT_FULLCG=1"
     fi
     for s in none b2; do
       if [ "$s" = none ]; then se=""; else
@@ -94,6 +118,8 @@ for q in none $Q1_NAME $Q2_NAME; do
       fi
       name="q-${q}_w-${w}_s-${s}"
       for karm in k2 k4; do
+        if [ $(( IDX % STRIDE )) -ne "$OFFSET" ]; then IDX=$((IDX+1)); continue; fi
+        IDX=$((IDX+1))
         run_cfg "$name" "$qd" "$SHARED $qe $we $se" "$karm"
       done
     done
