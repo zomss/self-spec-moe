@@ -1,0 +1,44 @@
+{
+ "dense": {
+  "quant x window only|n=2": {
+   "cost_err_pct": 9.65,
+   "accept_err_pct": 2.53,
+   "n": 64
+  },
+  "with skip|n=2": {
+   "cost_err_pct": 4.73,
+   "accept_err_pct": 2.18,
+   "n": 64
+  },
+  "with skip|n=3": {
+   "cost_err_pct": 11.55,
+   "accept_err_pct": 3.91,
+   "n": 64
+  },
+  "ALL": {
+   "cost_err_pct": 8.64,
+   "accept_err_pct": 2.88
+  }
+ },
+ "llamafix": {
+  "quant x window only|n=2": {
+   "cost_err_pct": 5.93,
+   "accept_err_pct": 2.73,
+   "n": 64
+  },
+  "with skip|n=2": {
+   "cost_err_pct": 5.68,
+   "accept_err_pct": 3.0,
+   "n": 64
+  },
+  "with skip|n=3": {
+   "cost_err_pct": 10.32,
+   "accept_err_pct": 4.38,
+   "n": 64
+  },
+  "ALL": {
+   "cost_err_pct": 7.31,
+   "accept_err_pct": 3.37
+  }
+ }
+}
