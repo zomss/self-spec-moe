@@ -349,6 +349,9 @@ class SpecDecodeBaseProposer:
         self._shared_kv_target_layer: dict[str, str] = {}
         self._kv_window_warned = False
         self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
+        # A/B escape hatch: restore the pre-fix full-width window compaction
+        # (gather over every block-table column instead of the kept ones).
+        self._win_full_gather = bool(os.environ.get("W7_WIN_FULL_GATHER"))
         self._kv_window_calls = 0
         # Phase 69: window-scratchpad FULL-CG draft chain attention. Each chain
         # step gathers the sinks+window KV into a FIXED-shape dense scratchpad
@@ -3024,18 +3027,30 @@ class SpecDecodeBaseProposer:
             torch.clamp(n_total - n_last, min=n_sink), n_total
         )
         dropped = torch.clamp(start_last - n_sink, min=0)
-        # left-slices of the fixed max-width buffers (see alloc note above)
-        src_cols = self._win_src_cols[:bs, :n_cols]
+        # Only the first n_sink and the last n_last blocks survive, so at most
+        # (n_sink + n_last) columns are ever READ back: win_seq_lens below is
+        # seq_lens - dropped*block_size, i.e. n_total - dropped blocks, which
+        # is n_total when dropped==0 (and then n_total <= n_sink + n_last) and
+        # exactly n_sink + n_last otherwise. Computing the gather over the full
+        # block-table width instead did ~n_cols/keep_cols times more work --
+        # 875 columns to produce 9 at ctx 14k with window 128 -- every draft
+        # step, and that waste scales with CONTEXT while the window is fixed,
+        # which is precisely the cost term the composed-R model cannot see.
+        # The returned tensor is still the full max-width buffer, so no shape
+        # a captured graph depends on changes; columns past keep_cols simply
+        # keep stale data and are never read.
+        keep_cols = n_cols if self._win_full_gather else min(n_sink + n_last, n_cols)
+        src_cols = self._win_src_cols[:bs, :keep_cols]
         torch.mul(
-            self._win_col_ge_sink[:, :n_cols],
+            self._win_col_ge_sink[:, :keep_cols],
             dropped.unsqueeze(1),
             out=src_cols,
         )
-        src_cols += self._win_col_arange[:, :n_cols]
+        src_cols += self._win_col_arange[:, :keep_cols]
         src_cols.clamp_(max=n_cols - 1)
         torch.gather(
             src_bt[:bs], 1, src_cols,
-            out=self._win_block_table[:bs, :n_cols],
+            out=self._win_block_table[:bs, :keep_cols],
         )
         self._win_seq_lens[:bs] = (seq_lens - dropped * block_size).to(
             self._win_seq_lens.dtype
