@@ -292,3 +292,29 @@ single-launch IMA (deferred throughput opt); A100 hardware column
   n=8 probes / n=16 confirms.
 - OPEN (Gate-2 material): whether to also refresh the 32B dense
   column under the uncapped protocol (+~10 h TP2).
+
+## Cache-collision repair fold-in (2026-08-05)
+
+The torch-compile cache-key collision (SpeculativeConfig.compute_hash
+omitted the draft config; fixed `aaad1c14e`) is fully folded into the
+phase-93 package. Ledger of every implicated artifact + screens:
+`paper/data/c1_corruption_ledger.md`. Deltas to the tables above:
+
+- Llama Stage B: **23/33 (+1 suspect) -> 24/33**. The w4a16 k2/k4
+  re-run moves 5 beats-AR verdicts; the R2/b32 SUSPECT cell (S 6.65,
+  previously excluded by the S>3 gate) re-measures to a real 1.24x
+  w4a16 win. Winning-config set unchanged. Pre-repair values kept as
+  `stageb_llama_*PREFIX*.json`; the map builder skips them.
+- Llama Stage A: winner map now exists (`c1_grid_winners_llama.json`,
+  16 cells) built from v2 w4a16/w8int8 + screened-clean v1 arms. A
+  full-log collision screen (51 draft boots) shows only W4A16<->W8INT8
+  ever shared a cache dir; fp8dyn (5 map wins) and all bf16-draft arms
+  are clean.
+- MLA Stage A: 4 winners changed (3 OFF cells + 1 w8chan cell ->
+  w4a16, all high-batch) — the v1 w4a16 arm was cost-corrupt up to
+  ~4.6x. Softens MLA's Stage-A OFF-dominance and closes part of the
+  Stage-A/Stage-B cross-layer gap.
+- Dense + MoE Stage A: re-verified, 0 winners changed.
+- Winner-map builder (`fig_c1_winner_maps.py`) now overlays
+  `cells_93v2_*` re-measurements over v1 rows at load; raw v1 CSVs are
+  untouched.

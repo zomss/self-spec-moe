@@ -27,12 +27,16 @@ ARCHES = sys.argv[1:] or ["dense", "mla", "moe"]
 
 def load_arch(arch):
     cells = defaultdict(dict)   # (batch, ctx) -> {(lever, K): (toks, acc)}
-    for f in sorted(GRID.glob(f"cells_93_{arch}_*.csv")):
-        lever = f.stem.replace(f"cells_93_{arch}_", "")
-        for r in csv.DictReader(f.open()):
-            key = (int(r["batch"]), int(r["ctx"]))
-            cells[key][(lever, int(r["K"]))] = (
-                float(r["decode_toks"]), float(r["accept"] or 0))
+    # v1 first, then cells_93v2_* (post-collision-fix re-measurements,
+    # c1_corruption_ledger.md) override matching (cell, lever, K) rows;
+    # the "_nc" (new-cache) suffix maps back to the v1 lever name.
+    for pref in (f"cells_93_{arch}_", f"cells_93v2_{arch}_"):
+        for f in sorted(GRID.glob(pref + "*.csv")):
+            lever = f.stem.replace(pref, "").removesuffix("_nc")
+            for r in csv.DictReader(f.open()):
+                key = (int(r["batch"]), int(r["ctx"]))
+                cells[key][(lever, int(r["K"]))] = (
+                    float(r["decode_toks"]), float(r["accept"] or 0))
     return cells
 
 

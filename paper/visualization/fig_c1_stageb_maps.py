@@ -23,6 +23,8 @@ RIDS = ["R1", "R2", "R3", "R4", "R5", "R5cot", "R6", "R7", "R8"]
 for arch in (sys.argv[1:] or ["dense", "mla", "moe"]):
     runs = {}
     for f in glob.glob(str(GRID / f"stageb_{arch}_*.json")):
+        if "PREFIX" in f:   # pre-repair backups (c1_corruption_ledger.md)
+            continue
         d = json.load(open(f))
         runs[f.split(f"stageb_{arch}_")[1][:-5]] = {
             (c["rid"], c["batch"]): c for c in d["cells"] if "toks" in c}
