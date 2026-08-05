@@ -64,6 +64,10 @@ ARCHS = {
         "draft": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
         "config": "q-hum_s-b2",
         "kv_limit": 330000,
+        # skip sets are SEARCH-DERIVED PER ARCHITECTURE -- not a shared
+        # constant. 93/data/skipsets_*.json; dense's b2 is 2,8 (as used by
+        # 94/run_map_validate.sh), llama's is 3,8.
+        "skip": "2,8",
     },
     "llama": {
         "model": "NousResearch/Meta-Llama-3.1-8B-Instruct",
@@ -71,9 +75,9 @@ ARCHS = {
             "~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"),
         "config": "q-w4a16_s-b2",
         "kv_limit": 260000,
+        "skip": "3,8",
     },
 }
-SKIP_SET = "2,8"          # skipb2, as defined in 94/run_fullspace_audit.sh
 KMAX = 4                  # policy chooses K in {0, 2, 4}
 
 
@@ -101,7 +105,7 @@ def main():
         os.environ["VLLM_SELF_SPEC_POLICY_FILE"] = str(tbl)
         os.environ["VLLM_SELF_SPEC_DRAFT_KV_WINDOW"] = (
             "0" if WINDOW == "none" else WINDOW)
-        os.environ["VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS"] = SKIP_SET
+        os.environ["VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS"] = a["skip"]
         spec = {"method": "draft_model", "model": a["draft"],
                 "num_speculative_tokens": KMAX,
                 "draft_tensor_parallel_size": 1}
@@ -114,7 +118,8 @@ def main():
     tok = AutoTokenizer.from_pretrained(a["model"])
 
     out = {"arch": ARCH, "window": WINDOW, "seed": SEED,
-           "config": a["config"], "kmax": KMAX if spec else 0,
+           "config": a["config"], "skip_set": a["skip"] if spec else None,
+           "kmax": KMAX if spec else 0,
            "model": a["model"], "draft": a["draft"] if spec else None,
            "regimes": {}}
     for rid in REGIMES:
