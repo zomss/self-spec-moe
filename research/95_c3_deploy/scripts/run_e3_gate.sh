@@ -53,12 +53,29 @@ BATCHES="${E95_BATCHES:-1,8,32,64}"
 DATASETS="${E95_DATASETS:-R1,R2,R6}"
 KMAX=4
 
+# Kill leftovers, then GATE on memory actually being released. A fixed sleep
+# is not enough: the mla/gated arm OOMed at KV-cache allocation because the
+# previous engine's memory had not been returned 5s after kill -9 (the
+# leftover-worker hazard recorded in the 93/94 ops notes). Wait for free
+# memory instead of guessing.
 cleanup() {
   for g in ${GPU//,/ }; do
     for p in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader -i "$g" 2>/dev/null); do
       kill -9 "$p" 2>/dev/null
     done
   done
+  local waited=0
+  while [ $waited -lt 180 ]; do
+    local busy=0
+    for g in ${GPU//,/ }; do
+      local used
+      used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i "$g" 2>/dev/null)
+      [ "${used:-0}" -gt 2000 ] && busy=1
+    done
+    [ $busy -eq 0 ] && break
+    sleep 10; waited=$((waited + 10))
+  done
+  echo "[E3] cleanup: GPUs free after ${waited}s"
   sleep 5
 }
 
