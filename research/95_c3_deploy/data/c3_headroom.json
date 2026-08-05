@@ -5,6 +5,21 @@
   {
    "arch": "dense",
    "arm_role": "switching",
+   "axis_attribution": {
+    "S": {
+     "K_only": 1.2817,
+     "K_window": 1.3079,
+     "K_skip": 1.2914,
+     "K_window_skip": 1.3147
+    },
+    "pct_over_K_only": {
+     "K_only": 0.0,
+     "K_window": 2.04,
+     "K_skip": 0.76,
+     "K_window_skip": 2.57
+    },
+    "note": "K_window_skip is `full` restricted to one quant lever; each freed axis costs a capture set (window sets the scratchpad gather shape n_kept; skip is load-time static)."
+   },
    "n_cells": 8,
    "n_configs": 18,
    "K_arms": [
@@ -151,6 +166,21 @@
   {
    "arch": "llama",
    "arm_role": "switching",
+   "axis_attribution": {
+    "S": {
+     "K_only": 1.1816,
+     "K_window": 1.2085,
+     "K_skip": 1.1826,
+     "K_window_skip": 1.2086
+    },
+    "pct_over_K_only": {
+     "K_only": 0.0,
+     "K_window": 2.28,
+     "K_skip": 0.08,
+     "K_window_skip": 2.29
+    },
+    "note": "K_window_skip is `full` restricted to one quant lever; each freed axis costs a capture set (window sets the scratchpad gather shape n_kept; skip is load-time static)."
+   },
    "n_cells": 8,
    "n_configs": 18,
    "K_arms": [
@@ -297,6 +327,21 @@
   {
    "arch": "mla",
    "arm_role": "gate",
+   "axis_attribution": {
+    "S": {
+     "K_only": 1.0173,
+     "K_window": 1.0173,
+     "K_skip": 1.0173,
+     "K_window_skip": 1.0173
+    },
+    "pct_over_K_only": {
+     "K_only": 0.0,
+     "K_window": 0.0,
+     "K_skip": 0.0,
+     "K_window_skip": 0.0
+    },
+    "note": "K_window_skip is `full` restricted to one quant lever; each freed axis costs a capture set (window sets the scratchpad gather shape n_kept; skip is load-time static)."
+   },
    "n_cells": 7,
    "n_configs": 18,
    "K_arms": [
@@ -429,6 +474,21 @@
   {
    "arch": "moe",
    "arm_role": "gate",
+   "axis_attribution": {
+    "S": {
+     "K_only": 1.0014,
+     "K_window": 1.0014,
+     "K_skip": 1.0014,
+     "K_window_skip": 1.0014
+    },
+    "pct_over_K_only": {
+     "K_only": 0.0,
+     "K_window": 0.0,
+     "K_skip": 0.0,
+     "K_window_skip": 0.0
+    },
+    "note": "K_window_skip is `full` restricted to one quant lever; each freed axis costs a capture set (window sets the scratchpad gather shape n_kept; skip is load-time static)."
+   },
    "n_cells": 7,
    "n_configs": 18,
    "K_arms": [

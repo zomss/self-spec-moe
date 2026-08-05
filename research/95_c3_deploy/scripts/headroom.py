@@ -116,9 +116,69 @@ def analyse(arch, p1, p2, mode):
             }
         )
 
+    # 4. AXIS ATTRIBUTION: which switchable axis earns the `full` gain?
+    #    Each rung frees one more axis; the config is written q_w_s so we
+    #    hold the others at their best fixed value. This scopes the engine
+    #    work: window and skip are both capture-shape-keyed (window sets
+    #    n_kept = the scratchpad gather shape; skip is load-time static),
+    #    so each extra free axis costs a capture set, not a metadata flip.
+    def parts(cfg):
+        d = dict(p.split("-", 1) for p in cfg.split("_"))
+        return d["q"], d["w"], d["s"]
+
+    def best_with(free_axes):
+        """Best mean S when `free_axes` may vary per cell, others fixed."""
+        best, pick = -1.0, None
+        fixed_axes = [a for a in ("q", "w", "s") if a not in free_axes]
+        combos = {
+            tuple(parts(cfg)[i] for i, a in enumerate("qws") if a in fixed_axes)
+            for cfg in cfgs
+        }
+        for combo in combos:
+            tot, sel = [], {}
+            ok = True
+            for c in cells:
+                cand = []
+                for k in S[c]:
+                    p = parts(k[0])
+                    held = tuple(
+                        p[i] for i, a in enumerate("qws") if a in fixed_axes
+                    )
+                    if held == combo:
+                        cand.append((S[c][k], k[0], k[1]))
+                if not cand:
+                    ok = False
+                    break
+                v = max(cand)
+                sel[c] = v
+                tot.append(max(v[0], 1.0))
+            if ok and mean(tot) > best:
+                best, pick = mean(tot), sel
+        return best, pick
+
+    axis = {}
+    for label, free in (
+        ("K_only", ""),
+        ("K_window", "w"),
+        ("K_skip", "s"),
+        ("K_window_skip", "ws"),
+    ):
+        v, _ = best_with(free)
+        axis[label] = round(v, 4)
+    axis_pct = {
+        k: round((v / axis["K_only"] - 1) * 100, 2) for k, v in axis.items()
+    }
+
     return {
         "arch": arch,
         "arm_role": mode,
+        "axis_attribution": {
+            "S": axis,
+            "pct_over_K_only": axis_pct,
+            "note": "K_window_skip is `full` restricted to one quant lever; "
+            "each freed axis costs a capture set (window sets the scratchpad "
+            "gather shape n_kept; skip is load-time static).",
+        },
         "n_cells": len(cells),
         "n_configs": len(cfgs),
         "K_arms": Ks,
@@ -182,6 +242,12 @@ def main():
         print(
             f"  cells beating AR: {r['n_cells_beating_ar']}/{r['n_cells']}"
             f"   quant levers used: {r['quant_levers_in_full_picks']}"
+        )
+        a = r["axis_attribution"]["pct_over_K_only"]
+        print(
+            "  axis attribution over K-only:  "
+            f"+window {a['K_window']:+.2f}%   +skip {a['K_skip']:+.2f}%   "
+            f"+both {a['K_window_skip']:+.2f}%"
         )
         for p in r["per_cell"]:
             print(

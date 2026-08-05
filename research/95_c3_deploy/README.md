@@ -25,9 +25,27 @@ C2's weight sharing (`VLLM_SELF_SPEC_SHARE_WEIGHTS=1`) split the axes by cost:
 | axis | mechanism | cost class |
 |---|---|---|
 | K / OFF | propose fewer steps | free (deployed today) |
-| KV window | `_apply_draft_kv_window` rewrites fixed-max-width persistent buffers in place, per draft step | **free-if-in-capture-set** (E0 measures; window-up under FULLCG may need multi-capture) |
-| layer skip | draft skip-set wrapper | **free under weight sharing** (E0 measures) |
+| KV window | `_apply_draft_kv_window` rewrites fixed-max-width buffers in place, but the window sets `n_kept` = the scratchpad gather shape (`_scratchpad_n_kept_blocks`) | **capture-shape-keyed**: one capture set per window; switch = graph select (E0 prices it) |
+| layer skip | replaces decoder layers with passthroughs AND deletes their `static_forward_context` attention registrations — "load-time static: the layer set never changes after boot" (`draft_model.py:328`) | **boot-class** (not hot-switchable in the current design) |
 | quant ckpt | separate resident checkpoint | **paid: 113 ms pinned DRAM swap** (89-E0) |
+
+### Scope decision: switch the WINDOW axis, hold skip boot-fixed
+
+Axis attribution over K-only (`scripts/headroom.py`, 2-sample basis):
+
+| arch | +window | +skip | +both |
+|---|---|---|---|
+| dense | **+2.04%** | +0.76% | +2.57% |
+| llama | **+2.28%** | +0.08% | +2.29% |
+
+The window axis carries **79% of dense's and 99.6% of llama's** switching
+gain, and it is the tractable one (multi-capture over the 2-3 windows a
+deployment's map actually uses). Skip is the hard one — switching it would
+have to re-register KV specs — and it is worth **+0.76pp on dense, +0.08pp on
+llama**. So skip stays **boot-fixed**, chosen once per deployment from the map
+(what C1/C2 already support). This is a priced decision, not an omission: the
+forgone gain is recorded above, and P1/P2 predict the window-only system we
+are actually building.
 
 The structural finding that shapes this phase: **within every architecture,
 C2's per-cell winners hold the quant lever CONSTANT** (dense `q-hum` in all 8
@@ -77,14 +95,16 @@ Magnitudes come from `scripts/headroom.py` over the committed phase-94
 compile-cell measurements. The predictions are about **live serving on real
 datasets** — a different protocol — so they are falsifiable, not restatements.
 
-- **P1 (dense switching).** Trace-weighted `full` over `konly` lands in
-  **[+1%, +4%]** on traces that cross the cells where the map's winner
-  changes. Compile-cell basis: **+2.6%** (2-sample). Concentrated:
-  b32/c8000 +6.4%, b32/c2000 +5.4%, b8/c2000 +4.3%; three cells at +0.0-0.5%.
-- **P2 (llama switching).** Same quantity in **[+1%, +4%]**. Basis:
-  **+2.3%** (2-sample). Llama is the CLEANEST test of the config axis: its
-  K-only arm adds +0.0% over static (K2 wins every cell), so all of llama's
-  switching value is the config axis by construction.
+- **P1 (dense window switching).** Trace-weighted `full` over `konly` lands in
+  **[+1%, +4%]** on traces that cross the cells where the map's window winner
+  changes. Compile-cell basis: **+2.04%** (window-only, 2-sample; +2.6% if
+  skip could also switch). Concentrated: b32/c8000 +6.4%, b32/c2000 +5.4%,
+  b8/c2000 +4.3%; three cells at +0.0-0.5%.
+- **P2 (llama window switching).** Same quantity in **[+1%, +4%]**. Basis:
+  **+2.28%** (window-only; skip switching adds +0.01pp — nothing). Llama is
+  the CLEANEST test of the config axis: its K-only arm adds +0.0% over static
+  (K2 wins every cell), so all of llama's switching value is the window axis
+  by construction.
 
   Both bases are 2-sample truth (mean S over the R1+R2 content draws). The
   single-sample R1 figures were higher (dense +4.2%, llama +2.6%) -- the
@@ -132,14 +152,16 @@ Registered risks (stated now, not after the fact):
 
 ## Plan
 
-- **E0 — engine feasibility (no long GPU runs; gates everything).** Runtime
-  mutation of window and skip on one resident draft. `self._kv_window` is a
-  plain per-step attribute and `_apply_draft_kv_window` rewrites fixed
-  max-width buffers in place, so window-down should be a data change;
-  window-up under FULLCG may need multi-capture or eager. Measure per-toggle
-  latency, memory delta, and an **accept A/B around every toggle** (P35/82
-  rule: accept, never step-time alone). Deliverable: toggle-cost table
-  refreshed with weight sharing ON.
+- **E0 — window multi-capture feasibility (gates everything).** Hold capture
+  sets for the 2-3 windows a deployment's map uses on ONE resident draft
+  (weight sharing ON) and select per cycle. Measure: incremental capture time
+  and graph memory per extra window, steady-state switch latency, and an
+  **accept A/B around every toggle** (P35/82 rule: accept, never step-time
+  alone). Deliverable: toggle-cost table refreshed with weight sharing ON.
+  Fail-honest: if multi-capture memory or capture time is prohibitive, the
+  finding is that window switching is boot-class too — and C3's deliverable
+  reduces to the K/OFF policy on a map-chosen static config, with the
+  forgone +2.0-2.3% recorded.
 - **E1 — policy schema v2 + compiler.** `options: [{config, K, R, f_ref}]`;
   scheduler argmax over (config, K); two switch-cost classes; amortization
   gate `dwell* = cost / delta_rate` (82-E3). Compiled FROM C2's search output
