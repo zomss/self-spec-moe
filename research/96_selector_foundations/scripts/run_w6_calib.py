@@ -30,7 +30,7 @@ SKIP = os.environ.get("W6_SKIP", "2,8")
 WINDOW = os.environ.get("W6_WINDOW", "512")
 MODEL = "Qwen/Qwen3-8B"
 DRAFT = os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq")
-REGIMES = ["R5", "R5cot", "R1"]
+REGIMES = os.environ.get("W6_REGIMES", "R5,R5cot,R1").split(",")
 SEEDS = [0, 1]
 ITERS = 4
 
