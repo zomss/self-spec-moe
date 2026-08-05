@@ -85,3 +85,23 @@ Design consequence: one-time per-arch profile → identifies the cheap
 tier (transferable); Round 2 selects WITHIN the cheap tier per regime
 (a handful of bursts, not L boots). G3's gated measurement mode drops
 off the critical path.
+
+## 36-layer profile + count-{4,8} ladder (seed-mean, w512)
+
+| count | R5 f / e2e | R1 f / e2e |
+|---|---|---|
+| 0 | 0.857 / 523 | 0.952 / 169 |
+| 2 {2,8} | 0.813 / 450† | 0.935 / 174 |
+| 4 {2,7,8,11} | 0.740 / 499 | 0.924 / 167 |
+| 8 {2,3,4,7,8,11,15,16} | 0.612 / 484 | 0.841 / **192** |
+
+† episode-contaminated seed-1 (uncertified; certified ≈505).
+
+Full profile (36/36): cheap tier is exclusively early-mid layers —
+depth-monotone at full resolution. **Count-8 is the new R1 winner:
+e2e 192 ≈ S 1.25 vs AR, +9% over the previous best (s-2,8/w2048, 176)**
+— deep skipping pays at b1 math (f 0.84 still clears the halved cost)
+and loses at b8 RAG (f falls faster than cost). The count axis is
+regime-dependent exactly as the window axis was: one more per-regime
+lever for the ladder, and the W6 gate's R1 margin widens from +5.9%
+to ~+15% with count in the pool.
