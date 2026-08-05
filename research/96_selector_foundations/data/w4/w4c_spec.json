@@ -1,0 +1,205 @@
+{
+ "arm": "spec",
+ "batch": 8,
+ "ctx": 14000,
+ "k": 4,
+ "prompt_cache": "/data/smcho/self-spec-moe/research/93_c1_grid/data/prompts_cache_NousResearch_Meta_Llama_3_1_8B_Instruct_14000.json",
+ "contents": {
+  "cmap": [
+   {
+    "style": "compile-N160",
+    "rate": 945.1,
+    "accept": 4.188,
+    "t1s": [
+     3.31,
+     3.32,
+     3.322
+    ],
+    "tns": [
+     4.696,
+     4.904,
+     4.665
+    ]
+   },
+   {
+    "style": "compile-N512",
+    "rate": 1074.8,
+    "accept": 4.554,
+    "t1s": [
+     3.347,
+     3.316,
+     3.332
+    ],
+    "tns": [
+     7.255,
+     7.127,
+     7.263
+    ]
+   },
+   {
+    "style": "serving",
+    "rounds": [
+     {
+      "wall_s": 7.285,
+      "ntok": 4096,
+      "e2e_rate": 562.3,
+      "dec_rate_req": 106.2,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.283,
+      "ntok": 4096,
+      "e2e_rate": 562.4,
+      "dec_rate_req": 106.1,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.279,
+      "ntok": 4096,
+      "e2e_rate": 562.7,
+      "dec_rate_req": 106.1,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.289,
+      "ntok": 4096,
+      "e2e_rate": 561.9,
+      "dec_rate_req": 106.0,
+      "accept": 4.554
+     }
+    ]
+   },
+   {
+    "style": "serving-ie",
+    "rounds": [
+     {
+      "wall_s": 7.285,
+      "ntok": 4096,
+      "e2e_rate": 562.3,
+      "dec_rate_req": 106.2,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.296,
+      "ntok": 4096,
+      "e2e_rate": 561.4,
+      "dec_rate_req": 106.1,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.278,
+      "ntok": 4096,
+      "e2e_rate": 562.8,
+      "dec_rate_req": 106.2,
+      "accept": 4.554
+     },
+     {
+      "wall_s": 7.292,
+      "ntok": 4096,
+      "e2e_rate": 561.7,
+      "dec_rate_req": 106.0,
+      "accept": 4.554
+     }
+    ]
+   }
+  ],
+  "r5": [
+   {
+    "style": "compile-N160",
+    "rate": 712.3,
+    "accept": 3.762,
+    "t1s": [
+     3.356,
+     3.352,
+     3.35
+    ],
+    "tns": [
+     5.158,
+     5.149,
+     5.147
+    ]
+   },
+   {
+    "style": "compile-N512",
+    "rate": 892.0,
+    "accept": 4.03,
+    "t1s": [
+     3.352,
+     3.36,
+     3.358
+    ],
+    "tns": [
+     7.943,
+     7.952,
+     7.956
+    ]
+   },
+   {
+    "style": "serving",
+    "rounds": [
+     {
+      "wall_s": 4.881,
+      "ntok": 579,
+      "e2e_rate": 118.6,
+      "dec_rate_req": 35.8,
+      "accept": 3.163
+     },
+     {
+      "wall_s": 4.893,
+      "ntok": 579,
+      "e2e_rate": 118.3,
+      "dec_rate_req": 35.8,
+      "accept": 3.163
+     },
+     {
+      "wall_s": 4.891,
+      "ntok": 579,
+      "e2e_rate": 118.4,
+      "dec_rate_req": 35.9,
+      "accept": 3.163
+     },
+     {
+      "wall_s": 4.887,
+      "ntok": 579,
+      "e2e_rate": 118.5,
+      "dec_rate_req": 35.9,
+      "accept": 3.163
+     }
+    ]
+   },
+   {
+    "style": "serving-ie",
+    "rounds": [
+     {
+      "wall_s": 8.036,
+      "ntok": 4096,
+      "e2e_rate": 509.7,
+      "dec_rate_req": 97.1,
+      "accept": 4.022
+     },
+     {
+      "wall_s": 8.015,
+      "ntok": 4096,
+      "e2e_rate": 511.0,
+      "dec_rate_req": 97.1,
+      "accept": 4.022
+     },
+     {
+      "wall_s": 8.022,
+      "ntok": 4096,
+      "e2e_rate": 510.6,
+      "dec_rate_req": 97.0,
+      "accept": 4.022
+     },
+     {
+      "wall_s": 8.044,
+      "ntok": 4096,
+      "e2e_rate": 509.2,
+      "dec_rate_req": 97.0,
+      "accept": 4.022
+     }
+    ]
+   }
+  ]
+ }
+}

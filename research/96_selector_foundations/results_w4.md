@@ -89,13 +89,73 @@ So the map's transfer error decomposes into two named, measured causes:
 wins). f: compile-content vs regime-content gap (map OVERSTATES wherever
 real content accepts less than C4).**
 
-### W4c (open, next): protocol discriminator
+### W4c — the gap is a REALIZATION × DECODE-LENGTH effect, not protocol arithmetic
 
-One boot, both measurements: the compile-cell protocol (T(1+N)−T(1)) AND
-a serving window at the same (batch, ctx) inside the same engine, so the
-R gap is isolated from boot/content/kernel variance. Until W4c lands,
-Round 1 (W5) treats compile-R as a SHORTLISTING signal only — consistent
-with S1's "interpolation may shortlist, never decide."
+Design: `run_w4c_protocol.py` — one engine, ladder {cmap = the audit's
+byte-identical compile prompts, r5 = deployment content} × {compile-N160
+(the map's exact min-min arithmetic), compile-N512, serving-512
+(ignore_eos), serving-natural-EOS} × realization {scratchpad =
+FULLCG+wholechain (the map's and phase-95's deployed-C3 stack, per
+95/run_e0.sh), piecewise = paged window chain}. Matched off anchor.
+Anchors: off/r5/serving 140.1 ≈ W2's 142.4; piecewise spec/r5/serving
+**198.9 ≈ W2d's 198.7 (0.1%)** — the attribution is exact.
+
+**Disclosure (instrument error, mine):** every 96 llama serving run
+before W4c (W1 matrix, W1b, W2, W2b, W2c, W2d) exported the e3-gate env
+set, which lacks `VLLM_SELF_SPEC_DRAFT_FULLCG/WHOLECHAIN` — so they ran
+the PIECEWISE realization while phase-95's llama numbers and the map ran
+the scratchpad. W1's variance causes, W2's currency findings, and W4a's
+scheduler results are realization-independent claims and stand; but all
+my llama serving S values are piecewise-stack values, and the
+"map-vs-serving R gap" decomposes as follows.
+
+R at llama b8/c14k K4 w2048 s-b2, notune (dec basis; S_e2e where noted):
+
+| measurement | scratchpad | piecewise |
+|---|---|---|
+| compile-N160, cmap (the map's cell) | 0.562 | 0.561 |
+| compile-N512, cmap | 0.506 | 0.465 |
+| serving-512 dec, cmap | 0.533 | 0.527 |
+| serving-512 dec, r5 | 0.504 | 0.494 |
+| **natural-EOS serving, r5 (~72 tok/req)** | S_e2e **0.846**, accept 3.163 | S_e2e **1.420**, accept 3.765 |
+
+Verdicts:
+
+- **Protocol arithmetic is nearly innocent** (P-W4c1 axis: +5–6%
+  within-realization, same content). The N-window bias is real but
+  modest: N160 overstates R by ~6–17% vs 512-token serving (P-W4c2) —
+  correctable by lengthening/reporting per-N R.
+- **Long decodes: the realizations are equivalent** (within 2%
+  everywhere at 512-token decodes) and the map's R is ~right.
+- **Short decodes: the realization lever flips sign and is worth 68%.**
+  At the deployment's actual R5 behavior (~72-token answers after 14k
+  prefill), scratchpad LOSES 15% vs AR (and accepts less: early-cycle
+  numerics, the phase-67 kernel-switch perturbation) while piecewise
+  WINS 42%. The compile protocol is doubly blind to this cell: it forces
+  `ignore_eos` AND its C4 content never stops.
+- P-W4c3: EOS/decode-length matters (11% on R even within piecewise) —
+  it is not a nuisance term, it is the axis.
+
+**This closes the loop with I2**: the map's missing index (generated-
+suffix length) carries not only the acceptance term phase 95 found but a
+first-order COST/REALIZATION term. A regime carries its decode-length
+distribution by construction — Round 2's per-regime confirmation is the
+fix, now for two measured reasons.
+
+Consequences:
+
+1. **Realization enters the composition pool as a boot-class lever**
+   (W0's matrix already classed it; now it has a measured 68% regime-
+   dependent swing). The deployed C3 stack (scratchpad wholechain) is
+   the WRONG realization for short-decode regimes; where the scratchpad
+   retains a win region at all must be re-located with the corrected
+   instrument.
+2. Round 1's compile protocol gains a short-decode arm (small-N R
+   reported per N), or short-decode regimes are excluded from compile
+   coverage and owned entirely by Round 2.
+3. Compile-R remains SHORTLIST-only (S1), now with its two measured
+   blind spots named: N-amortization bias (~10%) and the short-decode
+   realization cliff (~68%).
 
 ## W4 model terms settled
 
@@ -104,5 +164,6 @@ with S1's "interpolation may shortlist, never decide."
 | per-flip transition | ~0 | "~20 ms/cycle", the 2% hysteresis rent |
 | wrong-arm duty | ~1.06 step-equiv per armed step | unpriced |
 | parked engine | −0.6% b16, ~0 b8 | hardcoded OFF=1.0 |
-| R source | compile-R shortlists; serving-R (W4c) decides | the lottery-audit question, closed |
+| R source | compile-R shortlists (blind spots: ~10% N-bias, 68% short-decode realization cliff); Round 2 decides | the lottery-audit question, closed |
 | f source | per-regime measurement, never compile content | C4-universal f |
+| realization | boot-class composition lever, regime-dependent sign (scratchpad −15% / piecewise +42% at R5-natural) | assumed fixed deployed stack |

@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-"""W4c scorer: R per (content, style) from matched off/spec boots."""
+"""W4c scorer: R per (content, style) from matched off/spec boots.
+
+argv[1] optionally names the spec-arm JSON (default w4c_spec.json; pass
+w4c_spec_pw.json for the piecewise realization).
+"""
 import json
+import sys
 from pathlib import Path
 
 D = Path(__file__).resolve().parents[1] / "data" / "w4"
 K = 4
 
 off = json.loads((D / "w4c_off.json").read_text())
-spec = json.loads((D / "w4c_spec.json").read_text())
+spec_name = sys.argv[1] if len(sys.argv) > 1 else "w4c_spec.json"
+print(f"spec arm: {spec_name}")
+spec = json.loads((D / spec_name).read_text())
 
 
 def rate(entry, which):
