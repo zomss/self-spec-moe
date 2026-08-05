@@ -152,22 +152,35 @@ Registered risks (stated now, not after the fact):
 
 ## Plan
 
-- **E0 — window multi-capture feasibility (gates everything).** Hold capture
-  sets for the 2-3 windows a deployment's map uses on ONE resident draft
-  (weight sharing ON) and select per cycle. Measure: incremental capture time
-  and graph memory per extra window, steady-state switch latency, and an
-  **accept A/B around every toggle** (P35/82 rule: accept, never step-time
-  alone). Deliverable: toggle-cost table refreshed with weight sharing ON.
-  Fail-honest: if multi-capture memory or capture time is prohibitive, the
-  finding is that window switching is boot-class too — and C3's deliverable
-  reduces to the K/OFF policy on a map-chosen static config, with the
-  forgone +2.0-2.3% recorded.
+- **E0 — the switching ENVELOPE on real data (no engine change; gates
+  everything else).** Measure before building. Today's runner already boots
+  one window per engine (`run_e6d.sh:44` uses a per-window policy table), so
+  the `oracle` arm is reachable now: boot each window in the map's set, run
+  the same regime cells, and take the per-cell max. That envelope is the
+  UPPER BOUND on what any switcher could deliver, measured on the deployment
+  path, and it yields P6 (map transfer) directly.
+
+  **Gate: if the envelope over `konly` is < 1% on real traces, the switching
+  thesis is refuted on the deployment path and E1 is not built** — C3's
+  deliverable reduces to the K/OFF policy on a map-chosen static config, with
+  the forgone gain recorded. This ordering exists so a negative result costs
+  one measurement instead of an engine build.
+
+- **E1 — window multi-capture (only if E0's envelope justifies it).** The
+  draft's `CudagraphDispatcher` keys on batch descriptor only; window sets
+  `n_kept`, so each window needs its own capture set and the key must gain a
+  window dimension. Budget from committed logs (E6d, the deployed config):
+  capture is 0.28-1.25 GiB and 2-14 s per set, so 2-3 windows cost ~+1-2.5
+  GiB and ~+10-30 s boot — affordable against 80 GiB, especially with the
+  15.3 GiB weight sharing freed. Measure incremental capture time/memory,
+  steady-state switch latency, and an **accept A/B around every toggle**
+  (P35/82 rule: accept, never step-time alone).
 - **E1 — policy schema v2 + compiler.** `options: [{config, K, R, f_ref}]`;
   scheduler argmax over (config, K); two switch-cost classes; amortization
   gate `dwell* = cost / delta_rate` (82-E3). Compiled FROM C2's search output
   (`scripts/compile_from_c2.py`) — this script is the C2->C3 handoff artifact.
 - **E2 — switching eval (dense, llama).** Arms 1-6 on the phase-88 regime
-  suite, paired multi-seed per R1.
+  suite, paired multi-seed per R1. Runs only if E0's gate passes.
 - **E3 — gate eval (MLA, MoE).** Arms 1, 2, 4 on the same suite; P7.
 - **E4 — RL half.** Drift trace + GRPO thinking rollout with the (config, K)
   policy; compare against the recorded 1.090x / 1.300x incumbents.
@@ -180,6 +193,8 @@ Registered risks (stated now, not after the fact):
 
 - E0: a lever whose toggle costs > ~1 s or perturbs accept by > 0.05 is NOT
   hot-switchable and leaves the v2 action space (recorded, not worked around).
+- E0 gate: envelope over `konly` >= 1% on real traces, else E1 is not built
+  and the phase closes on the registered R2 outcome.
 - E2 gate: `full` >= `konly` on the trace aggregate at >= 2 of 3 seeds, and
   P5 holds. Failing that, the deliverable is R2's registered outcome with the
   measured reason.
