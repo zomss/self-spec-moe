@@ -20,12 +20,12 @@ K to (config, K) and measures what that is worth **on the deployment path**.
 
 ## Action space and cost classes
 
-C2's weight sharing (`VLLM_SELF_SPEC_SHARE_WEIGHTS=1`) split the axes by cost:
+The axes differ sharply in switch cost:
 
 | axis | mechanism | cost class |
 |---|---|---|
 | K / OFF | propose fewer steps | free (deployed today) |
-| KV window | `_apply_draft_kv_window` rewrites fixed-max-width buffers in place, but the window sets `n_kept` = the scratchpad gather shape (`_scratchpad_n_kept_blocks`) | **capture-shape-keyed**: one capture set per window; switch = graph select (E0 prices it) |
+| KV window | `_apply_draft_kv_window` rewrites fixed-max-width buffers in place, but the window sets `n_kept` = the scratchpad gather shape (`_scratchpad_n_kept_blocks`) | **capture-shape-keyed**: one capture set per window; switch = graph select (E1 prices it) |
 | layer skip | replaces decoder layers with passthroughs AND deletes their `static_forward_context` attention registrations — "load-time static: the layer set never changes after boot" (`draft_model.py:328`) | **boot-class** (not hot-switchable in the current design) |
 | quant ckpt | separate resident checkpoint | **paid: 113 ms pinned DRAM swap** (89-E0) |
 
@@ -49,10 +49,19 @@ are actually building.
 
 The structural finding that shapes this phase: **within every architecture,
 C2's per-cell winners hold the quant lever CONSTANT** (dense `q-hum` in all 8
-cells; llama `q-w4a16` in all 8) and vary only window/skip/K. The expensive
-axis does not need to switch; the axes that need to switch are the ones weight
-sharing made free. Predicted consequence: zero DRAM swaps fire on
+cells; llama `q-w4a16` in all 8) and vary only window/skip/K. So exactly ONE
+draft checkpoint is ever resident — the same as today — and the expensive axis
+never has to switch. Predicted consequence: zero DRAM swaps fire on
 within-architecture traces (P4 below).
+
+> **Correction (2026-08-05, after the initial commit of this README).** An
+> earlier phrasing credited this to C2's weight sharing. That was wrong:
+> `_weight_sharing_enabled` (`draft_model.py:146`) requires the draft's
+> checkpoint AND quantization to equal the target's, so weight sharing applies
+> only to `q-none` drafts. Dense and llama both carry a quantized draft, so
+> weight sharing is inactive in these arms. What makes the swap unnecessary is
+> the quant-constancy finding alone. Weight sharing re-enters only for a
+> deployment whose map picks `q-none`.
 
 ## Arms (the accounting ladder)
 
