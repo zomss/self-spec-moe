@@ -199,6 +199,28 @@ Registered risks (stated now, not after the fact):
   winning MoE cell on a different quant than its neighbours, P4 is void for
   MoE and the 113 ms swap re-enters.
 
+## E0 OUTCOME (2026-08-05) — see `results_e0.md`
+
+| arch | cross-seed gain (accept-binding) | gate |
+|---|---|---|
+| dense | **+2.78% / +2.65%** both directions | PASS (long-context workloads); +0.9% mixed |
+| llama | +0.08% / +0.00% | FAIL |
+
+- **P1 CONFIRMED** (registered [+1%,+4%], basis +2.04%).
+- **P2 REFUTED** (registered [+1%,+4%], basis +2.28%): llama delivers ~0%.
+  Not because no window preference exists, but because the policy's own
+  boot-to-boot decision noise (-8% to -42% on R5, AR anchor stable to 0.2%)
+  is an order of magnitude larger than the effect it should exploit.
+- **P8 REFUTED** (see below): the window is a cost floor, not only an accept
+  tradeoff.
+- **Gate decision: E1 is NOT built yet.** The same measurement surfaced a
+  gate-safety defect (llama R8 armed ~94% of steps at S=0.935 when it should
+  have disarmed) and llama's decision instability, both tracing to one cause:
+  the live-f estimate is unreliable near the `f = R` break-even (arming is
+  `f > R` exactly). Fixing the estimator is worth more than the switching gain
+  and must precede a switcher that would inherit the instability. New step
+  **E1' (estimator repair) precedes E1 (multi-capture)**; see results_e0.md.
+
 ## Plan
 
 **Realizability constraint found in E0 (2026-08-05).** The switching set is

@@ -1,0 +1,84 @@
+{
+ "arch": "llama",
+ "window": "2048",
+ "seed": 1,
+ "config": "q-w4a16_s-b2",
+ "skip_set": "3,8",
+ "kmax": 4,
+ "model": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+ "draft": "/home/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym",
+ "regimes": {
+  "R4": {
+   "toks": 598.9,
+   "all": [
+    594.8,
+    598.9,
+    608.1
+   ],
+   "accept": 2.341,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5": {
+   "toks": 116.1,
+   "all": [
+    115.8,
+    116.1,
+    120.9
+   ],
+   "accept": 2.317,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5cot": {
+   "toks": 871.0,
+   "all": [
+    870.6,
+    871.0,
+    871.8
+   ],
+   "accept": 2.875,
+   "batch": 8,
+   "max_tokens": 3072,
+   "temp": 0.0
+  },
+  "R8": {
+   "toks": 2046.4,
+   "all": [
+    2024.6,
+    2046.4,
+    2093.9
+   ],
+   "accept": 2.287,
+   "batch": 16,
+   "max_tokens": 2048,
+   "temp": 1.0
+  },
+  "R1": {
+   "toks": 197.5,
+   "all": [
+    197.0,
+    197.5,
+    197.9
+   ],
+   "accept": 4.576,
+   "batch": 1,
+   "max_tokens": 1024,
+   "temp": 0.0
+  },
+  "R6": {
+   "toks": 3311.7,
+   "all": [
+    3308.6,
+    3311.7,
+    3344.7
+   ],
+   "accept": 2.92,
+   "batch": 32,
+   "max_tokens": 256,
+   "temp": 0.0
+  }
+ }
+}

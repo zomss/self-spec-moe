@@ -1,0 +1,84 @@
+{
+ "arch": "dense",
+ "window": "2048",
+ "seed": 1,
+ "config": "q-hum_s-b2",
+ "skip_set": "2,8",
+ "kmax": 4,
+ "model": "Qwen/Qwen3-8B",
+ "draft": "/home/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+ "regimes": {
+  "R4": {
+   "toks": 575.8,
+   "all": [
+    569.4,
+    575.8,
+    586.5
+   ],
+   "accept": 2.343,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5": {
+   "toks": 462.4,
+   "all": [
+    461.8,
+    462.4,
+    469.6
+   ],
+   "accept": 4.199,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5cot": {
+   "toks": 1033.8,
+   "all": [
+    1033.2,
+    1033.8,
+    1041.8
+   ],
+   "accept": 4.908,
+   "batch": 8,
+   "max_tokens": 3072,
+   "temp": 0.0
+  },
+  "R8": {
+   "toks": 2002.1,
+   "all": [
+    2000.1,
+    2002.1,
+    2008.2
+   ],
+   "accept": 2.803,
+   "batch": 16,
+   "max_tokens": 2048,
+   "temp": 1.0
+  },
+  "R1": {
+   "toks": 215.0,
+   "all": [
+    214.6,
+    215.0,
+    216.6
+   ],
+   "accept": 4.759,
+   "batch": 1,
+   "max_tokens": 1024,
+   "temp": 0.0
+  },
+  "R6": {
+   "toks": 3210.4,
+   "all": [
+    3020.0,
+    3210.4,
+    3316.8
+   ],
+   "accept": 4.735,
+   "batch": 32,
+   "max_tokens": 256,
+   "temp": 0.0
+  }
+ }
+}
