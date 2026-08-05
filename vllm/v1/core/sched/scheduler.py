@@ -1321,9 +1321,17 @@ class Scheduler(SchedulerInterface):
             for rid in list(self._sd_req_ema):
                 if rid not in run_ids:
                     del self._sd_req_ema[rid]
-            self._sd_accept_ema = sum(
-                self._sd_req_ema.get(rid, 1.0) for rid in run_ids
-            ) / max(len(run_ids), 1)
+            # Phase 96 F5: the optimistic default is COLD-START ONLY.
+            # Re-injecting 1.0 per unseen request held a standing +0.1
+            # bias on the pooled EMA (kpick median 0.647 vs true 0.531,
+            # 96/results_w2.md) -- two compensating errors with the
+            # stale-R tables. Unseen requests now inherit the pooled
+            # estimate (no evidence, no pull); an empty pool keeps the
+            # phase-82 optimistic init for discovery.
+            seen = [self._sd_req_ema[rid] for rid in run_ids
+                    if rid in self._sd_req_ema]
+            self._sd_accept_ema = (
+                sum(seen) / len(seen) if seen else 1.0)
             if envs.VLLM_SELF_SPEC_BANDIT:
                 # Per-STEP posterior update (Phase 91): one decay per
                 # step's pooled evidence, half-life 24 drafted tokens.
