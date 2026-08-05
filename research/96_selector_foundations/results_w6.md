@@ -54,3 +54,34 @@ W5's miscalibrated letter-PASS.
 - Consistent with the error floor: the offline-only search would have
   picked w2048 at dense R5 (−3.6%) and missed R1's skip choice; Round 2
   recovered both for ~1 GPU-h.
+
+## Skip-identity subset transfer test (4 single-layer probes × R5/R1 × 2 seeds)
+
+Sensitivity = f(none) − f(skip-L), seed pairs agree (cross-seed τ = 1.00
+both regimes):
+
+| layer | R5 (s0/s1) | R1 (s0/s1) |
+|---|---|---|
+| 2 | 0.009 / 0.012 | 0.012 / 0.029 |
+| 8 | 0.038 / 0.033 | 0.011 / 0.006 |
+| 18 | 0.067 / 0.055 | 0.026 / 0.053 |
+| 30 | 0.182 / 0.158 | 0.103 / 0.072 |
+
+Orders: R5 [2,8,18,30], R1 [8,2,18,30] — exactly ONE adjacent swap;
+cross-regime τ = 2/3. The pre-registered rule said "at most one adjacent
+swap (τ ≥ 0.67)": the verbal clause PASSES, the numeric threshold fails
+by rounding (0.667 < 0.67). Both readings reported; the boundary case is
+ours, not the data's.
+
+The substantive finding is sharper than the formal verdict: the
+expensive tail (L18, L30; depth-monotone) transfers perfectly, but the
+CHEAP tier's internal order (L2 vs L8) genuinely flips by content class
+with seed-consistent effect sizes (R5: L8 costs 3× L2; R1: half).
+**The knapsack's decisive entries — which cheap layers to pick at small
+counts — are precisely the non-transferable ones.** The dichotomy,
+fractally.
+
+Design consequence: one-time per-arch profile → identifies the cheap
+tier (transferable); Round 2 selects WITHIN the cheap tier per regime
+(a handful of bursts, not L boots). G3's gated measurement mode drops
+off the critical path.
