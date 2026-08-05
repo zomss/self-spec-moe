@@ -35,6 +35,17 @@ all of MLA/MoE below b32, high-batch K4, expensive quants). Output: the
 candidate pool per (input-length, batch) cell. Grid amendment: add
 sub-2000-ctx cells (R1/R6/R8 miscalibration, W5).
 
+**Skip-count rule (user, 2026-08-06)**: within the skip lever, Round 1
+decides only the COUNT ladder, never the identity. Count → R is pure
+physics (each skipped layer removes ~1/L of draft compute); identity →
+f is content-dependent and Round-2-only. Since more skipping always
+lowers R, cost-only reasoning cannot argmax the count — Round 1 instead
+emits the SURVIVING counts by break-even: count k survives iff its
+break-even f = R_k is plausibly below the measured no-skip acceptance
+(sound, because skipping never raises f: f(k) ≤ f(0)). The current pool
+froze count at {0, 2} (the phase-93 search's b2), where the R saving is
+3–6% and sometimes inside noise; the ladder {0, 2, 4, 8} opens the axis.
+
 ## 2. Round 2 — real-acceptance calibration on the surviving pool
 
 Measure f per (regime, composition) — NOT per cell (f is
@@ -51,6 +62,20 @@ constant K/(KR+1) ≤ 1.2, so an ε-optimal lever per regime with
 probability 1−δ needs O(log(|pool|/δ)/ε²) drafted tokens. The tie-set is
 the formal ε-optimal set at the chosen budget. Boot cost is compressed
 by the W0 action space (runtime-switchable window/K share boots).
+
+**Skip-identity stage (KnapSpec with measured profits)**: at each
+surviving count, Round 2 selects WHICH layers via the knapsack whose
+weight side (per-layer cost, uniform) is Round-1 physics and whose
+VALUE side (per-layer acceptance cost) is measured here — per-layer
+sensitivity bursts, composed under the C2 sound bounds
+(`f_set ≥ ∏ f_i` admits), then ONE confirmation burst of the composed
+set. KnapSpec profiled these values offline on calibration content; the
+dichotomy (and the measured ρ spread) says the profit vector must be
+per-regime measurement instead. Measurement cost: identity is
+boot-fixed (W0), so either a one-time per-arch L-boot sensitivity
+profile (valid iff per-layer RANKING transfers across regimes — test on
+a 3-layer subset first) or the G3 gated-passthrough measurement mode
+(all layers in one boot; engine change).
 
 ## 3. Serving — ranked ladder with sequential-test demotion
 
