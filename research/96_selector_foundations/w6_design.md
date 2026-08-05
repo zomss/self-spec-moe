@@ -101,6 +101,30 @@ Prediction (pre-registered): the floor is dominated by
 arm-where-live-says-OFF errors (dense R4-class cells, ρ ≈ 0.41), with
 mean loss 1–3% and worst-cell loss ≥ 5% on at least one arch.
 
+### Measured (scripts/error_floor.py → data/w6/error_floor.json)
+
+| arch | Floor A mean | worst cell | where the loss lives |
+|---|---|---|---|
+| dense | **+1.75%** | +3.6% (R5) | R4 +2.9% (arms where live says OFF — as predicted), R5/R5cot +3.3–3.6% (window mis-picks) |
+| llama | **+7.05%** | **+37.1% (R1)** | R1: offline prefers w512 (pred 1.168) whose deployed realization is 0.745 vs w2048's 1.116; plus R5cot +4.0% |
+
+Prediction scored: dense exactly in the predicted band with the
+predicted mechanism; llama EXCEEDS the band, and its worst cell is a
+window mis-pick at a short-ctx b1 cell (the miscalibrated-grid region),
+not an arm/OFF error — the floor has two mechanisms, not one. Floor B
+coincides with A where scorable; 3/12 unrestricted picks are s-none
+variants never measured live (UNSCORED, coverage disclosed).
+
+Caveat, per the rule: live values are deployed-runtime realizations
+(policy path), so llama R1's 0.745 folds the runtime's mis-arming into
+the offline pick's cost — which is the honest accounting: an
+offline-only selector ships exactly that runtime.
+
+**The dichotomy's impossibility half now has its number: a purely
+offline search pays +1.75% (dense) / +7.05% (llama) mean against a
+measurement-informed selector restricted to the SAME three actions —
+and up to 37% on a single regime.**
+
 ## 5. Work items
 
 | # | item | status |
