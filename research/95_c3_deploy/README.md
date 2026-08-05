@@ -1,5 +1,32 @@
 # Phase 95 — C3: deploying C2's searched map at runtime
 
+## STATUS: STOPPED 2026-08-05 (not closed) — continued in phase 96
+
+User directive after E0 and the partial E3: stop C3 and resolve the
+foundational issues E0 exposed first. **The measured results below stand and
+are inputs to `research/96_selector_foundations`**, which carries the issue
+list, the two-round redesign, and the work order.
+
+Completed and trustworthy:
+- **E0** (window-switching envelope, 2 boots x 2 arches x 6 regimes): dense
+  +2.78%/+2.65% cross-seed on accept-binding regimes (P1 CONFIRMED), llama
+  +0.08%/+0.00% (P2 REFUTED). See `results_e0.md`.
+- **E3 partial** — MLA `off` + `uncond` only. The headline finding is
+  complete and does not need the missing arm: unconditional spec loses **47%
+  at b1** (S 0.529) with acceptance **5.0/5.0**, i.e. essentially perfect
+  acceptance and a pure cost loss, predicted by C2's table to 2% (0.517).
+- The R8 diagnosis (parked-engine cost + unpriced transition cost) and the
+  P8 refutation (window is a cost floor, not only an accept tradeoff).
+
+NOT done: E3 MLA `gated` (OOMed on a memory-release race; runner since fixed
+to gate on free memory), E3 MoE (all arms), E1 multi-capture, E1' probe
+discriminator (`scripts/run_e1p_probe.sh` is written and ready to run).
+
+Reusable assets: `scripts/compile_from_c2.py` (C2->C3 policy compiler,
+round-trip verified to 0.0124%), `score_e0.py` (cross-seed selection),
+`run_e3_gate.sh`, `diag_r8_gate.sh`, `parse_kpick.py`, `run_e1p_probe.sh`.
+
+
 Source phases: 82 (runtime switching, compiled policy in the scheduler),
 89 (DRAM lever swap, 113 ms pinned), 91 (bandit stage-3 ladder, multi-seed
 RL results), 88 (the canonical 9-regime x real-dataset eval), 93 (C1 grid),
