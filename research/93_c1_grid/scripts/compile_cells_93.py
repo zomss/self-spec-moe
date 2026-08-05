@@ -154,6 +154,31 @@ if _mml:
     cp.measure = _measure_mml
 
 
+# COMPILE_TUNE=0: disable flashinfer autotune (96/W1: boot-scoped kernel
+# lottery, 40% swing on llama draft kernels; every 96-scored run sets it).
+if os.environ.get("COMPILE_TUNE", "1") != "1":
+    _real_measure_t = cp.measure
+
+    def _measure_notune(arm):
+        import functools
+
+        from vllm import LLM as _LLM
+        orig_init = _LLM.__init__
+
+        @functools.wraps(orig_init)
+        def patched(self, *a, **kw):
+            kw["kernel_config"] = {"enable_flashinfer_autotune": False}
+            return orig_init(self, *a, **kw)
+
+        _LLM.__init__ = patched
+        try:
+            return _real_measure_t(arm)
+        finally:
+            _LLM.__init__ = orig_init
+
+    cp.measure = _measure_notune
+
+
 def main():
     import os
     ap = argparse.ArgumentParser()
