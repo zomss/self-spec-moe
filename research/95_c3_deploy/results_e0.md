@@ -52,7 +52,55 @@ So llama's ~0% switching gain is not "no window preference exists"; it is
 "the policy's own decision noise is an order of magnitude larger than the
 window effect it is supposed to exploit."
 
-## The same root cause as the R8 gate failure
+## The R8 gate failure, RESOLVED by measurement (supersedes the section below)
+
+The diagnostic (`scripts/diag_r8_gate.sh`, 3960 logged decisions) refuted the
+hypothesis this section advanced, and two of my inferences with it.
+
+**The policy is not misbehaving.** Armed duty **4.6%** (K0 95.4%), live f
+median **0.674** -- correctly below the cell break-even R=0.733. Band changes:
+**9 in 3960 steps (0.2%)**, so the band-thrash hypothesis (H1) is REFUTED. The
+f=1.000 spikes are new `generate()` calls arriving with no per-request
+history; they decay below break-even in ~10 steps.
+
+**The "armed ~94%" inference was wrong**, because it assumed OFF == AR. Direct
+measurement with probes disabled (`VLLM_SELF_SPEC_ACCEPT_PROBE_BURST=0`):
+
+| llama seed 0 | S vs AR | note |
+|---|---|---|
+| parked R8 | **0.9752** | accept 3.385 -> ~1% residual arming from new-request optimism |
+| parked R4 | **1.0005** | accept None -- never armed |
+| full policy R8 | 0.9350 | E0 |
+| + GATE_DEBUG | 0.9058 | logging tax ~3% |
+
+Decomposition of llama R8's 6.5% deficit:
+
+    parked-engine overhead        2.5%
+    probe / arming churn          4.0%   (0.975 parked -> 0.935 with probes)
+    wrong steady-state decisions  ~0%    (correctly disarms 95.4% of steps)
+
+**Finding 1 — "disarming is FREE" is not quite true.** The scheduler comments
+"disarming is FREE (E0), so OFF's score is always 1.0". Phase 82's E0 measured
+the TOGGLE as free (switch latency); it did not measure the parked engine's
+throughput. Measured here: parked costs **2.5% at R8 (b16), ~0% at R4 (b8)**.
+Small, but it means OFF's true score is cell-dependent and slightly below 1.0,
+so the argmax scores every arm against a reference the engine cannot quite
+deliver.
+
+**Finding 2 — arm/disarm TRANSITIONS are not priced at all, and dominate.**
+4.6% armed duty costs 4.0% throughput; the steady-state model predicts ~0.5%
+(duty x per-step deficit). Transitions therefore cost several times their
+occupancy. `S_K = (1+fK)/(KR+1)` prices only steady-state operation; the 2%
+arming rent is a hysteresis constant, not a measured transition cost.
+
+**This is not an argument for deleting probes.** At R4 the same probes HELP
+(+2.1%: 1.0005 parked -> 1.0218 with probes) because arming wins there, and
+phase 91 proved probes are load-bearing for drift detection (removing them
+starved the refresh detector -- the exploration-for-detection finding). The
+tension is real and now quantified: probes buy detection everywhere and cost
+4% exactly where the config loses.
+
+## (superseded) The f-vs-R margin analysis
 
 Setting `S = (1 + fK)/(KR + 1) = 1` gives `fK = KR`, so **the policy arms iff
 live f > the cell's R, independent of K**. Margins on llama are thin:
