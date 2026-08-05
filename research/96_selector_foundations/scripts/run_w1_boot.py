@@ -92,8 +92,12 @@ def main():
     spec = None
     if ARM != "off":
         w = ARM.lstrip("w")
-        tbl = P95 / "data" / f"policy_llama_q-w4a16_s-b2_w{w}.json"
-        os.environ["VLLM_SELF_SPEC_POLICY_FILE"] = str(tbl)
+        # W2d: W1_UNCOND=1 drops the compiled policy -- spec ALWAYS on at
+        # KMAX. Isolates the raw (window, K) physics from the decision
+        # layer (lottery-era tables + inflated f EMA, results_w2.md).
+        if os.environ.get("W1_UNCOND") != "1":
+            tbl = P95 / "data" / f"policy_llama_q-w4a16_s-b2_w{w}.json"
+            os.environ["VLLM_SELF_SPEC_POLICY_FILE"] = str(tbl)
         os.environ["VLLM_SELF_SPEC_DRAFT_KV_WINDOW"] = w
         os.environ["VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS"] = SKIP
         spec = {"method": "draft_model", "model": DRAFT,
