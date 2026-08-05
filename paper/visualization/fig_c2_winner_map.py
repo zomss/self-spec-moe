@@ -41,6 +41,12 @@ def load_validation():
         d = json.loads(p.read_text())
         for arch, v in d["per_arch"].items():
             out[(arch, v.get("cell", d.get("cell")))] = v
+    # post-collision-fix re-validation: the llama b1 winners changed
+    # identity after the w8int8 repair; v2 supersedes the llama rows.
+    p = DATA / "c2_map_validation_v2.json"
+    if p.exists():
+        for cell, v in json.loads(p.read_text())["per_cell"].items():
+            out[("llama", cell)] = v
     return out
 
 

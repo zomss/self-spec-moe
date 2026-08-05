@@ -1,0 +1,50 @@
+{
+ "note": "post-collision-fix re-validation: the llama b1 map winners changed identity after the w8int8 repair, so every b1 composition win was re-measured on 3 extra document draws (mapv3_llama_*). Draw0 = the post-fix oracle itself. Dense rows unchanged (its oracle has no w8int8 arm) -- see c2_map_*_validation.json.",
+ "per_cell": {
+  "b1/c8000": {
+   "winner": "w4a16+win2048+skipb2-K4",
+   "single": "w4a16-K2",
+   "gains_pct": [
+    8.5,
+    4.7,
+    -4.7,
+    -9.4
+   ],
+   "mean_gain_pct": -0.2,
+   "sd": 8.3,
+   "sem": 4.1,
+   "n_draws": 4,
+   "robust": false
+  },
+  "b1/c14000": {
+   "winner": "w4a16+win2048+skipb2-K2",
+   "single": "w4a16-K2",
+   "gains_pct": [
+    7.2,
+    5.4,
+    2.9,
+    0.5
+   ],
+   "mean_gain_pct": 4.0,
+   "sd": 2.9,
+   "sem": 1.4,
+   "n_draws": 4,
+   "robust": true
+  },
+  "b1/c2000": {
+   "winner": "w4a16+win512-K2",
+   "single": "w4a16-K4",
+   "gains_pct": [
+    1.1,
+    5.2,
+    2.7,
+    -7.2
+   ],
+   "mean_gain_pct": 0.4,
+   "sd": 5.4,
+   "sem": 2.7,
+   "n_draws": 4,
+   "robust": false
+  }
+ }
+}
