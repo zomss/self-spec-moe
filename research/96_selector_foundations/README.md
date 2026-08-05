@@ -195,13 +195,15 @@ Three strengthenings are required:
 
 | # | task | depends | cost | why now |
 |---|---|---|---|---|
-| **W1** | Root-cause llama's run-to-run variance (I4). N boots R5, autotune on/off, kernel-selection log | — | ~1 GPU-h | **Blocker.** No model validates against 25-42% noise |
+| **W0** | Stack capability audit: lever binding matrix, runtime action space, gap list (`w0_infra_audit.md`) | — | 0 | **DONE 2026-08-05.** Main finding: the stack's one clean pattern is *boot-at-max, select-down* (K has it); window can join it in two grades (masked down-switch = acceptance-only, per-window graphs = cost-true); skip needs gated passthrough + per-set capture; quant and kernel realization are boot-class permanently. Runtime action today is K-only (C-B unmet); `{wnone}×{FULLCG}=∅` breaks lever-grid uniformity |
+| **W1** | Root-cause llama's run-to-run variance (I4 = G5). N boots R5, autotune on/off, kernel-selection log. Bundle G6 (plumb `seed` through `load_regime` so seeds become content draws) | W0 | ~1 GPU-h | **Blocker.** No model validates against 25-42% noise |
 | **W2** | Separate TTFT/TPOT in the regime runner; record BOTH currencies per run (I1) | — | ~2 GPU-h | Makes the metric explicit before any re-scoring |
 | **W3** | **Pre-register** the threshold that justifies Round 2 + hidden switching, in decode-only currency | W2 | 0 | Avoid building for a number that may not survive the metric change |
 | **W4** | Complete the throughput model (I5): prefill term, per-cell parked cost, per-transition cost. Probe discriminator already written (95/`run_e1p_probe.sh`) | W1 | ~2 GPU-h | C-A |
 | **W5** | Round 1 redesign: interpolate R, emit tie-sets with uncertainty (S1, I3) | W4 | — | The search must express "cannot tell" |
 | **W6** | Round 2: per-regime confirmation in the declared currency, over a global pool sized to the capture budget (S2) | W3, W5 | — | The core of the proposal |
-| **W7** | Hidden switching: multi-capture residency + side-stream graph selection (C-C) | W6 | — | Cannot hide a re-capture; needs the pool fixed first |
+| **W7a** | Runtime action `(composition, K)` at zero capture cost: policy schema gains a composition id; scheduler argmax over (comp, K); masked window DOWN-switch inside the boot graph (G1 + G2a) | W4 | — | Smallest change that makes C-B executable; acceptance-lever only (cost floor stays at boot window) |
+| **W7b** | Cost-true hidden switching: per-window / per-skip-set captured graphs, multi-capture residency, side-stream selection (G2b + G3, C-C) | W6, W7a | — | Cannot hide a re-capture; pool sized by S2's budget = \|windows\| x \|verify widths\| (+ \|skip sets\|); G3 built only if Round 1 shortlists >1 skip set |
 | **W8** | Online per-step lever update at RL rollout | W6 | — | Best-supported piece (phase 92: drift small, accept RISES over 128 steps) |
 
 Order rationale: **W1 and W2 are cheap and unblock everything**; W3 is free
