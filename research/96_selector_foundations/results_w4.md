@@ -55,4 +55,54 @@ Pre-registered prediction (results_w2.md F6): audited R ≈ table R / 1.46
 uniformly across (window, K, batch, ctx); non-uniform inflation
 regenerates the whole llama table.
 
-<!-- W4B_RESULTS -->
+### Result: P-W4b REFUTED — the tables were never lottery-inflated
+
+32 cells, deployed config × {w512, w2048} × {K2, K4}, notune, own off
+anchor (`score_w4b.py`): **inflation mean 1.00×, range [0.91, 1.13]**.
+The compile-cell R reproduces under notune. (Why the oracle escaped the
+lottery: each oracle config ran under its own `VLLM_CACHE_ROOT`, freezing
+one kernel draw per config; those draws were evidently equivalent to the
+notune defaults on the compile-measurement path.)
+
+**Correction to results_w2.md F6 (retained there per T11):** the "1.46×
+inflation" was a CURRENCY artifact, not kernel inflation. The
+"identity-derived true R" divided live accept by the SERVING S
+(prefill-diluted, concurrency-shaped) and compared it against a
+COMPILE-protocol R. Wrong denominator; the kernels were innocent.
+
+### The real finding: a protocol gap in R, and an f gap by regime
+
+At the same nominal cell (b8/c14k, K4, notune):
+
+- **Compile protocol**: R ≈ 0.54–0.55 (both windows), accept 3.74–4.18.
+- **Live serving** (W2d uncond): realized decode-phase S ≈ 1.6 at accept
+  3.46–3.77 ⇒ implied R ≈ **0.33–0.43** — the deployment wins ~35% MORE
+  than the map predicts there. The largest audit deviations (1.09–1.13)
+  also sit at the c14000 cells.
+- At R4 the direction reverses for a different reason: compile-content
+  (packed C4) acceptance is **4.11** where live summarization content
+  accepts **2.30** — an **f mismatch**, exactly C2's "f is regime-only"
+  doctrine violated by using C4 as the universal compile content.
+
+So the map's transfer error decomposes into two named, measured causes:
+**R: compile-vs-serving protocol gap (map UNDERSTATES long-ctx serving
+wins). f: compile-content vs regime-content gap (map OVERSTATES wherever
+real content accepts less than C4).**
+
+### W4c (open, next): protocol discriminator
+
+One boot, both measurements: the compile-cell protocol (T(1+N)−T(1)) AND
+a serving window at the same (batch, ctx) inside the same engine, so the
+R gap is isolated from boot/content/kernel variance. Until W4c lands,
+Round 1 (W5) treats compile-R as a SHORTLISTING signal only — consistent
+with S1's "interpolation may shortlist, never decide."
+
+## W4 model terms settled
+
+| term | value | replaces |
+|---|---|---|
+| per-flip transition | ~0 | "~20 ms/cycle", the 2% hysteresis rent |
+| wrong-arm duty | ~1.06 step-equiv per armed step | unpriced |
+| parked engine | −0.6% b16, ~0 b8 | hardcoded OFF=1.0 |
+| R source | compile-R shortlists; serving-R (W4c) decides | the lottery-audit question, closed |
+| f source | per-regime measurement, never compile content | C4-universal f |
