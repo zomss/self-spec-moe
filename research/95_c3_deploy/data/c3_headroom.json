@@ -1,0 +1,564 @@
+{
+ "description": "C3 prediction basis: runtime-actionable decomposition of C2's map, from committed phase-94 compile-cell data (2-sample truth scoring). Predicts live-serving E2-E4.",
+ "protocol_caveat": "compile-cell decode measurements, NOT live serving; the phase-95 pre-registrations predict the live protocol from these.",
+ "arches": [
+  {
+   "arch": "dense",
+   "arm_role": "switching",
+   "n_cells": 8,
+   "n_configs": 18,
+   "K_arms": [
+    2,
+    4
+   ],
+   "static": {
+    "config": "q-hum_w-512_s-none",
+    "K": 2,
+    "S_unconditional": 1.2692,
+    "S_gated": 1.2692
+   },
+   "konly": {
+    "config": "q-hum_w-2048_s-b2",
+    "S": 1.2817
+   },
+   "full": {
+    "S": 1.3147,
+    "n_distinct_configs": 4
+   },
+   "gate_value_pct": 0.0,
+   "konly_over_static_pct": 1.0,
+   "full_over_konly_pct": 2.6,
+   "full_over_static_pct": 3.6,
+   "n_cells_beating_ar": 8,
+   "quant_levers_in_full_picks": [
+    "q-hum"
+   ],
+   "per_cell": [
+    {
+     "cell": "b1/c2000",
+     "konly": {
+      "K": 4,
+      "S": 1.23
+     },
+     "full": {
+      "config": "q-hum_w-2048_s-none",
+      "K": 4,
+      "S": 1.262
+     },
+     "gain_pct": 2.6,
+     "beats_ar": true
+    },
+    {
+     "cell": "b1/c8000",
+     "konly": {
+      "K": 4,
+      "S": 1.338
+     },
+     "full": {
+      "config": "q-hum_w-2048_s-b2",
+      "K": 4,
+      "S": 1.338
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b1/c14000",
+     "konly": {
+      "K": 4,
+      "S": 1.39
+     },
+     "full": {
+      "config": "q-hum_w-2048_s-b2",
+      "K": 4,
+      "S": 1.39
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.125
+     },
+     "full": {
+      "config": "q-hum_w-512_s-none",
+      "K": 2,
+      "S": 1.173
+     },
+     "gain_pct": 4.3,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c8000",
+     "konly": {
+      "K": 2,
+      "S": 1.288
+     },
+     "full": {
+      "config": "q-hum_w-2048_s-none",
+      "K": 2,
+      "S": 1.315
+     },
+     "gain_pct": 2.1,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c14000",
+     "konly": {
+      "K": 2,
+      "S": 1.36
+     },
+     "full": {
+      "config": "q-hum_w-512_s-none",
+      "K": 2,
+      "S": 1.367
+     },
+     "gain_pct": 0.5,
+     "beats_ar": true
+    },
+    {
+     "cell": "b32/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.053
+     },
+     "full": {
+      "config": "q-hum_w-512_s-b2",
+      "K": 2,
+      "S": 1.11
+     },
+     "gain_pct": 5.4,
+     "beats_ar": true
+    },
+    {
+     "cell": "b32/c8000",
+     "konly": {
+      "K": 4,
+      "S": 1.47
+     },
+     "full": {
+      "config": "q-hum_w-512_s-none",
+      "K": 4,
+      "S": 1.564
+     },
+     "gain_pct": 6.4,
+     "beats_ar": true
+    }
+   ]
+  },
+  {
+   "arch": "llama",
+   "arm_role": "switching",
+   "n_cells": 8,
+   "n_configs": 18,
+   "K_arms": [
+    2,
+    4
+   ],
+   "static": {
+    "config": "q-w4a16_w-512_s-b2",
+    "K": 2,
+    "S_unconditional": 1.1816,
+    "S_gated": 1.1816
+   },
+   "konly": {
+    "config": "q-w4a16_w-512_s-b2",
+    "S": 1.1816
+   },
+   "full": {
+    "S": 1.2086,
+    "n_distinct_configs": 4
+   },
+   "gate_value_pct": 0.0,
+   "konly_over_static_pct": 0.0,
+   "full_over_konly_pct": 2.3,
+   "full_over_static_pct": 2.3,
+   "n_cells_beating_ar": 8,
+   "quant_levers_in_full_picks": [
+    "q-w4a16"
+   ],
+   "per_cell": [
+    {
+     "cell": "b1/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.168
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-b2",
+      "K": 2,
+      "S": 1.168
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b1/c8000",
+     "konly": {
+      "K": 2,
+      "S": 1.111
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-b2",
+      "K": 4,
+      "S": 1.266
+     },
+     "gain_pct": 14.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b1/c14000",
+     "konly": {
+      "K": 2,
+      "S": 1.209
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-b2",
+      "K": 2,
+      "S": 1.209
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.092
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 1.117
+     },
+     "gain_pct": 2.3,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c8000",
+     "konly": {
+      "K": 2,
+      "S": 1.203
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-none",
+      "K": 2,
+      "S": 1.206
+     },
+     "gain_pct": 0.3,
+     "beats_ar": true
+    },
+    {
+     "cell": "b8/c14000",
+     "konly": {
+      "K": 2,
+      "S": 1.255
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-b2",
+      "K": 2,
+      "S": 1.288
+     },
+     "gain_pct": 2.6,
+     "beats_ar": true
+    },
+    {
+     "cell": "b32/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.046
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-b2",
+      "K": 2,
+      "S": 1.046
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    },
+    {
+     "cell": "b32/c8000",
+     "konly": {
+      "K": 2,
+      "S": 1.368
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-b2",
+      "K": 2,
+      "S": 1.368
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    }
+   ]
+  },
+  {
+   "arch": "mla",
+   "arm_role": "gate",
+   "n_cells": 7,
+   "n_configs": 18,
+   "K_arms": [
+    2,
+    4
+   ],
+   "static": {
+    "config": "q-w4a16_w-none_s-none",
+    "K": 2,
+    "S_unconditional": 0.8188,
+    "S_gated": 1.0
+   },
+   "konly": {
+    "config": "q-w4a16_w-2048_s-b2",
+    "S": 1.0173
+   },
+   "full": {
+    "S": 1.0173,
+    "n_distinct_configs": 4
+   },
+   "gate_value_pct": 22.1,
+   "konly_over_static_pct": 1.7,
+   "full_over_konly_pct": 0.0,
+   "full_over_static_pct": 1.7,
+   "n_cells_beating_ar": 1,
+   "quant_levers_in_full_picks": [
+    "q-w4a16"
+   ],
+   "per_cell": [
+    {
+     "cell": "b1/c2000",
+     "konly": {
+      "K": 2,
+      "S": 0.625
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 0.66
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b1/c8000",
+     "konly": {
+      "K": 2,
+      "S": 0.568
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 0.685
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b1/c14000",
+     "konly": {
+      "K": 2,
+      "S": 0.518
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-b2",
+      "K": 2,
+      "S": 0.715
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c2000",
+     "konly": {
+      "K": 2,
+      "S": 0.883
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-none",
+      "K": 2,
+      "S": 0.89
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c8000",
+     "konly": {
+      "K": 2,
+      "S": 0.881
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 0.926
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c14000",
+     "konly": {
+      "K": 2,
+      "S": 0.96
+     },
+     "full": {
+      "config": "q-w4a16_w-512_s-none",
+      "K": 2,
+      "S": 0.99
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b32/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.121
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-b2",
+      "K": 2,
+      "S": 1.121
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    }
+   ]
+  },
+  {
+   "arch": "moe",
+   "arm_role": "gate",
+   "n_cells": 7,
+   "n_configs": 18,
+   "K_arms": [
+    2,
+    4
+   ],
+   "static": {
+    "config": "q-w4a16_w-2048_s-b2",
+    "K": 2,
+    "S_unconditional": 0.8235,
+    "S_gated": 1.0
+   },
+   "konly": {
+    "config": "q-w4a16_w-none_s-b2",
+    "S": 1.0014
+   },
+   "full": {
+    "S": 1.0014,
+    "n_distinct_configs": 5
+   },
+   "gate_value_pct": 21.4,
+   "konly_over_static_pct": 0.1,
+   "full_over_konly_pct": 0.0,
+   "full_over_static_pct": 0.1,
+   "n_cells_beating_ar": 1,
+   "quant_levers_in_full_picks": [
+    "q-none",
+    "q-w4a16",
+    "q-w8chan"
+   ],
+   "per_cell": [
+    {
+     "cell": "b1/c2000",
+     "konly": {
+      "K": 2,
+      "S": 0.59
+     },
+     "full": {
+      "config": "q-none_w-none_s-none",
+      "K": 2,
+      "S": 0.689
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b1/c8000",
+     "konly": {
+      "K": 2,
+      "S": 0.681
+     },
+     "full": {
+      "config": "q-w8chan_w-none_s-none",
+      "K": 2,
+      "S": 0.708
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b1/c14000",
+     "konly": {
+      "K": 4,
+      "S": 0.679
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-none",
+      "K": 2,
+      "S": 0.73
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c2000",
+     "konly": {
+      "K": 2,
+      "S": 0.878
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 0.878
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c8000",
+     "konly": {
+      "K": 2,
+      "S": 0.875
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-b2",
+      "K": 2,
+      "S": 0.978
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b8/c14000",
+     "konly": {
+      "K": 2,
+      "S": 0.92
+     },
+     "full": {
+      "config": "q-w4a16_w-2048_s-b2",
+      "K": 2,
+      "S": 0.941
+     },
+     "gain_pct": 0.0,
+     "beats_ar": false
+    },
+    {
+     "cell": "b32/c2000",
+     "konly": {
+      "K": 2,
+      "S": 1.01
+     },
+     "full": {
+      "config": "q-w4a16_w-none_s-b2",
+      "K": 2,
+      "S": 1.01
+     },
+     "gain_pct": 0.0,
+     "beats_ar": true
+    }
+   ]
+  }
+ ]
+}

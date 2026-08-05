@@ -1,0 +1,174 @@
+# Phase 95 — C3: deploying C2's searched map at runtime
+
+Source phases: 82 (runtime switching, compiled policy in the scheduler),
+89 (DRAM lever swap, 113 ms pinned), 91 (bandit stage-3 ladder, multi-seed
+RL results), 88 (the canonical 9-regime x real-dataset eval), 93 (C1 grid),
+94 (C2 composition search + weight sharing). User directive 2026-08-05:
+"proceed with C3 with MLA/MoE as gate arms".
+
+## The gap this phase closes
+
+C3's deployed policy (`vllm/v1/core/sched/scheduler.py:1142-1260`) reads a
+compiled table whose per-cell `options` are `{K, R, S_ref, f_ref}`. The
+**lever identity is boot-fixed**; only K/OFF switches per step. Every C3
+number to date (1.090x +- 0.044 drift, 1.300x rollout) was produced with one
+hand-chosen lever and a policy that picks depth.
+
+C2 emits a per-cell winner over singles ∪ compositions. Today's runtime can
+act on the K slice of that map only. This phase extends the action space from
+K to (config, K) and measures what that is worth **on the deployment path**.
+
+## Action space and cost classes
+
+C2's weight sharing (`VLLM_SELF_SPEC_SHARE_WEIGHTS=1`) split the axes by cost:
+
+| axis | mechanism | cost class |
+|---|---|---|
+| K / OFF | propose fewer steps | free (deployed today) |
+| KV window | `_apply_draft_kv_window` rewrites fixed-max-width persistent buffers in place, per draft step | **free-if-in-capture-set** (E0 measures; window-up under FULLCG may need multi-capture) |
+| layer skip | draft skip-set wrapper | **free under weight sharing** (E0 measures) |
+| quant ckpt | separate resident checkpoint | **paid: 113 ms pinned DRAM swap** (89-E0) |
+
+The structural finding that shapes this phase: **within every architecture,
+C2's per-cell winners hold the quant lever CONSTANT** (dense `q-hum` in all 8
+cells; llama `q-w4a16` in all 8) and vary only window/skip/K. The expensive
+axis does not need to switch; the axes that need to switch are the ones weight
+sharing made free. Predicted consequence: zero DRAM swaps fire on
+within-architecture traces (P4 below).
+
+## Arms (the accounting ladder)
+
+Each arm isolates one layer, so the deltas attribute:
+
+1. `AR` — no speculation
+2. `static` — best single (config, K), fixed for the deployment
+3. `recipe` — published fixed recipes: KnapSpec skip set; EfficientRollout
+   ctrl (both already reproduced, phases 86 / 91-E6-effroll)
+4. `konly` — config fixed, K/OFF per step (**today's C3**)
+5. `full` — (config, K) per cell from C2's map (**the new arm**)
+6. `oracle` — same picks, switch cost zeroed (upper bound)
+
+Claim under test: `full - konly`, and what fraction of `oracle - konly` it
+captures.
+
+## Arm assignment per architecture (user decision 2026-08-05)
+
+- **dense, llama = switching arms.** C2's map puts 5 distinct configs across
+  8 cells for each; this is where the headroom is.
+- **MLA, MoE = gate arms.** Both beat AR only at b32/b64 (C1 Stage B: MLA
+  11/33 all at b32/b64 on `w8chan_k2`; MoE 8/33, 7 of them b32/b64). C2's
+  composition grid samples that region once (b32/c2000) and finds composition
+  worth only +2.1% / +1.9% there. Their C3 claim is therefore a SAFETY claim,
+  not a speedup claim: the runtime must disarm where the map says spec loses
+  (MLA/MoE b1 sit at S 0.65-0.69 — unconditional spec burns ~35%). Measured
+  gate value on the compile-cell basis: **MLA +22.1%, MoE +21.4%** over the
+  best unconditional static config — larger than the entire switching headroom
+  on dense/llama, and it is what today's K/OFF policy already delivers.
+
+  Disclosed scope limit: C2's MLA/MoE grid has 7 cells with only one at b32
+  and none at b64 — one cell deep exactly where they win. This phase does NOT
+  claim "composition does not help MLA/MoE"; it claims the grid samples that
+  region once. Extending the grid to b32/c8000 + b64 is the recorded optional
+  follow-up.
+
+## Pre-registrations (recorded BEFORE any run)
+
+Magnitudes come from `scripts/headroom.py` over the committed phase-94
+compile-cell measurements. The predictions are about **live serving on real
+datasets** — a different protocol — so they are falsifiable, not restatements.
+
+- **P1 (dense switching).** Trace-weighted `full` over `konly` lands in
+  **[+1%, +4%]** on traces that cross the cells where the map's winner
+  changes. Compile-cell basis: **+2.6%** (2-sample). Concentrated:
+  b32/c8000 +6.4%, b32/c2000 +5.4%, b8/c2000 +4.3%; three cells at +0.0-0.5%.
+- **P2 (llama switching).** Same quantity in **[+1%, +4%]**. Basis:
+  **+2.3%** (2-sample). Llama is the CLEANEST test of the config axis: its
+  K-only arm adds +0.0% over static (K2 wins every cell), so all of llama's
+  switching value is the config axis by construction.
+
+  Both bases are 2-sample truth (mean S over the R1+R2 content draws). The
+  single-sample R1 figures were higher (dense +4.2%, llama +2.6%) -- the
+  winner's-curse gap C2 measured, applied here to our own prediction before
+  it could flatter the result.
+- **P3 (MLA/MoE null).** `full` ≈ `konly` (|delta| < 1%): the OFF gate is the
+  whole story. Basis: +0.0% on both.
+- **P4 (free-axis switching).** Zero DRAM checkpoint swaps fire on
+  within-architecture traces; all switches are metadata-only.
+- **P5 (no thrash).** On a trace that stays in one cell, `full` >= `konly`
+  - 1%.
+- **P6 (map transfer — the real C2->C3 claim).** Per-cell predicted gain from
+  C2's map correlates positively with measured live per-cell gain
+  (Spearman rho > 0, reported with n and p).
+- **P7 (gate safety, MLA/MoE).** On b1/b8 real-data regimes the gate keeps
+  aggregate S >= 0.98; at b32/b64 it arms and beats AR.
+
+Registered risks (stated now, not after the fact):
+
+- **R1 — resolution.** The effect is +2-5%; per-phase noise on these boots ran
+  +-8-10% (phase 91). Only a **paired, multi-seed, same-boot AR anchor per
+  seed** design can resolve it (that design resolved +4.7 points across 3
+  seeds in 91). >=3 seeds required; unpaired results will not be reported as
+  evidence.
+- **R2 — 8B lever uniformity.** All nine phase-88 8B regime winners sat on one
+  kernel with K as the selector. If real traces do not cross the window/skip
+  boundaries the compile-cell map crosses, `full` has nothing to do. "K-only
+  suffices at 8B; config switching pays where kernel winners split" is a
+  legitimate registered outcome, not a failure.
+- **R3 — b1 content luck, and llama's concentration.** C2 found 2 of 5 b1
+  wins dissolve under re-drawn documents. The runtime carries C2's tie-break
+  rule (prefer content-robust configs among near-ties at single-stream cells)
+  rather than chasing a one-document margin. Sharpest instance: llama's
+  aggregate is dominated by ONE cell (b1/c8000, +14.0%; every other llama cell
+  is <= +2.6%), and that cell is a b1 cell whose composition margin C2's
+  multi-draw validation already reduced to a tie. **Llama results are
+  therefore reported twice: all cells, and b1-excluded.** If the b1-excluded
+  llama gain is ~0, P2 is not supported regardless of the aggregate.
+- **R4 — MoE quant diversity vs the gate.** MoE's per-cell full picks span
+  three quant levers (`q-none`, `q-w4a16`, `q-w8chan`) -- but every cell that
+  would require a quant switch sits BELOW AR and is gated OFF, so P4 (no DRAM
+  swaps) still holds for the deployed arm. If a future grid extension puts a
+  winning MoE cell on a different quant than its neighbours, P4 is void for
+  MoE and the 113 ms swap re-enters.
+
+## Plan
+
+- **E0 — engine feasibility (no long GPU runs; gates everything).** Runtime
+  mutation of window and skip on one resident draft. `self._kv_window` is a
+  plain per-step attribute and `_apply_draft_kv_window` rewrites fixed
+  max-width buffers in place, so window-down should be a data change;
+  window-up under FULLCG may need multi-capture or eager. Measure per-toggle
+  latency, memory delta, and an **accept A/B around every toggle** (P35/82
+  rule: accept, never step-time alone). Deliverable: toggle-cost table
+  refreshed with weight sharing ON.
+- **E1 — policy schema v2 + compiler.** `options: [{config, K, R, f_ref}]`;
+  scheduler argmax over (config, K); two switch-cost classes; amortization
+  gate `dwell* = cost / delta_rate` (82-E3). Compiled FROM C2's search output
+  (`scripts/compile_from_c2.py`) — this script is the C2->C3 handoff artifact.
+- **E2 — switching eval (dense, llama).** Arms 1-6 on the phase-88 regime
+  suite, paired multi-seed per R1.
+- **E3 — gate eval (MLA, MoE).** Arms 1, 2, 4 on the same suite; P7.
+- **E4 — RL half.** Drift trace + GRPO thinking rollout with the (config, K)
+  policy; compare against the recorded 1.090x / 1.300x incumbents.
+- **E5 — map-transfer analysis.** P6 + where the map mispredicts live. The
+  91-E6-val survivor-bias finding (drain tails are low-accept; cell prices
+  call them spec-heaven) says live-f must override map-f — the C2<->C3
+  unification, measured.
+
+## Decision criteria
+
+- E0: a lever whose toggle costs > ~1 s or perturbs accept by > 0.05 is NOT
+  hot-switchable and leaves the v2 action space (recorded, not worked around).
+- E2 gate: `full` >= `konly` on the trace aggregate at >= 2 of 3 seeds, and
+  P5 holds. Failing that, the deliverable is R2's registered outcome with the
+  measured reason.
+- E3 gate: P7.
+
+## Constraints
+
+GPUs **0-1 only** (user instruction 2026-08-05; 2-7 unavailable). Caches on
+`/data`; `.venv/bin/python`; commit prefix `[W7][95]`.
+
+## Expected next artifact
+
+`data/c3_headroom.json` (prediction basis), then `results_e0.md` with the
+refreshed toggle-cost table.
