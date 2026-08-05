@@ -274,6 +274,9 @@ class Scheduler(SchedulerInterface):
             )
         self._sd_accept_ema = 1.0
         self._sd_req_ema: dict[str, float] = {}
+        # 96/W6 4b: per-draft-position acceptance evidence (chain-censored)
+        self._sd_pos_accept: list[int] = [0] * 8
+        self._sd_pos_reached: list[int] = [0] * 8
         self._sd_gate_step = 0
         self._sd_batch_band = -1
         self._sd_shortctx_off: tuple[int, int] | None = None
@@ -1232,22 +1235,50 @@ class Scheduler(SchedulerInterface):
                 # duty (vs argmax's 8/128 = 6.3%).
                 probing = (self._sd_gate_step % 256) < 4
                 self._sd_gate_step += 1
-            # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
-            # score is always 1.0 -- staying ON requires S >= 1.0, and
-            # only ARMING (or switching K) pays the 2% margin.
-            best_k, best_s = 0, 1.0
-            nz_best_k, nz_best_s = 0, 0.0
-            for o in active.get("options", []):
-                k_o, r_o = int(o["K"]), float(o["R"])
-                s_o = (1 + f_live * k_o) / (k_o * r_o + 1)
-                if s_o > nz_best_s:
-                    nz_best_k, nz_best_s = k_o, s_o
-                if k_o != cur_k:
-                    s_o -= 0.02
-                if s_o > best_s:
-                    best_k, best_s = k_o, s_o
-            if best_k == 0 and probing and nz_best_k:
-                best_k = nz_best_k
+            if envs.VLLM_SELF_SPEC_LADDER:
+                # 96/W6 item 5: ranked-ladder policy. Options arrive
+                # Round-2-RANKED (table order); walk down and take the
+                # first whose position-resolved tau clears break-even
+                # (an SPRT-lite threshold on measured evidence, not an
+                # argmax over a point EMA -- 96/results_w2 F5/F6 showed
+                # the argmax multiplies estimator errors). Demotion is
+                # free (W4a: per-flip ~ 0); unobserved positions are
+                # optimistic (cold-start discovery); the existing probe
+                # bursts re-supply evidence for re-promotion while OFF.
+                best_k = 0
+                for o in active.get("options", []):
+                    k_o, r_o = int(o["K"]), float(o["R"])
+                    tau_k = 1.0 + sum(
+                        (self._sd_pos_accept[i] / self._sd_pos_reached[i])
+                        if self._sd_pos_reached[i] >= 64 else 1.0
+                        for i in range(min(k_o, 8)))
+                    if tau_k / (k_o * r_o + 1) >= 1.0:
+                        best_k = k_o
+                        break
+                if best_k == 0 and probing and active.get("options"):
+                    best_k = int(active["options"][0]["K"])
+                if envs.VLLM_SELF_SPEC_GATE_DEBUG:
+                    logger.info(
+                        "[ladder] n_run=%d K=%d pos=%s", n_run, best_k,
+                        [f"{a}/{r}" for a, r in zip(
+                            self._sd_pos_accept, self._sd_pos_reached)])
+            else:
+                # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
+                # score is always 1.0 -- staying ON requires S >= 1.0, and
+                # only ARMING (or switching K) pays the 2% margin.
+                best_k, best_s = 0, 1.0
+                nz_best_k, nz_best_s = 0, 0.0
+                for o in active.get("options", []):
+                    k_o, r_o = int(o["K"]), float(o["R"])
+                    s_o = (1 + f_live * k_o) / (k_o * r_o + 1)
+                    if s_o > nz_best_s:
+                        nz_best_k, nz_best_s = k_o, s_o
+                    if k_o != cur_k:
+                        s_o -= 0.02
+                    if s_o > best_s:
+                        best_k, best_s = k_o, s_o
+                if best_k == 0 and probing and nz_best_k:
+                    best_k = nz_best_k
             self._sd_policy_k = best_k
             if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                 cell = self._sd_policy_cell or {}
@@ -1308,6 +1339,8 @@ class Scheduler(SchedulerInterface):
                 self._sd_req_ema.clear()
                 self._sd_gated_off = False
                 self._sd_bandit_ab = [9.0, 1.0]
+                self._sd_pos_accept = [0] * 8
+                self._sd_pos_reached = [0] * 8
             probing = (
                 self._sd_gate_step % self._sd_probe_interval
                 < self._sd_probe_burst
@@ -1892,6 +1925,23 @@ class Scheduler(SchedulerInterface):
                     self._sd_req_ema[req_id] = (
                         (1 - w) * ema + w * num_accepted / num_draft_tokens
                     )
+                    # 96/W6 item 4b: position-resolved acceptance. Chain
+                    # verify truncates at the first rejection, so positions
+                    # 0..num_accepted-1 accepted and position num_accepted
+                    # (if drafted) rejected; later positions are censored.
+                    # tau(K) = 1 + sum_{i<K} p_i is then unbiased for
+                    # EVERY K <= KMAX from one armed stream (no mixed-K
+                    # bias). Halving at 8192 observations = drift decay.
+                    for i in range(min(num_accepted, 8)):
+                        self._sd_pos_reached[i] += 1
+                        self._sd_pos_accept[i] += 1
+                    if num_accepted < min(num_draft_tokens, 8):
+                        self._sd_pos_reached[num_accepted] += 1
+                    if self._sd_pos_reached[0] >= 8192:
+                        self._sd_pos_accept = [
+                            a // 2 for a in self._sd_pos_accept]
+                        self._sd_pos_reached = [
+                            r // 2 for r in self._sd_pos_reached]
                     if envs.VLLM_SELF_SPEC_BANDIT:
                         # Phase 91: accumulate step-level evidence; the
                         # posterior update (with its 24-drafted-token

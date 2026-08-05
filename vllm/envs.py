@@ -299,6 +299,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_MOE_NUM_DUMP: str = ""
     VLLM_SELF_SPEC_MOE_DUMP_LAYER: int = 0
     VLLM_SELF_SPEC_MOE_FP32_ACCUM: bool = False
+    VLLM_SELF_SPEC_LADDER: bool = False
     VLLM_DBO_COMM_SMS: int = 20
     VLLM_PATTERN_MATCH_DEBUG: str | None = None
     VLLM_DEBUG_DUMP_PATH: str | None = None
@@ -2310,6 +2311,11 @@ environment_variables: dict[str, Callable[[], Any]] = {
     #     fp32 transport is not needed; here we upcast the partials to fp32 for a
     #     faithful fp32 cross-rank sum (correctness probe; see results for the
     #     bandwidth note). Default off -> both paths unchanged (bf16-accum).
+    # 96/W6 item 5: ranked-ladder policy (options are Round-2
+    # ranked; SPRT-lite threshold on position-resolved tau).
+    "VLLM_SELF_SPEC_LADDER": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_LADDER", "0"))
+    ),
     "VLLM_SELF_SPEC_MOE_FP32_ACCUM": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_MOE_FP32_ACCUM", "0"))
     ),
