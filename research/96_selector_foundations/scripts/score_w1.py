@@ -59,6 +59,38 @@ for arm in ARMS:
     if t is not None and nt is not None:
         print(f"[{arm:6s}] tune swing {pct(t)} -> notune swing {pct(nt)}")
 
+# --- W1b: pin-vs-nopin discriminator (source B) ---
+# Boot MEDIANS hide the mode (episodes last 1-2 of 3 rounds in this
+# matrix), so score PER ROUND: a round is a slow-mode EPISODE if it is
+# >5% below the boot's max round (bimodal gap is ~11%, fast-cluster
+# spread <1% -- the threshold sits in empty space).
+w1b = sorted(D.glob("w1b_llama_off_notune_g*_b*.json"))
+if w1b:
+    print("\nW1b (AR-only, notune): per-round episode analysis")
+    cells = {}
+    for p in w1b:
+        d = json.loads(p.read_text())
+        parts = p.stem.split("_")   # w1b_llama_off_notune_gG_PIN_bB
+        cells.setdefault((parts[4], parts[5]), []).append(d)
+    for (gpu, pin), boots in sorted(cells.items()):
+        boots.sort(key=lambda d: d["boot"])
+        n_ep, fast = 0, []
+        for b in boots:
+            mx = max(b["all"])
+            ep = [r for r in b["all"] if r < 0.95 * mx]
+            n_ep += len(ep)
+            fast += [r for r in b["all"] if r >= 0.95 * mx]
+        spread = max(fast) / min(fast) - 1 if len(fast) > 1 else 0.0
+        print(f"  {gpu}/{pin:5s} boots={len(boots)} "
+              f"episode-rounds {n_ep}/{3 * len(boots)}  "
+              f"fast-cluster [{min(fast):.1f}, {max(fast):.1f}] "
+              f"spread {pct(spread)}")
+    pin_ep = sum(1 for (g, p), bs in cells.items() if p == "pin"
+                 for b in bs for r in b["all"] if r < 0.95 * max(b["all"]))
+    print(f"  P-W1b1 (pinned unimodal): "
+          f"{'CONFIRMED' if pin_ep == 0 else 'REFUTED'} "
+          f"({pin_ep} episode round(s) under pinning)")
+
 nt_off = swings.get(("off", "notune"))
 nt_spec = swings.get(("w2048", "notune"))
 t_off = swings.get(("off", "tune"))
