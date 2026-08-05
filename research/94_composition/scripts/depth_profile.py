@@ -32,15 +32,22 @@ OUT = Path("/data/smcho/self-spec-moe/paper/data")
 
 def collect(sources):
     """-> {arm: {K: [tau,...]}} pooled over cells (acceptance is
-    cell-independent; pooling reduces noise)."""
-    per = defaultdict(lambda: defaultdict(list))
+    cell-independent; pooling reduces noise). Later sources OVERRIDE
+    earlier ones at (arm, K, batch, ctx) granularity -- used to overlay
+    the post-collision-fix re-measurements (cells_93v2_*, see
+    paper/data/c1_corruption_ledger.md) on the corrupt v1 rows."""
+    rows = {}
     for pat, tag in sources:
         for f in glob.glob(str(pat)):
             name = Path(f).stem.split(tag)[1].replace("fullcg", "")
+            name = name.removesuffix("_nc")
             for r in csv.DictReader(open(f)):
                 tau = float(r["accept"] or 0)
                 if tau > 1:
-                    per[name][int(r["K"])].append(tau)
+                    rows[(name, int(r["K"]), r["batch"], r["ctx"])] = tau
+    per = defaultdict(lambda: defaultdict(list))
+    for (name, K, _, _), tau in rows.items():
+        per[name][K].append(tau)
     return per
 
 
@@ -80,10 +87,12 @@ def main():
     archs = sys.argv[1:] or ["dense", "llama", "q3_32b", "moe", "mla"]
     out = {}
     for arch in archs:
+        oracle = ("llamafix" if arch == "llama" else arch)  # post-fix llama
         per = collect([
             (ROOT / f"93_c1_grid/data/cells_93_{arch}_*.csv", f"cells_93_{arch}_"),
+            (ROOT / f"93_c1_grid/data/cells_93v2_{arch}_*.csv", f"cells_93v2_{arch}_"),
             (ROOT / f"94_composition/data/cells_94_{arch}_*.csv", f"cells_94_{arch}_"),
-            (ROOT / f"94_composition/data/oracle_{arch}_*.csv", f"oracle_{arch}_"),
+            (ROOT / f"94_composition/data/oracle_{oracle}_*.csv", f"oracle_{oracle}_"),
         ])
         if not per:
             continue

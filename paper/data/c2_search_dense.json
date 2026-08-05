@@ -2,67 +2,55 @@
  "arch": "dense",
  "n_configs": 18,
  "n_oracle_arms": 36,
- "best_single_regret_pct": 9.351293962569514,
+ "best_single_regret_pct": 10.842500067168638,
  "curve": [
   {
    "confirms": 1,
-   "mean_regret_pct": 2.3997043059524517,
-   "worst_regret_pct": 5.115082361495637,
+   "mean_regret_pct": 4.505824242147362,
+   "worst_regret_pct": 11.011638316920326,
    "budget_arms": 16,
    "budget_frac_pct": 44.44444444444444,
-   "random_mean_regret_pct": 17.500847778415586,
+   "random_mean_regret_pct": 19.5407074483107,
    "accept_profiles": 5,
-   "ranker": "union",
+   "ranker": "ours",
    "pruned_pct": 6.94,
-   "mean_confirms_per_cell": 1.5
+   "mean_confirms_per_cell": 1.0
   },
   {
    "confirms": 2,
-   "mean_regret_pct": 2.3997043059524517,
-   "worst_regret_pct": 5.115082361495637,
-   "budget_arms": 16,
-   "budget_frac_pct": 44.44444444444444,
-   "random_mean_regret_pct": 10.308880789129663,
+   "mean_regret_pct": 3.5633021997363814,
+   "worst_regret_pct": 10.053715308863021,
+   "budget_arms": 17,
+   "budget_frac_pct": 47.22222222222222,
+   "random_mean_regret_pct": 11.147126409964589,
    "accept_profiles": 5,
-   "ranker": "union",
+   "ranker": "ours",
    "pruned_pct": 6.94,
-   "mean_confirms_per_cell": 1.5
+   "mean_confirms_per_cell": 2.0
   },
   {
    "confirms": 3,
-   "mean_regret_pct": 1.671076127663734,
-   "worst_regret_pct": 5.115082361495637,
+   "mean_regret_pct": 3.162999604818039,
+   "worst_regret_pct": 9.104744852282902,
    "budget_arms": 18,
    "budget_frac_pct": 50.0,
-   "random_mean_regret_pct": 9.990955218800174,
+   "random_mean_regret_pct": 10.394672842934215,
    "accept_profiles": 5,
-   "ranker": "union",
+   "ranker": "ours",
    "pruned_pct": 6.94,
-   "mean_confirms_per_cell": 2.75
-  },
-  {
-   "confirms": 4,
-   "mean_regret_pct": 1.671076127663734,
-   "worst_regret_pct": 5.115082361495637,
-   "budget_arms": 18,
-   "budget_frac_pct": 50.0,
-   "random_mean_regret_pct": 6.393835076481958,
-   "accept_profiles": 5,
-   "ranker": "union",
-   "pruned_pct": 6.94,
-   "mean_confirms_per_cell": 2.75
+   "mean_confirms_per_cell": 3.0
   },
   {
    "confirms": 5,
-   "mean_regret_pct": 1.0738603275768186,
-   "worst_regret_pct": 5.115082361495637,
-   "budget_arms": 21,
-   "budget_frac_pct": 58.333333333333336,
-   "random_mean_regret_pct": 5.540890497187798,
+   "mean_regret_pct": 2.5822422613739846,
+   "worst_regret_pct": 9.104744852282902,
+   "budget_arms": 22,
+   "budget_frac_pct": 61.111111111111114,
+   "random_mean_regret_pct": 6.4111114099484485,
    "accept_profiles": 5,
-   "ranker": "union",
+   "ranker": "ours",
    "pruned_pct": 6.94,
-   "mean_confirms_per_cell": 4.38
+   "mean_confirms_per_cell": 5.0
   }
  ]
 }

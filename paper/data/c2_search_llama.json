@@ -2,43 +2,56 @@
  "arch": "llama",
  "n_configs": 18,
  "n_oracle_arms": 36,
- "best_single_regret_pct": 7.060525893137431,
+ "best_single_regret_pct": 8.282705065978092,
  "curve": [
   {
    "confirms": 1,
-   "mean_regret_pct": 2.706050480148811,
-   "worst_regret_pct": 7.714197165638296,
-   "budget_arms": 14,
-   "budget_frac_pct": 38.88888888888889,
-   "random_mean_regret_pct": 26.38485525535633,
-   "accept_profiles": 5
+   "mean_regret_pct": 3.0700766048844526,
+   "worst_regret_pct": 6.875253138922632,
+   "budget_arms": 16,
+   "budget_frac_pct": 44.44444444444444,
+   "random_mean_regret_pct": 16.551803478704997,
+   "accept_profiles": 5,
+   "ranker": "ours",
+   "pruned_pct": 2.43,
+   "mean_confirms_per_cell": 1.0
   },
   {
    "confirms": 2,
-   "mean_regret_pct": 2.706050480148811,
-   "worst_regret_pct": 7.714197165638296,
-   "budget_arms": 16,
-   "budget_frac_pct": 44.44444444444444,
-   "random_mean_regret_pct": 17.895885050981956,
-   "accept_profiles": 5
+   "mean_regret_pct": 2.306729466534237,
+   "worst_regret_pct": 6.273418871352328,
+   "budget_arms": 18,
+   "budget_frac_pct": 50.0,
+   "random_mean_regret_pct": 13.494745878600583,
+   "accept_profiles": 5,
+   "ranker": "ours",
+   "pruned_pct": 2.43,
+   "mean_confirms_per_cell": 2.0
   },
   {
    "confirms": 3,
-   "mean_regret_pct": 1.4298721625180324,
-   "worst_regret_pct": 7.714197165638296,
-   "budget_arms": 17,
-   "budget_frac_pct": 47.22222222222222,
-   "random_mean_regret_pct": 11.907224022213606,
-   "accept_profiles": 5
+   "mean_regret_pct": 2.1797919999388333,
+   "worst_regret_pct": 6.273418871352328,
+   "budget_arms": 21,
+   "budget_frac_pct": 58.333333333333336,
+   "random_mean_regret_pct": 6.660420126554927,
+   "accept_profiles": 5,
+   "ranker": "ours",
+   "pruned_pct": 2.43,
+   "mean_confirms_per_cell": 3.0
   },
   {
    "confirms": 5,
-   "mean_regret_pct": 0.0,
-   "worst_regret_pct": 0.0,
-   "budget_arms": 19,
-   "budget_frac_pct": 52.77777777777778,
-   "random_mean_regret_pct": 13.497340214594237,
-   "accept_profiles": 5
+   "mean_regret_pct": 1.9511179868045108,
+   "worst_regret_pct": 6.273418871352328,
+   "budget_arms": 22,
+   "budget_frac_pct": 61.111111111111114,
+   "random_mean_regret_pct": 6.183959987935053,
+   "accept_profiles": 5,
+   "ranker": "ours",
+   "pruned_pct": 2.43,
+   "mean_confirms_per_cell": 5.0
   }
- ]
+ ],
+ "source": "oracle_llamafix (post cache-collision fix, offset 0; R1 w8int8 arms corrupt, see c2.md correction note)"
 }

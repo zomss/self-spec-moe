@@ -1,0 +1,16 @@
+{
+ "dense": {
+  "ours": "6/8",
+  "product_rank": "8/8",
+  "knapspec": "7/8",
+  "proxy_rank": "8/8"
+ },
+ "llama": {
+  "ours": "7/8",
+  "product_rank": "7/8",
+  "knapspec": "8/8",
+  "proxy_rank": "8/8"
+ },
+ "definition": "top-1 pick != oracle argmax, per-cell pipeline of baselines.py",
+ "llama_source": "oracle_llamafix (post cache-collision fix, offset 0; R1 w8int8 arms corrupt, see c2.md correction note)"
+}
