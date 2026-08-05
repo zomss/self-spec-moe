@@ -129,6 +129,106 @@ class DraftModelProposer(SpecDecodeBaseProposer):
         )
 
     @override
+    def load_model(self, target_model: nn.Module) -> None:
+        # Phase 94 (weight sharing): a q-none self-draft is bit-identical
+        # to the target, so the second copy _get_model materialises is
+        # pure memory waste (and what makes unquantized MLA self-spec
+        # OOM at K4). Stash the target for the duration of the build so
+        # _get_model can alias instead of load.
+        self._weight_share_target = (
+            target_model if self._weight_sharing_enabled() else None
+        )
+        try:
+            super().load_model(target_model)
+        finally:
+            self._weight_share_target = None
+
+    def _weight_sharing_enabled(self) -> bool:
+        if not envs.VLLM_SELF_SPEC_SHARE_WEIGHTS:
+            return False
+        spec = self.speculative_config
+        tgt = self.vllm_config.model_config
+        draft = spec.draft_model_config
+        problems = []
+        if draft.model != tgt.model:
+            problems.append(
+                f"draft checkpoint ({draft.model}) differs from the "
+                f"target ({tgt.model})"
+            )
+        if draft.quantization != tgt.quantization:
+            problems.append(
+                f"draft quantization ({draft.quantization}) differs "
+                f"from the target ({tgt.quantization})"
+            )
+        if envs.VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA:
+            problems.append(
+                "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA loads a modified "
+                "expert-resident draft; its weights are not the target's"
+            )
+        if problems:
+            raise ValueError(
+                "VLLM_SELF_SPEC_SHARE_WEIGHTS=1 but the draft cannot "
+                "alias the target's weights: " + "; ".join(problems)
+            )
+        return True
+
+    def _share_target_weights(self, draft: nn.Module,
+                              target: nn.Module) -> None:
+        """Alias every draft parameter to its target twin.
+
+        The draft was built with load_format="dummy" (no disk read);
+        replacing its Parameter/buffer entries drops the dummy tensors
+        and the allocator reclaims ~one full model copy. Runs BEFORE
+        compilation/warmup, so captured graphs see the aliased tensors.
+        """
+        tgt_params = dict(target.named_parameters())
+        tgt_buffers = dict(target.named_buffers())
+        shared, freed = 0, 0
+        for name, param in list(draft.named_parameters()):
+            twin = tgt_params.get(name)
+            if (twin is None or twin.shape != param.shape
+                    or twin.dtype != param.dtype):
+                raise ValueError(
+                    "VLLM_SELF_SPEC_SHARE_WEIGHTS: draft parameter "
+                    f"'{name}' has no identical target twin "
+                    f"(found: {twin is not None})"
+                )
+            mod_path, _, leaf = name.rpartition(".")
+            mod = draft.get_submodule(mod_path) if mod_path else draft
+            freed += param.numel() * param.element_size()
+            mod._parameters[leaf] = twin
+            shared += 1
+        for name, buf in list(draft.named_buffers()):
+            twin = tgt_buffers.get(name)
+            if (twin is not None and twin.shape == buf.shape
+                    and twin.dtype == buf.dtype):
+                mod_path, _, leaf = name.rpartition(".")
+                mod = draft.get_submodule(mod_path) if mod_path else draft
+                mod._buffers[leaf] = twin
+        # Attention layers derive absorbed tensors from weights at load
+        # time (MLA: W_UK_T/W_UV from kv_b_proj); the dummy build derived
+        # them from random weights. Re-derive from the aliased (real)
+        # ones, mirroring model_loader.utils.process_weights_after_loading.
+        from vllm.model_executor.layers.attention import (
+            Attention,
+            MLAAttention,
+            MMEncoderAttention,
+        )
+
+        act_dtype = self.speculative_config.draft_model_config.dtype
+        for _, module in draft.named_modules():
+            if isinstance(
+                module, (Attention, MLAAttention, MMEncoderAttention)
+            ) and hasattr(module, "process_weights_after_loading"):
+                module.process_weights_after_loading(act_dtype)
+        torch.cuda.empty_cache()
+        logger.info(
+            "Self-spec weight sharing: %d draft parameters alias the "
+            "target's tensors (~%.2f GiB of dummy draft weights freed).",
+            shared, freed / (1 << 30),
+        )
+
+    @override
     def _get_model(self) -> nn.Module:
         from contextlib import contextmanager
 
@@ -172,6 +272,15 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 cc.mode, cc.cudagraph_mode = old_mode, old_cg
 
         draft_vllm_config = self._create_draft_vllm_config()
+        share_target = getattr(self, "_weight_share_target", None)
+        if share_target is not None:
+            # Build structure only; weights come from the target below.
+            draft_vllm_config = replace(
+                draft_vllm_config,
+                load_config=replace(
+                    draft_vllm_config.load_config, load_format="dummy"
+                ),
+            )
         # Phase 83: draft PARTIAL replica -- activate the build context so
         # FusedMoE construction installs the frequency-profiled per-layer
         # expert maps (non-resident experts are never loaded).
@@ -188,6 +297,8 @@ class DraftModelProposer(SpecDecodeBaseProposer):
                 vllm_config=draft_vllm_config,
                 prefix="draft_model",
             )
+        if share_target is not None:
+            self._share_target_weights(model, share_target)
         self._log_draft_moe_ep_status(model)
         self._apply_skip_layers(model)
         self._prewarm_jit_linear_kernels(model)

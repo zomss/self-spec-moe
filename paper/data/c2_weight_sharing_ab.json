@@ -1,0 +1,36 @@
+{
+ "dense_qnone_win2048_K2_b8_c8000": {
+  "control": {
+   "decode_toks": 869.3,
+   "accept": 2.928,
+   "kv_tokens": 282688
+  },
+  "shared": {
+   "decode_toks": 873.6,
+   "accept": 2.951,
+   "kv_tokens": 393792,
+   "params_aliased": 291,
+   "freed_GiB": 15.26
+  }
+ },
+ "mla_qnone_K4_b8_c8000_gmu0.90": {
+  "shared": {
+   "decode_toks": 721.9,
+   "accept": 4.919,
+   "params_aliased": 324,
+   "freed_GiB": 29.26,
+   "note": "boots at default gmu 0.90; OOMed pre-sharing"
+  },
+  "oracle_refs_full_copy_gmu0.94": {
+   "R1": [
+    711.7,
+    4.945
+   ],
+   "R2": [
+    734.0,
+    4.95
+   ]
+  }
+ },
+ "flag": "VLLM_SELF_SPEC_SHARE_WEIGHTS=1"
+}

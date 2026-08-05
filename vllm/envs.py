@@ -273,6 +273,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_WHOLECHAIN: bool = False
     VLLM_SELF_SPEC_SHARED_KV: bool = False
     VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE: bool = False
+    VLLM_SELF_SPEC_SHARE_WEIGHTS: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_REPLICA: bool = False
     VLLM_SELF_SPEC_DRAFT_FULL_CG: bool = False
     VLLM_SELF_SPEC_DRAFT_FULLCG: bool = False
@@ -2012,6 +2013,15 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Default off. See research/66_shared_kv.
     "VLLM_SELF_SPEC_SHARED_KV": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_SHARED_KV", "0"))
+    ),
+    # Self-spec (phase 94): when the draft checkpoint IS the target model
+    # (q-none window/skip levers), build the draft with the dummy loader
+    # and alias every parameter to the target's tensor instead of
+    # materialising a bit-identical second copy (~one full model of GPU
+    # memory). Requires identical model path, quantization and TP;
+    # incompatible with DRAFT_PARTIAL_REPLICA. Default off.
+    "VLLM_SELF_SPEC_SHARE_WEIGHTS": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_SHARE_WEIGHTS", "0"))
     ),
     # Self-spec W7 (phase 67): with SHARED_KV, compact the step-0 draft forward
     # from a q=(K+2) query to a q=1 decode of only the appended sampled token
