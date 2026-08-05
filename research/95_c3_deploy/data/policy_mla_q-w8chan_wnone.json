@@ -1,0 +1,155 @@
+{
+ "model": "deepseek-ai/DeepSeek-V2-Lite",
+ "draft": "/home/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan",
+ "arming_rent": 0.015,
+ "provenance": {
+  "source": "phase 94 C2 oracle cells",
+  "arch": "mla",
+  "config": "q-w8chan_w-none_s-none",
+  "sample": "mean",
+  "ar_anchor": "cells_93_mla_off.csv",
+  "inversion": "f=(tau-1)/K; S=toks/toks_AR; R=(tau/S-1)/K"
+ },
+ "cells": [
+  {
+   "batch": 1,
+   "ctx": 2000,
+   "options": [
+    {
+     "K": 2,
+     "R": 1.9947,
+     "S_ref": 0.594,
+     "f_ref": 0.9817,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 2.105,
+     "S_ref": 0.5167,
+     "f_ref": 0.9669,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 1,
+   "ctx": 8000,
+   "options": [
+    {
+     "K": 2,
+     "R": 2.2931,
+     "S_ref": 0.537,
+     "f_ref": 1.0,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 2.0046,
+     "S_ref": 0.5477,
+     "f_ref": 0.9849,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 1,
+   "ctx": 14000,
+   "options": [
+    {
+     "K": 2,
+     "R": 1.7351,
+     "S_ref": 0.6629,
+     "f_ref": 0.9817,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 1.895,
+     "S_ref": 0.5691,
+     "f_ref": 0.9706,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 8,
+   "ctx": 2000,
+   "options": [
+    {
+     "K": 2,
+     "R": 1.2379,
+     "S_ref": 0.8608,
+     "f_ref": 0.996,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 1.2122,
+     "S_ref": 0.8363,
+     "f_ref": 0.9729,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 8,
+   "ctx": 8000,
+   "options": [
+    {
+     "K": 2,
+     "R": 1.1705,
+     "S_ref": 0.8909,
+     "f_ref": 0.9882,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 1.1676,
+     "S_ref": 0.8648,
+     "f_ref": 0.976,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 8,
+   "ctx": 14000,
+   "options": [
+    {
+     "K": 2,
+     "R": 1.1667,
+     "S_ref": 0.8884,
+     "f_ref": 0.9808,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 1.155,
+     "S_ref": 0.8756,
+     "f_ref": 0.9802,
+     "n_samples": 2
+    }
+   ]
+  },
+  {
+   "batch": 32,
+   "ctx": 2000,
+   "options": [
+    {
+     "K": 2,
+     "R": 0.9552,
+     "S_ref": 1.0194,
+     "f_ref": 0.9835,
+     "n_samples": 2
+    },
+    {
+     "K": 4,
+     "R": 0.9289,
+     "S_ref": 1.0377,
+     "f_ref": 0.9732,
+     "n_samples": 2
+    }
+   ]
+  }
+ ]
+}
