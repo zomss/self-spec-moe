@@ -1,0 +1,38 @@
+{
+ "arch": "llama",
+ "window": "off",
+ "seed": 0,
+ "config": "q-w4a16_s-b2",
+ "skip_set": null,
+ "kmax": 0,
+ "model": "NousResearch/Meta-Llama-3.1-8B-Instruct",
+ "draft": null,
+ "regimes": {
+  "R8": {
+   "toks": 2156.0,
+   "all": [
+    2155.7,
+    2156.0,
+    2156.0,
+    2156.3
+   ],
+   "accept": null,
+   "batch": 16,
+   "max_tokens": 2048,
+   "temp": 1.0
+  },
+  "R4": {
+   "toks": 600.9,
+   "all": [
+    600.4,
+    600.5,
+    600.9,
+    601.2
+   ],
+   "accept": null,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  }
+ }
+}
