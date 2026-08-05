@@ -459,3 +459,32 @@ product_rank, exhaustive-1-sample}.
 regret within 1pp of the best rule; strictly best mean on >= 2 arches;
 no arch where v2 is worst in BOTH directions. Failures reported as-is
 (T11).
+
+## C2 CLOSED (2026-08-05)
+
+All gates passed; paper/c2.md carries the claim set. Closing state:
+
+- Composition: 6/8 cells >= +5% on BOTH complete oracles (post-fix),
+  peaks +31.1%/+20.2%; two-binding-terms law confirmed at term level;
+  MoE OFF-dominance replicated on independent content (6/7 and 5/7).
+- Search: confirm-5 regret 0.46%/1.61% (per-cell form) vs exhaustive;
+  O(#levers + #confirmations) measured both directions (12x space,
+  1.4x cost); full-space regret BOUNDED by the fixed-seed sampled
+  audit (+0.48% mean, +1.40% worst, 40/420 points, 0 missing).
+- Ranking: second-order under 2-sample truths (4 arches x 2 samples;
+  rule spread <= content noise); the search matches exhaustive-once
+  at ~half the boots (winner's curse up to 5.67% on MoE); ours-v2
+  pre-registered -> v2r uniformly competitive, best on both
+  OFF-dominant arches (v2g fails MoE, reported).
+- b1 content law: 2 of 5 b1 composition wins survive multi-draw
+  measurement (both content-robust win2048 winners); the largest
+  single-draw b1 margin (+8.5%) dissolved on re-draws.
+- Integrity: cache-collision repaired end-to-end, global 923-boot
+  screen, p75/p92 bounded, no open ledger rows; weight sharing
+  shipped (window/skip levers memory-free).
+- Permanent disclosures only remain: kvq stack exclusion, tree-width
+  axis, unscreenable phases (re-measurement only).
+
+Editorial: c2.md reordered (prune -> rules -> reconciliation -> 4-arch
+-> v2), status reduced to disclosures, data table completed, all
+figures regenerated from current artifacts.
