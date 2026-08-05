@@ -1,0 +1,55 @@
+{
+ "model": "meta-llama/Llama-3.1-8B-Instruct",
+ "draft": "",
+ "arming_rent": 0.015,
+ "provenance": {
+  "source": "phase 94 C2 oracle cells",
+  "arch": "llama",
+  "config": "q-w4a16_w-512_s-b2",
+  "sample": "mean",
+  "ar_anchor": "cells_93_llama_off.csv",
+  "inversion": "f=(tau-1)/K; S=toks/toks_AR; R=(tau/S-1)/K"
+ },
+ "cells": [
+  {
+   "batch": 1,
+   "ctx": 2000,
+   "options": []
+  },
+  {
+   "batch": 1,
+   "ctx": 8000,
+   "options": []
+  },
+  {
+   "batch": 1,
+   "ctx": 14000,
+   "options": []
+  },
+  {
+   "batch": 8,
+   "ctx": 2000,
+   "options": []
+  },
+  {
+   "batch": 8,
+   "ctx": 8000,
+   "options": []
+  },
+  {
+   "batch": 8,
+   "ctx": 14000,
+   "options": []
+  },
+  {
+   "batch": 32,
+   "ctx": 2000,
+   "options": []
+  },
+  {
+   "batch": 32,
+   "ctx": 8000,
+   "options": []
+  }
+ ]
+}

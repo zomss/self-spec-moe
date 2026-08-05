@@ -99,7 +99,11 @@ def main():
     a = ARCHS[ARCH]
     spec = None
     if WINDOW != "off":
-        tbl = PHASE / "data" / f"policy_{ARCH}_{a['config']}_w{WINDOW}.json"
+        # 96/W4: E95_POLICY overrides the table (e.g. the park-everywhere
+        # fixture that measures parked-engine cost).
+        tbl = Path(os.environ["E95_POLICY"]) if os.environ.get(
+            "E95_POLICY") else (
+            PHASE / "data" / f"policy_{ARCH}_{a['config']}_w{WINDOW}.json")
         if not tbl.exists():
             raise SystemExit(f"missing policy table {tbl}")
         os.environ["VLLM_SELF_SPEC_POLICY_FILE"] = str(tbl)
@@ -110,11 +114,17 @@ def main():
                 "num_speculative_tokens": KMAX,
                 "draft_tensor_parallel_size": 1}
 
+    extra = {}
+    if os.environ.get("E95_TUNE", "1") != "1":
+        # 96/W1: flashinfer autotune is a boot-scoped kernel lottery
+        # (40% swing); scored runs set E95_TUNE=0. Default preserves the
+        # historical boot path.
+        extra["kernel_config"] = {"enable_flashinfer_autotune": False}
     llm = LLM(model=a["model"], speculative_config=spec,
               tensor_parallel_size=1, max_model_len=20480,
               gpu_memory_utilization=0.90, max_num_seqs=32,
               enable_prefix_caching=False, disable_log_stats=False,
-              async_scheduling=True, max_num_batched_tokens=8192)
+              async_scheduling=True, max_num_batched_tokens=8192, **extra)
     tok = AutoTokenizer.from_pretrained(a["model"])
 
     out = {"arch": ARCH, "window": WINDOW, "seed": SEED,
