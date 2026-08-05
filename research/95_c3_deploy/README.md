@@ -130,6 +130,15 @@ datasets** — a different protocol — so they are falsifiable, not restatement
   (Spearman rho > 0, reported with n and p).
 - **P7 (gate safety, MLA/MoE).** On b1/b8 real-data regimes the gate keeps
   aggregate S >= 0.98; at b32/b64 it arms and beats AR.
+- **P8 (null control).** R6's envelope is < half the discriminating regimes'.
+  A window can only matter where it BINDS: measured end contexts (prompt +
+  generation, seed 0) are R4 8691, R5 14549, R5cot 17193, R8 2166 -- all
+  crossing both windows -- while **R6 is 318 and crosses neither**, so the
+  map's window choice cannot affect it. R6 therefore estimates the noise
+  floor of the envelope metric. If R6's envelope matches the discriminating
+  regimes', E0 is measuring noise and the gate is NOT read as passed,
+  whatever the aggregate says. (R1 at 1087 crosses 512 only -- reported
+  separately, not counted in either group.)
 
 Registered risks (stated now, not after the fact):
 
