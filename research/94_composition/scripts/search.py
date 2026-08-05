@@ -51,6 +51,57 @@ DATA = Path("/data/smcho/self-spec-moe/research/94_composition/data")
 C1DATA = Path("/data/smcho/self-spec-moe/research/93_c1_grid/data")
 OUT = Path("/data/smcho/self-spec-moe/paper/data")
 
+# v2r ranker (pre-registered 2026-08-05): roofline-composed cost +
+# sound min-bound acceptance + b1 content-robustness rules.
+LAYERS = {"dense": 36, "llama": 32, "mla": 27, "moe": 48}
+THETA = {"none": 1.0, "hum": 0.25, "w4a16": 0.25, "w8int8": 0.5,
+         "w8chan": 0.5}
+FRAGILE = ("w-512", "w-128")
+
+
+def base_arch(arch):
+    """'llamafix'/'denseR2' etc. -> the LAYERS key."""
+    for k in LAYERS:
+        if arch and arch.startswith(k):
+            return k
+    return arch
+
+
+def lever_factors(name, ctx, layers):
+    q, w, s = parse(name)
+    theta = THETA.get(q, 1.0)
+    leff = min(ctx, int(w) + 16) if w != "none" else ctx
+    sigma = (layers - 2) / layers if s == "b2" else 1.0
+    return theta, leff, sigma
+
+
+def fit_roofline(cells, ar, layers):
+    """(aKV, aC, F) least-squares fit from the singles' inverted R."""
+    from scipy.optimize import least_squares
+    rows = []
+    for (b, L), arms in cells.items():
+        if (b, L) not in ar:
+            continue
+        for (n, K), (t, a) in arms.items():
+            if n_active(n) <= 1 and a > 1:
+                R = R_of(t, ar[(b, L)], a, K)
+                if R and 0 < R < 1.5:
+                    rows.append((b, L, *lever_factors(n, L, layers), R))
+    if len(rows) < 6:
+        return None
+
+    def pred(p, b, L, th, le, sg):
+        aKV, aC, F = (abs(x) for x in p)
+        Td = max(sg * (th + aKV * b * le), sg * aC * b) + F
+        Tt = max(1.0 + aKV * b * L, aC * b) + F
+        return Td / Tt
+
+    sol = least_squares(
+        lambda p: [pred(p, b, L, th, le, sg) - R
+                   for b, L, th, le, sg, R in rows],
+        x0=[1e-5, 0.02, 0.3], method="lm")
+    return [abs(x) for x in sol.x]
+
 
 def parse(name):
     d = {}
@@ -126,7 +177,7 @@ def score_knapspec(tau, R, K, prof, R_meas, R0, parts):
 
 
 def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
-               ranker="union"):
+               ranker="union", arch=None):
     """Returns (chosen per cell, boots, accept_units, stats).
 
     Stage B is charged ONCE per config profiled (cell-independent);
@@ -137,6 +188,8 @@ def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
     Ks = sorted({k for c in cells.values() for _, k in c})
     singles = [c for c in configs if n_active(c) == 1]
     comps = [c for c in configs if n_active(c) >= 2]
+    layers = LAYERS.get(base_arch(arch), 32)
+    roof = fit_roofline(cells, ar, layers) if ranker == "v2r" else None
 
     # ---- Stage B: profile the SINGLES only (cell-independent) ----
     prof = {}
@@ -171,6 +224,22 @@ def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
         if taus:
             prof[c] = taus
 
+    # v2r acceptance: no kappa; rank compositions by the sound
+    # admission bound min(f_parts) * 1.03 (UCB-style shortlisting)
+    prof_ub = dict(prof) if ranker == "v2r" else None
+    if ranker == "v2r":
+        for c in comps:
+            parts = [single_name(d, v) for (d, v) in
+                     zip(("q", "w", "s"), parse(c)) if v != "none"]
+            taus = {}
+            for K in Ks:
+                fs = [(prof[p][K] - 1) / K for p in parts
+                      if p in prof and K in prof[p]]
+                if len(fs) == len(parts) and fs:
+                    taus[K] = 1 + min(min(fs) * 1.03, 1.0) * K
+            if taus:
+                prof_ub[c] = taus
+
     chosen, cost_units = {}, 0
     stats = {"pruned": 0, "considered": 0, "confirms": 0, "cells": 0}
     booted = set()          # (config,K) pairs actually measured
@@ -204,6 +273,14 @@ def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
             parts = [single_name(d, v) for d, v in (("q", q), ("w", w), ("s", s_))
                      if v != "none"]
             for K in Ks:
+                if roof is not None:
+                    aKV, aC, F = roof
+                    b, L = cell
+                    th, le, sg = lever_factors(c, L, layers)
+                    Td = max(sg * (th + aKV * b * le), sg * aC * b) + F
+                    Tt = max(1.0 + aKV * b * L, aC * b) + F
+                    Rs[(c, K)] = max(Td / Tt, 0.05)
+                    continue
                 R0 = R_meas.get(("q-none_w-none_s-none", K))
                 rs = [R_meas.get((p_, K)) for p_ in parts]
                 if R0 is None or any(r is None for r in rs):
@@ -238,6 +315,19 @@ def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
             r.sort(reverse=True)
             ranks[key] = [(c, K) for _, c, K in r]
 
+        if ranker == "v2r":
+            r = []
+            for (c, K), R in feasible.items():
+                tau = prof_ub.get(c, {}).get(K)
+                if not tau or not R:
+                    continue
+                sc = tau / (K * R + 1)
+                if cell[0] == 1 and any(w in c for w in FRAGILE):
+                    sc *= 0.98      # registered b1 list penalty
+                r.append((sc, c, K))
+            r.sort(reverse=True)
+            ranks["v2r"] = [(c, K) for _, c, K in r]
+
         # ---- confirm: union of both rankers' top-N (neither generalizes) ----
         n_confirm = max(1, int(budget_units))
         if ranker == "union":
@@ -247,15 +337,24 @@ def run_search(cells, ar, budget_units, seed=0, gamma=1.15, target=1.0,
         else:
             cand = ranks[ranker][:n_confirm]
 
-        best = None
+        best, confirmed = None, []
         for (c, K) in cand:
             v = arms.get((c, K))
             if not v:
                 continue
             booted.add((c, K))
             s_true = v[0] / ar[cell]
+            confirmed.append((s_true, c, K))
             if best is None or s_true > best[0]:
                 best = (s_true, c, K)
+        # registered v2r pick rule: at b1, prefer a content-robust
+        # confirmed config within 1.5% of a fragile measured-best
+        if (ranker == "v2r" and best and cell[0] == 1
+                and any(w in best[1] for w in FRAGILE)):
+            robust = [x for x in confirmed
+                      if not any(w in x[1] for w in FRAGILE)]
+            if robust and max(robust)[0] >= best[0] * 0.985:
+                best = max(robust)
         stats["confirms"] += len(cand)
         stats["cells"] += 1
         if best:
@@ -329,8 +428,14 @@ def main():
     ap.add_argument("--target", type=float, default=1.0,
                     help="minimum speedup worth keeping; prune if the "
                          "acceptance-free ceiling cannot reach it")
-    ap.add_argument("--ranker", choices=["union", "ours", "knapspec"],
+    ap.add_argument("--ranker", choices=["union", "ours", "knapspec", "v2r"],
                     default="ours",
+                    help="'v2r' (roofline cost + sound min-bound shortlist, "
+                         "pre-registered 2026-08-05) is the recommended "
+                         "DEPLOYED rule at confirm>=3 -- its top-1 is "
+                         "deliberately exploratory. CLI default stays "
+                         "'ours' (v1) so committed curve artifacts stay "
+                         "comparable; see paper/c2.md ours-v2.",
                     help="default reverted to 'ours': the union was adopted "
                          "as minimax on TWO arches, but at four its worst "
                          "case (1.64%%) does not beat plain ours (1.61%%)")
@@ -378,7 +483,8 @@ def main():
     rows = []
     for nc in a.confirms:
         found, cu, au, st = run_search(cells, ar, nc, gamma=a.gamma,
-                                       target=a.target, ranker=a.ranker)
+                                       target=a.target, ranker=a.ranker,
+                                       arch=a.arch)
         m, w = regret(found, orc, truth_S)
         # budget: confirmations + accept profiles, vs exhaustive arms
         used = cu       # cu is now the BOOT count (singles + confirmations)

@@ -415,3 +415,47 @@ ctx grid, one boot per (config, K)), same production stack bundles, so
 composition cells are directly comparable to C1's single-lever cells.
 Windows use FULLCG-scratchpad WITHOUT wholechain (the C1 IMA fix).
 Singles are NOT re-measured: C1's cells_93_* are the baseline.
+
+## OURS-V2 pre-registration (2026-08-05, registered BEFORE scoring)
+
+Motivation: the 37b2d4df4 diagnosis (additive cost over-estimates R,
+error grows with lever count -> triples under-ranked; acceptance model
+fine) and the 2-sample result (rule spread <= content noise; kappa
+neutral). V2 replaces fitted constants with the model. Two variants,
+both fully specified here; no post-hoc tuning against the oracles.
+
+**v2r (primary): roofline-composed cost.**
+  R_pred from the phase-94 roofline T = max(sigma*(theta + aKV*B*Leff),
+  sigma*aC*B) + F, (aKV, aC, F) fit per arch by least squares on the
+  SINGLES' inverted R at that arch's own cells (sample being searched
+  only -- deployable-legal: a new deployment measures its own singles).
+  theta: none 1.0 / W4 0.25 / W8 0.5; Leff = min(ctx, window+16);
+  sigma = (layers - 2)/layers for skipb2 (dense 36, llama 32, mla 27,
+  moe 48). R pooled over K.
+**v2g (fallback): additive cost / structural gamma** {2: 1.15, 3: 1.33}
+  (transfer-validated constants, NOT refit), updated ONLINE from the
+  confirmations the search already pays for: after each confirmed
+  composed config, gamma[n_levers] <- running mean of R_add/R_true with
+  prior weight 2; gamma shared across cells (cells in sorted order);
+  remaining candidates re-ranked after each confirmation.
+
+**Shared by both variants:**
+  - acceptance: plain product of singles (NO kappa) as point estimate;
+    rank score uses the OPTIMISTIC sound bound f_ub = min(f_parts) *
+    1.03 (UCB-style shortlisting: high-uncertainty multi-lever configs
+    must enter the confirm list, measurement decides).
+  - confirm top-5 (unchanged, comparability with v1).
+  - content-robustness rules at b1 cells only: (i) list assembly:
+    configs containing win128/win512 get score * 0.98; (ii) pick: if
+    the measured-best config at a b1 cell contains win128/win512 and a
+    robust confirmed config is within 1.5% measured S, pick the robust
+    one.
+
+**Evaluation (fixed):** exactly the truth_4arch protocol -- 4 arches x
+2 content samples, picks from each sample at confirm-5, judged on the
+2-sample mean S; report from-R1 / from-R2 / mean vs {ours-v1, knapspec,
+product_rank, exhaustive-1-sample}.
+**Success criteria:** uniformly competitive = on every arch, mean
+regret within 1pp of the best rule; strictly best mean on >= 2 arches;
+no arch where v2 is worst in BOTH directions. Failures reported as-is
+(T11).
