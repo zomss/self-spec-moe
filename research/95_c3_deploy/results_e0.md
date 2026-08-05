@@ -11,10 +11,21 @@ Data: `data/e0_{arch}_w{win}_s{seed}.json`, scored by `scripts/score_e0.py`.
 | dense | **+2.78% / +2.65%** (both directions) | +0.96% / +0.79% | **PASS** on long-context workloads |
 | llama | +0.08% / +0.00% | -4.62% / +0.00% | **FAIL** |
 
-Cross-seed = pick each regime's window on one seed, score it on the other.
-Selection and evaluation on independent draws, so no winner's curse. Raw
-same-seed envelopes (biased up, recorded but not used for the decision):
-dense +1.75% / +1.42%, llama +1.27% / +0.00%.
+Cross-seed = pick each regime's window on one seed, score it on the other, so
+selection and evaluation land on independent draws and the winner's curse is
+removed. Raw same-seed envelopes (biased up, recorded but not used for the
+decision): dense +1.75% / +1.42%, llama +1.27% / +0.00%.
+
+**Correction on what a "seed" is here (2026-08-05).** `load_regime` accepts a
+`seed` argument but **never uses it** — verified by hashing the prompt sets:
+byte-identical for R4/R5/R5cot/R8/R1/R6 across seeds 0 and 1. Every regime but
+R8 also runs at temperature 0.0. So seed 0 and seed 1 are **replicate boots on
+an identical deterministic workload**, not independent content draws (only
+R8's *sampling* differs, via the SamplingParams seed at T=1.0). The cross-seed
+procedure is therefore a test-retest design over BOOT noise. That is still a
+valid bias control — boot noise dominates here and selection remains
+independent of evaluation — but it is not the content resampling C2's 2-sample
+truth scoring performed, and must not be described as such.
 
 **P1 (dense, registered [+1%, +4%], basis +2.04%): CONFIRMED.** +2.65-2.78%
 on the accept-binding group, consistent in both directions, close to the
@@ -31,9 +42,10 @@ is worth +2.7%. For the mixed 6-regime workload w512 is already the right
 default for 5 of 6 regimes, and switching adds only +0.8-1.0%. Quoting the
 +2.7% without the workload qualifier would overstate it.
 
-## Why llama fails: policy instability, not an absent window preference
+## Why llama fails: run-to-run variance swamps the effect
 
-Between-seed swings, with the AR anchor stable to 0.2% (142.7 vs 142.4 tok/s):
+Between-boot swings **on an identical deterministic workload** (same prompts,
+T=0.0), with the AR anchor stable to 0.2% (142.7 vs 142.4 tok/s):
 
 | cell | S(seed 0) | S(seed 1) | swing | tau s0 -> s1 |
 |---|---|---|---|---|
@@ -42,15 +54,23 @@ Between-seed swings, with the AR anchor stable to 0.2% (142.7 vs 142.4 tok/s):
 | llama R5cot w2048 | 1.4950 | 1.3732 | -8.2% | 3.172 -> 2.875 |
 | dense (worst of 8) | — | — | -4.0% | — |
 
-`tau > 3` requires `K >= 4` (tau <= K+1), so the tau shifts across the K=3
-line prove the policy chose **different depths on different boots at the same
-cell**. R5 w512 is the clearest case: acceptance *rose* (2.957 -> 3.151) while
-throughput *fell* 25.6% — not content noise, a deeper-K choice that did not
-pay. Dense's decisions are stable (worst swing -4.0%).
+**Cause NOT established — an earlier draft of this section over-claimed it.**
+I argued the tau shifts prove different depth choices, via `tau <= K+1`. They
+do not: in each pair only ONE value exceeds 3.0 and forces `K >= 4`, while the
+other is consistent with either K2 or K4, so a constant K fits every pair.
+
+What IS established: R5's prompts are identical across the two boots and its
+sampling is greedy, so these swings are **pure system-level run-to-run
+variance** — not content, and not demonstrably a policy choice. Candidate
+causes not yet separated: kernel autotune nondeterminism, KV-cache sizing,
+CUDA-graph capture differences.
 
 So llama's ~0% switching gain is not "no window preference exists"; it is
-"the policy's own decision noise is an order of magnitude larger than the
-window effect it is supposed to exploit."
+"run-to-run variance at long context (-25% to -42% on identical inputs) is an
+order of magnitude larger than the window effect it is supposed to exploit."
+Dense is stable over the same comparison (worst swing -4.0%), which is why its
++2.7% resolves. **A 25-42% swing on a deterministic workload is a
+reproducibility defect in its own right, and is logged as an open item.**
 
 ## The R8 gate failure, RESOLVED by measurement (supersedes the section below)
 
