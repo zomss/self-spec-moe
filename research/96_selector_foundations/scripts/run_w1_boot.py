@@ -60,6 +60,19 @@ def gpu_snapshot():
         return [f"snapshot-failed: {e}"]
 
 
+def cpu_snapshot():
+    """W1b: affinity + system CPU load (source-B forensics; single-NUMA
+    box, so placement means CORES, not sockets)."""
+    try:
+        return {
+            "cpus_allowed": sorted(os.sched_getaffinity(0)),
+            "n_cpus_allowed": len(os.sched_getaffinity(0)),
+            "loadavg": os.getloadavg(),
+        }
+    except Exception as e:
+        return {"snapshot-failed": str(e)}
+
+
 def spec_counters(llm):
     acc = drafts = 0
     for m in llm.get_metrics():
@@ -125,6 +138,8 @@ def main():
            "accept": round(sum(accepts) / len(accepts), 3)
            if accepts else None,
            "boot_seconds": round(boot_s, 1),
+           "pin": os.environ.get("W1_PIN", ""),
+           "cpu_snapshot": cpu_snapshot(),
            "gpu_snapshot_start": snap0,
            "gpu_snapshot_end": gpu_snapshot()}
     path = os.environ.get("W1_OUT", str(
