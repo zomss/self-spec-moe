@@ -142,6 +142,21 @@ datasets** — a different protocol — so they are falsifiable, not restatement
 
 Registered risks (stated now, not after the fact):
 
+- **R0 — the envelope is a max over noisy arms.** E0's envelope takes a max
+  over three windows per regime, which is the winner's-curse structure C2
+  measured on its own search: under noise, E[max] exceeds the true max, so the
+  raw envelope OVERSTATES the headroom. Two corrections are built in, and the
+  raw max is never the headline. (i) The R6 null control estimates the bias
+  directly (window cannot act there, so its envelope is pure max-of-noise);
+  the reported figure is discriminating MINUS null. (ii) With two seeds,
+  cross-seed selection picks each regime's window on one seed and scores it on
+  the other, removing the curse rather than estimating it -- the same fix C2's
+  2-sample truth scoring applied to its rankers. **A single-seed raw envelope
+  is not sufficient to pass the gate.**
+
+  Note the gate metric is AR-INDEPENDENT: envelope/konly is a ratio of two
+  spec arms sharing one AR denominator, so AR boot variance cancels exactly
+  and moves only the absolute S values.
 - **R1 — resolution.** The effect is +2-5%; per-phase noise on these boots ran
   +-8-10% (phase 91). Only a **paired, multi-seed, same-boot AR anchor per
   seed** design can resolve it (that design resolved +4.7 points across 3

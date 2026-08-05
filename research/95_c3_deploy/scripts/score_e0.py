@@ -16,6 +16,23 @@ Regimes are split by whether the axis under test can act at all:
 P8: the null control's envelope must be < half the discriminating group's.
 R6 cannot benefit from window switching by construction, so whatever it
 shows is this metric's noise floor.
+
+TWO BIAS CORRECTIONS, because `envelope` is a max over three noisy arms --
+the same winner's-curse structure C2 measured on its own search:
+
+1. NULL-CONTROL SUBTRACTION. R6's envelope is pure max-of-noise (the window
+   cannot act there), so it estimates the upward bias directly. The headline
+   is the CORRECTED envelope = discriminating - null, not the raw max.
+
+2. CROSS-SEED SELECTION (`--cross-seed a b`). Choose each regime's window on
+   seed a, then score that choice on seed b. Selection and evaluation land on
+   independent draws, so the winner's curse is removed rather than estimated
+   -- the same fix C2's 2-sample truth scoring applied to its rankers. This
+   is the preferred estimate whenever two seeds exist.
+
+Note the gate metric is AR-INDEPENDENT: envelope/konly is a ratio of two spec
+arms that share the same AR denominator, so boot-to-boot AR variance cancels
+exactly and cannot move the gate decision (it moves only the absolute S).
 """
 import json
 import statistics as st
@@ -111,26 +128,90 @@ def score(arch, seed):
     n = out["groups"].get("null_control")
     if d and n:
         de, ne = d["envelope_over_konly_pct"], n["envelope_over_konly_pct"]
+        corrected = de - ne
+        out["null_envelope_pct"] = ne
+        out["corrected_envelope_pct"] = round(corrected, 2)
         out["P8_null_control_ok"] = bool(ne < de / 2)
-        out["gate_pass"] = bool(de >= 1.0 and ne < de / 2)
+        out["gate_pass"] = bool(corrected >= 1.0 and ne < de / 2)
         print(f"  P8 null control: R6 {ne:+.2f}% vs discriminating {de:+.2f}%"
               f"  -> {'OK' if out['P8_null_control_ok'] else 'FAILS (noise)'}")
-        print(f"  GATE (>= +1% and P8 ok): "
+        print(f"  CORRECTED envelope (discriminating - null) = "
+              f"{corrected:+.2f}%   <- the headline; raw max is biased up")
+        print(f"  GATE (corrected >= +1% and P8 ok): "
               f"{'PASS -> build E1' if out['gate_pass'] else 'FAIL -> do not build E1'}")
     return out
 
 
+def cross_seed(arch, sa, sb):
+    """Pick each regime's window on seed sa, score that pick on seed sb.
+
+    Selection and evaluation on independent draws -> no winner's curse.
+    """
+    A, B = load(arch, sa), load(arch, sb)
+    if "off" not in A or "off" not in B:
+        return None
+    rids = [r for r in A["off"]["regimes"]
+            if all(r in A.get(w, {"regimes": {}})["regimes"] and
+                   r in B.get(w, {"regimes": {}})["regimes"] for w in WINDOWS)]
+    if not rids:
+        return None
+    SA = {r: {w: A[w]["regimes"][r]["toks"] / A["off"]["regimes"][r]["toks"]
+              for w in WINDOWS} for r in rids}
+    SB = {r: {w: B[w]["regimes"][r]["toks"] / B["off"]["regimes"][r]["toks"]
+              for w in WINDOWS} for r in rids}
+    out = {"arch": arch, "select_seed": sa, "eval_seed": sb, "groups": {}}
+    print(f"\n----- {arch}: cross-seed (select s{sa}, evaluate s{sb}) -----")
+    for gname, sel in GROUPS.items():
+        present = [r for r in sel if r in SA]
+        if not present:
+            continue
+        konly_w = max(WINDOWS,
+                      key=lambda w: st.mean([SA[r][w] for r in present]))
+        konly = st.mean([SB[r][konly_w] for r in present])
+        picks = {r: max(SA[r], key=SA[r].get) for r in present}
+        switched = st.mean([SB[r][picks[r]] for r in present])
+        out["groups"][gname] = {
+            "konly_window": konly_w, "konly_S": round(konly, 4),
+            "switched_S": round(switched, 4),
+            "gain_pct": round((switched / konly - 1) * 100, 2),
+            "picks": picks,
+        }
+        print(f"  [{gname:14s}] konly=w{konly_w} {konly:.4f} -> switched "
+              f"{switched:.4f}  {out['groups'][gname]['gain_pct']:+.2f}%"
+              f"   picks={picks}")
+    d, n = out["groups"].get("discriminating"), out["groups"].get("null_control")
+    if d and n:
+        out["corrected_gain_pct"] = round(d["gain_pct"] - n["gain_pct"], 2)
+        print(f"  CORRECTED cross-seed gain = {out['corrected_gain_pct']:+.2f}%"
+              "   <- unbiased estimate of the switching headroom")
+    return out
+
+
 def main():
-    seeds = [int(x) for x in (sys.argv[1:] or ["0"])]
-    res = []
+    args = sys.argv[1:]
+    xs = None
+    if "--cross-seed" in args:
+        i = args.index("--cross-seed")
+        xs = (int(args[i + 1]), int(args[i + 2]))
+        args = args[:i] + args[i + 3:]
+    seeds = [int(x) for x in (args or ["0"])]
+    res, cross = [], []
     for arch in ("dense", "llama"):
         for s in seeds:
             r = score(arch, s)
             if r:
                 res.append(r)
+        if xs:
+            c = cross_seed(arch, *xs)
+            if c:
+                cross.append(c)
+            c2 = cross_seed(arch, xs[1], xs[0])   # both directions
+            if c2:
+                cross.append(c2)
     if res:
         (DATA / "e0_envelope.json").write_text(json.dumps(
-            {"windows": WINDOWS, "groups": GROUPS, "results": res}, indent=1))
+            {"windows": WINDOWS, "groups": GROUPS, "results": res,
+             "cross_seed": cross}, indent=1))
         print(f"\nwrote {DATA}/e0_envelope.json")
 
 
