@@ -31,7 +31,7 @@ WINDOW = os.environ.get("W6_WINDOW", "512")
 MODEL = "Qwen/Qwen3-8B"
 DRAFT = os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq")
 REGIMES = os.environ.get("W6_REGIMES", "R5,R5cot,R1").split(",")
-SEEDS = [0, 1]
+SEEDS = [int(x) for x in os.environ.get("W6_SEEDS", "0,1").split(",")]
 ITERS = 4
 
 HISTS = ["vllm:request_decode_time_seconds"]
