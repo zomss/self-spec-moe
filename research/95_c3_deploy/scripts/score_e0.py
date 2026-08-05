@@ -49,10 +49,22 @@ DATA = PHASE / "data"
 # mean); running it plain HERE would compare across stacks inside the very
 # metric under test, so the none arm is dropped and the constraint recorded.
 WINDOWS = ["512", "2048"]
+# GROUPING, corrected by measurement (2026-08-05). P8 registered R6 as a null
+# control on the premise that a window cannot matter where it does not bind.
+# MEASURED FALSE: at R6 (end ctx 318) dense runs +5.0% faster on w512 with
+# accept IDENTICAL (4.733 vs 4.734), llama +12.0%. The mechanism is
+# _scratchpad_n_kept_blocks: the gather materialises
+# n_sink + ceil((window+K)/block_size) blocks EVERY draft step regardless of
+# the live context length, so the window sets a fixed per-draft-step COST
+# floor. R6 discriminates through cost even though it cannot through accept.
+#
+# Consequences: (a) there is no window-inert regime, so no valid null control
+# exists and P8 is retired as refuted; (b) bias control falls entirely to
+# cross-seed selection; (c) all_regimes is the honest aggregate.
 GROUPS = {
-    "discriminating": ["R4", "R5", "R5cot", "R8"],
-    "partial": ["R1"],
-    "null_control": ["R6"],
+    "all_regimes": ["R4", "R5", "R5cot", "R8", "R1", "R6"],
+    "accept_binding": ["R4", "R5", "R5cot", "R8"],   # window binds semantically
+    "cost_only": ["R1", "R6"],                       # window acts via cost only
 }
 
 
@@ -131,21 +143,14 @@ def score(arch, seed):
         print(f"  [{gname:14s}] konly=w{konly_w} {konly:.4f}  "
               f"envelope {env:.4f}  -> {g['envelope_over_konly_pct']:+.2f}%")
 
-    d = out["groups"].get("discriminating")
-    n = out["groups"].get("null_control")
-    if d and n:
-        de, ne = d["envelope_over_konly_pct"], n["envelope_over_konly_pct"]
-        corrected = de - ne
-        out["null_envelope_pct"] = ne
-        out["corrected_envelope_pct"] = round(corrected, 2)
-        out["P8_null_control_ok"] = bool(ne < de / 2)
-        out["gate_pass"] = bool(corrected >= 1.0 and ne < de / 2)
-        print(f"  P8 null control: R6 {ne:+.2f}% vs discriminating {de:+.2f}%"
-              f"  -> {'OK' if out['P8_null_control_ok'] else 'FAILS (noise)'}")
-        print(f"  CORRECTED envelope (discriminating - null) = "
-              f"{corrected:+.2f}%   <- the headline; raw max is biased up")
-        print(f"  GATE (corrected >= +1% and P8 ok): "
-              f"{'PASS -> build E1' if out['gate_pass'] else 'FAIL -> do not build E1'}")
+    a = out["groups"].get("all_regimes")
+    if a:
+        out["raw_envelope_pct"] = a["envelope_over_konly_pct"]
+        print(f"  RAW envelope (all regimes) = "
+              f"{a['envelope_over_konly_pct']:+.2f}%  -- BIASED UP (per-regime "
+              "argmax selected on the same draw it is scored on).")
+        print("  No null control exists (P8 refuted): the gate is decided by "
+              "cross-seed selection, not by this number.")
     return out
 
 

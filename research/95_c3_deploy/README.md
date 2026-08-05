@@ -130,7 +130,23 @@ datasets** — a different protocol — so they are falsifiable, not restatement
   (Spearman rho > 0, reported with n and p).
 - **P7 (gate safety, MLA/MoE).** On b1/b8 real-data regimes the gate keeps
   aggregate S >= 0.98; at b32/b64 it arms and beats AR.
-- **P8 (null control).** R6's envelope is < half the discriminating regimes'.
+- **P8 (null control) — REFUTED BY MEASUREMENT, 2026-08-05.** Registered as:
+  R6's envelope is < half the discriminating regimes'. The premise was that a
+  window cannot matter where it does not bind. **Measured false**: at R6 (end
+  ctx 318) dense runs **+5.0%** faster on w512 with acceptance IDENTICAL
+  (4.733 vs 4.734), llama **+12.0%**. Mechanism:
+  `_scratchpad_n_kept_blocks` gathers `n_sink + ceil((window+K)/block_size)`
+  blocks *every draft step regardless of the live context length*, so the
+  window sets a fixed per-draft-step COST floor and w2048 pays for KV it does
+  not need. R6 discriminates through cost even though it cannot through
+  accept. Consequences: no window-inert regime exists, so **no valid null
+  control is available**; bias control falls entirely to cross-seed selection;
+  regimes are regrouped by mechanism (accept-binding vs cost-only). The
+  finding strengthens the switching case rather than weakening it — at short
+  context a narrow window is strictly better (same accept, less cost), so the
+  window should track context length for cost reasons alone.
+
+  Original registration retained above per T11.
   A window can only matter where it BINDS: measured end contexts (prompt +
   generation, seed 0) are R4 8691, R5 14549, R5cot 17193, R8 2166 -- all
   crossing both windows -- while **R6 is 318 and crosses neither**, so the
