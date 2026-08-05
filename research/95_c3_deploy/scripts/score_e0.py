@@ -41,7 +41,14 @@ from pathlib import Path
 
 PHASE = Path(__file__).resolve().parents[1]
 DATA = PHASE / "data"
-WINDOWS = ["512", "2048", "none"]
+# The switching set is {512, 2048}, NOT {512, 2048, none}. Full-context
+# drafting is not realizable in the deployed stack: VLLM_SELF_SPEC_DRAFT_FULLCG
+# raises "requires VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0 (the scratchpad
+# materialises the sinks+window key set)". Phase 94 handled this by running
+# w-none PLAIN and disclosing the realization split (measured worth -0.5%
+# mean); running it plain HERE would compare across stacks inside the very
+# metric under test, so the none arm is dropped and the constraint recorded.
+WINDOWS = ["512", "2048"]
 GROUPS = {
     "discriminating": ["R4", "R5", "R5cot", "R8"],
     "partial": ["R1"],

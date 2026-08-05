@@ -1,0 +1,83 @@
+{
+ "arch": "dense",
+ "window": "off",
+ "seed": 0,
+ "config": "q-hum_s-b2",
+ "kmax": 0,
+ "model": "Qwen/Qwen3-8B",
+ "draft": null,
+ "regimes": {
+  "R4": {
+   "toks": 590.2,
+   "all": [
+    589.8,
+    590.2,
+    590.4
+   ],
+   "accept": null,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5": {
+   "toks": 366.1,
+   "all": [
+    365.3,
+    366.1,
+    367.0
+   ],
+   "accept": null,
+   "batch": 8,
+   "max_tokens": 512,
+   "temp": 0.0
+  },
+  "R5cot": {
+   "toks": 579.2,
+   "all": [
+    579.0,
+    579.2,
+    579.3
+   ],
+   "accept": null,
+   "batch": 8,
+   "max_tokens": 3072,
+   "temp": 0.0
+  },
+  "R8": {
+   "toks": 2046.2,
+   "all": [
+    2015.4,
+    2046.2,
+    2066.5
+   ],
+   "accept": null,
+   "batch": 16,
+   "max_tokens": 2048,
+   "temp": 1.0
+  },
+  "R1": {
+   "toks": 152.9,
+   "all": [
+    152.7,
+    152.9,
+    153.0
+   ],
+   "accept": null,
+   "batch": 1,
+   "max_tokens": 1024,
+   "temp": 0.0
+  },
+  "R6": {
+   "toks": 2792.3,
+   "all": [
+    2771.4,
+    2792.3,
+    2795.4
+   ],
+   "accept": null,
+   "batch": 32,
+   "max_tokens": 256,
+   "temp": 0.0
+  }
+ }
+}

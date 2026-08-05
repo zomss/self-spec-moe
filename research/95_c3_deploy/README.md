@@ -185,6 +185,19 @@ Registered risks (stated now, not after the fact):
 
 ## Plan
 
+**Realizability constraint found in E0 (2026-08-05).** The switching set is
+`{512, 2048}`, not `{512, 2048, none}`: booting the deployed stack with a
+full-context draft raises `VLLM_SELF_SPEC_DRAFT_FULLCG requires
+VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0 (the scratchpad materialises the
+sinks+window key set)`. Phase 94 met the same constraint and handled it by
+running `w-none` PLAIN, disclosing the realization split (measured worth
+-0.5% mean). Running it plain HERE would compare across two stacks inside the
+very metric under test, so the `none` arm is dropped instead. This is the same
+physics phase 91's E6-effroll reported from the other direction: a
+full-context draft is unaffordable on H100 -- here the deployed stack does not
+even admit one. The map's picks for the discriminating (long-context) regimes
+are 512/2048 anyway, so the dropped arm costs little.
+
 - **E0 — the switching ENVELOPE on real data (no engine change; gates
   everything else).** Measure before building. Today's runner already boots
   one window per engine (`run_e6d.sh:44` uses a per-window policy table), so
