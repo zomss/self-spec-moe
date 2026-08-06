@@ -87,6 +87,18 @@ paper is that marginal cost-side cells measured under natural EOS with
 a draining batch require equal-work re-measurement before being
 claimed, and that 43 such cells exist in Stage B.
 
+## Follow-through (W10, done for MoE)
+
+`results_w10.md` re-measured the whole MoE surface under equal work.
+It confirms this screen's two-sided caution empirically (5 wins fell,
+2 losses rose) and adds a SECOND inflation mechanism this screen does
+not detect: Stage-B AR anchors ran 3-14% slow under autotune, and
+since S = spec/AR a slow denominator inflates every S in the arm
+uniformly — including drain-immune b1 cells. That mechanism is
+architecture-general, so the counts in every c1 row (not just the
+contaminated cells listed above) carry a few-percent anchor
+uncertainty. Only MoE's changed qualitatively.
+
 ## Recommended remediation (not run)
 
 Re-measure only the 43 SUSPECT cells under `G93_FIXED_LEN` — roughly
