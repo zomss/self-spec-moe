@@ -105,3 +105,21 @@ and loses at b8 RAG (f falls faster than cost). The count axis is
 regime-dependent exactly as the window axis was: one more per-regime
 lever for the ladder, and the W6 gate's R1 margin widens from +5.9%
 to ~+15% with count in the pool.
+
+## Ladder validation boot (dense s-none/w512 + r2 table, R5+R1, seed 0)
+
+Accepts match uncond exactly (R5 4.33-4.41, R1 4.85-4.87 -> the ladder
+arms and holds K4 correctly). Rates, vs anchors:
+
+- R5: rejected-median ~465 -- ABOVE the W2 argmax realization (~452),
+  ~7% below the uncond ceiling (500-523).
+- R1: two suppressed rounds (110/111, episode-suspect on the GPU0 lane
+  again), fast rounds 142-146 -- BELOW both argmax (~166) and uncond
+  (168) despite correct arming.
+
+VERDICT: PARTIAL. Arming/K decisions validated (the estimator chain
+works end-to-end); the R1 rate gap at correct decisions is unexplained
+(candidates: per-step ladder overhead at b1, probe interaction, or
+episodes) and needs a replicate boot + GATE_DEBUG before the ladder is
+declared deployable. Recorded as open item; do NOT ship the ladder on
+b1 cells until resolved.
