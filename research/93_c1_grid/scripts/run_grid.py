@@ -52,7 +52,21 @@ TUNE = os.environ.get("G93_TUNE", "1") == "1"
 # collapsing width -- fine when decodes hit the ceiling (MLA, 2048 tok),
 # fatal when they are short (MoE R2, ~200 tok). Cost-model (R-side)
 # measurement only; scored serving runs keep natural EOS.
-FIXED_LEN = int(os.environ.get("G93_FIXED_LEN", "0"))
+def _parse_fixed_len(raw):
+    """G93_FIXED_LEN: "256" (all regimes) or "R1:280,R2:205" (per
+    regime). Per-regime lengths let each regime keep its natural
+    character while both arms still do EQUAL work, which is the
+    property natural EOS violates (96/W9)."""
+    raw = (raw or "").strip()
+    if not raw:
+        return 0, {}
+    if ":" not in raw:
+        return int(raw), {}
+    return 0, {k: int(v) for k, v in
+               (kv.split(":") for kv in raw.split(",") if kv)}
+
+
+FIXED_LEN, FIXED_LEN_MAP = _parse_fixed_len(os.environ.get("G93_FIXED_LEN"))
 # G93_MAX_SEQS overrides the engine's max_num_seqs, which otherwise
 # tracks max(BATCHES). Single-batch boots therefore configure a smaller
 # engine than a multi-batch sweep measuring the SAME cell (CUDA-graph
@@ -107,6 +121,7 @@ def main():
     rids = want.split(",") if want else REGIMES
     out = {"model": MODEL, "tag": TAG, "draft": DRAFT, "K": K if spec else 0,
            "tune": TUNE, "fixed_len": FIXED_LEN,
+           "fixed_len_map": FIXED_LEN_MAP,
            "max_num_seqs": MAX_SEQS or max(BATCHES),
            "window": WINDOW, "skip": SKIP, "ceiling": CEILING,
            "draft_kv_dtype": os.environ.get(
@@ -118,10 +133,11 @@ def main():
         plens = [len(tok.encode(p)) for p in prompts]
         # regime v2: dataset sets input/output character, NOT length --
         # natural EOS under the ceiling; temperature stays canonical
-        sp = SamplingParams(max_tokens=FIXED_LEN or CEILING,
+        flen = FIXED_LEN_MAP.get(rid, FIXED_LEN)
+        sp = SamplingParams(max_tokens=flen or CEILING,
                             temperature=gs["temperature"],
                             seed=0 if gs["temperature"] else None,
-                            ignore_eos=bool(FIXED_LEN))
+                            ignore_eos=bool(flen))
         llm.generate(prompts[:2], SamplingParams(
             max_tokens=64, temperature=gs["temperature"], seed=0),
             use_tqdm=False)  # warmup
