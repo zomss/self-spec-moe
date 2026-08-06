@@ -123,3 +123,12 @@ works end-to-end); the R1 rate gap at correct decisions is unexplained
 episodes) and needs a replicate boot + GATE_DEBUG before the ladder is
 declared deployable. Recorded as open item; do NOT ship the ladder on
 b1 cells until resolved.
+
+### b1 ladder gap RESOLVED (GPU1 replicate, GATE_DEBUG)
+
+R1 e2e [181.2, 178.4, 180.5, 179.1] -- ABOVE the uncond ceiling (168) --
+accepts 4.82-4.86, K-duty 1858/1858 steps at K=4 (zero flapping). The
+GPU0 rounds (110-146) were source-B episodes; the ladder's decisions and
+execution are both clean at b1. Gate lifted: the ladder ships on all
+cells. (One more episode datum for the co-tenant file: every suppressed
+cell this arc sat on the GPU0 lane.)
