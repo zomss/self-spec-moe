@@ -1,0 +1,32 @@
+{
+ "model": "deepseek-ai/DeepSeek-V2-Lite",
+ "tag": "w8c_mla_off_b8",
+ "draft": "off",
+ "K": 0,
+ "tune": false,
+ "fixed_len": 256,
+ "window": 0,
+ "skip": "",
+ "ceiling": 2048,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R2",
+   "batch": 8,
+   "toks": 898.8,
+   "all": [
+    881.4,
+    898.8,
+    900.9
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 256,
+   "out_tok_p95": 256,
+   "prompt_tok_p50": 39,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}
