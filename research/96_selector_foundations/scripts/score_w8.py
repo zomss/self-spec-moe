@@ -57,16 +57,28 @@ def wbytes(arch, n_tok, bpp):
 
 
 def prof(tag):
+    """Per-region mean [ms], aggregated across TP ranks with MAX.
+
+    A TP step's wall time is set by the slowest rank (ranks sync at
+    collectives), so max -- not an arbitrary rank -- is the step cost.
+    On the MoE TP2 boots the two ranks differ by ~10%, which is the
+    width of the P-W8c band, so the choice is not cosmetic.
+    """
     d = W8 / f"prof_{tag}"
-    best, best_n = None, -1
+    agg: dict[str, float] = {}
+    ranks = 0
     for p in d.glob("self_spec_profile_*.json"):
         s = json.load(open(p))["summary"]
-        n = s.get("verify", {}).get("n") or 0
-        if n > best_n:
-            best, best_n = s, n
-    if not best:
+        if not (s.get("verify", {}).get("n") or 0):
+            continue                      # non-model process, no samples
+        ranks += 1
+        for k, v in s.items():
+            if v["n"]:
+                agg[k] = max(agg.get(k, 0.0), v["mean_ms"])
+    if not agg:
         return None
-    return {k: v["mean_ms"] for k, v in best.items() if v["n"]}
+    agg["_ranks"] = float(ranks)
+    return agg
 
 
 def main():
