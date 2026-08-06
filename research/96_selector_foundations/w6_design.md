@@ -35,6 +35,20 @@ all of MLA/MoE below b32, high-batch K4, expensive quants). Output: the
 candidate pool per (input-length, batch) cell. Grid amendment: add
 sub-2000-ctx cells (R1/R6/R8 miscalibration, W5).
 
+**Amendment (user, 2026-08-06, after W7 → w8_cost_model.md)**: Round 1
+upgraded from table-driven to CONSTRUCTIVE. (a) The identity's "+1"
+verify term is generalized to V(K,b): sparse activation makes K+1
+verify tokens read ~min(E,(K+1)k) experts, so verify is NOT one target
+step below coverage saturation — the W7 inversion booked this into R̂.
+(b) New Stage 0 (cheap-target cell test): from measured T(b), stack
+floor C, coverage V, and a bytes-roofline draft floor, S_max ≤ 1
+proves OFF for a whole cell before any lever exists; can only prove
+OFF, never ARM. (c) Stage 1 eliminates (lever, K) PAIRS with profiled
+per-lever kernel/stack efficiency — K-aware because coverage depends
+on b·(K+1). Validation gate: the constructive denominator must
+reproduce W7's measured τ/S within ±10% (P-W8c) before the funnel
+replaces the banked tables.
+
 **Skip-count rule (user, 2026-08-06)**: within the skip lever, Round 1
 decides only the COUNT ladder, never the identity. Count → R is pure
 physics (each skipped layer removes ~1/L of draft compute); identity →
