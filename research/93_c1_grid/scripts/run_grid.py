@@ -43,6 +43,9 @@ BATCHES = [int(b) for b in os.environ.get(
 LONG_CTX = {"R4", "R5", "R5cot"}   # packed-doc datasets: capacity-bound
 NLOAD_LONG = int(os.environ.get("G93_NLOAD_LONG", "32"))
 TAG = os.environ.get("G93_TAG", "")
+# G93_TUNE=0 disables flashinfer autotune (the 40% boot lottery, 96/W1).
+# Default 1 preserves the historical grid's semantics.
+TUNE = os.environ.get("G93_TUNE", "1") == "1"
 
 
 def counters(llm):
@@ -75,18 +78,21 @@ def main():
                 "num_speculative_tokens": K,
                 "draft_tensor_parallel_size":
                     int(os.environ.get("G93_DRAFT_TP", str(TP)))}
+    extra = {} if TUNE else {
+        "kernel_config": {"enable_flashinfer_autotune": False}}
     llm = LLM(model=MODEL, speculative_config=spec,
               tensor_parallel_size=TP, max_model_len=MAXLEN,
               gpu_memory_utilization=0.90, max_num_seqs=max(BATCHES),
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192,
               enforce_eager=os.environ.get("G93_ENFORCE_EAGER") == "1",
-              trust_remote_code=True)
+              trust_remote_code=True, **extra)
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 
     want = os.environ.get("G93_DATASETS")
     rids = want.split(",") if want else REGIMES
     out = {"model": MODEL, "tag": TAG, "draft": DRAFT, "K": K if spec else 0,
+           "tune": TUNE,
            "window": WINDOW, "skip": SKIP, "ceiling": CEILING,
            "draft_kv_dtype": os.environ.get(
                "VLLM_SELF_SPEC_DRAFT_KV_DTYPE", ""),
