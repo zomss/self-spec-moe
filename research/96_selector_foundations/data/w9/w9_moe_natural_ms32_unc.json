@@ -1,0 +1,33 @@
+{
+ "model": "Qwen/Qwen3-30B-A3B",
+ "tag": "w9_moe_natural_ms32_unc",
+ "draft": "/home/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym",
+ "K": 4,
+ "tune": false,
+ "fixed_len": 0,
+ "max_num_seqs": 32,
+ "window": 0,
+ "skip": "",
+ "ceiling": 16384,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R2",
+   "batch": 32,
+   "toks": 1266.2,
+   "all": [
+    1255.2,
+    1266.2,
+    1318.7
+   ],
+   "accept": 4.433,
+   "clip_ratio": 0.0,
+   "out_tok_p50": 203,
+   "out_tok_p95": 970,
+   "prompt_tok_p50": 53,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}

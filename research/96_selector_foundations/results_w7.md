@@ -15,12 +15,14 @@ MoE TP2 boots are sequential reboots on GPUs 0+1.
 | MLA | R2 | 0.577 | 0.909 | **1.129 ARM**† | 1.085 |
 | MLA | R6 | 0.568 | (0.93)* | **1.111 ARM** | 1.127 |
 | MoE | R1 | 0.615 | 0.886 | (0.91/0.94 OFF)* | (0.90)* |
-| MoE | R2 | 0.533 | 0.647 | **1.087 ARM** | 1.067 |
+| MoE | R2 | 0.533 | 0.647 | ~~1.087 ARM~~ **RETRACTED→OFF** | 1.067‡ |
 | MoE | R6 | 0.492 | 0.809 | 0.857 OFF | 0.914 |
 
 \* uncertified under the 2% cross-boot rule but VERDICT-ROBUST: both
 boot readings fall on the same side of 1.0 (values in parens =
 conservative reading). † resolved by tie-breaker boot, see P-W7c.
+‡ MoE b64 rests on the same drain-contaminated protocol as the
+retracted b32 cell (W9); treat as unverified, not as a map row.
 
 ## Verdicts
 
@@ -49,6 +51,14 @@ Flag: MLA b32 content is ceiling-clipped loops (clip 0.89–0.97,
 out_p50 = 2048 = ceiling, τ ≈ 5.0 inflated). Per pre-registration this
 ARM verdict requires real-content confirmation before deployment; the
 OFF verdicts are a fortiori sound.
+
+> **RETRACTED 2026-08-06 by W9 (`results_w9.md`).** The refutation
+> below does not stand. Under a workload-controlled protocol the cell
+> LOSES at both engine configurations (S = 0.928 / 0.943, τ unchanged);
+> the apparent win was a drain artifact — the two arms generated
+> different text (out p95 1332 for AR vs 925 for spec), so the AR arm
+> spent longer in the inefficient low-batch tail. The oracle's OFF
+> prediction for MoE b32 was correct. Text preserved per T11.
 
 **P-W7d (MoE b32) — REFUTED in R2 (retained per T11).** Predicted OFF
 everywhere from oracle S_ref 0.94–0.99; measured R2 b32 S = 1.087,
@@ -85,3 +95,7 @@ except a certified natural-content b32/R2 arm the oracle missed —
 the last point is itself evidence for the design: Round 1's sound
 elimination kept the cell alive, and only Round 2's measured
 acceptance could bank it.
+
+**Superseded by W9**: the MoE b32/R2 arm is retracted (drain artifact,
+see the P-W7d note above). MoE's Round-2 verdict is gate-OFF
+everywhere, matching Round 1's prediction; MLA b32's arm stands.
