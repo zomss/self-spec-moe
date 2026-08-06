@@ -53,6 +53,12 @@ TUNE = os.environ.get("G93_TUNE", "1") == "1"
 # fatal when they are short (MoE R2, ~200 tok). Cost-model (R-side)
 # measurement only; scored serving runs keep natural EOS.
 FIXED_LEN = int(os.environ.get("G93_FIXED_LEN", "0"))
+# G93_MAX_SEQS overrides the engine's max_num_seqs, which otherwise
+# tracks max(BATCHES). Single-batch boots therefore configure a smaller
+# engine than a multi-batch sweep measuring the SAME cell (CUDA-graph
+# capture sizes, spec token-slot reservation), which is a confound when
+# comparing across harnesses.
+MAX_SEQS = int(os.environ.get("G93_MAX_SEQS", "0"))
 
 
 def counters(llm):
@@ -89,7 +95,8 @@ def main():
         "kernel_config": {"enable_flashinfer_autotune": False}}
     llm = LLM(model=MODEL, speculative_config=spec,
               tensor_parallel_size=TP, max_model_len=MAXLEN,
-              gpu_memory_utilization=0.90, max_num_seqs=max(BATCHES),
+              gpu_memory_utilization=0.90,
+              max_num_seqs=MAX_SEQS or max(BATCHES),
               enable_prefix_caching=False, disable_log_stats=False,
               async_scheduling=True, max_num_batched_tokens=8192,
               enforce_eager=os.environ.get("G93_ENFORCE_EAGER") == "1",
@@ -100,6 +107,7 @@ def main():
     rids = want.split(",") if want else REGIMES
     out = {"model": MODEL, "tag": TAG, "draft": DRAFT, "K": K if spec else 0,
            "tune": TUNE, "fixed_len": FIXED_LEN,
+           "max_num_seqs": MAX_SEQS or max(BATCHES),
            "window": WINDOW, "skip": SKIP, "ceiling": CEILING,
            "draft_kv_dtype": os.environ.get(
                "VLLM_SELF_SPEC_DRAFT_KV_DTYPE", ""),
