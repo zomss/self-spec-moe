@@ -1,0 +1,32 @@
+{
+ "model": "deepseek-ai/DeepSeek-V2-Lite",
+ "tag": "mla_uncond_boot3",
+ "draft": "/home/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan",
+ "K": 4,
+ "tune": false,
+ "window": 0,
+ "skip": "",
+ "ceiling": 2048,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R2",
+   "batch": 32,
+   "toks": 2759.3,
+   "all": [
+    2707.3,
+    2711.7,
+    2759.3,
+    2768.8
+   ],
+   "accept": 4.984,
+   "clip_ratio": 0.938,
+   "out_tok_p50": 2048,
+   "out_tok_p95": 2048,
+   "prompt_tok_p50": 52,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}

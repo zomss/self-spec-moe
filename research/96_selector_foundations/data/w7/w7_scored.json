@@ -1,0 +1,304 @@
+{
+ "mla": {
+  "cells": [
+   {
+    "rid": "R1",
+    "batch": 1,
+    "off_mean": 247.5,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": null,
+    "uncond_note": "episode-suppressed (kept 1/4 + 4/4)",
+    "tau": 5.0,
+    "tau_boot2": 5.0
+   },
+   {
+    "rid": "R1",
+    "batch": 8,
+    "off_mean": 946.4,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 903.5,
+    "uncond_note": "ok (3 rounds rejected)",
+    "tau": 4.996,
+    "tau_boot2": 4.996,
+    "S": 0.9546,
+    "R_hat": 1.058
+   },
+   {
+    "rid": "R1",
+    "batch": 32,
+    "off_mean": 2338.2,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 2632.7,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.995,
+    "tau_boot2": 4.995,
+    "S": 1.126,
+    "R_hat": 0.859,
+    "S_per_boot_best2": [
+     1.1359,
+     1.1341
+    ]
+   },
+   {
+    "rid": "R1",
+    "batch": 64,
+    "off_mean": 4385.6,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 4903.9,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.994,
+    "tau_boot2": 4.994,
+    "S": 1.1182,
+    "R_hat": 0.867
+   },
+   {
+    "rid": "R2",
+    "batch": 1,
+    "off_mean": 257.0,
+    "off_note": "ok (2 rounds rejected)",
+    "uncond_mean": 148.2,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.953,
+    "tau_boot2": 4.953,
+    "S": 0.5765,
+    "R_hat": 1.898
+   },
+   {
+    "rid": "R2",
+    "batch": 8,
+    "off_mean": 817.1,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 742.9,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.963,
+    "tau_boot2": 4.961,
+    "S": 0.9091,
+    "R_hat": 1.115
+   },
+   {
+    "rid": "R2",
+    "batch": 32,
+    "off_mean": 2423.1,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": null,
+    "uncond_note": "boots-disagree (2802.4 vs 2735.1)",
+    "tau": 4.985,
+    "tau_boot2": 4.985
+   },
+   {
+    "rid": "R2",
+    "batch": 64,
+    "off_mean": 4239.5,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 4598.9,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.984,
+    "tau_boot2": 4.986,
+    "S": 1.0848,
+    "R_hat": 0.899
+   },
+   {
+    "rid": "R6",
+    "batch": 1,
+    "off_mean": 260.5,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 147.9,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.996,
+    "tau_boot2": 4.996,
+    "S": 0.5679,
+    "R_hat": 1.949
+   },
+   {
+    "rid": "R6",
+    "batch": 8,
+    "off_mean": null,
+    "off_note": "boots-disagree (961.1 vs 984.8)",
+    "uncond_mean": 902.7,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.997,
+    "tau_boot2": 4.996
+   },
+   {
+    "rid": "R6",
+    "batch": 32,
+    "off_mean": 2452.3,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 2723.8,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.995,
+    "tau_boot2": 4.995,
+    "S": 1.1107,
+    "R_hat": 0.874,
+    "S_per_boot_best2": [
+     1.1211,
+     1.1017
+    ]
+   },
+   {
+    "rid": "R6",
+    "batch": 64,
+    "off_mean": 4466.7,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 5032.3,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.995,
+    "tau_boot2": 4.995,
+    "S": 1.1266,
+    "R_hat": 0.858
+   }
+  ]
+ },
+ "moe": {
+  "cells": [
+   {
+    "rid": "R1",
+    "batch": 1,
+    "off_mean": 234.7,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 144.3,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.741,
+    "tau_boot2": 4.741,
+    "S": 0.615,
+    "R_hat": 1.677
+   },
+   {
+    "rid": "R1",
+    "batch": 8,
+    "off_mean": 808.1,
+    "off_note": "ok (1 rounds rejected)",
+    "uncond_mean": 716.2,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.78,
+    "tau_boot2": 4.783,
+    "S": 0.8864,
+    "R_hat": 1.098
+   },
+   {
+    "rid": "R1",
+    "batch": 32,
+    "off_mean": null,
+    "off_note": "boots-disagree (2062.1 vs 1984.5)",
+    "uncond_mean": 1875.9,
+    "uncond_note": "ok (3 rounds rejected)",
+    "tau": 4.799,
+    "tau_boot2": 4.796
+   },
+   {
+    "rid": "R1",
+    "batch": 64,
+    "off_mean": null,
+    "off_note": "boots-disagree (980.0 vs 954.6)",
+    "uncond_mean": null,
+    "uncond_note": "episode-suppressed (kept 1/4 + 1/4)",
+    "tau": 4.859,
+    "tau_boot2": 4.864
+   },
+   {
+    "rid": "R2",
+    "batch": 1,
+    "off_mean": 252.6,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 134.5,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.306,
+    "tau_boot2": 4.306,
+    "S": 0.5325,
+    "R_hat": 1.772
+   },
+   {
+    "rid": "R2",
+    "batch": 8,
+    "off_mean": 575.1,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 372.0,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.188,
+    "tau_boot2": 4.186,
+    "S": 0.6468,
+    "R_hat": 1.369
+   },
+   {
+    "rid": "R2",
+    "batch": 32,
+    "off_mean": 1182.0,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 1284.6,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.43,
+    "tau_boot2": 4.418,
+    "S": 1.0868,
+    "R_hat": 0.769,
+    "S_per_boot_best2": [
+     1.0898,
+     1.1077
+    ]
+   },
+   {
+    "rid": "R2",
+    "batch": 64,
+    "off_mean": 2037.1,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 2173.5,
+    "uncond_note": "ok (2 rounds rejected)",
+    "tau": 4.591,
+    "tau_boot2": 4.588,
+    "S": 1.067,
+    "R_hat": 0.826
+   },
+   {
+    "rid": "R6",
+    "batch": 1,
+    "off_mean": 242.4,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 119.3,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.918,
+    "tau_boot2": 4.918,
+    "S": 0.4921,
+    "R_hat": 2.248
+   },
+   {
+    "rid": "R6",
+    "batch": 8,
+    "off_mean": 695.5,
+    "off_note": "ok (1 rounds rejected)",
+    "uncond_mean": 562.6,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.806,
+    "tau_boot2": 4.776,
+    "S": 0.8089,
+    "R_hat": 1.235
+   },
+   {
+    "rid": "R6",
+    "batch": 32,
+    "off_mean": 1265.8,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 1084.3,
+    "uncond_note": "ok (1 rounds rejected)",
+    "tau": 4.837,
+    "tau_boot2": 4.841,
+    "S": 0.8566,
+    "R_hat": 1.162,
+    "S_per_boot_best2": [
+     0.8548,
+     0.8596
+    ]
+   },
+   {
+    "rid": "R6",
+    "batch": 64,
+    "off_mean": 2192.8,
+    "off_note": "ok (0 rounds rejected)",
+    "uncond_mean": 2004.8,
+    "uncond_note": "ok (0 rounds rejected)",
+    "tau": 4.84,
+    "tau_boot2": 4.838,
+    "S": 0.9142,
+    "R_hat": 1.073
+   }
+  ]
+ }
+}
