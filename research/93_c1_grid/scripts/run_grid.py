@@ -46,6 +46,13 @@ TAG = os.environ.get("G93_TAG", "")
 # G93_TUNE=0 disables flashinfer autotune (the 40% boot lottery, 96/W1).
 # Default 1 preserves the historical grid's semantics.
 TUNE = os.environ.get("G93_TUNE", "1") == "1"
+# G93_FIXED_LEN>0: ignore_eos + fixed max_tokens so the batch width stays
+# CONSTANT for the whole measurement. Natural EOS lets the batch drain
+# (b -> 1) mid-run, so e2e rate and mean step time both average over a
+# collapsing width -- fine when decodes hit the ceiling (MLA, 2048 tok),
+# fatal when they are short (MoE R2, ~200 tok). Cost-model (R-side)
+# measurement only; scored serving runs keep natural EOS.
+FIXED_LEN = int(os.environ.get("G93_FIXED_LEN", "0"))
 
 
 def counters(llm):
@@ -92,7 +99,7 @@ def main():
     want = os.environ.get("G93_DATASETS")
     rids = want.split(",") if want else REGIMES
     out = {"model": MODEL, "tag": TAG, "draft": DRAFT, "K": K if spec else 0,
-           "tune": TUNE,
+           "tune": TUNE, "fixed_len": FIXED_LEN,
            "window": WINDOW, "skip": SKIP, "ceiling": CEILING,
            "draft_kv_dtype": os.environ.get(
                "VLLM_SELF_SPEC_DRAFT_KV_DTYPE", ""),
@@ -103,9 +110,10 @@ def main():
         plens = [len(tok.encode(p)) for p in prompts]
         # regime v2: dataset sets input/output character, NOT length --
         # natural EOS under the ceiling; temperature stays canonical
-        sp = SamplingParams(max_tokens=CEILING,
+        sp = SamplingParams(max_tokens=FIXED_LEN or CEILING,
                             temperature=gs["temperature"],
-                            seed=0 if gs["temperature"] else None)
+                            seed=0 if gs["temperature"] else None,
+                            ignore_eos=bool(FIXED_LEN))
         llm.generate(prompts[:2], SamplingParams(
             max_tokens=64, temperature=gs["temperature"], seed=0),
             use_tqdm=False)  # warmup
