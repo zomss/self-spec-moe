@@ -19,6 +19,14 @@ export VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSpar
 # regimes are temperature 0 (greedy), so the top-k/top-p sampler backend cannot
 # affect outputs; disable it rather than mixing CUDA runtimes.
 export VLLM_USE_FLASHINFER_SAMPLER=0
+# 2026-08-07: the home reset also wiped /home/smcho/.humming/cache, which had
+# held a correctly-linked nvrtc_compile helper. Rebuilding it, Humming resolves
+# CUDA via torch's major version to /usr/local/cuda-12 (12.8) and its NVRTC then
+# dlopens libnvrtc-builtins.so.12.8 -- which IS installed at
+# /usr/local/cuda-12/lib64 but is not on the loader path (LD_LIBRARY_PATH unset,
+# dir not in ld.so.conf). Put it on the path: this keeps the self-consistent
+# 12.8 nvrtc+builtins pair the helper linked against.
+export LD_LIBRARY_PATH="/usr/local/cuda-12/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=1 VLLM_SELF_SPEC_CPU_ORCH=1"
 SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
