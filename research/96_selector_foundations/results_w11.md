@@ -48,7 +48,13 @@ The separation is visible cell-by-cell. q3_32b b1 cells move +0.2% to
 +3.9%; its b32/b64 cells move −11.7% to −42.2%. Drain-immune cells
 hold, drain-exposed cells collapse.
 
-## The structural finding: dense and sparse have OPPOSITE batch-dependence
+## Batch-dependence: the dense half is textbook, the sparse half is not
+
+**Framing correction (2026-08-07).** An earlier version of this section
+billed "dense wins at low batch, loses at high" as a structural
+finding. It is the standard, expected result for speculative decoding
+and is recorded here as confirmation, not discovery. The novel half is
+the SPARSE inversion and its mechanism.
 
 Every one of q3_32b's 15 surviving wins is at **b1 or b8**. It loses
 at *every* b32 and b64 cell. llama shows the same direction (wins
@@ -63,21 +69,56 @@ Set against W10/W7, the four architectures split cleanly:
 | dense (llama-8B, Qwen3-32B) | **wins** | loses |
 | sparse (MLA V2-Lite, MoE 30B-A3B) | loses (acceptance-independently) | marginal wins only |
 
-W8's cost model explains both directions with one mechanism. For a
-dense target, the b1 step is memory-bound, so a W4 draft reading ¼ the
-bytes is genuinely cheaper and speculation pays; at high batch the
-target step turns compute-bound, the draft's byte saving stops
-converting, and verify's extra tokens cost real time. For a sparse
-target the b1 step is *dispatch*-bound (measured 7.8–15.2× off its
-byte roofline), so quantization buys nothing and no acceptance can
-rescue it; only at b32, where expert coverage saturates and the step
-becomes bandwidth-bound, does the draft's byte saving finally convert.
+The decline is **entirely cost-side**: acceptance is flat across batch
+(q3_32b τ 4.84→4.74, llama τ 2.877→2.892) while S falls 1.25→0.81. So
+the denominator of S = τ/(K·D/T + V + C/T) grows; the numerator does
+not.
 
-**Speculation pays where the target step is bandwidth-bound — and the
-batch at which that happens is opposite for dense and sparse
-architectures.** That is a sharper statement of C1's regime axis than
-"the winner changes with batch", and it is now mechanistically grounded
-rather than observed.
+Two terms grow, with DIFFERENT scope:
+
+- **V (verify) — universal.** Spec decoding works at b1 because K+1
+  verify tokens SHARE one weight read, so V ≈ 1. At compute-bound high
+  batch, verify does (K+1)× the FLOPs and V climbs toward K+1. This
+  hits every speculative system, including one with a tiny external
+  draft.
+- **K·D/T (draft) — specific to THIS lever set.** Our levers are
+  BYTE-reducing (quant, KV window), not FLOP-reducing. At b1 a W4
+  draft reads ¼ the bytes and is cheap; at compute-bound it
+  dequantizes to the compute dtype and does the SAME FLOPs as the
+  target (it is the same architecture), so D/T → 1. A 1B external
+  draft for a 32B target would hold D/T ≈ 1/32 in FLOPs and degrade
+  far more gracefully. Only layer-skip cuts FLOPs, and the sets in
+  play are tiny (q3_32b's skipb2 = 2 of 64 layers ≈ 3%).
+
+**Consequence for the paper: a byte-oriented lever set has value
+structurally confined to bandwidth-bound regimes.** That is a real
+limitation of training-free self-drafting, stated plainly.
+
+**The sparse inversion is the non-obvious part.** MLA/MoE at b1 LOOK
+memory-bound, so the standard argument predicts spec's best regime.
+They are its worst. The "verify is free" property requires tokens to
+SHARE a weight read, and under sparse routing at low batch they do
+not — each token pulls its own top-k experts, so K+1 verify tokens
+touch up to (K+1)k distinct ones. Measured: V = 1.75 (MLA b1) and 1.54
+(MoE b1) where dense would be ≈1.0. The draft does not get cheap
+either, because that step is DISPATCH-bound (7.8-15.2× off its byte
+roofline), so shrinking bytes buys nothing. Only at b32, once coverage
+saturates (~112/128 experts touched regardless), do extra verify
+tokens read no new weights (V → 1.19/1.34) and the draft's byte saving
+convert (D/T → 0.78/0.74).
+
+**The unifying rule is not "memory-bound wins" but "speculation pays
+when the verify tokens SHARE the weight read and the draft is
+genuinely cheaper."** For dense that is low batch; for sparse it is
+high batch, because below expert saturation the weight read is not
+shared even though the step is memory-bound.
+
+*Measurement status*: the sparse decomposition (D, V per batch) is
+MEASURED (W8). The dense decomposition is INFERRED from e2e ratios
+plus the identity — W8 profiled step times only on MLA/MoE. The
+inference is quantitatively consistent (q3_32b's denominator grows
+3.83 → 5.86 from b1 to b64, which the two terms account for) but
+profiling dense D and V directly is a ~1 GPU-h open item.
 
 ## What this costs C1 — and what it does not
 
