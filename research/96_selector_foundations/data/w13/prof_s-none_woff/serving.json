@@ -1,0 +1,129 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "tag": "w13_prof_s-none_woff",
+ "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+ "K": 4,
+ "tune": false,
+ "fixed_len": 0,
+ "fixed_len_map": {
+  "R1": 1024,
+  "R5": 512,
+  "R5cot": 3072
+ },
+ "max_num_seqs": 8,
+ "window": 0,
+ "skip": "",
+ "ceiling": 16384,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R1",
+   "batch": 1,
+   "toks": 153.3,
+   "all": [
+    149.0,
+    150.6,
+    153.3,
+    153.9
+   ],
+   "accept": 4.93,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R1",
+   "batch": 8,
+   "toks": 1106.9,
+   "all": [
+    930.4,
+    1096.4,
+    1106.9,
+    1153.8
+   ],
+   "accept": 4.891,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 1,
+   "toks": 118.2,
+   "all": [
+    114.2,
+    117.9,
+    118.2,
+    119.8
+   ],
+   "accept": 4.556,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 8,
+   "toks": 407.8,
+   "all": [
+    398.2,
+    400.2,
+    407.8,
+    413.8
+   ],
+   "accept": 4.624,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 1,
+   "toks": 138.8,
+   "all": [
+    136.9,
+    138.6,
+    138.8,
+    140.5
+   ],
+   "accept": 4.925,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 8,
+   "toks": 573.2,
+   "all": [
+    571.5,
+    571.9,
+    573.2,
+    573.2
+   ],
+   "accept": 4.922,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}

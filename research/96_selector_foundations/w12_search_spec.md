@@ -273,6 +273,17 @@ failures.
 
 ## 7. OPEN inputs
 
+- **BLOCKER (W13, 2026-08-07): the sync-bracketed profiler is not
+  accurate enough at short steps.** Measured bias in τ* is +11…+17%
+  mean and, fatally, DIFFERENTIAL between compositions at one cell (20
+  points at R1 b8), which breaks the ranking Round 1 must produce:
+  2/6 top-1, 1/6 exact order on dense. Bias tracks step length (worst
+  at b1 ≈5 ms, near zero at b8/14k), the signature of the profiler's
+  fixed per-region CUDA syncs — which is why W8 §3b passed at b32
+  (11.5 ms steps) and this fails. A CUDA-event profiler is the fix.
+  Until then, τ* is usable only on long-step (high total-KV) cells —
+  which is also exactly where W13 found cost discriminates
+  compositions at all (τ* spread 30–49% at b8/14k vs 1–8% at b1).
 - **`V` and `C` are measured only on MLA/MoE** (W8). The dense and
   llama columns need the same profiling (~1 GPU-h) before Stage 0/1
   can be applied there; today those columns' Round 1 still runs on the

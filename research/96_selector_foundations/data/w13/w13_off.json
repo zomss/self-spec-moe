@@ -1,0 +1,129 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "tag": "w13_off",
+ "draft": "off",
+ "K": 0,
+ "tune": false,
+ "fixed_len": 0,
+ "fixed_len_map": {
+  "R1": 1024,
+  "R5": 512,
+  "R5cot": 3072
+ },
+ "max_num_seqs": 8,
+ "window": 0,
+ "skip": "",
+ "ceiling": 16384,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R1",
+   "batch": 1,
+   "toks": 153.0,
+   "all": [
+    153.0,
+    153.0,
+    153.0,
+    153.0
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R1",
+   "batch": 8,
+   "toks": 1157.5,
+   "all": [
+    1157.0,
+    1157.0,
+    1157.5,
+    1158.5
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 1,
+   "toks": 122.4,
+   "all": [
+    122.4,
+    122.4,
+    122.4,
+    122.5
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 8,
+   "toks": 428.2,
+   "all": [
+    428.0,
+    428.2,
+    428.2,
+    428.7
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 1,
+   "toks": 134.2,
+   "all": [
+    129.0,
+    130.7,
+    134.2,
+    134.2
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 8,
+   "toks": 571.1,
+   "all": [
+    547.9,
+    548.0,
+    571.1,
+    577.0
+   ],
+   "accept": null,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}

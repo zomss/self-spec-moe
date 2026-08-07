@@ -1,0 +1,129 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "tag": "w13_unc_s-none_w2048",
+ "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+ "K": 4,
+ "tune": false,
+ "fixed_len": 0,
+ "fixed_len_map": {
+  "R1": 1024,
+  "R5": 512,
+  "R5cot": 3072
+ },
+ "max_num_seqs": 8,
+ "window": 2048,
+ "skip": "",
+ "ceiling": 16384,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R1",
+   "batch": 1,
+   "toks": 205.7,
+   "all": [
+    201.3,
+    205.5,
+    205.7,
+    206.3
+   ],
+   "accept": 4.948,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R1",
+   "batch": 8,
+   "toks": 1568.3,
+   "all": [
+    1379.0,
+    1455.5,
+    1568.3,
+    1570.6
+   ],
+   "accept": 4.88,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 1,
+   "toks": 158.4,
+   "all": [
+    155.6,
+    156.4,
+    158.4,
+    159.9
+   ],
+   "accept": 4.507,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 8,
+   "toks": 565.6,
+   "all": [
+    550.2,
+    551.1,
+    565.6,
+    582.8
+   ],
+   "accept": 4.525,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 1,
+   "toks": 195.9,
+   "all": [
+    190.3,
+    194.6,
+    195.9,
+    197.0
+   ],
+   "accept": 4.928,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 8,
+   "toks": 994.4,
+   "all": [
+    966.0,
+    989.9,
+    994.4,
+    1017.2
+   ],
+   "accept": 4.909,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}

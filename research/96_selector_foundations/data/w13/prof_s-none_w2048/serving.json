@@ -1,0 +1,129 @@
+{
+ "model": "Qwen/Qwen3-8B",
+ "tag": "w13_prof_s-none_w2048",
+ "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+ "K": 4,
+ "tune": false,
+ "fixed_len": 0,
+ "fixed_len_map": {
+  "R1": 1024,
+  "R5": 512,
+  "R5cot": 3072
+ },
+ "max_num_seqs": 8,
+ "window": 2048,
+ "skip": "",
+ "ceiling": 16384,
+ "draft_kv_dtype": "",
+ "cells": [
+  {
+   "rid": "R1",
+   "batch": 1,
+   "toks": 150.5,
+   "all": [
+    125.6,
+    143.5,
+    150.5,
+    150.6
+   ],
+   "accept": 4.95,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R1",
+   "batch": 8,
+   "toks": 1106.8,
+   "all": [
+    925.9,
+    1024.8,
+    1106.8,
+    1139.6
+   ],
+   "accept": 4.878,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 1024,
+   "out_tok_p95": 1024,
+   "prompt_tok_p50": 83,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 1,
+   "toks": 116.6,
+   "all": [
+    114.4,
+    116.1,
+    116.6,
+    116.7
+   ],
+   "accept": 4.497,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5",
+   "batch": 8,
+   "toks": 503.4,
+   "all": [
+    472.6,
+    480.6,
+    503.4,
+    505.0
+   ],
+   "accept": 4.494,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 512,
+   "out_tok_p95": 512,
+   "prompt_tok_p50": 14037,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 1,
+   "toks": 138.0,
+   "all": [
+    135.7,
+    136.9,
+    138.0,
+    139.7
+   ],
+   "accept": 4.929,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  },
+  {
+   "rid": "R5cot",
+   "batch": 8,
+   "toks": 813.3,
+   "all": [
+    786.6,
+    810.7,
+    813.3,
+    821.3
+   ],
+   "accept": 4.931,
+   "clip_ratio": 1.0,
+   "out_tok_p50": 3072,
+   "out_tok_p95": 3072,
+   "prompt_tok_p50": 14086,
+   "preemptions": 0,
+   "temp": 0.0
+  }
+ ],
+ "complete": true
+}
