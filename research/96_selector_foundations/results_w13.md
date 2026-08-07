@@ -64,6 +64,33 @@ semantics, with the cell-level trend, and with W8 §3b passing at b32.
 cell** — and that differential, not the level, is what breaks the
 ranking. Recorded as open rather than replaced with an untested story.
 
+### Mechanisms TESTED and REFUTED (2026-08-08)
+
+| hypothesis | test | outcome |
+|---|---|---|
+| fixed overhead per armed step | Δ = bias_abs × T constant? | **REFUTED** — CV 93%, sign changes |
+| over-counts the KV READ (user) | excess ∝ draft KV bytes? | **REFUTED** — corr **−0.44**, i.e. excess SHRINKS as KV grows |
+| simple overlap, excess = min(CPU,GPU) | excess rises then plateaus with GPU work? | **REFUTED** — observed excess FALLS |
+
+Extremes for the KV test: w512 @ R1 b1 reads 0.075 GB and over-counts
+**+5.06 ms**; woff @ R5 b8 reads 17.16 GB and UNDER-counts **−4.15 ms**.
+
+**Best-fitting hypothesis (not yet isolated): TWO OPPOSING ERRORS.**
+(a) over-count from serialization — syncs expose CPU work (launches,
+attention-metadata prep, sampling, bookkeeping) that serving pipelines
+away; dominates when the step is GPU-light. (b) under-count from
+UNINSTRUMENTED work — the two regions do not span the whole armed step
+(scheduler, rejection sampling, output processing sit outside and grow
+with batch); W8 measured exactly this on MoE at b32, where regions
+covered 78% of the step. They cross over near R5 b8, which explains the
+sign change and why no single variable correlates.
+
+**The experiment that separates them** (small, do before the CUDA-event
+rewrite): add ONE region spanning the entire armed step. Then
+full-step-region vs sum-of-sub-regions measures the uninstrumented gap,
+and CUDA-events vs syncs on the same regions measures the serialization
+error — both directly, instead of inferred from residuals.
+
 **What is NOT refuted:** the τ* formulation itself. τ* is algebraically
 the denominator of the identity; it is correct by construction, and
 τ*_true = τ/S_actual is a well-defined quantity that behaves exactly as
