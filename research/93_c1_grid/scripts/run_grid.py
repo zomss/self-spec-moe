@@ -187,6 +187,20 @@ def main():
                   f"accept={cell['accept']} clip={cell['clip_ratio']} "
                   f"out_p50={cell['out_tok_p50']} "
                   f"preempt={cell['preemptions']}", flush=True)
+            # Per-cell profiler snapshot. The profiler lives in the WORKER
+            # process and accumulates across the whole boot, so a multi-cell
+            # boot otherwise yields one pooled set of region means and the
+            # per-cell terms are unrecoverable. It flushes cumulatively, so
+            # copying the file after each cell lets the scorer diff
+            # consecutive snapshots: mean_cell = (Σn·mean)/Δn.
+            _pd = os.environ.get("VLLM_SELF_SPEC_PROFILE_OUT", "").strip()
+            if _pd and os.environ.get("VLLM_SELF_SPEC_PROFILE") == "1":
+                import glob
+                import shutil
+                for _f in glob.glob(os.path.join(
+                        _pd, "self_spec_profile_*.json")):
+                    shutil.copy(_f, os.path.join(
+                        _pd, f"snap_{rid}_b{b}_{os.path.basename(_f)}"))
         # incremental save: a timeout mid-sweep must not destroy the
         # datasets already measured (lost 25 cells to a looping-model
         # 6h-timeout on MLA before this)
