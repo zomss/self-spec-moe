@@ -83,7 +83,54 @@ arms without measured acceptance.
 **Inputs (all offline, f-free):** profiled `T(c)`, `C(c)`, `V(K,c)`,
 and `D(ℓ,c)` for each lever in the pool, per realization.
 
-### 2.1 Stage 0 — cell kill
+### 2.0 The Round-1 output is a REQUIRED-ACCEPTANCE label (user, 2026-08-07)
+
+Round 1 should not emit a filtered list. The denominator is pure cost,
+so every configuration carries a number Round 1 can compute exactly:
+
+    τ*(ℓ,K,c) = K·D(ℓ,c)/T(c) + V(K,c) + C(c)/T(c)
+
+τ* is **the acceptance that configuration must achieve at that cell to
+break even**, and then
+
+    S = τ_measured / τ*
+
+so Round 2's job is to supply τ, and selection is a division. Nothing
+is thresholded in Round 1 except the impossible: τ* > K+1 cannot be
+satisfied (τ ≤ K+1), which recovers the Stage-0 cell kill and the
+(lever,K) elimination below as COROLLARIES rather than separate rules.
+
+*Validated out-of-sample* (results_w8.md §3b): predicted τ* = 4.71
+(MLA b32) and 4.80 (MoE b32) against unprofiled actuals 4.64 and 4.81
+— +1.5% / −0.3% — and the ARM/OFF call follows directly (MLA τ=4.94 >
+τ* → ARM, actual S=1.064; MoE τ=4.47 < τ* → OFF, actual S=0.928).
+
+**Pool construction: SPAN τ*, do not maximize predicted S.** Round 1
+cannot rank by S (it has no acceptance), but it can guarantee the pool
+holds an option at every acceptance level — a cheap draft with τ*≈1.5
+alongside an aggressive one with τ*≈4.7. Picking the top-N by any
+predicted score clusters them; a spanning set means that whatever
+acceptance turns out to be, a matched configuration exists. This is
+the principled answer to "how do you choose a pool without knowing
+acceptance".
+
+**Ladder consequence.** The serving fallback chain should be ordered by
+**descending τ*** — when live acceptance falls, demote to a
+configuration that needs less of it. That ordering is regime-robust,
+where ordering by one regime's measured S is not.
+
+**Trajectory in τ*-space.** As context grows, a windowed draft's cost
+stays flat while the target's grows, so **τ* FALLS for windowed
+configurations** — an option too expensive at 2k becomes affordable at
+16k. But acceptance moves too, and not always favourably: a fixed
+window covers a shrinking fraction of the relevant suffix, so τ can
+fall as well (I2: widening buys +0.30 accept at gen 3072 vs +0.02–0.09
+at gen 512). S = τ/τ* is therefore a ratio of two quantities that both
+move along the trajectory, in regime-dependent proportion — which is
+precisely why the window must be measured per regime and tracked live,
+not solved once.
+
+### 2.1 Stage 0 — cell kill (a corollary of §2.0)
 
 The maximum draft budget at cell `c` and depth `K`, using only
 `τ ≤ K+1`:

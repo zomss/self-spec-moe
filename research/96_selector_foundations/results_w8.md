@@ -43,7 +43,44 @@ converges near saturation. Mechanism: below saturation the step is
 latency-bound, so extra verify tokens do not cost their bytes; the
 bytes law becomes valid exactly when the step becomes bandwidth-bound.
 
-## 3. P-W8c — NOT TESTED (retracted check, T11)
+## 3b. P-W8c — NOW TESTED, and it PASSES (2026-08-07)
+
+The circular check below stands retracted. But a genuine out-of-sample
+test exists in the banked data and I missed it: W8d/W9 ran UNPROFILED
+uncond boots at b32 under the same fixed-256 protocol. Profiled boots
+were pre-registered as "not scored serving artifacts", so those
+unprofiled runs are held-out data for the cost model.
+
+Predict the unprofiled denominator from the profiled step times
+(P = draft_chain + verify, T from the unprofiled off arm):
+
+| cell | predicted τ* = P/T | actual τ/S (unprofiled) | error |
+|---|---|---|---|
+| MLA b32 | 4.714 | 4.643 (τ=4.939, S=1.0637) | **+1.5%** |
+| MoE b32 | 4.798 | 4.813 (τ=4.467, S=0.9282) | **−0.3%** |
+
+Both inside the pre-registered ±10%. And the ARM/OFF call follows
+directly: MLA τ=4.94 > τ*=4.71 → ARM (actual S=1.064); MoE τ=4.47 <
+τ*=4.80 → OFF (actual S=0.928). **P-W8c is CONFIRMED at b32 on both
+architectures.**
+
+### Consequence: the "instrument coverage" reading was wrong
+
+§4 reported that the two profiled regions "contain 78–87% of the armed
+step", implying they MISS real work. They do not. The regions predict
+the UNPROFILED armed-step cost to within 1.5%; the missing 13–22% in a
+profiled boot's own serving numbers is the profiler's sync overhead
+sitting OUTSIDE the regions. So the pre-registered rule to discard
+profiled serving numbers was not just cautious — it was exactly the
+right cut, and the region times are sound Round-1 inputs.
+
+This also softens §4's conclusion about Stage 0: the terms are not
+25–29% inflated as cost inputs (that figure is the perturbation of the
+profiled boot's END-TO-END rate, not of its region times), so the
+Stage-0 deflation exercise in §4 was over-conservative. Stage 0's
+b1/b8 OFF proofs stand on the region times directly.
+
+## 3. P-W8c — the ORIGINAL check: NOT A TEST (retracted, T11)
 
 `score_w8_final.py` first reported "coverage-corrected reconstruction"
 PASS at −0.0% on all six cells. That is an algebraic identity:
