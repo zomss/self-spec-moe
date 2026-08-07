@@ -7,9 +7,52 @@ design rationale and its amendment history).
 
 ## 0. Objects
 
-Cell `c = (b, ctx)`; regime `g` (content character); lever
+Cell `c`; regime `g` (content character); lever
 `ℓ = (quant, window, skip-set, kv-quant, realization)`; depth `K`.
 A **configuration** is `(ℓ, K)`; the action space also contains `OFF`.
+
+**Cell definition (user, 2026-08-07) — continuous, and a TRAJECTORY.**
+A request is not a point in the grid; it sweeps one. A 16k-input /
+2k-output workload traverses cells 16k → 18k as it generates, and the
+selector must be indexed so Round 1, Round 2 and serving all read the
+same axis. Two axes are required, because they are not the same
+quantity:
+
+| quantity | index | why |
+|---|---|---|
+| cost (D, V, C, T) | **total context** (per-step: #scheduled requests + total scheduled KV tokens) | weight reads scale with request count, attention with KV length |
+| acceptance (τ, p_i) | **regime × GENERATED length** | I2: widening the window buys +0.30 accept at gen 3072 but +0.02–0.09 at gen 512 — value tracks the self-generated suffix, not total ctx |
+
+Collapsing both onto total context would merge a 16k-input/2k-gen
+request with a 2k-input/16k-gen one: identical cost, different
+acceptance. That is exactly the I2 failure, reintroduced.
+
+The serving key `(b, input length, generated length)` determines both
+axes, which is why it is the key.
+
+**Granularity is free, because cost is interpolated not tabulated.**
+`T(ctx) ≈ a + b·ctx` (constant weight reads + linear attention); a
+full-KV draft has the same shape; **a windowed draft is FLAT in ctx**
+(it attends over the last W tokens regardless). So 3–4 profiled context
+points per lever fit two parameters and `D*(K,c)` evaluates at any
+granularity. Corollary worth exploiting: since windowed `D` is flat
+while `T` grows, `D/T` DECREASES with context, so the crossover context
+at which the window lever begins to pay is SOLVABLE in closed form
+rather than tabulated — the mechanism behind C1's observed "window wins
+at long context".
+
+**Trajectory ⇒ switching, and only runtime-class levers can follow it.**
+If the optimal lever changes at 17k, following the trajectory means
+switching mid-request. Window and K are runtime-switchable; quant,
+skip-identity and realization are boot-class (W0). So boot-class levers
+are chosen once against the DISTRIBUTION of trajectories (the portfolio
+problem, §4) and runtime-class levers follow the trajectory inside that
+choice.
+
+*Measured scope*: our grid is the homogeneous special case
+(total KV = b × ctx). Continuous batching mixes contexts within a step;
+the (requests, total-KV) form is the general index and degenerates to
+`(b, ctx)` for what we measured.
 
 Throughput identity, in the generalized form (W8):
 
