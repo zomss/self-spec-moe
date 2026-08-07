@@ -1,0 +1,215 @@
+{
+ "threshold": 0.15,
+ "arch": "qwen3-8b",
+ "cells": [
+  {
+   "n_active": 1,
+   "total_kv": 1107,
+   "weight_share": 0.9658,
+   "kv_share": 0.0342,
+   "weight_GB": 4.612,
+   "kv_GB": 0.163,
+   "leverage": {
+    "quant": 0.9658,
+    "window": 0.0342,
+    "kv_quant": 0.0342,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "quant"
+   ],
+   "defer_or_spotcheck": [
+    "kv_quant",
+    "window"
+   ]
+  },
+  {
+   "n_active": 8,
+   "total_kv": 8856,
+   "weight_share": 0.7794,
+   "kv_share": 0.2206,
+   "weight_GB": 4.612,
+   "kv_GB": 1.306,
+   "leverage": {
+    "quant": 0.7794,
+    "window": 0.2206,
+    "kv_quant": 0.2206,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 1,
+   "total_kv": 14550,
+   "weight_share": 0.6825,
+   "kv_share": 0.3175,
+   "weight_GB": 4.612,
+   "kv_GB": 2.145,
+   "leverage": {
+    "quant": 0.6825,
+    "window": 0.3175,
+    "kv_quant": 0.3175,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 8,
+   "total_kv": 116400,
+   "weight_share": 0.2118,
+   "kv_share": 0.7882,
+   "weight_GB": 4.612,
+   "kv_GB": 17.164,
+   "leverage": {
+    "quant": 0.2118,
+    "window": 0.7882,
+    "kv_quant": 0.7882,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 1,
+   "total_kv": 17100,
+   "weight_share": 0.6466,
+   "kv_share": 0.3534,
+   "weight_GB": 4.612,
+   "kv_GB": 2.521,
+   "leverage": {
+    "quant": 0.6466,
+    "window": 0.3534,
+    "kv_quant": 0.3534,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 8,
+   "total_kv": 136800,
+   "weight_share": 0.1861,
+   "kv_share": 0.8139,
+   "weight_GB": 4.612,
+   "kv_GB": 20.172,
+   "leverage": {
+    "quant": 0.1861,
+    "window": 0.8139,
+    "kv_quant": 0.8139,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 32,
+   "total_kv": 64000,
+   "weight_share": 0.3283,
+   "kv_share": 0.6717,
+   "weight_GB": 4.612,
+   "kv_GB": 9.437,
+   "leverage": {
+    "quant": 0.3283,
+    "window": 0.6717,
+    "kv_quant": 0.6717,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "quant",
+    "window"
+   ],
+   "defer_or_spotcheck": []
+  },
+  {
+   "n_active": 32,
+   "total_kv": 465600,
+   "weight_share": 0.063,
+   "kv_share": 0.937,
+   "weight_GB": 4.612,
+   "kv_GB": 68.656,
+   "leverage": {
+    "quant": 0.063,
+    "window": 0.937,
+    "kv_quant": 0.937,
+    "skip": 0.0
+   },
+   "measure_full_curve": [
+    "kv_quant",
+    "window"
+   ],
+   "defer_or_spotcheck": [
+    "quant"
+   ]
+  }
+ ],
+ "validation": {
+  "rows": [
+   {
+    "cell": "R1 b1",
+    "kv_share": 0.0342,
+    "measured_DT_spread": 0.0406,
+    "routed": "defer"
+   },
+   {
+    "cell": "R1 b8",
+    "kv_share": 0.2206,
+    "measured_DT_spread": 0.0742,
+    "routed": "measure"
+   },
+   {
+    "cell": "R5 b1",
+    "kv_share": 0.3175,
+    "measured_DT_spread": 0.0209,
+    "routed": "measure"
+   },
+   {
+    "cell": "R5cot b1",
+    "kv_share": 0.3534,
+    "measured_DT_spread": 0.0192,
+    "routed": "measure"
+   },
+   {
+    "cell": "R5 b8",
+    "kv_share": 0.7882,
+    "measured_DT_spread": 0.9684,
+    "routed": "measure"
+   },
+   {
+    "cell": "R5cot b8",
+    "kv_share": 0.8139,
+    "measured_DT_spread": 1.0976,
+    "routed": "measure"
+   }
+  ],
+  "spearman_rho": 0.48571428571428577,
+  "under_routed": [],
+  "over_routed": [
+   "R1 b8",
+   "R5 b1",
+   "R5cot b1"
+  ]
+ }
+}
