@@ -88,11 +88,48 @@ quality. This generalises: **window and kv-quant act on the KV term
 dominate).** Round 1's power is therefore a function of which levers
 are in the pool, evaluated per cell.
 
-*Self-criticism*: W13's three surviving compositions all varied only
-the window — exactly the lever with no cost signal at low total-KV. The
-two that hung (skip variants) are the ones that would have carried
-weight-term signal. The b1 cells here were close to undecidable by
-construction, and that should have been seen before launching.
+### LEVER LEVERAGE (user, 2026-08-08) — the governing principle
+
+**A lever's maximum cost leverage = the share of the step's memory
+traffic attributable to the term it modifies.**
+
+| cell | weight share | KV share | quant caps | window caps | skip 8/36 caps |
+|---|---|---|---|---|---|
+| R1 b1 | **96.6%** | 3.4% | ~97% | ~3% | ~22% of both |
+| R1 b8 | 77.9% | 22.1% | ~78% | ~22% | ~22% |
+| R5 b8 | 21.2% | **78.8%** | ~21% | ~79% | ~22% |
+
+Quantization acts on weight bytes; window and kv-quant on KV bytes;
+layer-skip removes whole layers so it cuts BOTH — leverage k/L at every
+cell, making it the universal cost lever. Measured D/T spread across
+the three windows confirms it exactly: 4%/7%/2% at the low-KV cells
+(noise) vs **97% and 110%** at R5 b8 and R5cot b8.
+
+**Independent confirmation from W6.** R1's total context is ~1.1k and
+W6's R1 winner uses w2048 — a window that never binds at 1.1k, i.e.
+the winner is effectively skip-only with the window inert. R5 and
+R5cot (14k, b8) both won with w512, where the window is active. W6's
+measured winners already obey the leverage principle: low total-KV →
+weight-term lever wins; high total-KV → KV-term lever wins.
+
+### VERDICT RESTATED
+
+This section first read "Round 1 fails at short-step cells". The honest
+statement is **"the WRONG LEVERS were tested at short-step cells"**.
+Three compounding errors, all in the experiment design:
+1. the pool was copied from W6 to enable comparison, and both of its
+   weight-term (skip) arms hung — execution stripped the informative half;
+2. the intended skip variant was count-2 (5.5% leverage) when W6's own
+   ladder had already shown count-8 (22%) is the R1 winner;
+3. **quantization — the ~97%-leverage lever at b1 — was held FIXED**
+   across all five compositions.
+At b1 the experiment varied a 3% lever, weakly varied a 5.5% lever, and
+held the 97% lever constant. No instrument quality could have rescued
+that cell. The instrument bias (+23% at R1 b1) is real but was NOT the
+binding constraint there.
+
+The correct b1 re-run varies QUANTIZATION (W4A8 / W8A16 / FP8 /
+bf16-self), where τ* differences are first-order.
 
 **1. At b1, cost does not discriminate compositions at all.** τ* spread
 across the three windows is 1–8% at b1 but 30–49% at b8/14k. The

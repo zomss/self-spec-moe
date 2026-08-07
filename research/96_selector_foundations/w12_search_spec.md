@@ -130,6 +130,29 @@ move along the trajectory, in regime-dependent proportion — which is
 precisely why the window must be measured per regime and tracked live,
 not solved once.
 
+### 2.05 Pool construction is CELL-DEPENDENT and leverage-aware (W13)
+
+A lever's maximum cost leverage is the share of the step's memory
+traffic attributable to the term it modifies:
+
+    quant        -> weight bytes         leverage = weight share
+    window, kvq  -> KV bytes             leverage = KV share
+    layer skip   -> whole layers (BOTH)  leverage = k/L, every cell
+
+Both shares are computable ANALYTICALLY per cell from the model config
+and batch x ctx — no measurement needed. Round 1 should therefore
+include only levers whose leverage at that cell clears a threshold, and
+pass sub-threshold levers straight to Round 2 as acceptance-only. This
+makes Round 1 both cheaper (never profile a lever that cannot matter
+there) and sharper (no ranking on differences smaller than the error).
+
+Measured (Qwen3-8B): weight/KV share is 96.6/3.4 at b1-1.1k ctx,
+77.9/22.1 at b8-1.1k, 21.2/78.8 at b8-14.5k. D/T spread across three
+window settings tracks it exactly: 2-7% at the low-KV cells (noise),
+97-110% at b8/14.5k. W6's winners independently obey the rule — its R1
+winner uses a window (w2048) that cannot even bind at 1.1k ctx, so it
+is effectively skip-only, while R5/R5cot win with an active w512.
+
 ### 2.1 Stage 0 — cell kill (a corollary of §2.0)
 
 The maximum draft budget at cell `c` and depth `K`, using only
