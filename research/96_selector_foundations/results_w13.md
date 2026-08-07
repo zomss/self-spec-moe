@@ -38,12 +38,31 @@ ranking is the **differential** bias at a single cell. At R1 b8:
 w512 +7.7% vs w2048 +27.6% vs woff +25.6% — a 20-point spread, and the
 model duly picks w512 where reality picks woff.
 
-The bias tracks step length: worst at b1/short-context (+15…+28%, steps
-≈5 ms), near zero at b8/14k-context (−6…+9%, long steps). That is the
-signature of a **fixed per-region cost** — the profiler's CUDA syncs —
-which is negligible on long steps and dominant on short ones. It
-explains why W8 §3b passed at b32 on MLA/MoE (11.5 ms steps, +1.5%/
-−0.3%) and fails here.
+**Correction (2026-08-08): the "fixed per-region cost" explanation
+first written here is REFUTED by its own test.** If the bias were a
+constant additive overhead Δ per armed step, then Δ = bias_abs × T
+would be constant across cells. Measured: mean 3.48 ms, sd 3.24,
+**CV 93%**, range −4.15…+6.87 ms — not constant, and it changes sign.
+
+What the data does show is that bias tracks the **GPU-work fraction**,
+not step length per se:
+
+| KV share of the draft step | mean bias | spread across comps |
+|---|---|---|
+| 3.4% (R1 b1) | +23.1% | 8.8 pts |
+| 22.0% (R1 b8) | +20.3% | 19.9 pts |
+| 31.7% (R5 b1) | +12.4% | 12.4 pts |
+| 78.8% (R5 b8) | −3.4% | 6.9 pts |
+
+Leading explanation: sync-bracketed regions **destroy CPU/GPU
+overlap**, so summing them counts serially what the engine pipelines.
+The over-count is proportional to the CPU-side work that would
+otherwise be hidden — largest when the step is GPU-light, vanishing
+(slightly negative) once GPU work dominates. Consistent with sync
+semantics, with the cell-level trend, and with W8 §3b passing at b32.
+**NOT explained: why the bias differs BETWEEN COMPOSITIONS at one
+cell** — and that differential, not the level, is what breaks the
+ranking. Recorded as open rather than replaced with an untested story.
 
 **What is NOT refuted:** the τ* formulation itself. τ* is algebraically
 the denominator of the identity; it is correct by construction, and
@@ -55,6 +74,25 @@ now a **blocker**, with a measured magnitude and a demonstrated
 consequence.
 
 ## Two findings that survive and change the design
+
+**0. The deeper reason Round 1 fails at short-step cells: for THIS
+pool there is almost no cost signal to use.** The window lever acts
+only on the KV/attention term, whose share of the draft step's bytes
+runs 3.4% (R1 b1, 1.1k total KV) → 22% (R1 b8) → 31.7% (R5 b1) →
+78.8% (R5 b8, 116k total KV). At b1 the draft reads ~4.6 GB of weights
+against ~0.16 GB of KV, so changing the window moves 3% of the step.
+Round 1 cannot eliminate what does not differ, at any instrument
+quality. This generalises: **window and kv-quant act on the KV term
+(signal only at high total-KV); quant and skip act on the WEIGHT term
+(signal at every batch, strongest at low batch where weights
+dominate).** Round 1's power is therefore a function of which levers
+are in the pool, evaluated per cell.
+
+*Self-criticism*: W13's three surviving compositions all varied only
+the window — exactly the lever with no cost signal at low total-KV. The
+two that hung (skip variants) are the ones that would have carried
+weight-term signal. The b1 cells here were close to undecidable by
+construction, and that should have been seen before launching.
 
 **1. At b1, cost does not discriminate compositions at all.** τ* spread
 across the three windows is 1–8% at b1 but 30–49% at b8/14k. The
