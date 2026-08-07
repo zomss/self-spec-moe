@@ -35,6 +35,35 @@ all of MLA/MoE below b32, high-batch K4, expensive quants). Output: the
 candidate pool per (input-length, batch) cell. Grid amendment: add
 sub-2000-ctx cells (R1/R6/R8 miscalibration, W5).
 
+**Amendment 2 (user, 2026-08-07): the batch-dependent DRAFT BUDGET.**
+Winning requires tau > K*(D/T) + V(K,b) + C/T, and tau <= K+1 always,
+so a NECESSARY condition on any lever is
+
+    D/T  <  D*(K,b)  =  (K+1 - V(K,b) - C/T) / K
+
+D* is the maximum draft cost that can EVER pay at that cell, at any
+acceptance. It TIGHTENS as batch grows because V grows with b: the
+draft lever must get cheaper as the batch gets larger, precisely
+because verify becomes more expensive relative to AR. Round 1 applies
+it per cell, and it is sound (monotone in f, uses only the tau <= K+1
+bound). Degenerate case: V + C/T >= K+1 makes D* < 0 and the WHOLE
+CELL is OFF for every lever -- the cell kill that Stage 0 was reaching
+for, now with the measured V instead of the assumed V=1.
+
+Validation against W8's measured terms (K=4):
+
+| cell | V | C/T | D* | measured D/T | Round 1 | actual |
+|---|---|---|---|---|---|---|
+| MLA b1 | 1.75 | 0.79 | 0.615 | 1.69 | eliminate | loses |
+| MLA b32 | 1.19 | 0.42 | 0.848 | 0.78 | survives | WINS |
+| MoE b1 | 1.54 | 0.83 | 0.658 | 1.64 | eliminate | loses |
+| MoE b32 | 1.34 | 0.49 | 0.793 | 0.74 | survives (tight) | marginal win |
+
+Every verdict reproduced, including the tightness at b32 that matches
+W10's +1.3-3.6% marginal wins. Open: V and C are measured only on
+MLA/MoE (W8); the dense column needs the same profiling (~1 GPU-h)
+before D* can be applied there.
+
 **Amendment (user, 2026-08-06, after W7 → w8_cost_model.md)**: Round 1
 upgraded from table-driven to CONSTRUCTIVE. (a) The identity's "+1"
 verify term is generalized to V(K,b): sparse activation makes K+1
