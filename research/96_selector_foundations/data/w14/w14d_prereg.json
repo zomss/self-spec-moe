@@ -82127,5 +82127,31 @@
     323
    ]
   }
+ },
+ "lane_assignment": {
+  "policy": "one COMPLETE block per GPU; boots sequential within a block",
+  "rationale": "q = tau/(rate_spec/rate_AR) cancels a lane-wide scale factor, but only if the AR anchor shares the lane with the speculative boots it anchors. Each block registers its own fresh AR anchor, so block-per-GPU makes lane effects cancel in q by construction and any residual becomes a BLOCK effect, which the paired bootstrap already resamples. Spreading one block's boots across GPUs would separate anchor from arms and break this.",
+  "blocks": {
+   "1": 0,
+   "2": 2,
+   "3": 3
+  },
+  "calibration": {
+   "protocol": "identical AR boot, same frozen prompt, 3 iters",
+   "b1": {
+    "gpu0": 151.05,
+    "gpu2": 151.72,
+    "gpu3": 151.59,
+    "spread_pct": 0.45
+   },
+   "b8": {
+    "gpu0": 127.73,
+    "gpu2": 128.35,
+    "gpu3": 128.01,
+    "spread_pct": 0.49
+   },
+   "verdict": "lanes agree within 0.49%, inside the ~1% bar and below the 2% cross-boot certification threshold; safe for ABSOLUTE-latency surface fits too"
+  },
+  "recording": "every D output records its GPU so a lane effect stays detectable post hoc instead of hiding inside r_surface"
  }
 }
