@@ -1,7 +1,26 @@
-# W14 — uncertainty-aware selector search (awaiting GO)
+# W14 — uncertainty-aware selector search (B complete; D0 next)
 
 Source: W12's search specification, W13's failed profiler validation, and the
-2026-08-08 design review. Nothing in this work order has started.
+2026-08-08 design review. Item B was registered at `d57f81222` and is not
+changed by this document revision. The D0/D protocol below is a prospective
+amendment made after the final B result and before any D observation.
+
+## Current status and next decision (2026-08-08)
+
+- B completed all 12 registered boots. P-W14a passed 6/6 transfer units;
+  registered P-W14b containment failed at 6/12, while all four selector
+  evaluations passed with zero regret. The final record is
+  `results_w14b.md` (`24d1b99dc`).
+- The post-result interval prototype (`f7eab7f7b`) raises leave-one-unit-out
+  containment from 6/12 to 12/12 and mean width from 1.54% to 3.46%. This is
+  a useful diagnostic, not a rescore of P-W14b: each b1/b8 estimate has only
+  two donor deltas and shares content, order, and AR anchors with the held-out
+  unit. Its `elimination_flips=0` is also non-evidence because every B cell is
+  far from the elimination boundary.
+- The decision is **GO to D0, not yet to scored D GPU data**. No more B boots
+  are needed. D0 must close exact-state and target-step accounting, replace
+  independent resampling with a paired block bootstrap, and commit the D
+  matrix and scorer before the first scored boot.
 
 ## Objective
 
@@ -24,16 +43,19 @@ where cost transfer is certified.
 
 Let
 
-- `x = (n_active, total_scheduled_kv, graph_bucket)` be the execution state;
+- `x = (n_active, total_scheduled_kv, graph_bucket)` be the execution state,
+  where `graph_bucket` is the observed target/draft dispatch descriptor rather
+  than a nominal batch label;
 - `g` be the workload/content regime;
 - `u` be generated-suffix position or interval;
 - `c = (quant, realization, window, skip-set, kv-quant)` be a composition;
 - `a = (c, K)` be a complete configuration, with `OFF` always available;
 - `T(x)` be the unperturbed AR decode-step time;
-- `P_a(x)` be the complete unperturbed armed-step time, including all `K`
-  draft forwards, verification, and serving overhead; and
-- `tau_a(g, u)` be expected emitted tokens per armed step, obtained from the
-  position-resolved acceptance counters.
+- `P_a(x)` be the complete unperturbed target-step time under action `a`,
+  including any draft forwards, verification, fallback, and serving overhead;
+  and
+- `tau_a(g, u)` be expected emitted tokens per target step, obtained from the
+  position-resolved acceptance and target-step counters.
 
 Define the required-acceptance label
 
@@ -55,6 +77,31 @@ This identity is valid only for equal-work measurements over a matched state
 or state interval. An aggregate over different context trajectories is not a
 matched-cell transfer test.
 
+For D onward, the runner must make the step denominator explicit. Let `H` be
+the number of target decode request-steps, `D_arm` the subset that actually
+received a draft, `A` the accepted draft tokens produced, `C` the emissions
+clipped at a fixed-length boundary, and `E` the committed decode emissions in
+the scored interval. The binding accounting is
+
+```text
+E + C = A + H
+tau_eff = E / H
+U = H - D_arm
+```
+
+For an interior interval with `C=0`, `tau_eff = 1 + A/H`; the familiar
+`1 + A/D_arm` is valid only when `U=0`. B's raw b8 cells differ by about 1.1%
+between emitted decode tokens and `A + D_arm`; D must record `H` and `C`, and
+treat unarmed target steps as part of the action rather than silently folding
+them into an acceptance label. Define `P = decode_time_spec/H` and
+`T = decode_time_AR/H_AR`; then `q=P/T=tau_eff/S_dec` closes by construction.
+
+Also for D onward, `total_scheduled_kv` means the exact per-engine-step sum of
+the KV lengths read at target-dispatch entry, not `batch x median prompt
+length`. The raw trace must retain `Q_j`, `n_active_j`, and the actual target
+and draft dispatch/capture descriptors. A cell label such as `ctx=8192` is a
+design target, never the fitted `Q` value.
+
 Round 1 emits a prediction interval `[q_lo, q_hi]`. Set the existing arming
 rent `epsilon_arm = 0.015`. The most favorable possible speedup is
 
@@ -70,6 +117,18 @@ criterion.
 After Round 2 supplies an acceptance interval `[tau_lo, tau_hi]`, the speedup
 interval is `[tau_lo/q_hi, tau_hi/q_lo]`. The selector's epsilon-optimal
 tie-set uses `epsilon_sel = 0.015`, matching the arming rent.
+
+The safe tie-set is based on interval dominance. Including `OFF=[1,1]`, let
+`L_best = max_a S_lo(a)`; then
+
+```text
+T_epsilon = {a : S_hi(a) >= (1 - epsilon_sel) * L_best}
+```
+
+A candidate is removed from the tie-set only when another candidate's
+pessimistic bound dominates its optimistic bound by more than epsilon. The
+old diagnostic scorer's comparison with the best optimistic bound is not the
+D/E rule.
 
 ## The search in four stages
 
@@ -255,13 +314,134 @@ conflated in the writeup. W13's complete `q` spread was smaller, about
 available; do not use the biased profiled `q` as ground truth. W6's inert
 R1 window and active R5/R5cot windows are qualitative checks only.
 
+### D0 — freeze the measurement and scoring contract
+
+**Cost:** CPU work plus five short, explicitly non-scored GPU smoke boots: AR,
+piecewise K2/K4, and piecewise-nowindow K2/K4. Smoke observations cannot
+become training anchors.
+
+Before the first scored D boot, commit all of the following together:
+
+1. `data/w14/w14d_prereg.json`: exact prompt token IDs and SHA-256 hashes,
+   train/held-out labels, context lengths, content seeds, actions, batch and
+   cell order, boot-block order, graph strata, exclusions, and software/model
+   revisions;
+2. a phase-local runner that records raw per-step `H`, `D_arm`, `A`, `C`,
+   committed emissions, exact `Q_j`, `n_active_j`, suffix position, and the
+   actual target/draft graph-dispatch descriptors, and that carries a
+   **progress watchdog**;
+3. a scorer that consumes only raw, unrounded counters, resamples complete
+   randomized boot blocks, fits `T` and `P` separately, constructs the frozen
+   interval below, and implements interval-dominance tie-sets; and
+4. synthetic tests for count closure, exact `Q` aggregation, graph-stratum
+   separation, paired resampling, held-out access rejection during fitting,
+   interval inversion, elimination, and tie-set construction.
+
+The current `w14_measure.py` labels KV as `batch x median prompt length`; the
+current `w14_intervals.py` independently resamples rate and acceptance arrays.
+They are B diagnostics and must not be used unchanged for D scoring.
+
+**Progress watchdog (added 2026-08-08).** The draft graph-capture wedge always
+manifests BEFORE the first measured cell, so a total timeout is the wrong
+instrument: it must be long enough for a whole boot and therefore charges full
+price for every wedge. Measured healthy boot-to-first-cell on B: 41-55 s (AR)
+and 128-160 s (speculative). The runner therefore emits a heartbeat on the
+first scored cell and is killed if none appears within **400 s** (a ~2.5x
+margin over the slowest healthy boot). At the observed ~44% wedge rate this
+changes the cost of D's 21 valid boots from about 6.7 h of wasted time under
+the 1500 s timeout to about 1.8 h. It changes no registered boot count, matrix,
+or scored quantity -- only the price of failure. A watchdog kill is a crashed
+process, not an observation: it replaces its registered slot per the
+replication rule.
+
+**Gate D0:** on every smoke round, target-step accounting closes exactly after
+the declared terminal-step treatment; exact scheduled-KV reconstructed from
+the trace agrees with the engine counters; the observed dispatch descriptor
+belongs to the registered stratum; repeated snapshots are monotone; and a
+synthetic common-mode boot perturbation remains common-mode after resampling.
+Any failure blocks scored D data. The registration and scorer commit hashes
+must be written into every D output file.
+
 ### D — transferable latency surface
 
-**Cost:** approximately eight boots / two GPU-hours if K can be selected down
-inside a KMAX=4 boot; add configuration boots if it cannot.
+**Question:** after exact state adjustment, does a training-only interval for
+`q_c,K,b(Q)` cover new context and content cells well enough for safe Round-1
+use?
 
-For every B-certified `(configuration, batch)` unit and `K in {2, 4}`, fit at
-fixed batch and capture regime:
+#### Frozen matrix
+
+| axis | values |
+|---|---|
+| target / draft | `Qwen/Qwen3-8B` / `Qwen3-8B-W4A8-gptq` |
+| configurations | `w512`, `w2048`, `w-off` as the same complete realizations as B |
+| depth | `K in {2, 4}`; cost is measured separately for each K |
+| batch | `b in {1, 8}` |
+| exact training prompt lengths | 2,048; 8,192; 14,336 tokens |
+| exact held-out prompt lengths | 5,120; 11,264 tokens |
+| generated interval | first fixed 256 committed tokens, `ignore_eos=True` |
+| rounds | `ITERS=4`, temperature 0, notune |
+| valid replicates | three complete randomized boot blocks |
+
+Prompt content is fresh relative to B and disjoint across the cells:
+
+| split | exact context | R5 seed | R5cot seed |
+|---|---:|---:|---:|
+| train | 2,048 | 2 | 5 |
+| train | 8,192 | 3 | 6 |
+| train | 14,336 | 4 | 7 |
+| held out | 5,120 | 8 | 10 |
+| held out | 11,264 | 9 | 11 |
+
+D0 materializes these as exact token-ID prompts and freezes their hashes;
+`ctx_target` or tokenizer medians are not accepted as substitutes. Within a
+batch, repeat the same prompt `b` times. Greedy duplicate requests therefore
+traverse the same suffix together, keeping `n_active` and the graph descriptor
+fixed while the exact `Q_j` trace still verifies that assumption. R5 training
+cells fit the state surface; R5cot training cells estimate post-state-
+adjustment transfer residuals. Neither held-out regime may influence model
+choice, residual pools, interval width, exclusions, or thresholds.
+
+The registered target-query strata are:
+
+| action | query tokens/request | b1 target tokens | b8 target tokens |
+|---|---:|---:|---:|
+| AR | 1 | 1 | 8 |
+| K=2 verify | 3 | 3 | 24 |
+| K=4 verify | 5 | 5 | 40 |
+
+D0 records the actual padded capture descriptor and each draft-chain
+descriptor for these six rows. Curves never cross a row or a dispatch-mode
+boundary. An unregistered fallback/eager descriptor creates an uncertified,
+non-pruning stratum; it is not silently pooled with a captured stratum.
+
+#### Replication and order
+
+Each randomized complete block contains one fresh AR anchor boot and all six
+`configuration x K` boots. The frozen boot order (seed `20260808`) is:
+
+| block | boot order |
+|---|---|
+| 1 | `w512-K2`, `w-off-K4`, `w2048-K2`, `w512-K4`, AR, `w2048-K4`, `w-off-K2` |
+| 2 | `w2048-K4`, `w-off-K4`, `w512-K4`, `w-off-K2`, `w2048-K2`, `w512-K2`, AR |
+| 3 | `w-off-K4`, `w512-K4`, `w-off-K2`, AR, `w2048-K4`, `w512-K2`, `w2048-K2` |
+
+This is **21 valid scored boots**. A crashed or rejected process is not an
+observation and replaces the same slot; there is no selective fourth block.
+The AR anchor is shared only inside its declared block, and the scorer
+preserves that dependence by resampling the whole block.
+
+Within every boot, D0 freezes an expanded cell-order manifest. Context order
+is `[2048, 5120, 8192, 11264, 14336]` in block 1,
+`[8192, 14336, 5120, 2048, 11264]` in block 2, and
+`[11264, 8192, 2048, 14336, 5120]` in block 3. R5/R5cot-first and b1/b8-first
+alternate by block and context position. This replaces B's fixed R5-then-
+R5cot ordering and interleaves training and held-out positions without
+unblinding their values to the fitter.
+
+#### Surface and interval construction
+
+At fixed batch, action, and registered graph stratum, fit from R5 training
+cells only:
 
 ```text
 T_b(Q)        = alpha_T + beta_T * Q
@@ -269,17 +449,67 @@ P_c,K,b(Q)    = alpha_c,K + beta_c,K * Q
 q_c,K,b(Q)    = P_c,K,b(Q) / T_b(Q)
 ```
 
-Use three pre-declared training contexts and two untouched held-out contexts
-per curve. B's matched point may be one training point. Fit separate curves
-across graph/capture or compute-regime boundaries. If the training residual
-exceeds 5%, widen the interval and use piecewise interpolation or a table;
-never force the affine form.
+`Q` is the exact step-trace value. The affine form is retained only when all
+training-only leave-one-context-out relative errors for both `T` and `P` are
+at most 5%. For an interval aggregate, use the exact engine-step mean
+`Q_bar = sum_j Q_j / J`; affine latency makes the corresponding mean-time
+prediction exact under the model, while the full range remains in the raw
+record. Otherwise the local model is frozen as piecewise interpolation/table
+lookup and gets a non-pruning interval outside the training hull. No held-out
+result may select the fallback.
 
-**P-W14c — held-out cost coverage:** at least 90% of held-out `q_true` values
-fall inside their 95% prediction intervals, mean absolute point error is at
-most 5%, and the optimistic-bound elimination rule makes zero false
-eliminations. Failure narrows the certified surface; it does not create a
-global architecture failure.
+Construct uncertainty on `z=log(q)`. Each Monte Carlo draw contains:
+
+```text
+z_draw = z_surface_from_paired_block_bootstrap
+         + r_surface
+         + r_transfer_after_state_adjustment
+```
+
+- resample the three complete boot-block IDs and keep all rates, times,
+  counters, configurations, regimes, contexts, and their AR anchor paired;
+- form `r_surface` from training-only leave-one-context-out log residuals;
+- fit a training-only R5cot surface for residual estimation, evaluate the R5
+  and R5cot surfaces at the same exact `Q`, and form `r_transfer` from their
+  log difference; this state-adjusted term is not the raw B directional delta
+  and does not double-count a context interpolation residual; and
+- symmetrize both residual pools in log space within batch/graph stratum so a
+  reused interval widens but is not shifted by an unknowable direction.
+
+Exponentiate the 2.5th and 97.5th percentiles. A same-cell measurement carries
+sampling uncertainty; every reused prediction carries sampling, surface, and
+transfer uncertainty. If a stratum has fewer than eight training residuals,
+pool upward and use the wider parent-stratum envelope. B's 12 observations
+and its leave-one-unit-out prototype are diagnostics only and cannot supply a
+D residual or tune a D interval.
+
+#### P-W14c and local decision rule
+
+There are 48 held-out values:
+`3 configurations x 2 K x 2 batches x 2 contexts x 2 regimes`. Before opening
+them, the fitter writes a frozen prediction artifact. Pass requires:
+
+- at least 44/48 `q_true` values inside their 95% prediction intervals, with
+  at least 22/24 separately for R5 and R5cot;
+- mean absolute point error at most 5% overall and for each batch stratum; and
+- zero false eliminations under `(K+1)/q_lo < 1 + epsilon_arm`.
+
+Report interval width and the number of actual elimination opportunities. If
+Round 1 eliminates nothing, record `0/0 — soundness not exercised`; do not cite
+that as evidence of safe pruning. A predicted elimination is validated only
+when the held-out oracle's own 95% interval puts its optimistic
+`(K+1)/q_true_lo` below `1 + epsilon_arm`; an oracle interval that straddles the
+boundary is unresolved and cannot certify the elimination. Any false or
+unresolved elimination refutes the pruning rule for every stratum sharing its
+residual pool. A coverage or error failure creates a local non-pruning mask at
+`(configuration, K, batch, graph stratum, Q segment)`; affected cells pass to
+Round 2. It does not force a global architecture failure or authorize tuning
+against the held-out cells.
+
+**Cost:** 21 valid scored boots plus D0 smoke. The old eight-boot/two-hour
+estimate assumed K could be selected down inside one boot and did not include
+the required complete-block replication. Boot count is binding; elapsed GPU
+time must be re-estimated from the D0 smoke before launch.
 
 ### E — corrected dense end-to-end validation
 
@@ -390,16 +620,18 @@ and engineering plan.
 |---|---:|---|
 | C | 1 h CPU | measurement routing only |
 | A | 30 min CPU | metric accounting closes |
-| B | 12–16 boots, about 3–4 h GPU | local transfer mask |
-| D | about 8 boots, 2 h GPU | held-out cost coverage |
+| B | 12 boots completed | 6/6 transfer mask; registered containment 6/12 |
+| D0 | CPU + 5 non-scored smoke boots | measurement/scorer freeze |
+| D | 21 valid scored boots; time set by D0 smoke | held-out cost coverage |
 | E | about 8 new boots, 2 h GPU | safe pruning and final regret |
 | F | CPU + at most 1 h GPU | feasible global runtime pool |
 | G | confirmation + 1–2 days engineering | only mechanisms valued by F |
 
-To the first decision: about three to four GPU-hours. Full dense validation
-through F: about 6–8 GPU-hours, with B/D anchors reused where valid. Boot count
-is the binding estimate; elapsed time must be updated from the actual runner
-matrix before execution.
+The next binding decision is D0 followed by 21 valid D boots; B requires no
+additional data. The former 6–8 GPU-hour estimate through F is obsolete
+because it assumed K down-selection and undercounted D replication. Re-estimate
+elapsed time and the downstream total from the D0 smoke without changing the
+registered boot count or matrix.
 
 ## Measurement and scoring rules
 
@@ -409,14 +641,21 @@ matrix before execution.
   scored run. Retain refuted predictions.
 - Fixed output length is mandatory for cost comparisons. Natural EOS may be
   reported only as a deployment result after equal-work validation.
-- Use two disjoint content seeds and at least two independent boots for every
-  binding comparison. Bootstrap at the boot level; rounds are not independent
-  replicates. Add the pre-registered third boot for boundary or cross-boot
-  disagreement cases.
+- For D onward, use the three registered complete boot blocks. Resample blocks,
+  not individual rate/acceptance arrays or rounds; rounds are not independent
+  replicates. A rejected boot replaces its registered slot and does not create
+  a selectively enlarged sample.
 - Use notune and the W3 episode-rejection/cross-boot rules. Pair every surface
-  with fresh AR anchors and randomize configuration order.
+  with its registered fresh AR anchor, counterbalance content order, and retain
+  the frozen action order.
+- Retain raw target-step closure, exact scheduled-KV traces, and actual graph
+  descriptors. A context label, median prompt length, or nominal batch label
+  cannot substitute for observed execution state.
+- Fit and freeze predictions without held-out access. Use symmetric log-space
+  surface and post-state-adjustment transfer residuals for reused cost.
 - Report intervals, tie-sets, false eliminations, simple regret, survivor
-  fraction, and resource cost. Exact top-1 accuracy is descriptive only.
+  fraction, resource cost, and whether the elimination test was non-vacuous.
+  Exact top-1 accuracy is descriptive only.
 
 ## Known environment dependencies
 
@@ -431,9 +670,10 @@ matrix before execution.
 
 ## Paper outcomes
 
-- **Broad B/D/E pass:** dense-model cost is an amortizable offline surface,
-  acceptance is workload-local, and the uncertainty-aware two-round selector
-  is validated on the measured dense domain.
+- **B transfer plus D/E pass:** dense-model cost is an amortizable offline
+  surface, acceptance is workload-local, and the uncertainty-aware two-round
+  selector is validated prospectively on the measured dense domain. The
+  registered B containment result remains 6/12 and is reported as such.
 - **Partial transfer:** publish a hybrid selector with a certified Round-1
   reliability mask; uncertified cells pass through to measurement. This is a
   supported outcome, not a failed architecture.
@@ -447,6 +687,9 @@ matrix before execution.
 
 ## Expected next artifact
 
-`results_w14_transfer.md` with the six matched transfer units, 12 directional
-predictions, four tie-set decisions, raw boot-level intervals, and the local
-transfer mask.
+First, a committed D0 bundle: `data/w14/w14d_prereg.json`, the patched runner,
+the frozen scorer, and their synthetic tests. After the 21 scored boots,
+`results_w14d.md` reports the 48 held-out predictions, interval components and
+widths, point errors, coverage by stratum, elimination opportunities and false
+eliminations, and the resulting local reliability mask. `results_w14b.md`
+remains the immutable B result.
