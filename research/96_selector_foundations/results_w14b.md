@@ -4,11 +4,10 @@ Pre-registration `w14_plan.md` item B (d57f81222). Scorer
 `score_w14b.py`, committed before the data (38eb651e4). Artifacts
 `data/w14/w14b_*.json`, scored `data/w14/w14b_scored.json`.
 
-Boots: AR 3/3, w2048 3/3, woff 3/3, **w512 2/3** (its third boot lost
-three consecutive attempts to the draft graph-capture wedge; at the
-observed ~44% wedge rate that is a ~9% event, and a fourth attempt is
-running). All units satisfy the matched-work rule: total-KV mismatch
-0.56%, inside the 1% validity bound.
+Boots: **12/12 complete** (AR 3, w512 3, w2048 3, woff 3). w512's third
+boot needed six attempts across two retry rounds against the draft
+graph-capture wedge. All units satisfy the matched-work rule: total-KV
+mismatch 0.56%, inside the 1% validity bound.
 
 ## P-W14a — CERTIFIED 6/6 (needed ≥5/6)
 
@@ -16,8 +15,8 @@ running). All units satisfy the matched-work rule: total-KV mismatch
 
 | unit | point | 95% CI | verdict |
 |---|---|---|---|
-| w512 b1 | −0.3% | [−2.4, +1.8] | PASS |
-| w512 b8 | +1.9% | [+1.6, +2.1] | PASS |
+| w512 b1 | −0.1% | [−2.6, +2.4] | PASS |
+| w512 b8 | +1.7% | [+1.5, +2.0] | PASS |
 | w2048 b1 | +0.8% | [−1.7, +2.9] | PASS |
 | w2048 b8 | +1.7% | [+1.4, +2.0] | PASS |
 | woff b1 | +0.2% | [−0.7, +1.1] | PASS |
@@ -33,9 +32,9 @@ the system.
 **The dichotomy, measured in one controlled experiment.** At matched
 execution state, across the same six units:
 
-- acceptance differs by up to **14%** between regimes (τ = 4.248 vs
+- acceptance differs by up to **16%** between regimes (τ = 4.248 vs
   4.919 at w512 b1);
-- cost transfers within **2%** (q = 3.335 vs 3.324).
+- cost transfers within **2%** (q = 3.335 vs 3.324, i.e. −0.1%).
 
 Cost is content-free at a matched state; acceptance is workload-local.
 That is the premise the two-round split rests on, previously inferred
@@ -89,8 +88,12 @@ registered 6/12 result stands as a FAIL and is not rescored.
 
 ## Caveats
 
-- w512 rests on 2 boots pending its third; its b1 interval is the
-  widest in the table and may narrow.
+- All results above are the FINAL 12-boot scoring. Adding w512's third
+  boot moved its b1 point estimate −0.3% → −0.1% and WIDENED its CI
+  ([−2.4,+1.8] → [−2.6,+2.4]) — the extra boot revealed more spread
+  than two boots had shown, which is the argument for n=3 made
+  concrete. No verdict changed; one selector evaluation's measured best
+  moved within an existing tie-set (w512 → w2048, regret still 0.00%).
 - `woff` remains a distinct realization, not a clean window
   intervention (plan §"Scope corrections"); its agreement is evidence
   about that realization, not about window size alone.
