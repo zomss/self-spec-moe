@@ -82152,6 +82152,20 @@
    },
    "verdict": "lanes agree within 0.49%, inside the ~1% bar and below the 2% cross-boot certification threshold; safe for ABSOLUTE-latency surface fits too"
   },
-  "recording": "every D output records its GPU so a lane effect stays detectable post hoc instead of hiding inside r_surface"
+  "recording": "every D output records its GPU so a lane effect stays detectable post hoc instead of hiding inside r_surface",
+  "excluded": {
+   "gpu1": {
+    "reason": "every wedge observed across W13, B and D0 smoke occurred on GPU1; no other lane has produced one",
+    "controlled_test": "identical config (w512 K4, batches 1,8, R5+R5cot) wedged 3/3 on GPU1 and passed 2/2 on GPU2",
+    "signal": "SW power capping counter 1366804357 us on GPU1 vs 18077441 us on GPU2 (76x)",
+    "action": "GPU1 excluded from W14; blocks 1/2/3 -> GPUs 0/2/3 as registered"
+   }
+  },
+  "retracted_hypotheses": [
+   "K4 wedges more than K2 -- refuted: w-off_K2 also wedged, and K4 passes on a good lane",
+   "lazy Humming JIT during graph capture -- unsupported: identical capture shapes succeed on GPU2",
+   "leaked shared memory accumulating across boots -- refuted: /dev/shm holds 20KB of 945GB",
+   "concurrent multi-GPU load -- refuted by timing: first wedges preceded any concurrent run"
+  ]
  }
 }
