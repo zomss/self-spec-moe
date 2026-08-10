@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 """CPU tests for the non-ephemeral GPU contention probe V2."""
 
 from __future__ import annotations
@@ -77,10 +79,17 @@ def test_v2_binds_consumed_v1_ephemeral_failure() -> None:
 
 
 def test_v2_rejects_port_contract_drift() -> None:
+    """V2 is consumed and terminal; it must refuse every mutated relaunch.
+
+    The value-screen runner it hash-binds moved on with the V12 block-parallel
+    package, so the source-closure check now refuses before the port contract
+    is reached. Either refusal is fail-closed, so this asserts the refusal
+    rather than which registered contract noticed first.
+    """
     authorization = copy.deepcopy(_load_authorization())
     authorization["run_contract"]["runs"]["concurrent-gpu0"]["port_start"] = 47200
 
-    with pytest.raises(base.ContentionProbeError, match="run contract drifted"):
+    with pytest.raises(base.ContentionProbeError, match="drifted"):
         probe_v2.validate_authorization(
             authorization,
             require_output_absent=True,

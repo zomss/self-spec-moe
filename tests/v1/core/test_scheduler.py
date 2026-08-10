@@ -35,6 +35,17 @@ from vllm.v1.kv_cache_interface import (
 )
 from vllm.v1.outputs import DraftTokenIds, KVConnectorOutput, ModelRunnerOutput
 from vllm.v1.request import Request, RequestStatus
+from vllm.v1.spec_decode.koff_runtime import (
+    K4_ACTION_ID,
+    OFF_ACTION_ID,
+    P4_CAPTURE_COHORT_CONTRACT_ID,
+    P4_CAPTURE_COHORT_EXTRA_ARGS_KEY,
+    W512_ACTION_ID,
+    KOffRuntimeError,
+    SharedKVIdentity,
+    SharedWeightIdentity,
+    make_runner_evidence,
+)
 from vllm.v1.structured_output import StructuredOutputManager
 
 from .utils import EOS_TOKEN_ID, create_requests, create_scheduler, mock_kv
@@ -1123,6 +1134,403 @@ def test_schedule_spec_decoding_stats(spec_tokens, output_tokens, expected):
         assert stats.num_draft_tokens == expected[1]
         assert stats.num_accepted_tokens == expected[2]
         assert stats.num_accepted_tokens_per_pos == expected[3]
+
+
+def test_koff_mixed_admission_aborts_pending_k4_to_q1_off():
+    scheduler = create_scheduler(
+        num_speculative_tokens=4,
+        max_num_batched_tokens=64,
+    )
+    (decode_req,) = create_requests(
+        num_requests=1,
+        num_tokens=1,
+        req_ids=["decode"],
+    )
+    scheduler.add_request(decode_req)
+
+    prefill_output = scheduler.schedule()
+    scheduler.update_from_output(
+        prefill_output,
+        ModelRunnerOutput(
+            req_ids=[decode_req.request_id],
+            req_id_to_index={decode_req.request_id: 0},
+            sampled_token_ids=[[42]],
+            logprobs=None,
+            prompt_logprobs_dict={},
+            pooler_output=[],
+        ),
+    )
+
+    scheduler._koff_runtime_enabled = True
+    scheduler.update_draft_token_ids(
+        DraftTokenIds(
+            [decode_req.request_id],
+            [[1, 2, 3, 4]],
+            koff_action_id=K4_ACTION_ID,
+        )
+    )
+    (prefill_req,) = create_requests(
+        num_requests=1,
+        num_tokens=10,
+        req_ids=["prefill"],
+    )
+    scheduler.add_request(prefill_req)
+
+    mixed_output = scheduler.schedule()
+    metadata = mixed_output.koff_runtime
+    assert metadata is not None
+    assert mixed_output.num_scheduled_tokens == {"decode": 1, "prefill": 10}
+    assert mixed_output.scheduled_spec_decode_tokens == {}
+    assert metadata.decode_req_ids == ("decode",)
+    assert metadata.verified_action_id == OFF_ACTION_ID
+    assert metadata.next_action_id == OFF_ACTION_ID
+    assert metadata.selection_intent == "force_off"
+    assert metadata.aborted_action_id == K4_ACTION_ID
+    assert metadata.discarded_draft_width == 4
+    assert metadata.aborted_draft_request_count == 1
+
+
+def test_koff_synchronous_boundary_emits_explicit_p4_request_row():
+    scheduler = create_scheduler(
+        num_speculative_tokens=4,
+        max_num_batched_tokens=64,
+    )
+    (request,) = create_requests(
+        num_requests=1,
+        num_tokens=1,
+        req_ids=["R6-s0-p000"],
+    )
+    scheduler.add_request(request)
+    prefill_output = scheduler.schedule()
+    scheduler.update_from_output(
+        prefill_output,
+        ModelRunnerOutput(
+            req_ids=[request.request_id],
+            req_id_to_index={request.request_id: 0},
+            sampled_token_ids=[[42]],
+            logprobs=None,
+            prompt_logprobs_dict={},
+            pooler_output=[],
+        ),
+    )
+
+    class Recorder:
+        capture_id = "capture-live-boundary"
+
+        def __init__(self):
+            self.events = []
+
+        def record(self, event, evidence):
+            self.events.append((event, evidence))
+
+    recorder = Recorder()
+    scheduler._koff_runtime_enabled = True
+    scheduler._p4_capture_recorder = recorder
+    scheduler.update_draft_token_ids(
+        DraftTokenIds(
+            [request.request_id],
+            [[1, 2, 3, 4]],
+            koff_action_id=K4_ACTION_ID,
+        )
+    )
+    decode_output = scheduler.schedule()
+    metadata = decode_output.koff_runtime
+    assert metadata is not None
+    evidence = make_runner_evidence(
+        metadata=metadata,
+        target_runtime_mode="FULL",
+        output=torch.empty((1, 4), dtype=torch.int32),
+        proposal_called=True,
+        draft_step0_query_width=1,
+        draft_step0_num_tokens=1,
+        draft_step0_batch_size=1,
+        draft_step0_runtime_mode="PIECEWISE",
+        draft_chain_runtime_mode="PIECEWISE",
+        shared_kv=SharedKVIdentity("binding", "pool", 1, 1),
+        shared_weights=SharedWeightIdentity("version", "version", 1),
+        true_slot_mapping_id="slots",
+    )
+    scheduler.update_from_output(
+        decode_output,
+        ModelRunnerOutput(
+            req_ids=[request.request_id],
+            req_id_to_index={request.request_id: 0},
+            sampled_token_ids=[[43, 44, 45]],
+            logprobs=None,
+            prompt_logprobs_dict={},
+            pooler_output=[],
+            koff_runtime_evidence=evidence,
+        ),
+    )
+
+    assert len(recorder.events) == 1
+    event, observed_evidence = recorder.events[0]
+    assert observed_evidence is evidence
+    assert event["source"]["verified_action_id"] == K4_ACTION_ID
+    assert event["source"]["next_action_id"] == K4_ACTION_ID
+    assert event["quality"]["invalid_spec_tokens"] == 0
+    assert event["request_steps"] == [
+        {
+            "request_id": request.request_id,
+            "target_processed": True,
+            "draft_armed": True,
+            "accepted_draft_tokens": 2,
+            "raw_generated_tokens": 3,
+            "committed_tokens": 3,
+            "clipped_tokens": 0,
+        }
+    ]
+
+
+class _P4CohortRecorder:
+    capture_id = "p4-cohort-live-test"
+
+    def __init__(self):
+        self.events = []
+        self.closed = False
+
+    def record(self, event, evidence):
+        self.events.append((event, evidence))
+
+    def close(self):
+        self.closed = True
+
+
+def _create_p4_cohort_scheduler() -> Scheduler:
+    scheduler = create_scheduler(
+        num_speculative_tokens=4,
+        speculative_model="facebook/opt-125m",
+        max_num_batched_tokens=8192,
+        max_num_seqs=32,
+        num_blocks=22000,
+    )
+    assert isinstance(scheduler, Scheduler)
+    assert scheduler.vllm_config.speculative_config is not None
+    assert scheduler.vllm_config.speculative_config.uses_draft_model()
+    assert scheduler.scheduler_config.max_num_batched_tokens == 8192
+    assert scheduler.scheduler_config.max_num_scheduled_tokens == 8160
+    assert scheduler.max_num_scheduled_tokens == 8160
+    return scheduler
+
+
+def _enable_p4_cohort_test_runtime(scheduler, action_id: str) -> _P4CohortRecorder:
+    recorder = _P4CohortRecorder()
+    scheduler._koff_runtime_enabled = True
+    scheduler._p4_capture_recorder = recorder
+    scheduler._koff_options = dataclasses.replace(
+        scheduler._koff_options,
+        p4_boot_action_id=action_id,
+    )
+    return recorder
+
+
+def _p4_cohort_requests(action_id: str, measured_tokens: int = 1):
+    request_ids = [f"R4-s0-p{index:03d}" for index in range(5)]
+    marker = {
+        "contract_id": P4_CAPTURE_COHORT_CONTRACT_ID,
+        "measurement_only": True,
+        "cohort_id": f"cohort-{action_id}",
+        "frozen_request_ids": request_ids,
+        "action_id": action_id,
+        "measured_decode_tokens": measured_tokens,
+        "unmeasured_prefill_tokens": 1,
+    }
+    requests = tuple(
+        create_requests(
+            num_requests=1,
+            num_tokens=num_tokens,
+            req_ids=[request_id],
+            ignore_eos=True,
+            max_tokens=measured_tokens + 1,
+        )[0]
+        for request_id, num_tokens in zip(
+            request_ids, (2000, 2000, 2000, 2000, 400), strict=True
+        )
+    )
+    for request in requests:
+        assert request.sampling_params is not None
+        request.sampling_params.extra_args = {P4_CAPTURE_COHORT_EXTRA_ARGS_KEY: marker}
+    return requests
+
+
+def _update_p4_cohort_step(
+    scheduler: Scheduler,
+    scheduler_output: SchedulerOutput,
+    sampled_token_ids: list[list[int]],
+) -> None:
+    metadata = scheduler_output.koff_runtime
+    assert metadata is not None
+    width = 0 if metadata.next_action_id == OFF_ACTION_ID else 4
+    step0_batch_size = len(sampled_token_ids) if width else None
+    step0_query_width = None
+    step0_num_tokens = None
+    if width:
+        if metadata.pure_decode:
+            step0_query_width = 1
+            step0_num_tokens = step0_batch_size
+        else:
+            step0_widths = [
+                scheduler_output.num_scheduled_tokens[req_id] + 1
+                for req_id in scheduler_output.num_scheduled_tokens
+            ]
+            step0_num_tokens = sum(step0_widths)
+            if len(set(step0_widths)) == 1:
+                step0_query_width = step0_widths[0]
+    evidence = make_runner_evidence(
+        metadata=metadata,
+        target_runtime_mode="FULL",
+        output=torch.empty((len(sampled_token_ids), width), dtype=torch.int32),
+        proposal_called=bool(width),
+        draft_step0_query_width=step0_query_width,
+        draft_step0_num_tokens=step0_num_tokens,
+        draft_step0_batch_size=step0_batch_size,
+        draft_step0_runtime_mode="PIECEWISE" if width else None,
+        draft_chain_runtime_mode="PIECEWISE" if width else None,
+        shared_kv=SharedKVIdentity("binding", "pool", 1, 1),
+        shared_weights=SharedWeightIdentity("version", "version", 1, "weight-binding"),
+        true_slot_mapping_id="slots",
+    )
+    req_ids = list(scheduler_output.num_scheduled_tokens)
+    scheduler.update_from_output(
+        scheduler_output,
+        ModelRunnerOutput(
+            req_ids=req_ids,
+            req_id_to_index={request_id: i for i, request_id in enumerate(req_ids)},
+            sampled_token_ids=sampled_token_ids,
+            logprobs=None,
+            prompt_logprobs_dict={},
+            pooler_output=[],
+            koff_runtime_evidence=evidence,
+        ),
+    )
+    if scheduler._p4_capture_cohort is not None:
+        scheduler.update_draft_token_ids(
+            DraftTokenIds(
+                req_ids,
+                [list(range(width)) for _ in req_ids],
+                koff_action_id=metadata.next_action_id,
+            )
+        )
+
+
+@pytest.mark.parametrize("action_id", [OFF_ACTION_ID, K4_ACTION_ID, W512_ACTION_ID])
+def test_p4_cohort_live_scheduler_holds_then_atomically_releases(action_id: str):
+    scheduler = _create_p4_cohort_scheduler()
+    recorder = _enable_p4_cohort_test_runtime(scheduler, action_id)
+    requests = _p4_cohort_requests(action_id)
+    for request in requests:
+        scheduler.add_request(request)
+
+    first = scheduler.schedule()
+    assert first.num_scheduled_tokens == {
+        **{request.request_id: 2000 for request in requests[:4]},
+        requests[4].request_id: 160,
+    }
+    assert first.koff_runtime is not None
+    assert first.koff_runtime.capture_cohort_arm is True
+    _update_p4_cohort_step(scheduler, first, [[101], [102], [103], [104], []])
+
+    second = scheduler.schedule()
+    assert second.num_scheduled_tokens == {requests[4].request_id: 240}
+    assert not set(first.num_scheduled_tokens).intersection(
+        second.num_scheduled_tokens
+    ) - {requests[4].request_id}
+    assert second.koff_runtime is not None
+    assert second.koff_runtime.capture_cohort_arm is True
+    _update_p4_cohort_step(scheduler, second, [[102]])
+
+    release = scheduler.schedule()
+    expected_width = 1 if action_id == OFF_ACTION_ID else 5
+    assert release.num_scheduled_tokens == dict.fromkeys(
+        (request.request_id for request in requests), expected_width
+    )
+    assert release.koff_runtime is not None
+    assert release.koff_runtime.pure_decode is True
+    _update_p4_cohort_step(
+        scheduler,
+        release,
+        [[201], [202], [203], [204], [205]],
+    )
+
+    history = scheduler.get_p4_capture_cohort_history()
+    assert len(history) == 1
+    assert history[0]["state"] == "complete"
+    assert history[0]["pure_first_measured_decode"] is True
+    assert history[0]["max_num_batched_tokens"] == 8192
+    assert history[0]["max_num_scheduled_tokens"] == 8160
+    assert history[0]["committed_by_request"] == dict.fromkeys(
+        (request.request_id for request in requests), 1
+    )
+    assert len(recorder.events) == 1
+
+
+@pytest.mark.parametrize(
+    ("max_num_batched_tokens", "max_num_scheduled_tokens", "max_num_seqs"),
+    [(8193, 8160, 32), (8192, 8192, 32), (8192, 8160, 31)],
+)
+def test_p4_cohort_rejects_budget_contract_drift(
+    max_num_batched_tokens: int,
+    max_num_scheduled_tokens: int,
+    max_num_seqs: int,
+):
+    scheduler = _create_p4_cohort_scheduler()
+    scheduler.scheduler_config.max_num_batched_tokens = max_num_batched_tokens
+    scheduler.scheduler_config.max_num_scheduled_tokens = max_num_scheduled_tokens
+    scheduler.max_num_scheduled_tokens = max_num_scheduled_tokens
+    scheduler.max_num_running_reqs = max_num_seqs
+    _enable_p4_cohort_test_runtime(scheduler, K4_ACTION_ID)
+
+    with pytest.raises(
+        KOffRuntimeError,
+        match="configured 8192-token.*effective 8160-token",
+    ):
+        scheduler.add_request(_p4_cohort_requests(K4_ACTION_ID)[0])
+
+
+def test_p4_cohort_member_cancellation_aborts_every_member():
+    scheduler = _create_p4_cohort_scheduler()
+    _enable_p4_cohort_test_runtime(scheduler, OFF_ACTION_ID)
+    requests = _p4_cohort_requests(OFF_ACTION_ID)
+    for request in requests:
+        scheduler.add_request(request)
+
+    scheduler.finish_requests(
+        requests[0].request_id,
+        RequestStatus.FINISHED_ABORTED,
+    )
+
+    assert scheduler.requests == {}
+    history = scheduler.get_p4_capture_cohort_history()
+    assert len(history) == 1
+    assert history[0]["state"] == "aborted"
+    assert requests[0].request_id in history[0]["abort_reason"]
+
+
+def test_p4_cohort_shutdown_fails_closed_and_cleans_members():
+    scheduler = _create_p4_cohort_scheduler()
+    recorder = _enable_p4_cohort_test_runtime(scheduler, OFF_ACTION_ID)
+    requests = _p4_cohort_requests(OFF_ACTION_ID)
+    for request in requests:
+        scheduler.add_request(request)
+
+    with pytest.raises(KOffRuntimeError, match="exact work completion"):
+        scheduler.shutdown()
+
+    assert scheduler.requests == {}
+    assert recorder.closed is True
+    assert scheduler.get_p4_capture_cohort_history()[0]["state"] == "aborted"
+
+
+def test_p4_cohort_marker_absence_preserves_ordinary_serving():
+    scheduler = create_scheduler(max_num_batched_tokens=8192)
+    (request,) = create_requests(num_requests=1, num_tokens=32)
+    scheduler.add_request(request)
+
+    output = scheduler.schedule()
+
+    assert output.num_scheduled_tokens == {request.request_id: 32}
+    assert scheduler._p4_capture_cohort is None
+    assert scheduler.get_p4_capture_cohort_history() == ()
 
 
 def test_spec_decoding_stats_empty_output():

@@ -1,0 +1,920 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_run_authorization_v12.schema.json",
+  "title": "Phase 97 B0 block-parallel two-lane value-screen authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "prior_authorization",
+    "consumed_attempt",
+    "contention_probe_disposition",
+    "lane_precedent",
+    "variable_prefill_repair_validation",
+    "chunked_prefill_probe",
+    "chunked_prefill_contract",
+    "source_artifacts",
+    "run_contract",
+    "decision",
+    "claims",
+    "authorizations",
+    "execution_policy",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 12
+    },
+    "package_id": {
+      "const": "p4-b0-value-screen-run-authorization-v12"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "authorized_block_parallel_two_lane_value_screen_only"
+    },
+    "prior_authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "disposition"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "disposition": {
+          "const": "consumed_external_resource_reassignment"
+        }
+      }
+    },
+    "consumed_attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interruption",
+        "capture_manifest",
+        "output_dir",
+        "complete_capture_count",
+        "empty_placeholder_count",
+        "adapted_rounds_emitted",
+        "score_emitted",
+        "preserve_without_resume_or_reuse"
+      ],
+      "properties": {
+        "interruption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "capture_manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "output_dir": {
+          "type": "string"
+        },
+        "complete_capture_count": {
+          "const": 48
+        },
+        "empty_placeholder_count": {
+          "const": 1
+        },
+        "adapted_rounds_emitted": {
+          "const": false
+        },
+        "score_emitted": {
+          "const": false
+        },
+        "preserve_without_resume_or_reuse": {
+          "const": true
+        }
+      }
+    },
+    "contention_probe_disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v1",
+        "v2",
+        "decision",
+        "measured_contention_bound_available",
+        "dual_gpu_authority_from_probe"
+      ],
+      "properties": {
+        "v1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorization",
+            "failure",
+            "classification"
+          ],
+          "properties": {
+            "authorization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "failure": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "classification": {
+              "const": "launcher_ephemeral_port_collision"
+            }
+          }
+        },
+        "v2": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorization",
+            "failure",
+            "classification"
+          ],
+          "properties": {
+            "authorization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "failure": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "classification": {
+              "const": "concurrent_worktree_write_during_run"
+            }
+          }
+        },
+        "decision": {
+          "const": "removed_from_the_value_screen_critical_path"
+        },
+        "measured_contention_bound_available": {
+          "const": false
+        },
+        "dual_gpu_authority_from_probe": {
+          "const": false
+        }
+      }
+    },
+    "lane_precedent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "artifact",
+        "policy",
+        "measured_spread_fraction",
+        "cross_boot_agreement_fraction",
+        "reused_as_calibration",
+        "phase_97_basis"
+      ],
+      "properties": {
+        "phase": {
+          "const": 96
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "policy": {
+          "type": "string"
+        },
+        "measured_spread_fraction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "b1",
+            "b8"
+          ],
+          "properties": {
+            "b1": {
+              "type": "number"
+            },
+            "b8": {
+              "type": "number"
+            }
+          }
+        },
+        "cross_boot_agreement_fraction": {
+          "const": 0.02
+        },
+        "reused_as_calibration": {
+          "const": false
+        },
+        "phase_97_basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "variable_prefill_repair_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization",
+        "audit",
+        "aggregate",
+        "isolated_case",
+        "isolated_trace",
+        "transition_case",
+        "transition_trace",
+        "status",
+        "authorization_consumed",
+        "scored",
+        "parent_aggregate_passed",
+        "parent_rejection",
+        "cases"
+      ],
+      "properties": {
+        "authorization": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "audit": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "aggregate": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "isolated_case": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "isolated_trace": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "transition_case": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "transition_trace": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "status": {
+          "const": "gpu_cases_passed_parent_aggregate_rejected"
+        },
+        "authorization_consumed": {
+          "const": true
+        },
+        "scored": {
+          "const": false
+        },
+        "parent_aggregate_passed": {
+          "const": false
+        },
+        "parent_rejection": {
+          "const": {
+            "classification": "observer_cardinality_bug",
+            "caused_gpu_case_failure": false,
+            "expected_count": 2,
+            "observed_transition_armed_prefill_count": 9
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "case_id": "isolated-r8",
+              "physical_gpu_index": 0,
+              "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703",
+              "completed_cohorts": [
+                "r8-first"
+              ],
+              "measured_event_count": 610,
+              "trace_record_count": 612,
+              "armed_prefill_observation_count": 1,
+              "exact_r8_observation": {
+                "draft_step0_query_width": null,
+                "draft_step0_num_tokens": 2116,
+                "draft_step0_batch_size": 16,
+                "draft_output_shape": [
+                  16,
+                  4
+                ],
+                "proposal_called": true,
+                "draft_step0_runtime_mode": "NONE",
+                "draft_chain_runtime_mode": "PIECEWISE",
+                "produced_draft_width": 4,
+                "engine_step_index": 0
+              }
+            },
+            {
+              "case_id": "r5cot-to-r8",
+              "physical_gpu_index": 1,
+              "physical_gpu_uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923",
+              "completed_cohorts": [
+                "r5cot-last",
+                "r8-first"
+              ],
+              "measured_event_count": 1273,
+              "trace_record_count": 1289,
+              "armed_prefill_observation_count": 9,
+              "exact_r8_observation": {
+                "draft_step0_query_width": null,
+                "draft_step0_num_tokens": 2116,
+                "draft_step0_batch_size": 16,
+                "draft_output_shape": [
+                  16,
+                  4
+                ],
+                "proposal_called": true,
+                "draft_step0_runtime_mode": "NONE",
+                "draft_chain_runtime_mode": "PIECEWISE",
+                "produced_draft_width": 4,
+                "engine_step_index": 632
+              }
+            }
+          ]
+        }
+      }
+    },
+    "chunked_prefill_probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization",
+        "preparation",
+        "result",
+        "trace",
+        "status",
+        "scored",
+        "authorization_consumed",
+        "action_id",
+        "regimes",
+        "physical_gpu_index",
+        "physical_gpu_uuid",
+        "configured_max_num_batched_tokens",
+        "effective_max_num_scheduled_tokens",
+        "gpu_memory_utilization",
+        "cohort_count",
+        "complete_request_count",
+        "canonical_request_ids",
+        "pure_first_measured_decode",
+        "zero_preemption",
+        "zero_recomputation",
+        "zero_invalid_spec_tokens",
+        "shared_target_kv_block_capacity",
+        "minimum_shared_target_kv_blocks",
+        "actual_cuda_graph_memory_bytes",
+        "trace_record_count"
+      ],
+      "properties": {
+        "authorization": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "preparation": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "result": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "trace": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "status": {
+          "const": "pass"
+        },
+        "scored": {
+          "const": false
+        },
+        "authorization_consumed": {
+          "const": true
+        },
+        "action_id": {
+          "const": "target-matching-k4"
+        },
+        "regimes": {
+          "const": [
+            "R4",
+            "R5",
+            "R5cot"
+          ]
+        },
+        "physical_gpu_index": {
+          "const": 4
+        },
+        "physical_gpu_uuid": {
+          "const": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+        },
+        "configured_max_num_batched_tokens": {
+          "const": 8192
+        },
+        "effective_max_num_scheduled_tokens": {
+          "const": 8160
+        },
+        "gpu_memory_utilization": {
+          "const": 0.9
+        },
+        "cohort_count": {
+          "const": 3
+        },
+        "complete_request_count": {
+          "const": 24
+        },
+        "canonical_request_ids": {
+          "const": true
+        },
+        "pure_first_measured_decode": {
+          "const": true
+        },
+        "zero_preemption": {
+          "const": true
+        },
+        "zero_recomputation": {
+          "const": true
+        },
+        "zero_invalid_spec_tokens": {
+          "const": true
+        },
+        "shared_target_kv_block_capacity": {
+          "const": 24527
+        },
+        "minimum_shared_target_kv_blocks": {
+          "const": 21682
+        },
+        "actual_cuda_graph_memory_bytes": {
+          "const": 589365248
+        },
+        "trace_record_count": {
+          "const": 40
+        }
+      }
+    },
+    "chunked_prefill_contract": {
+      "const": {
+        "state": "pass",
+        "max_num_batched_tokens": 8192,
+        "effective_max_num_scheduled_tokens": 8160,
+        "max_num_seqs": 32,
+        "gpu_memory_utilization": 0.9,
+        "enable_chunked_prefill": true,
+        "full_microbatch_prefill_allowed": false,
+        "capture_cohort_contract_id": "p4-capture-cohort-barrier-v1",
+        "queue_all_exact_members_before_first_step": true,
+        "hold_early_prefill_completers": true,
+        "atomic_first_measured_decode": true,
+        "require_every_action_and_prompt_slice": true,
+        "ordinary_serving_without_marker_unchanged": true
+      }
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 34,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_authorization",
+        "invocation"
+      ],
+      "properties": {
+        "base_authorization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "invocation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runner_path",
+            "argv",
+            "output_dir",
+            "overwrite_allowed",
+            "runner_exists",
+            "launchable_now"
+          ],
+          "properties": {
+            "runner_path": {
+              "const": "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py"
+            },
+            "argv": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output_dir": {
+              "const": "research/97_composition_runtime/data/p4/run_b0_value_screen_v11"
+            },
+            "overwrite_allowed": {
+              "const": false
+            },
+            "runner_exists": {
+              "const": true
+            },
+            "launchable_now": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "scope",
+        "basis",
+        "invalidated_by"
+      ],
+      "properties": {
+        "state": {
+          "const": "approve"
+        },
+        "scope": {
+          "const": "block_parallel_two_lane_value_screen_v12_only"
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "invalidated_by": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "minProperties": 28,
+      "additionalProperties": {
+        "type": [
+          "boolean",
+          "integer"
+        ]
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_runner_conformance_engineering",
+        "gpu_measurement",
+        "v12_execution",
+        "block_parallel_two_lane_execution",
+        "value_screen_scoring",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "capture_runner_conformance_engineering": {
+          "const": true
+        },
+        "gpu_measurement": {
+          "const": true
+        },
+        "v12_execution": {
+          "const": true
+        },
+        "block_parallel_two_lane_execution": {
+          "const": true
+        },
+        "value_screen_scoring": {
+          "const": true
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lane_assignment",
+        "lane_parallel",
+        "fallback_gpu_authorized",
+        "engine_core_mode",
+        "engine_core_class",
+        "v1_multiprocessing",
+        "physical_boot_count",
+        "capture_count",
+        "max_num_batched_tokens",
+        "effective_max_num_scheduled_tokens",
+        "gpu_memory_utilization",
+        "capture_cohort_barrier_required",
+        "create_new_output_required",
+        "prior_output_reuse_allowed",
+        "repair_validation_output_reuse_allowed",
+        "source_snapshot_required",
+        "block_restart_unit",
+        "block_restart_requires_fresh_authorization",
+        "partial_resume_within_block_allowed",
+        "retry_allowed",
+        "score_grants_authority",
+        "on_any_failure"
+      ],
+      "properties": {
+        "lane_assignment": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "lane_id",
+              "physical_gpu_index",
+              "physical_gpu_uuid",
+              "cpu_affinity",
+              "cache_root",
+              "block_ids"
+            ],
+            "properties": {
+              "lane_id": {
+                "type": "string"
+              },
+              "physical_gpu_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physical_gpu_uuid": {
+                "type": "string",
+                "pattern": "^GPU-"
+              },
+              "cpu_affinity": {
+                "type": "string"
+              },
+              "cache_root": {
+                "type": "string"
+              },
+              "block_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    2,
+                    3
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "lane_parallel": {
+          "const": true
+        },
+        "fallback_gpu_authorized": {
+          "const": false
+        },
+        "engine_core_mode": {
+          "const": "in_process"
+        },
+        "engine_core_class": {
+          "const": "InprocClient"
+        },
+        "v1_multiprocessing": {
+          "const": false
+        },
+        "physical_boot_count": {
+          "const": 9
+        },
+        "capture_count": {
+          "const": 432
+        },
+        "max_num_batched_tokens": {
+          "const": 8192
+        },
+        "effective_max_num_scheduled_tokens": {
+          "const": 8160
+        },
+        "gpu_memory_utilization": {
+          "const": 0.9
+        },
+        "capture_cohort_barrier_required": {
+          "const": true
+        },
+        "create_new_output_required": {
+          "const": true
+        },
+        "prior_output_reuse_allowed": {
+          "const": false
+        },
+        "repair_validation_output_reuse_allowed": {
+          "const": false
+        },
+        "source_snapshot_required": {
+          "const": true
+        },
+        "block_restart_unit": {
+          "const": true
+        },
+        "block_restart_requires_fresh_authorization": {
+          "const": true
+        },
+        "partial_resume_within_block_allowed": {
+          "const": false
+        },
+        "retry_allowed": {
+          "const": false
+        },
+        "score_grants_authority": {
+          "const": false
+        },
+        "on_any_failure": {
+          "const": "preserve_block_and_require_fresh_block_authorization"
+        }
+      }
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "requires_complete_capture_count",
+        "requires_complete_block_count",
+        "may_authorize_p4a",
+        "may_admit_action"
+      ],
+      "properties": {
+        "kind": {
+          "const": "p4_b0_value_screen_result"
+        },
+        "requires_complete_capture_count": {
+          "const": 432
+        },
+        "requires_complete_block_count": {
+          "const": 3
+        },
+        "may_authorize_p4a": {
+          "const": false
+        },
+        "may_admit_action": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

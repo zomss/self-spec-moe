@@ -1,7 +1,11 @@
 # Phase 97 — workload-aware composition runtime
 
 Status: **active shared-KV-only design; the matched B0 value screen remains
-preregistered but unscored. V5 was executed once on GPU 4 and failed closed at
+preregistered but unscored. The current authority is the block-parallel
+two-lane V12 package, which passes CPU validation, registers the fresh
+create-only `run_b0_value_screen_v11` output, and is unexecuted; see
+`results_p4_b0_run_authorization_v12.md`. The history below is retained. V5
+was executed once on GPU 4 and failed closed at
 the first live OFF event with zero complete captures and no score. A separate
 source-bound `114688 / 0.96` ingress diagnosis now identifies the exact
 exclusion as `prefill_or_mixed_batch`: the first request entered width-one
@@ -1463,7 +1467,8 @@ repair evidence only; it did not itself authorize V11 or a value-screen retry.
 The separate V11 review in `results_p4_b0_run_authorization_v11.md` now passes
 without GPU execution.
 
-The following V11 command is registered and remains unexecuted:
+The following V11 command was registered and has been consumed by one
+interrupted attempt:
 
 ```bash
 .venv/bin/python \
@@ -1472,6 +1477,31 @@ The following V11 command is registered and remains unexecuted:
   research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json \
   --output-dir \
   research/97_composition_runtime/data/p4/run_b0_value_screen_v10
+```
+
+The current authority is the block-parallel two-lane V12 package. Its
+registered command is create-only and remains unexecuted:
+
+```bash
+.venv/bin/python \
+  research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py \
+  --authorization \
+  research/97_composition_runtime/data/p4/p4_b0_run_authorization_v12.json \
+  --output-dir \
+  research/97_composition_runtime/data/p4/run_b0_value_screen_v11
+```
+
+V12 adds these phase-local artifacts:
+
+```text
+results_p4_b0_run_authorization_v12.md
+data/p4/p4_b0_run_authorization_v12.json
+data/p4/p4_b0_run_authorization_v12_validation.json
+schemas/p4_b0_run_authorization_v12.schema.json
+scripts/run_p4_b0_value_screen_v12.py
+scripts/validate_p4_b0_run_authorization_v12.py
+tests/test_p4_b0_run_authorization_v12.py
+tests/test_p4_b0_value_screen_v12.py
 ```
 
 It permits one GPU-4 parent launch, nine sequential boots, and scoring only
@@ -1768,10 +1798,38 @@ evidence rather than transition history. See
 repair and GPU validation are recorded in
 `results_p4_b0_variable_prefill_repair_validation.md`: both GPU cases pass,
 while the consumed parent aggregate rejects only its incorrect observation
-count. The separate source-bound V11 review now passes and registers only the
+count. The separate source-bound V11 review passed and registered only the
 fresh `run_b0_value_screen_v10` output; no existing output is reusable. V11
-remains unexecuted and is documented in
-`results_p4_b0_run_authorization_v11.md`.
+is documented in `results_p4_b0_run_authorization_v11.md` and has since been
+consumed by the interrupted attempt described below.
+
+V11 was then executed once on GPU 4. It completed the first boot's 48
+captures and was interrupted when another user reserved that GPU; the
+immutable record classifies the stop as `external_resource_reassignment`
+with no runtime fault, and forbids retry, resume, fallback, and scoring.
+Two contention probes then tried and failed to produce a GPU-0/GPU-1
+contention bound, both in the launcher: V1 registered a rendezvous range
+overlapping the host ephemeral range, and V2 completed `serial-gpu0` before
+refusing `serial-gpu1` on a capture-adapter hash that a concurrent staging
+pass had rewritten inside the run window. Both probes are consumed and no
+contention bound exists.
+
+The source-bound V12 review therefore removes the contention probe from the
+critical path and authorizes a block-parallel two-lane screen instead, on
+Phase 96's registered block-per-GPU precedent (read-only, measured lane
+spread 0.45%/0.49%). Blocks are never split: lane-a takes blocks 1 and 3 on
+GPU 0, lane-b takes block 2 on GPU 1. The transfer rests on properties of
+the frozen matrix and scorer rather than new assumptions: acceptance is a
+pure count ratio, committed tokens per action are equal, the Latin square
+gives every action an identical lane mixture, and the residual block-by-action
+interaction is exactly what the frozen paired complete-boot-block bootstrap
+resamples. The 2% cross-boot certification is retained as a fail-closed lane
+tripwire. V12 also closes the V2 failure mode structurally, with a verified
+source snapshot that children resolve against, a byte-for-byte executing-code
+guard, a worktree-quiescence preflight, and the capture block as the restart
+unit. V12 passes CPU validation, registers the fresh create-only
+`run_b0_value_screen_v11` output, and remains unexecuted. See
+`results_p4_b0_run_authorization_v12.md`.
 
 The separate source-bound diagnosis retained the real serving boundary at
 budget 8192 and utilization 0.90. Its 24-record non-scored trace contains one

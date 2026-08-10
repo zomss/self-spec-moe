@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 """Prepare or execute the fail-closed Phase 97 B0 value-screen matrix."""
 
 from __future__ import annotations
@@ -98,6 +100,35 @@ V11_CAPTURE_MANIFEST_PATH = (
     "research/97_composition_runtime/data/p4/"
     "run_b0_value_screen_v9/capture_manifest.json"
 )
+V12_PACKAGE_ID = "p4-b0-value-screen-run-authorization-v12"
+V12_AUTHORIZATION_PATH = (
+    "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v12.json"
+)
+V12_OUTPUT_PATH = "research/97_composition_runtime/data/p4/run_b0_value_screen_v11"
+V12_INTERRUPTION_PATH = (
+    "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/failure.json"
+)
+V12_CAPTURE_MANIFEST_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "run_b0_value_screen_v10/capture_manifest.json"
+)
+LANE_PRECEDENT_PATH = "research/96_selector_foundations/data/w14/w14d_prereg.json"
+CONTENTION_V1_AUTHORIZATION_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "p4_b0_gpu_contention_probe_authorization_v1.json"
+)
+CONTENTION_V1_FAILURE_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "run_b0_gpu_contention_probe_v1/failure.json"
+)
+CONTENTION_V2_AUTHORIZATION_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "p4_b0_gpu_contention_probe_authorization_v2.json"
+)
+CONTENTION_V2_FAILURE_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "run_b0_gpu_contention_probe_v2/failure.json"
+)
 VARIABLE_PREFILL_REPAIR_AUTHORIZATION_PATH = (
     "research/97_composition_runtime/data/p4/"
     "p4_b0_variable_prefill_repair_validation_authorization_v1.json"
@@ -173,6 +204,29 @@ INPROCESS_ENGINE_CORE_CLASS = "InprocClient"
 GPU0_UUID = "GPU-4938442e-5508-9249-0fa6-37baa1985703"
 GPU1_UUID = "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
 GPU4_UUID = "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+GPU0_UUID = "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+GPU1_UUID = "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+DEVICE_PIN_ENV = "CUDA_VISIBLE_DEVICES"
+CACHE_ROOT_ENV = "VLLM_CACHE_ROOT"
+SOURCE_SNAPSHOT_ENV = "VLLM_SELF_SPEC_P4_SOURCE_SNAPSHOT"
+V12_LANE_ASSIGNMENT = (
+    {
+        "lane_id": "lane-a",
+        "physical_gpu_index": 0,
+        "physical_gpu_uuid": GPU0_UUID,
+        "cpu_affinity": "0-95",
+        "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
+        "block_ids": [1, 3],
+    },
+    {
+        "lane_id": "lane-b",
+        "physical_gpu_index": 1,
+        "physical_gpu_uuid": GPU1_UUID,
+        "cpu_affinity": "96-191",
+        "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-b",
+        "block_ids": [2],
+    },
+)
 SCREEN_ID = "p4-b0-off-k4-w512-value-screen-v1"
 LOGICAL_VERSION_PREFIX = "target-matching-config-sha256-"
 MINIMUM_SHARED_KV_BLOCKS = 21682
@@ -221,7 +275,28 @@ def _load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def _snapshot_root() -> Path | None:
+    """Return the active immutable source snapshot, when a run declares one."""
+    declared = os.environ.get(SOURCE_SNAPSHOT_ENV, "")
+    if not declared:
+        return None
+    root = Path(declared).resolve()
+    _require(root.is_dir(), f"declared source snapshot is missing: {root}")
+    return root
+
+
 def _repository_path(relative_path: str) -> Path:
+    snapshot = _snapshot_root()
+    if snapshot is not None:
+        candidate = (snapshot / relative_path).resolve()
+        try:
+            candidate.relative_to(snapshot)
+        except ValueError as exc:
+            raise P4RunnerError(
+                f"approved source escapes the snapshot: {candidate}"
+            ) from exc
+        if candidate.is_file():
+            return candidate
     path = (REPO_ROOT / relative_path).resolve()
     try:
         path.relative_to(REPO_ROOT)
@@ -977,6 +1052,75 @@ def _v11_source_paths() -> dict[str, str]:
         "test_p4_b0_variable_prefill_repair_validation_preservation.py"
     )
     return paths
+
+
+def _v12_source_paths() -> dict[str, str]:
+    paths = _v11_source_paths()
+    paths["authorization_schema"] = (
+        "research/97_composition_runtime/schemas/"
+        "p4_b0_run_authorization_v12.schema.json"
+    )
+    paths["authorization_validator"] = (
+        "research/97_composition_runtime/scripts/"
+        "validate_p4_b0_run_authorization_v12.py"
+    )
+    paths["authorization_tests"] = (
+        "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v12.py"
+    )
+    paths["lane_launcher"] = (
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py"
+    )
+    paths["lane_launcher_tests"] = (
+        "research/97_composition_runtime/tests/test_p4_b0_value_screen_v12.py"
+    )
+    return paths
+
+
+def lane_assignment() -> list[dict[str, Any]]:
+    """Return the registered two-lane block-per-GPU assignment."""
+    return [copy.deepcopy(lane) for lane in V12_LANE_ASSIGNMENT]
+
+
+def lane_for_block(block_id: int) -> dict[str, Any]:
+    """Resolve the single lane that owns a capture block."""
+    owners = [lane for lane in V12_LANE_ASSIGNMENT if block_id in lane["block_ids"]]
+    _require(len(owners) == 1, f"block {block_id} does not have exactly one lane")
+    return copy.deepcopy(owners[0])
+
+
+def _validate_lane_assignment(lanes: Any) -> None:
+    """Prove the lanes cover every block exactly once and never split one."""
+    _require(
+        isinstance(lanes, Sequence) and not isinstance(lanes, (str, bytes)),
+        "lane assignment is not a sequence",
+    )
+    _require(list(lanes) == list(V12_LANE_ASSIGNMENT), "lane assignment drifted")
+    seen_blocks: list[int] = []
+    seen_gpus: list[int] = []
+    for lane in lanes:
+        _require(
+            isinstance(lane["block_ids"], Sequence) and bool(lane["block_ids"]),
+            "a lane owns no capture block",
+        )
+        seen_blocks.extend(lane["block_ids"])
+        seen_gpus.append(lane["physical_gpu_index"])
+    _require(
+        sorted(seen_blocks) == sorted(ACTION_ORDERS),
+        "lanes do not cover every capture block exactly once",
+    )
+    _require(
+        len(set(seen_gpus)) == len(seen_gpus),
+        "two lanes claim the same physical GPU",
+    )
+    _require(
+        sum(
+            len(ACTION_ORDERS[block_id])
+            for lane in lanes
+            for block_id in lane["block_ids"]
+        )
+        == 9,
+        "lane assignment does not close to nine physical boots",
+    )
 
 
 def _v7_request_id_repair() -> dict[str, Any]:
@@ -3066,10 +3210,329 @@ def _validate_v9_package(
     return base
 
 
+def _v12_execution_policy() -> dict[str, Any]:
+    return {
+        "lane_assignment": lane_assignment(),
+        "lane_parallel": True,
+        "fallback_gpu_authorized": False,
+        "engine_core_mode": "in_process",
+        "engine_core_class": INPROCESS_ENGINE_CORE_CLASS,
+        "v1_multiprocessing": False,
+        "physical_boot_count": 9,
+        "capture_count": 432,
+        "max_num_batched_tokens": SERVING_MAX_NUM_BATCHED_TOKENS,
+        "effective_max_num_scheduled_tokens": (
+            SERVING_EFFECTIVE_MAX_NUM_SCHEDULED_TOKENS
+        ),
+        "gpu_memory_utilization": SERVING_GPU_MEMORY_UTILIZATION,
+        "capture_cohort_barrier_required": True,
+        "create_new_output_required": True,
+        "prior_output_reuse_allowed": False,
+        "repair_validation_output_reuse_allowed": False,
+        "source_snapshot_required": True,
+        "block_restart_unit": True,
+        "block_restart_requires_fresh_authorization": True,
+        "partial_resume_within_block_allowed": False,
+        "retry_allowed": False,
+        "score_grants_authority": False,
+        "on_any_failure": "preserve_block_and_require_fresh_block_authorization",
+    }
+
+
+def _v12_invocation() -> dict[str, Any]:
+    source_paths = _v12_source_paths()
+    return {
+        "runner_path": source_paths["lane_launcher"],
+        "argv": [
+            ".venv/bin/python",
+            source_paths["lane_launcher"],
+            "--authorization",
+            V12_AUTHORIZATION_PATH,
+            "--output-dir",
+            V12_OUTPUT_PATH,
+        ],
+        "output_dir": V12_OUTPUT_PATH,
+        "overwrite_allowed": False,
+        "runner_exists": True,
+        "launchable_now": True,
+    }
+
+
+def _v12_decision() -> dict[str, Any]:
+    return {
+        "state": "approve",
+        "scope": "block_parallel_two_lane_value_screen_v12_only",
+        "basis": [
+            "v11_attempt_preserved_and_unscored",
+            "v11_output_reuse_forbidden",
+            "v11_interruption_was_external_reassignment_not_runtime_fault",
+            "gpu0_gpu1_relocation_probe_passed",
+            "contention_probe_removed_from_critical_path",
+            "phase96_block_per_gpu_precedent_referenced_read_only",
+            "latin_square_gives_every_action_one_boot_per_block",
+            "complete_boot_block_is_already_the_bootstrap_unit",
+            "cross_boot_certification_retained_as_lane_tripwire",
+            "current_execution_sources_hash_bound",
+            "source_snapshot_verified_before_any_child",
+            "fresh_output_path_registered",
+        ],
+        "invalidated_by": [
+            "approved_source_hash_drift",
+            "source_snapshot_mismatch",
+            "fresh_output_directory_exists",
+            "v11_attempt_artifact_drift",
+            "lane_assignment_drift",
+            "block_split_across_lanes",
+            "repair_validation_artifact_drift",
+            "v5_probe_artifact_drift",
+            "chunked_prefill_contract_drift",
+            "full_prefill_geometry_reenabled",
+            "decode_work_contract_drift",
+            "request_id_contract_drift",
+            "inprocess_engine_core_preflight_failure",
+            "native_sampler_preflight_failure",
+            "virtualenv_tool_preflight_failure",
+            "gpu_identity_drift",
+            "gpu_not_idle",
+            "resource_floor_failure",
+            "cohort_abort_or_incomplete_release",
+            "cross_boot_certification_failure",
+            "matrix_or_contract_drift",
+        ],
+    }
+
+
+def _v12_claims() -> dict[str, Any]:
+    return {
+        "prior_value_screen_attempts_performed": 10,
+        "latest_prior_complete_capture_count": 48,
+        "latest_prior_empty_placeholder_count": 1,
+        "latest_prior_gpu_executed": True,
+        "latest_prior_score_emitted": False,
+        "latest_prior_interrupted_externally": True,
+        "prior_outputs_preserved": True,
+        "prior_outputs_reusable": False,
+        "contention_probe_attempts_performed": 2,
+        "contention_bound_measured": False,
+        "lane_precedent_is_prior_phase_read_only": True,
+        "full_prefill_geometry_rejected": True,
+        "chunked_prefill_cohort_cpu_proven": True,
+        "chunked_prefill_k4_gpu_probe_passed": True,
+        "variable_prefill_runtime_evidence_repaired": True,
+        "isolated_r8_gpu_case_passed": True,
+        "r5cot_to_r8_gpu_case_passed": True,
+        "repair_parent_aggregate_passed": False,
+        "repair_parent_rejection_is_observer_only": True,
+        "lane_assignment_tested": True,
+        "block_restart_unit_tested": True,
+        "source_snapshot_verification_tested": True,
+        "decode_work_offset_tested": True,
+        "all_action_capture_rollover_tested": True,
+        "request_id_canonicalization_tested": True,
+        "internal_request_id_randomization_retained": True,
+        "inprocess_runner_wiring_complete": True,
+        "executable_run_ready": True,
+        "runtime_w512_switching_implemented": False,
+        "action_admitted": False,
+        "performance_claim_allowed": False,
+    }
+
+
+def _v12_authorizations() -> dict[str, Any]:
+    return {
+        "capture_runner_conformance_engineering": True,
+        "gpu_measurement": True,
+        "v12_execution": True,
+        "block_parallel_two_lane_execution": True,
+        "value_screen_scoring": True,
+        "p4a_engineering": False,
+        "action_admission": False,
+        "production_value_claim": False,
+    }
+
+
+def _v12_next_artifact() -> dict[str, Any]:
+    return {
+        "kind": "p4_b0_value_screen_result",
+        "requires_complete_capture_count": 432,
+        "requires_complete_block_count": 3,
+        "may_authorize_p4a": False,
+        "may_admit_action": False,
+    }
+
+
+def _v12_expected_run_contract() -> dict[str, Any]:
+    return {
+        "base_authorization": _file_reference(BASE_AUTHORIZATION_PATH),
+        "invocation": _v12_invocation(),
+    }
+
+
+def _validate_v12_package(
+    package: Mapping[str, Any], *, require_output_absent: bool = True
+) -> dict[str, Any]:
+    """Validate the V12 block-parallel package against every frozen source."""
+    expected_keys = {
+        "schema_version",
+        "package_id",
+        "date",
+        "status",
+        "prior_authorization",
+        "consumed_attempt",
+        "contention_probe_disposition",
+        "lane_precedent",
+        "variable_prefill_repair_validation",
+        "chunked_prefill_probe",
+        "chunked_prefill_contract",
+        "source_artifacts",
+        "run_contract",
+        "decision",
+        "claims",
+        "authorizations",
+        "execution_policy",
+        "next_artifact",
+    }
+    _require(set(package) == expected_keys, "V12 authorization fields drifted")
+    _require(
+        package.get("schema_version") == 12
+        and package.get("package_id") == V12_PACKAGE_ID
+        and package.get("status")
+        == "authorized_block_parallel_two_lane_value_screen_only",
+        "runner accepts only the reviewed V12 value-screen authority",
+    )
+    _require(
+        package["prior_authorization"]
+        == {
+            **_file_reference(V11_AUTHORIZATION_PATH),
+            "disposition": "consumed_external_resource_reassignment",
+        },
+        "V12 does not bind the consumed V11 authorization",
+    )
+    prior = _load_json(_repository_path(V11_AUTHORIZATION_PATH))
+    _require(
+        prior.get("package_id") == V11_PACKAGE_ID and prior.get("schema_version") == 11,
+        "V12 prior package is not the immutable V11 authorization",
+    )
+    _validate_v12_consumed_attempt(package["consumed_attempt"])
+    _validate_v12_contention_disposition(package["contention_probe_disposition"])
+    _validate_v12_lane_precedent(package["lane_precedent"])
+    _validate_v11_repair_validation(package["variable_prefill_repair_validation"])
+    _validate_v10_probe_evidence(package["chunked_prefill_probe"])
+    _require(
+        package["chunked_prefill_contract"] == _v10_chunked_prefill_contract(),
+        "V12 bounded chunked-prefill contract drifted",
+    )
+    base = _load_json(_repository_path(BASE_AUTHORIZATION_PATH))
+    _require(
+        base.get("package_id") == BASE_PACKAGE_ID and base.get("schema_version") == 2,
+        "V12 base is not the immutable full V2 authorization",
+    )
+    expected_inputs = {
+        "prompt_manifest": _file_reference(
+            str(PROMPT_MANIFEST_PATH.relative_to(REPO_ROOT))
+        ),
+        "prompt_bundle": _file_reference(
+            str(PROMPT_BUNDLE_PATH.relative_to(REPO_ROOT))
+        ),
+        "scorer_contract": _file_reference(
+            str(SCORER_CONTRACT_PATH.relative_to(REPO_ROOT))
+        ),
+    }
+    retained_contract = _load_json(_repository_path(V8_AUTHORIZATION_PATH))
+    _require(
+        retained_contract.get("package_id") == V8_PACKAGE_ID
+        and retained_contract.get("frozen_inputs") == expected_inputs,
+        "V12 frozen prompt or scorer input drifted",
+    )
+    source_paths = _v12_source_paths()
+    references = package["source_artifacts"]
+    _require(
+        set(references) == set(source_paths),
+        "V12 source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V12 source hash drifted for {role}",
+        )
+    _require(
+        package["run_contract"] == _v12_expected_run_contract(),
+        "V12 invocation differs from the create-new lane contract",
+    )
+    _require(package["decision"] == _v12_decision(), "V12 decision boundary drifted")
+    _require(
+        package["claims"] == _v12_claims(), "V12 claims drifted or overstate evidence"
+    )
+    _require(
+        package["authorizations"] == _v12_authorizations(),
+        "V12 authority exceeds one block-parallel value screen",
+    )
+    _require(
+        package["execution_policy"] == _v12_execution_policy(),
+        "V12 execution policy drifted",
+    )
+    _validate_lane_assignment(package["execution_policy"]["lane_assignment"])
+    _require(
+        package["next_artifact"] == _v12_next_artifact(),
+        "V12 post-run boundary drifted",
+    )
+    if require_output_absent:
+        _require(
+            not _repository_path(V12_OUTPUT_PATH).exists(),
+            "V12 registered output directory already exists",
+        )
+    authorization = copy.deepcopy(base)
+    authorization["run_contract"]["invocation"] = copy.deepcopy(
+        package["run_contract"]["invocation"]
+    )
+    return authorization
+
+
 def resolve_authorization_package(
     package: Mapping[str, Any], *, require_output_absent: bool = True
 ) -> dict[str, Any]:
     """Materialize the frozen V2 contract under an additive retry review."""
+    if package.get("package_id") == V12_PACKAGE_ID:
+        authorization = copy.deepcopy(
+            _validate_v12_package(
+                package,
+                require_output_absent=require_output_absent,
+            )
+        )
+        authorization = apply_chunked_prefill_engine_contract(authorization)
+        environment = authorization["run_contract"]["environment"]
+        environment[V1_MULTIPROCESSING_ENV] = V1_MULTIPROCESSING_VALUE
+        environment.pop(DEVICE_PIN_ENV, None)
+        authorization["schema_version"] = 12
+        authorization["package_id"] = V12_PACKAGE_ID
+        authorization["status"] = "authorized_block_parallel_two_lane_value_screen_only"
+        authorization["run_contract"]["invocation"] = copy.deepcopy(
+            package["run_contract"]["invocation"]
+        )
+        retained_contract = _load_json(_repository_path(V8_AUTHORIZATION_PATH))
+        for field in (
+            "request_id_repair",
+            "decode_work_repair",
+            "frozen_inputs",
+        ):
+            authorization[field] = copy.deepcopy(retained_contract[field])
+        for field in (
+            "prior_authorization",
+            "consumed_attempt",
+            "contention_probe_disposition",
+            "lane_precedent",
+            "variable_prefill_repair_validation",
+            "chunked_prefill_probe",
+            "chunked_prefill_contract",
+            "source_artifacts",
+            "decision",
+            "claims",
+            "authorizations",
+            "execution_policy",
+            "next_artifact",
+        ):
+            authorization[field] = copy.deepcopy(package[field])
+        return authorization
     if package.get("package_id") == V11_PACKAGE_ID:
         authorization = copy.deepcopy(
             _validate_v11_package(
@@ -3569,7 +4032,11 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         resources.get("on_violation") == "stop_without_scoring",
         "authorization resource failure policy drifted",
     )
-    if authorization.get("package_id") in {V10_PACKAGE_ID, V11_PACKAGE_ID}:
+    if authorization.get("package_id") in {
+        V10_PACKAGE_ID,
+        V11_PACKAGE_ID,
+        V12_PACKAGE_ID,
+    }:
         _require(
             engine.get("max_num_batched_tokens") == SERVING_MAX_NUM_BATCHED_TOKENS
             and engine.get("enable_chunked_prefill") is True
@@ -3589,6 +4056,7 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         V9_PACKAGE_ID,
         V10_PACKAGE_ID,
         V11_PACKAGE_ID,
+        V12_PACKAGE_ID,
     }:
         _require(
             run.get("environment", {}).get(V1_MULTIPROCESSING_ENV)
@@ -3721,6 +4189,92 @@ def _validate_v6_execution_authority(authorization: Mapping[str, Any]) -> None:
             "may_admit_action": False,
         },
         "V6 post-run boundary drifted",
+    )
+
+
+def _validate_v12_execution_authority(authorization: Mapping[str, Any]) -> None:
+    _require(
+        authorization.get("schema_version") == 12
+        and authorization.get("package_id") == V12_PACKAGE_ID
+        and authorization.get("status")
+        == "authorized_block_parallel_two_lane_value_screen_only",
+        "runner accepts only the reviewed V12 value-screen authority",
+    )
+    validate_preparation_contract(authorization)
+    _require(
+        authorization.get("request_id_repair") == _v7_request_id_repair(),
+        "V12 request-ID canonicalization contract drifted",
+    )
+    _require(
+        authorization.get("decode_work_repair") == _v8_decode_work_repair(),
+        "V12 decode-work offset contract drifted",
+    )
+    _validate_v12_consumed_attempt(authorization.get("consumed_attempt", {}))
+    _validate_v12_contention_disposition(
+        authorization.get("contention_probe_disposition", {})
+    )
+    _validate_v12_lane_precedent(authorization.get("lane_precedent", {}))
+    _validate_v11_repair_validation(
+        authorization.get("variable_prefill_repair_validation", {})
+    )
+    _validate_v10_probe_evidence(authorization.get("chunked_prefill_probe", {}))
+    _require(
+        authorization.get("chunked_prefill_contract")
+        == _v10_chunked_prefill_contract(),
+        "V12 chunked-prefill cohort contract drifted",
+    )
+    _require(
+        authorization.get("authorizations") == _v12_authorizations(),
+        "V12 authorities drifted beyond the value screen",
+    )
+    _require(
+        authorization.get("claims") == _v12_claims(),
+        "V12 does not claim the required tested lane path",
+    )
+    _require(
+        authorization.get("decision") == _v12_decision(),
+        "V12 decision does not approve the narrow block-parallel screen",
+    )
+    policy = authorization.get("execution_policy", {})
+    _require(policy == _v12_execution_policy(), "V12 execution policy drifted")
+    _validate_lane_assignment(policy["lane_assignment"])
+
+    references = authorization.get("source_artifacts", {})
+    source_paths = _v12_source_paths()
+    _require(
+        set(references) == set(source_paths),
+        "V12 execution source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V12 execution source hash drifted for {role}",
+        )
+
+    base = _load_json(_repository_path(BASE_AUTHORIZATION_PATH))
+    expected_run = copy.deepcopy(base["run_contract"])
+    expected_run["engine"]["max_num_batched_tokens"] = SERVING_MAX_NUM_BATCHED_TOKENS
+    expected_run["engine"]["enable_chunked_prefill"] = True
+    expected_run["engine"]["gpu_memory_utilization"] = SERVING_GPU_MEMORY_UTILIZATION
+    expected_run["environment"][V1_MULTIPROCESSING_ENV] = V1_MULTIPROCESSING_VALUE
+    expected_run["environment"].pop(DEVICE_PIN_ENV, None)
+    expected_run["invocation"] = _v12_invocation()
+    _require(
+        authorization.get("run_contract") == expected_run,
+        "V12 model, engine, cohort, action, or matrix contract drifted",
+    )
+    _require(
+        authorization.get("resource_gates") == base["resource_gates"],
+        "V12 resource gates drifted",
+    )
+    _require(
+        authorization.get("next_artifact") == _v12_next_artifact(),
+        "V12 post-run boundary drifted",
+    )
+    _require(
+        _reviewed_output_path(_repository_path(V12_AUTHORIZATION_PATH))
+        == _repository_path(V12_OUTPUT_PATH),
+        "V12 launch dispatcher does not resolve the reviewed path pair",
     )
 
 
@@ -3864,6 +4418,150 @@ def _validate_v11_execution_authority(authorization: Mapping[str, Any]) -> None:
         _reviewed_output_path(_repository_path(V11_AUTHORIZATION_PATH))
         == _repository_path(V11_OUTPUT_PATH),
         "V11 launch dispatcher does not resolve the reviewed path pair",
+    )
+
+
+def _v12_consumed_attempt_evidence() -> dict[str, Any]:
+    return {
+        "interruption": _file_reference(V12_INTERRUPTION_PATH),
+        "capture_manifest": _file_reference(V12_CAPTURE_MANIFEST_PATH),
+        "output_dir": V11_OUTPUT_PATH,
+        "complete_capture_count": 48,
+        "empty_placeholder_count": 1,
+        "adapted_rounds_emitted": False,
+        "score_emitted": False,
+        "preserve_without_resume_or_reuse": True,
+    }
+
+
+def _validate_v12_consumed_attempt(evidence: Mapping[str, Any]) -> None:
+    """Bind the interrupted V11 attempt without reusing any of its captures."""
+    _require(
+        evidence == _v12_consumed_attempt_evidence(),
+        "V12 consumed V11 attempt binding drifted",
+    )
+    failure = _load_json(_repository_path(V12_INTERRUPTION_PATH))
+    manifest = _load_json(_repository_path(V12_CAPTURE_MANIFEST_PATH))
+    attempt = failure.get("attempt", {})
+    diagnostic = failure.get("diagnostic", {})
+    disposition = failure.get("disposition", {})
+    _require(
+        failure.get("record_type") == "p4_b0_value_screen_execution_interruption"
+        and failure.get("authorization", {}).get("package_id") == V11_PACKAGE_ID
+        and attempt.get("physical_gpu_index") == 4
+        and attempt.get("gpu_model_executed") is True
+        and attempt.get("completed_physical_boots") == 1
+        and attempt.get("complete_captures_emitted") == 48
+        and attempt.get("empty_capture_placeholders") == 1
+        and attempt.get("interrupted_boot_id") == "p4-b0-b1-p2-k4"
+        and attempt.get("adapted_rounds_emitted") is False
+        and attempt.get("score_emitted") is False,
+        "V11 interruption does not describe the preserved partial attempt",
+    )
+    _require(
+        diagnostic.get("classification") == "external_resource_reassignment"
+        and diagnostic.get("reason") == "physical_gpu4_reserved_by_another_user"
+        and diagnostic.get("termination", {}).get("runtime_fault_observed") is False,
+        "V11 interruption is not an external reassignment",
+    )
+    _require(
+        disposition.get("v11_consumed") is True
+        and disposition.get("requires_fresh_authorization") is True
+        and disposition.get("retry_attempted") is False
+        and disposition.get("partial_resume_attempted") is False
+        and disposition.get("fallback_gpu_used") is False
+        and disposition.get("scoring_allowed") is False
+        and failure.get("output", {}).get("path") == V11_OUTPUT_PATH
+        and failure.get("output", {}).get("preserve_without_overwrite_or_resume")
+        is True,
+        "V11 interruption does not forbid resume, retry, or scoring",
+    )
+    _require(
+        manifest.get("status") == "immutable_partial_attempt"
+        and manifest.get("output_dir") == V11_OUTPUT_PATH
+        and manifest.get("counts", {}).get("complete_captures") == 48
+        and manifest.get("counts", {}).get("empty_placeholders") == 1
+        and manifest.get("invariants", {}).get("all_captures_unscored") is True
+        and manifest.get("invariants", {}).get(
+            "preserve_without_overwrite_resume_or_reuse"
+        )
+        is True,
+        "V11 capture manifest lost its immutable partial binding",
+    )
+
+
+def _v12_lane_precedent() -> dict[str, Any]:
+    return {
+        "phase": 96,
+        "artifact": _file_reference(LANE_PRECEDENT_PATH),
+        "policy": "one COMPLETE block per GPU; boots sequential within a block",
+        "measured_spread_fraction": {"b1": 0.0045, "b8": 0.0049},
+        "cross_boot_agreement_fraction": 0.02,
+        "reused_as_calibration": False,
+        "phase_97_basis": [
+            "tau_metrics_are_pure_counts_and_lane_independent",
+            "committed_tokens_per_action_are_equal_by_design",
+            "latin_square_gives_every_action_one_boot_per_block",
+            "lane_factor_cancels_in_s_k4_under_action_block_separability",
+            "residual_is_a_block_effect_resampled_by_the_paired_bootstrap",
+            "cross_boot_certification_fails_closed_above_two_percent",
+        ],
+    }
+
+
+def _validate_v12_lane_precedent(evidence: Mapping[str, Any]) -> None:
+    """Require the read-only Phase 96 precedent, never reused as measurement."""
+    _require(
+        evidence == _v12_lane_precedent(),
+        "V12 lane precedent binding drifted",
+    )
+    precedent = _load_json(_repository_path(LANE_PRECEDENT_PATH))
+    lane_block = precedent.get("lane_assignment", {})
+    calibration = lane_block.get("calibration", {})
+    _require(
+        lane_block.get("policy")
+        == "one COMPLETE block per GPU; boots sequential within a block",
+        "Phase 96 lane policy drifted",
+    )
+    _require(
+        calibration.get("b1", {}).get("spread_pct") == 0.45
+        and calibration.get("b8", {}).get("spread_pct") == 0.49,
+        "Phase 96 lane calibration drifted",
+    )
+
+
+def _v12_contention_probe_disposition() -> dict[str, Any]:
+    return {
+        "v1": {
+            "authorization": _file_reference(CONTENTION_V1_AUTHORIZATION_PATH),
+            "failure": _file_reference(CONTENTION_V1_FAILURE_PATH),
+            "classification": "launcher_ephemeral_port_collision",
+        },
+        "v2": {
+            "authorization": _file_reference(CONTENTION_V2_AUTHORIZATION_PATH),
+            "failure": _file_reference(CONTENTION_V2_FAILURE_PATH),
+            "classification": "concurrent_worktree_write_during_run",
+        },
+        "decision": "removed_from_the_value_screen_critical_path",
+        "measured_contention_bound_available": False,
+        "dual_gpu_authority_from_probe": False,
+    }
+
+
+def _validate_v12_contention_disposition(evidence: Mapping[str, Any]) -> None:
+    """Record both consumed probes and claim no contention bound from them."""
+    _require(
+        evidence == _v12_contention_probe_disposition(),
+        "V12 contention-probe disposition drifted",
+    )
+    failure = _load_json(_repository_path(CONTENTION_V2_FAILURE_PATH))
+    _require(
+        failure.get("status") == "failed_without_dual_gpu_authorization"
+        and failure.get("scored") is False
+        and failure.get("disposition", {}).get("dual_gpu_value_screen_authorized")
+        is False
+        and failure.get("disposition", {}).get("retry_allowed") is False,
+        "contention probe V2 does not remain a consumed non-authorizing failure",
     )
 
 
@@ -4375,6 +5073,9 @@ def validate_execution_authority(
     authorization: Mapping[str, Any],
 ) -> None:
     """Require a future source-bound approval before any GPU child starts."""
+    if authorization.get("package_id") == V12_PACKAGE_ID:
+        _validate_v12_execution_authority(authorization)
+        return
     if authorization.get("package_id") == V11_PACKAGE_ID:
         _validate_v11_execution_authority(authorization)
         return
@@ -4762,7 +5463,9 @@ def build_boot_specs(
     bounded_chunked_prefill = authorization.get("package_id") in {
         V10_PACKAGE_ID,
         V11_PACKAGE_ID,
+        V12_PACKAGE_ID,
     }
+    lane_parallel = authorization.get("package_id") == V12_PACKAGE_ID
     if bounded_chunked_prefill:
         budget_key = "chunked_prefill_budget"
         budget_evidence = chunked_prefill_budget_evidence(
@@ -4843,6 +5546,10 @@ def build_boot_specs(
                 "VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION": logical_version,
                 "VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS": str(MINIMUM_SHARED_KV_BLOCKS),
             }
+            lane = lane_for_block(block_id) if lane_parallel else None
+            if lane is not None:
+                env[DEVICE_PIN_ENV] = str(lane["physical_gpu_index"])
+                env[CACHE_ROOT_ENV] = lane["cache_root"]
             specs.append(
                 {
                     "schema_version": 1,
@@ -4850,6 +5557,7 @@ def build_boot_specs(
                     "boot_block_id": block_id,
                     "action_position": action_position,
                     "action_id": action_id,
+                    **({"lane": lane} if lane is not None else {}),
                     "dynamic_k_schedule": boot["dynamic_k_schedule"],
                     "logical_draft_weight_version": logical_version,
                     "minimum_shared_kv_blocks": MINIMUM_SHARED_KV_BLOCKS,
@@ -5318,8 +6026,37 @@ def _run_prompt_chunk(
     )
 
 
+def _verify_executing_code_against_snapshot() -> None:
+    """Refuse when the executing file differs from the authorized snapshot.
+
+    The snapshot fixes the *hashes* a child verifies, so ordinary worktree
+    churn no longer aborts a run. The code actually being executed still comes
+    from the worktree, so it is compared byte-for-byte here. A mismatch fails
+    this boot only; the block restart unit keeps sibling blocks valid.
+
+    Raises:
+        P4RunnerError: If the executing module drifted from the snapshot.
+    """
+    snapshot = _snapshot_root()
+    if snapshot is None:
+        return
+    executing = Path(__file__).resolve()
+    relative = str(executing.relative_to(REPO_ROOT))
+    authorized = snapshot / relative
+    _require(
+        authorized.is_file(),
+        f"executing module is absent from the snapshot: {relative}",
+    )
+    _require(
+        hashlib.sha256(executing.read_bytes()).hexdigest()
+        == hashlib.sha256(authorized.read_bytes()).hexdigest(),
+        f"executing module drifted from the authorized snapshot: {relative}",
+    )
+
+
 def run_boot_child(spec_path: Path) -> None:
     """Run all 48 cells in one engine process after parent authorization."""
+    _verify_executing_code_against_snapshot()
     spec = _load_json(spec_path)
     plan = _load_json(Path(spec["plan_path"]))
     _validate_plan(plan)
@@ -5422,6 +6159,7 @@ def _reviewed_output_path(authorization_path: Path) -> Path:
     """Resolve an exact reviewed authorization path to its paired output."""
     resolved_authorization_path = authorization_path.resolve()
     reviewed_pairs = (
+        (V12_AUTHORIZATION_PATH, V12_OUTPUT_PATH),
         (V11_AUTHORIZATION_PATH, V11_OUTPUT_PATH),
         (V10_AUTHORIZATION_PATH, V10_OUTPUT_PATH),
         (V9_AUTHORIZATION_PATH, V9_OUTPUT_PATH),
