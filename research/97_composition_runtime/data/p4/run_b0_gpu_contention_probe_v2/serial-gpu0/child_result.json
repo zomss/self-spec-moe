@@ -1,0 +1,72 @@
+{
+  "authorization": {
+    "bytes": 11822,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v2.json",
+    "sha256": "7739866d709cea47e3a2df023cffa28103eb6a5925d42f08f079078690044322"
+  },
+  "cache_root": "/data/smcho/.cache/vllm-p97-contention-v2/gpu0",
+  "captures": [
+    {
+      "bytes": 6061169,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu0/captures/contention-serial-gpu0-r1.json",
+      "sha256": "17544e357a843927951656048d1047d8b537f06c7a8aa4b9fb63e39bc16af802"
+    },
+    {
+      "bytes": 6064568,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu0/captures/contention-serial-gpu0-r2.json",
+      "sha256": "d6380b6361a56ed35fcfd9f1698dbacfa61ee80e0a60ab664fd9963ffae7b3e1"
+    },
+    {
+      "bytes": 6064547,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu0/captures/contention-serial-gpu0-r3.json",
+      "sha256": "47ed51315817000abad90bf07eef7c8697a9169398878e85e8c60eb78bc06aa8"
+    },
+    {
+      "bytes": 6064565,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu0/captures/contention-serial-gpu0-r4.json",
+      "sha256": "cf93cb2ca344812de509260665f0410a78c42125b0e96c934c147c82f5449988"
+    }
+  ],
+  "claims": {
+    "dual_gpu_value_screen_authorized": false,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "condition": "serial",
+  "cpu_affinity": {
+    "bound_exactly": true,
+    "logical_cpu_count": 96,
+    "registered": "0-47,96-143"
+  },
+  "episode": {
+    "committed_tokens": 262144,
+    "decode_rate_req": 96.74505677394906,
+    "reference_rate": 97.60258987373781,
+    "request_decode_time_s": 2709.63715089357,
+    "retention_threshold": 92.72246038005092,
+    "round_rates": [
+      94.40367272381091,
+      97.461032454696,
+      97.59113179315644,
+      97.60258987373781
+    ],
+    "surviving_round_count": 4,
+    "surviving_round_indices": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "gpu": {
+    "physical_index": 0,
+    "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "gpu_id": "gpu0",
+  "port_start": 20000,
+  "record_type": "p4_b0_gpu_contention_probe_child_result",
+  "run_id": "serial-gpu0",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass"
+}

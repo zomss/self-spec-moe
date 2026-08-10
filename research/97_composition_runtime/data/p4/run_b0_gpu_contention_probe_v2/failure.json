@@ -1,0 +1,23 @@
+{
+  "artifact_id": "p4-b0-gpu-contention-probe-v2-failure",
+  "authorization_consumed": true,
+  "child_results_present": {
+    "concurrent-gpu0": false,
+    "concurrent-gpu1": false,
+    "serial-gpu0": true,
+    "serial-gpu1": false
+  },
+  "disposition": {
+    "dual_gpu_value_screen_authorized": false,
+    "partial_resume_allowed": false,
+    "retry_allowed": false,
+    "value_screen_scoring_authorized": false
+  },
+  "exception": {
+    "message": "contention child process failed: {'serial-gpu1': 2}",
+    "type": "ContentionProbeError"
+  },
+  "schema_version": 1,
+  "scored": false,
+  "status": "failed_without_dual_gpu_authorization"
+}
