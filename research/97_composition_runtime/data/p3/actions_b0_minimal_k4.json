@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "boot_class_id": "qwen3-8b-b0-minimal-k4",
+  "actions": [
+    {
+      "action_id": "off",
+      "kind": "off",
+      "target_graph_descriptor": {
+        "graph_id": "target-k1",
+        "grade": "piecewise",
+        "realization": "target-decode",
+        "query_width": 1
+      },
+      "legal_switch_predecessors": [
+        "off",
+        "target-matching-k4"
+      ],
+      "measured_transition_cost_us": 0.0
+    },
+    {
+      "action_id": "target-matching-k4",
+      "kind": "speculative",
+      "draft_weight_path_id": "target-matching",
+      "realization": "piecewise-fullcg-shared-kv",
+      "window": {
+        "mode": "off",
+        "value": 0,
+        "cost_grade": "none"
+      },
+      "skip_set": [],
+      "k": 4,
+      "target_graph_descriptor": {
+        "graph_id": "target-k5",
+        "grade": "piecewise",
+        "realization": "target-verify-k5",
+        "query_width": 5
+      },
+      "draft_graph_descriptor": {
+        "graph_id": "draft-target-matching-k1",
+        "grade": "full",
+        "realization": "target-matching-shared-kv",
+        "query_width": 1
+      },
+      "requires_current_draft_weight": false,
+      "legal_switch_predecessors": [
+        "off",
+        "target-matching-k4"
+      ],
+      "measured_transition_cost_us": 0.0
+    }
+  ]
+}

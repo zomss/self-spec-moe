@@ -1,0 +1,94 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v7",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v7.json",
+    "sha256": "fabb3fad1fb689758ccb899c3be440e4ea47c4821564a10a1090dbbae67981df"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "complete_captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "failed_at": "2026-08-09T18:36:33+09:00",
+    "incomplete_captures_emitted": 1,
+    "physical_gpu_index": 4,
+    "raw_capture_files": 1,
+    "score_emitted": false,
+    "started_at": "2026-08-09T18:34:36+09:00"
+  },
+  "diagnostic": {
+    "accounting_evidence": {
+      "capture_complete": false,
+      "capture_event_count": 2045,
+      "capture_step_index_gaps": [
+        512,
+        1024,
+        1536,
+        2048
+      ],
+      "capture_step_index_range": [
+        1,
+        2049
+      ],
+      "first_cell_expected_pure_decode_commits": 16384,
+      "first_cell_observed_before_next_cell": 16352,
+      "frozen_measured_decode_tokens_per_request": 512,
+      "prompt_microbatch_count": 4,
+      "requests_per_microbatch": 8,
+      "sampling_max_tokens": 512,
+      "unmeasured_prefill_sample_tokens_per_request": 1
+    },
+    "cause": "Each request's first output token was sampled by its prefill event, which is intentionally excluded from the decode-only S_dec capture. Sampling max_tokens=512 therefore supplied only 511 pure-decode commits per request. The recorder still required 512, did not close the first cell, and consumed the next cell's reused prompt ids until R4-s0-p000 exceeded the stale cell's fixed-work bound.",
+    "exception_chain": [
+      {
+        "message": "P4 request 'R4-s0-p000' exceeded fixed output work",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:P4SameEventRecorder.record",
+        "type": "KOffRuntimeError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "last_stage": "first_cell_fixed_decode_work_closure",
+    "observed_before_failure": {
+      "cuda_graph_capture_completed": true,
+      "cuda_graph_pool_gib": 0.55,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "engine_core_class": "InprocClient",
+      "gpu_kv_cache_blocks": 22090,
+      "gpu_kv_cache_tokens": 353440,
+      "native_sampler_selected": true,
+      "self_spec_weight_alias_count": 291
+    },
+    "per_request_capture_totals": {
+      "R4-s0-p000_through_R4-s0-p007": 512,
+      "R4-s0-p008_through_R4-s0-p031": 511,
+      "interpretation": "All 32 first-cell requests contributed 511 pure-decode commits. Engine step 2049 belonged to the next planned cell and added one stale-cell commit to p000 through p007; the following event failed before it could be appended."
+    },
+    "scope": "prefill_sample_vs_decode_only_fixed_work_off_by_one"
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v7_consumed": true
+  },
+  "output": {
+    "boot_spec_sha256": "ea777276b36623934a294be1de532e46164d8d41ce46d40cbd22861c3f1beffc",
+    "incomplete_capture": "research/97_composition_runtime/data/p4/run_b0_value_screen_v6/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r1.json",
+    "incomplete_capture_sha256": "a9b83c3e7c0f9cba0945b7617dcb997059eef1c25bdc8e752167d21843f3fc77",
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v6",
+    "plan_sha256": "7ce7fe4a83bab45d5893c92500a3eba94fc0c947a059d324ff34093f1529b2da",
+    "preparation_sha256": "6cc0c687e184aa08607d368e8600c2ccd23151be6c54cd41cb41addd613b3d01",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

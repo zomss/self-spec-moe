@@ -1,0 +1,428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/boot_class.schema.json",
+  "title": "Phase 97 shared-KV boot class",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "boot_class_id",
+    "capability_class",
+    "fixed_environment_id",
+    "environment",
+    "kv",
+    "draft_weight_paths",
+    "admitted_windows",
+    "admitted_skip_sets",
+    "max_k",
+    "resident_graph_ids",
+    "resources"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "boot_class_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "capability_class": {
+      "enum": [
+        "B0",
+        "B1"
+      ]
+    },
+    "fixed_environment_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "VLLM_SELF_SPEC_SHARED_KV",
+        "VLLM_SELF_SPEC_DRAFT_KV_DTYPE"
+      ],
+      "properties": {
+        "VLLM_SELF_SPEC_SHARED_KV": {
+          "const": "1"
+        },
+        "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": {
+          "const": ""
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "kv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "owner",
+        "binding_id",
+        "pool_count",
+        "cache_spec",
+        "expected_layer_bindings"
+      ],
+      "properties": {
+        "path": {
+          "const": "shared_target"
+        },
+        "owner": {
+          "const": "target"
+        },
+        "binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "pool_count": {
+          "const": 1
+        },
+        "cache_spec": {
+          "$ref": "#/$defs/cache_spec"
+        },
+        "expected_layer_bindings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/layer_binding"
+          }
+        }
+      }
+    },
+    "draft_weight_paths": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/weight_path"
+      },
+      "contains": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "target_matching"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "admitted_windows": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "contains": {
+        "const": 0
+      }
+    },
+    "admitted_skip_sets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "contains": {
+        "type": "array",
+        "maxItems": 0
+      }
+    },
+    "max_k": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "resident_graph_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/identifier"
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "usable_hbm_bytes",
+        "safety_bytes",
+        "target_fixed_bytes",
+        "target_matching_draft_extra_bytes",
+        "quantized_draft_weights_bytes",
+        "weight_refresh_peak_bytes",
+        "graphs_and_workspaces_bytes",
+        "shared_target_kv_blocks",
+        "kv_block_size_tokens"
+      ],
+      "properties": {
+        "usable_hbm_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "safety_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "target_fixed_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "target_matching_draft_extra_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "quantized_draft_weights_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "weight_refresh_peak_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "graphs_and_workspaces_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "shared_target_kv_blocks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kv_block_size_tokens": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "capability_class": {
+            "const": "B0"
+          }
+        },
+        "required": [
+          "capability_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "draft_weight_paths": {
+            "maxItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "capability_class": {
+            "const": "B1"
+          }
+        },
+        "required": [
+          "capability_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "draft_weight_paths": {
+            "minItems": 2,
+            "maxItems": 2,
+            "contains": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "quantized"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "byte_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cache_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dtype",
+        "block_size",
+        "layout",
+        "spec_fingerprint"
+      ],
+      "properties": {
+        "dtype": {
+          "type": "string",
+          "minLength": 1
+        },
+        "block_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spec_fingerprint": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "layer_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft_layer",
+        "target_layer"
+      ],
+      "properties": {
+        "draft_layer": {
+          "$ref": "#/$defs/identifier"
+        },
+        "target_layer": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "quantization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "kernel",
+        "source"
+      ],
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kernel": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "weight_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path_id",
+        "kind",
+        "quantization",
+        "version_policy",
+        "resident_bytes",
+        "refresh_peak_bytes"
+      ],
+      "properties": {
+        "path_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "enum": [
+            "target_matching",
+            "quantized"
+          ]
+        },
+        "quantization": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/quantization"
+            }
+          ]
+        },
+        "version_policy": {
+          "enum": [
+            "target_alias",
+            "atomically_published"
+          ]
+        },
+        "resident_bytes": {
+          "$ref": "#/$defs/byte_count"
+        },
+        "refresh_peak_bytes": {
+          "$ref": "#/$defs/byte_count"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "target_matching"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "quantization": {
+                "type": "null"
+              },
+              "version_policy": {
+                "const": "target_alias"
+              },
+              "refresh_peak_bytes": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "quantized"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "quantization": {
+                "$ref": "#/$defs/quantization"
+              },
+              "version_policy": {
+                "const": "atomically_published"
+              },
+              "resident_bytes": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "claims": {
+    "action_admitted": false,
+    "generation_performed": false,
+    "model_initialized": true,
+    "performance_claim_allowed": false
+  },
+  "decision": {
+    "authority_granted": false,
+    "state": "fail",
+    "value_screen_may_be_separately_authorized": false
+  },
+  "engine": {
+    "chunked_prefill_enabled": true,
+    "max_num_batched_tokens": 114688,
+    "requests_executed": 0,
+    "sampler_backend": "pytorch_native"
+  },
+  "full_prefill_budget": {
+    "chunked_prefill_enabled": true,
+    "effective_scheduler_token_budget": 114656,
+    "headroom_tokens": 1748,
+    "max_microbatch_prompt_tokens": 112908,
+    "max_num_batched_tokens": 114688,
+    "policy": "measurement_only_full_microbatch_prefill",
+    "regime_max_microbatch_prompt_tokens": {
+      "R1": 343,
+      "R4": 68238,
+      "R5": 112304,
+      "R5cot": 112908,
+      "R6": 2498,
+      "R8": 2100
+    },
+    "speculative_slot_reserve": 32
+  },
+  "gpu": {
+    "memory_mib": 81559,
+    "name": "NVIDIA H100 80GB HBM3",
+    "physical_index": 4,
+    "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+  },
+  "package_id": "p4-b0-full-prefill-resource-probe-v1",
+  "record_type": "p4_b0_full_prefill_resource_probe_result",
+  "schema_version": 1,
+  "shared_kv_capacity": {
+    "block_size_tokens": 16,
+    "capacity_tokens": 318848,
+    "headroom_blocks": -1754,
+    "minimum_launch_blocks": 21682,
+    "num_gpu_blocks": 19928
+  }
+}

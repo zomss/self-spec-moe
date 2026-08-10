@@ -1,0 +1,64 @@
+{
+  "claims": {
+    "action_admitted": false,
+    "atomic_ingress_proven": true,
+    "performance_claim_allowed": false,
+    "v6_authorized": false,
+    "value_screen_repaired": false
+  },
+  "decision": "atomic_ingress_gate_passed",
+  "engine": {
+    "effective_scheduler_token_budget": 114656,
+    "enable_chunked_prefill": true,
+    "engine_core_class": "InprocClient",
+    "engine_core_mode": "in_process",
+    "gpu_memory_utilization": 0.96,
+    "max_num_batched_tokens": 114688,
+    "v1_multiprocessing": false
+  },
+  "invariants": {
+    "all_requests_queued_before_execution": true,
+    "capture_recorder_enabled": false,
+    "first_decode_has_no_exclusion": true,
+    "first_decode_is_pure_q1_off": true,
+    "initial_step_is_full_microbatch_prefill": true,
+    "private_draft_kv_allocated": false,
+    "shared_target_kv_layer_count": 36,
+    "target_draft_weight_alias_count": 291
+  },
+  "record_type": "p4_b0_atomic_ingress_proof",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "trace": {
+    "engine_step_count": 2,
+    "first_decode_exclusion_reasons": [],
+    "first_decode_query_widths": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "first_decode_request_count": 8,
+    "first_decode_step_index": 1,
+    "initial_prefill_query_widths": [
+      8077,
+      7839,
+      8368,
+      8435,
+      7836,
+      7876,
+      8597,
+      8172
+    ],
+    "initial_prefill_request_count": 8,
+    "initial_prefill_step_index": 0,
+    "preemptions": 0,
+    "recomputed_tokens": 0,
+    "shared_target_kv_blocks": 22090
+  }
+}

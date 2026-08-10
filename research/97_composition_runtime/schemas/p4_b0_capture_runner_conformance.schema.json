@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_capture_runner_conformance.schema.json",
+  "title": "Phase 97 B0 capture-runner conformance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "date",
+    "status",
+    "source_artifacts",
+    "implementation_checks",
+    "contracts",
+    "validation",
+    "claims",
+    "authorizations",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_id": {
+      "const": "p4-b0-capture-runner-conformance-v1"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "pass_cpu_conformance_reauthorization_required"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "held_authorization",
+        "live_runtime",
+        "live_scheduler",
+        "model_runner",
+        "environment_registry",
+        "matrix_runner",
+        "runtime_tests",
+        "recorder_tests",
+        "runner_tests",
+        "conformance_tests",
+        "schema",
+        "validator"
+      ],
+      "properties": {
+        "held_authorization": { "$ref": "#/$defs/source" },
+        "live_runtime": { "$ref": "#/$defs/source" },
+        "live_scheduler": { "$ref": "#/$defs/source" },
+        "model_runner": { "$ref": "#/$defs/source" },
+        "environment_registry": { "$ref": "#/$defs/source" },
+        "matrix_runner": { "$ref": "#/$defs/source" },
+        "runtime_tests": { "$ref": "#/$defs/source" },
+        "recorder_tests": { "$ref": "#/$defs/source" },
+        "runner_tests": { "$ref": "#/$defs/source" },
+        "conformance_tests": { "$ref": "#/$defs/source" },
+        "schema": { "$ref": "#/$defs/source" },
+        "validator": { "$ref": "#/$defs/source" }
+      }
+    },
+    "implementation_checks": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "status", "evidence"],
+        "properties": {
+          "code": {
+            "enum": [
+              "w512_boot_contract_blocked",
+              "w512_recorder_action_blocked",
+              "multi_cell_same_boot_capture_missing",
+              "boot_static_action_relabel_missing",
+              "logical_weight_version_unstable",
+              "runtime_resource_floor_guard_missing"
+            ]
+          },
+          "status": { "const": "pass" },
+          "evidence": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot_static_w512",
+        "same_boot_matrix",
+        "weight_identity",
+        "resource_floor",
+        "authority_boundary"
+      ],
+      "properties": {
+        "boot_static_w512": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action_id",
+            "window_tokens",
+            "sink_tokens",
+            "live_registry_remains_k4_off",
+            "trusted_relabel_only"
+          ],
+          "properties": {
+            "action_id": { "const": "target-matching-w512-masked-k4" },
+            "window_tokens": { "const": 512 },
+            "sink_tokens": { "const": 16 },
+            "live_registry_remains_k4_off": { "const": true },
+            "trusted_relabel_only": { "const": true }
+          }
+        },
+        "same_boot_matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "physical_boots",
+            "cells_per_boot",
+            "captures",
+            "canonical_order",
+            "create_new_outputs"
+          ],
+          "properties": {
+            "physical_boots": { "const": 9 },
+            "cells_per_boot": { "const": 48 },
+            "captures": { "const": 432 },
+            "canonical_order": { "const": "regime_seed_round" },
+            "create_new_outputs": { "const": true }
+          }
+        },
+        "weight_identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "logical_id_format",
+            "logical_id_cross_boot_stable",
+            "pointer_binding_within_boot_required"
+          ],
+          "properties": {
+            "logical_id_format": {
+              "const": "target-matching-config-sha256-<64-lowercase-hex>"
+            },
+            "logical_id_cross_boot_stable": { "const": true },
+            "pointer_binding_within_boot_required": { "const": true }
+          }
+        },
+        "resource_floor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["minimum_shared_kv_blocks", "checked_at", "on_failure"],
+          "properties": {
+            "minimum_shared_kv_blocks": { "const": 21682 },
+            "checked_at": {
+              "const": ["scheduler_initialization", "every_captured_event"]
+            },
+            "on_failure": { "const": "stop_without_scoring" }
+          }
+        },
+        "authority_boundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "held_package_rejected",
+            "prepare_only_is_cpu",
+            "fresh_source_bound_authorization_required",
+            "score_grants_authority"
+          ],
+          "properties": {
+            "held_package_rejected": { "const": true },
+            "prepare_only_is_cpu": { "const": true },
+            "fresh_source_bound_authorization_required": { "const": true },
+            "score_grants_authority": { "const": false }
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gpu_commands_run",
+        "focused_tests_passed",
+        "phase97_tests_passed",
+        "phase97_subtests_passed",
+        "ruff_version",
+        "ruff_passed"
+      ],
+      "properties": {
+        "gpu_commands_run": { "const": 0 },
+        "focused_tests_passed": { "type": "integer", "minimum": 1 },
+        "phase97_tests_passed": { "type": "integer", "minimum": 1 },
+        "phase97_subtests_passed": { "type": "integer", "minimum": 0 },
+        "ruff_version": { "const": "0.14.0" },
+        "ruff_passed": { "const": true }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "all_six_conformance_checks_pass",
+        "executable_source_ready_for_reauthorization",
+        "gpu_measurement_performed",
+        "value_measured",
+        "action_admitted",
+        "performance_claim_allowed"
+      ],
+      "properties": {
+        "all_six_conformance_checks_pass": { "const": true },
+        "executable_source_ready_for_reauthorization": { "const": true },
+        "gpu_measurement_performed": { "const": false },
+        "value_measured": { "const": false },
+        "action_admitted": { "const": false },
+        "performance_claim_allowed": { "const": false }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "gpu_measurement": { "const": false },
+        "p4a_engineering": { "const": false },
+        "action_admission": { "const": false },
+        "production_value_claim": { "const": false }
+      }
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "must_bind_changed_source_hashes", "may_self_authorize_gpu"],
+      "properties": {
+        "kind": { "const": "fresh_p4_b0_run_authorization_review" },
+        "must_bind_changed_source_hashes": { "const": true },
+        "may_self_authorize_gpu": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

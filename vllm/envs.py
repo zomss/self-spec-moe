@@ -279,6 +279,14 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_FULLCG: bool = False
     VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE: bool = False
     VLLM_SELF_SPEC_DRAFT_EAGER: bool = False
+    VLLM_SELF_SPEC_DRAFT_TRACE: str = ""
+    VLLM_SELF_SPEC_KOFF_RUNTIME: bool = False
+    VLLM_SELF_SPEC_KOFF_TRACE: str = ""
+    VLLM_SELF_SPEC_P4_CAPTURE_CONFIG: str = ""
+    VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT: str = ""
+    VLLM_SELF_SPEC_P4_BOOT_ACTION: str = ""
+    VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION: str = ""
+    VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS: int = 0
     VLLM_SELF_SPEC_COMPILE_CONSISTENT: bool = False
     VLLM_SELF_SPEC_CPU_ORCH: bool = False
     VLLM_SELF_SPEC_SHADOW_CHAIN: int = 0
@@ -1893,10 +1901,10 @@ environment_variables: dict[str, Callable[[], Any]] = {
         "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS", ""
     ),
     # Phase 91: Thompson-sampling scheduler policy (stage-3 bandit).
-    "VLLM_SELF_SPEC_BANDIT": lambda: os.getenv(
-        "VLLM_SELF_SPEC_BANDIT", "0") == "1",
-    "VLLM_SELF_SPEC_BANDIT_RESAMPLE": lambda: int(os.getenv(
-        "VLLM_SELF_SPEC_BANDIT_RESAMPLE", "16")),
+    "VLLM_SELF_SPEC_BANDIT": lambda: os.getenv("VLLM_SELF_SPEC_BANDIT", "0") == "1",
+    "VLLM_SELF_SPEC_BANDIT_RESAMPLE": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_BANDIT_RESAMPLE", "16")
+    ),
     # Phase 83: draft PARTIAL replica -- load ONLY the per-layer resident
     # expert sets ({layer_idx: LongTensor} file) into the draft's replica
     # (requires VLLM_SELF_SPEC_DRAFT_FULL_REPLICA=1). bf16, comm-free,
@@ -1946,8 +1954,8 @@ environment_variables: dict[str, Callable[[], Any]] = {
     "VLLM_SELF_SPEC_ACCEPT_PROBE_BURST": lambda: int(
         os.getenv("VLLM_SELF_SPEC_ACCEPT_PROBE_BURST", "2")
     ),
-    "VLLM_SELF_SPEC_GATE_DEBUG": lambda: os.getenv(
-        "VLLM_SELF_SPEC_GATE_DEBUG", "0") == "1",
+    "VLLM_SELF_SPEC_GATE_DEBUG": lambda: os.getenv("VLLM_SELF_SPEC_GATE_DEBUG", "0")
+    == "1",
     # Phase 82 E1: "ctx:thresh" -- above this mean context, the accept
     # gate's OFF threshold switches to the given (lower) value. The
     # break-even acceptance is a per-(batch, ctx) cell quantity: the
@@ -1969,21 +1977,23 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # whose prompts were never draft-prefilled draft correctly). Costs
     # one AR step after each prefill (drafting resumes next step).
     "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT": lambda: os.getenv(
-        "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT", "0") == "1",
+        "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT", "0"
+    )
+    == "1",
     # Phase 82: capture the K-1 draft chain steps as ONE CUDA graph
     # (single launch per spec cycle -- removes per-step CPU dispatch from
     # the chain's critical path). Requires the scratchpad chain
     # (VLLM_SELF_SPEC_DRAFT_FULLCG) and greedy sampling.
     "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": lambda: os.getenv(
-        "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN", "0") == "1",
+        "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN", "0"
+    )
+    == "1",
     # Phase 82 F4: path to a COMPILED policy table (compile_policy.py
     # --solve): per-(batch, ctx) cells of {K, accept_off_thresh} measured
     # on the deployment path. Replaces the hand-rule envs (schedule /
     # SHORTCTX_OFF / THRESH_LONG); the accept gate's thresholds and the
     # per-step K both come from the table.
-    "VLLM_SELF_SPEC_POLICY_FILE": lambda: os.getenv(
-        "VLLM_SELF_SPEC_POLICY_FILE", ""
-    ),
+    "VLLM_SELF_SPEC_POLICY_FILE": lambda: os.getenv("VLLM_SELF_SPEC_POLICY_FILE", ""),
     # Phase 82 E1: hysteresis upper bound -- once gated OFF, speculation
     # re-enables only when the probe EMA rises above this (defaults to the
     # OFF threshold when 0, i.e. no hysteresis band).
@@ -1994,9 +2004,7 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # context of running requests is below ctx AND the running batch is
     # >= batch (the map's verify-width OFF region at short context).
     # Empty -> disabled.
-    "VLLM_SELF_SPEC_SHORTCTX_OFF": lambda: os.getenv(
-        "VLLM_SELF_SPEC_SHORTCTX_OFF", ""
-    ),
+    "VLLM_SELF_SPEC_SHORTCTX_OFF": lambda: os.getenv("VLLM_SELF_SPEC_SHORTCTX_OFF", ""),
     # Number of attention-sink tokens the window-KV draft keeps at the start
     # of the KV sequence (rounded up to whole blocks). Only meaningful when
     # VLLM_SELF_SPEC_DRAFT_KV_WINDOW > 0.
@@ -2108,6 +2116,43 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # needs enforce_eager. Default off. See research/36_dp_accept.
     "VLLM_SELF_SPEC_DRAFT_EAGER": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_DRAFT_EAGER", "0"))
+    ),
+    # Diagnostic-only trace for the first max-token draft dummy forward.
+    # Requires DRAFT_EAGER so Python hooks execute. Post-hooks synchronize the
+    # device, making the final unmatched entry identify an asynchronous stall.
+    "VLLM_SELF_SPEC_DRAFT_TRACE": env_with_choices(
+        "VLLM_SELF_SPEC_DRAFT_TRACE",
+        "",
+        ["", "layer", "operator"],
+        case_sensitive=False,
+    ),
+    # Phase 97: strict live plumbing for the minimal target-matching B0.
+    # The closed runtime action set is OFF plus K=4; every draft action must
+    # use target-owned KV and target-aliased weights. Optional TRACE is a
+    # create-new JSONL file containing passive, non-scored engine-step records.
+    "VLLM_SELF_SPEC_KOFF_RUNTIME": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_KOFF_RUNTIME", "0"))
+    ),
+    "VLLM_SELF_SPEC_KOFF_TRACE": lambda: os.getenv("VLLM_SELF_SPEC_KOFF_TRACE", ""),
+    # Phase 97 P4: create explicit synchronous same-event captures. CONFIG is
+    # either one frozen capture-cell template or one 48-cell same-boot plan.
+    # OUTPUT is a create-new JSON file for a single cell or an existing empty
+    # boot directory for a plan. The three conformance fields bind a plan to
+    # its boot-static action, stable logical weight version, and KV floor.
+    "VLLM_SELF_SPEC_P4_CAPTURE_CONFIG": lambda: os.getenv(
+        "VLLM_SELF_SPEC_P4_CAPTURE_CONFIG", ""
+    ),
+    "VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT": lambda: os.getenv(
+        "VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT", ""
+    ),
+    "VLLM_SELF_SPEC_P4_BOOT_ACTION": lambda: os.getenv(
+        "VLLM_SELF_SPEC_P4_BOOT_ACTION", ""
+    ),
+    "VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION": lambda: os.getenv(
+        "VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION", ""
+    ),
+    "VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS": lambda: int(
+        os.getenv("VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS", "0")
     ),
     # Self-spec W7 compile-consistency: when set, enables batch-invariant
     # numerics (the same machinery as VLLM_BATCH_INVARIANT) so the COMPILED
@@ -2294,9 +2339,7 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # full-replica) and C (EP all-to-all) be diffed on the SAME prompt to prove
     # the comm-free-vs-EP bf16 reduce structure is the divergence cause. Timing-
     # neutral, default off (empty -> no dump). See research/40_num_divergence.
-    "VLLM_SELF_SPEC_MOE_NUM_DUMP": lambda: os.getenv(
-        "VLLM_SELF_SPEC_MOE_NUM_DUMP", ""
-    ),
+    "VLLM_SELF_SPEC_MOE_NUM_DUMP": lambda: os.getenv("VLLM_SELF_SPEC_MOE_NUM_DUMP", ""),
     "VLLM_SELF_SPEC_MOE_DUMP_LAYER": lambda: int(
         os.getenv("VLLM_SELF_SPEC_MOE_DUMP_LAYER", "0")
     ),
@@ -2313,9 +2356,7 @@ environment_variables: dict[str, Callable[[], Any]] = {
     #     bandwidth note). Default off -> both paths unchanged (bf16-accum).
     # 96/W6 item 5: ranked-ladder policy (options are Round-2
     # ranked; SPRT-lite threshold on position-resolved tau).
-    "VLLM_SELF_SPEC_LADDER": lambda: bool(
-        int(os.getenv("VLLM_SELF_SPEC_LADDER", "0"))
-    ),
+    "VLLM_SELF_SPEC_LADDER": lambda: bool(int(os.getenv("VLLM_SELF_SPEC_LADDER", "0"))),
     "VLLM_SELF_SPEC_MOE_FP32_ACCUM": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_MOE_FP32_ACCUM", "0"))
     ),

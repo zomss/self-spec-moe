@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "contract_id": "p4-b0-runner-scorer-v1",
+  "status": "frozen_unwired",
+  "frozen_date": "2026-08-09",
+  "source_artifacts": {
+    "contract_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_runner_scorer.schema.json",
+      "sha256": "e887930953e8579300133a034128fb20e13d67a7b4b6c35ae36c6dab693404c8"
+    },
+    "capture_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_same_event_capture.schema.json",
+      "sha256": "883707c9c2ea71a4667c2104e84e8f099d165410c6c9f01a4af5393cf6c115d7"
+    },
+    "round_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_adapted_round.schema.json",
+      "sha256": "d9e77edea555fadb3f21758e6de10a918429a2ff290c2870518d66dfc7f7eae0"
+    },
+    "measurement_adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "accounting_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_same_event_accounting_contract.json",
+      "sha256": "c0d6ef619614eccfc61a66577d43154fc59fca886750339bef0ed94c8da8624a"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    }
+  },
+  "input_contract": {
+    "preregistration_id": "p4-b0-off-k4-w512-value-screen-v1",
+    "capture_contract_id": "p4-b0-same-event-capture-v1",
+    "adapter_contract_id": "p4-b0-same-event-adapter-v1",
+    "round_contract_id": "p4-b0-adapted-round-v1",
+    "event_contract_id": "p4-same-event-target-step-v1",
+    "score_only_adapter_output": true,
+    "transition_event_policy": "reject_entire_round",
+    "ineligible_event_policy": "reject_entire_round",
+    "missing_field_policy": "reject_never_infer",
+    "legacy_p3_status": "diagnostic_only_unadaptable",
+    "legacy_p3_score_reuse": false
+  },
+  "matrix": {
+    "boot_blocks": [
+      {
+        "block_id": 1,
+        "action_order": [
+          "off",
+          "target-matching-k4",
+          "target-matching-w512-masked-k4"
+        ]
+      },
+      {
+        "block_id": 2,
+        "action_order": [
+          "target-matching-k4",
+          "target-matching-w512-masked-k4",
+          "off"
+        ]
+      },
+      {
+        "block_id": 3,
+        "action_order": [
+          "target-matching-w512-masked-k4",
+          "off",
+          "target-matching-k4"
+        ]
+      }
+    ],
+    "actions": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "regimes": [
+      {
+        "regime_id": "R4",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 512,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R5",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 512,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R5cot",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 3072,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R8",
+        "weight": 0.16666666666666666,
+        "batch": 16,
+        "max_output_tokens": 2048,
+        "temperature": 1.0
+      },
+      {
+        "regime_id": "R1",
+        "weight": 0.16666666666666666,
+        "batch": 1,
+        "max_output_tokens": 1024,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R6",
+        "weight": 0.16666666666666666,
+        "batch": 32,
+        "max_output_tokens": 256,
+        "temperature": 0.0
+      }
+    ],
+    "content_seeds": [
+      0,
+      1
+    ],
+    "rounds_per_boot": 4,
+    "prompts_per_round": 32,
+    "expected_round_records": 432
+  },
+  "episode_protocol": {
+    "reference_scope": "action_regime_seed_across_all_boot_rounds",
+    "b1_reference": "second_highest_round",
+    "other_batch_reference": "maximum_round",
+    "rejection_fraction": 0.05,
+    "rejection_rule": "decode_rate_req<0.95*reference",
+    "minimum_surviving_rounds_per_boot": 2,
+    "boot_summary": "sum_counters_and_time_over_surviving_rounds",
+    "cross_boot_metric": "decode_rate_req",
+    "cross_boot_agreement_fraction": 0.02,
+    "cross_boot_rule": "(max_boot_rate-min_boot_rate)/max_boot_rate<=0.02",
+    "failure_policy": "reject_complete_score_input"
+  },
+  "estimands": {
+    "round_rate": "E_committed/request_decode_time_s",
+    "round_tau": "1+A_accepted/H_target_steps",
+    "block_action_regime": "sum_both_seed_survivor_counters_and_time",
+    "draw_aggregation": "sum_selected_complete_block_counters_and_time",
+    "k4_speed": "rate_k4/rate_off",
+    "w512_no_cost_credit_speed": "S_k4*tau_w512/tau_k4",
+    "base_score": "max(1,S_k4)",
+    "candidate_score": "max(1,S_k4,S_w512_no_cost_credit)",
+    "regime_gain": "candidate_score-base_score",
+    "weighted_gain": "equal_weight_mean_over_six_regimes",
+    "missing_value": "null_never_zero"
+  },
+  "uncertainty": {
+    "method": "paired_complete_boot_block_bootstrap",
+    "resampling_unit": "complete_boot_block",
+    "draws": 4000,
+    "seed": 20260809,
+    "confidence_level": 0.95,
+    "percentile_index_rule": "floor(p*n)_zero_based_capped"
+  },
+  "decision_rule": {
+    "dominance": "all_regimes_UCB_tau_w512<=LCB_tau_k4",
+    "mean_gain_fraction": 0.02,
+    "single_regime_gain_fraction": 0.05,
+    "single_branch_mean_floor": 0.0,
+    "proper_subset_tolerance_fraction": 0.01,
+    "proper_subset_benefit_lcb_fraction": 0.02,
+    "failing_action_policy": "mask_w512_and_retain_k4_off",
+    "authority_policy": "score_never_grants_authority"
+  },
+  "readiness": {
+    "same_event_measurement_adapter_frozen": true,
+    "runner_scorer_frozen": true,
+    "same_event_live_recorder_wired": false
+  },
+  "authorizations": {
+    "gpu_measurement": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  }
+}

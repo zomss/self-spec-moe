@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/workload.schema.json",
+  "title": "Phase 97 workload resource envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workload_id",
+    "evidence_grade",
+    "scored",
+    "mode",
+    "concurrency",
+    "token_lengths",
+    "live_kv",
+    "prefix_cache",
+    "rl_actor_sync",
+    "service_objective",
+    "preemption_recompute",
+    "gateway_routing_allowed"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "workload_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "evidence_grade": {
+      "enum": [
+        "engineering_assumption",
+        "measured_trace"
+      ]
+    },
+    "scored": {
+      "type": "boolean"
+    },
+    "mode": {
+      "enum": [
+        "ordinary_inference",
+        "rl_rollout"
+      ]
+    },
+    "concurrency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "percentile",
+        "high_percentile_requests",
+        "hard_admission_requests"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "percentile": {
+          "$ref": "#/$defs/percentile"
+        },
+        "high_percentile_requests": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hard_admission_requests": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "token_lengths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt",
+        "requested_output"
+      ],
+      "properties": {
+        "prompt": {
+          "$ref": "#/$defs/length_envelope"
+        },
+        "requested_output": {
+          "$ref": "#/$defs/length_envelope"
+        }
+      }
+    },
+    "live_kv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "percentile",
+        "high_percentile_tokens",
+        "hard_admission_tokens",
+        "safety_margin_tokens",
+        "frozen_trace_tokens"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "percentile": {
+          "$ref": "#/$defs/percentile"
+        },
+        "high_percentile_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hard_admission_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "safety_margin_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frozen_trace_tokens": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "prefix_cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "expected_hit_rate",
+        "capacity_credit_allowed",
+        "assumption"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "expected_hit_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "capacity_credit_allowed": {
+          "const": false
+        },
+        "assumption": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "rl_actor_sync": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "max_rollout_batches_between_sync"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "max_rollout_batches_between_sync": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      ]
+    },
+    "service_objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "latency_slo_source"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "capacity_feasibility",
+            "slo_qualified_goodput",
+            "rollout_goodput"
+          ]
+        },
+        "latency_slo_source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "preemption_recompute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_preemptions_per_1000_requests",
+        "max_recomputed_tokens_per_1000_requests"
+      ],
+      "properties": {
+        "max_preemptions_per_1000_requests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_recomputed_tokens_per_1000_requests": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "gateway_routing_allowed": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "ordinary_inference"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rl_actor_sync": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "rl_rollout"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rl_actor_sync": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "percentile": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 100
+    },
+    "length_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "percentile",
+        "high_percentile_tokens",
+        "hard_max_tokens"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "percentile": {
+          "$ref": "#/$defs/percentile"
+        },
+        "high_percentile_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hard_max_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

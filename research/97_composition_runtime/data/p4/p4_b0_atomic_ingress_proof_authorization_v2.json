@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-atomic-ingress-proof-v2",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_non_scored_atomic_ingress_proof_v2_only",
+  "prior_diagnosis": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_ingress_diagnosis_authorization.json",
+      "sha256": "08351f44825f75f76a37d0b17a45dd1881e252a4199345a2a64e7b4ebf577eb3"
+    },
+    "diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1/diagnosis.json",
+      "sha256": "217f4417a0f10405bb052a5bfa5d9c6ded413d71edb3875eb2fca10f46b36eff"
+    },
+    "disposition": "mixed_ingress_identified_screen_unscored"
+  },
+  "prior_attempt": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization.json",
+      "sha256": "0af3504defd834d22eb217c6036109196a6c267312186c810e3a141ae6b8e9ab"
+    },
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/preparation.json",
+      "sha256": "dfeeafa22b820b6d49688f02ca232bf45704826701624761649c543808950147"
+    },
+    "failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/failure.json",
+      "sha256": "2502fe7c7640b697bdcab8af734e9b464ee4d7392ca197867ac7eca2fe24d25c"
+    },
+    "failure_diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_v1_failure_diagnosis.json",
+      "sha256": "5e4f3aa9229fd2860675217a6af08e58022b3622094169f09044acf521939159"
+    },
+    "disposition": "v1_consumed_zero_steps_no_trace_no_score"
+  },
+  "source_artifacts": {
+    "proof_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+      "sha256": "33ae7bf7ccf71a7191df9c1188bfc7d70f2122b22439c82ef318c6b68e48794e"
+    },
+    "proof_test": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py",
+      "sha256": "543d41805bde13764ac5d4580b0f30e6630662a8ea326ce2a830b99d86830296"
+    },
+    "full_prefill_helper": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_full_prefill_ingress_diagnosis.py",
+      "sha256": "925f8dcbcb11b59bbdfe89d9ec532c0abe008ce41ad013c66858725ff5aa57d2"
+    },
+    "serving_helper": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_serving_chunked_prefill_diagnosis.py",
+      "sha256": "830012a28848f4d0e419ed228d38e1016848cc4607f93cdc0fdb72790aa40fa4"
+    },
+    "v5_boot_spec": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4/boot_specs/p4-b0-b1-p1-off.json",
+      "sha256": "30555e7a8db6ff649e6cb87f8ed3bfe84ae8606b26fc5c683df5ec8dd83ce745"
+    },
+    "prior_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_ingress_diagnosis_authorization.json",
+      "sha256": "08351f44825f75f76a37d0b17a45dd1881e252a4199345a2a64e7b4ebf577eb3"
+    },
+    "prior_diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1/diagnosis.json",
+      "sha256": "217f4417a0f10405bb052a5bfa5d9c6ded413d71edb3875eb2fca10f46b36eff"
+    },
+    "prior_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1/koff_trace.jsonl",
+      "sha256": "68608dc537422e5b8ef6ab908eb090ec7f54f36f209b2c5ac713eec6b033281c"
+    },
+    "prior_proof_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization.json",
+      "sha256": "0af3504defd834d22eb217c6036109196a6c267312186c810e3a141ae6b8e9ab"
+    },
+    "prior_proof_preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/preparation.json",
+      "sha256": "dfeeafa22b820b6d49688f02ca232bf45704826701624761649c543808950147"
+    },
+    "prior_proof_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/failure.json",
+      "sha256": "2502fe7c7640b697bdcab8af734e9b464ee4d7392ca197867ac7eca2fe24d25c"
+    },
+    "prior_proof_failure_diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_v1_failure_diagnosis.json",
+      "sha256": "5e4f3aa9229fd2860675217a6af08e58022b3622094169f09044acf521939159"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "a4434420cc64503828fe8fac29ba11cd282cdf4d9dca4e7592dd92305ef69ad7"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "4670639b6dde892df006fb6798ad62820f14f806b339963660b354842bfd6d30"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "d57e1ff4fad5ddfc7379a606780fe62188452adab923b95db6ef73734db00562"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    }
+  },
+  "run_contract": {
+    "invocation": {
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization_v2.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2",
+      "create_new": true
+    },
+    "gpu": {
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+      "fallback_authorized": false
+    },
+    "model": {
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_source": "target_alias",
+      "draft_kv_source": "target_shared_cache"
+    },
+    "engine": {
+      "engine_core_mode": "in_process",
+      "engine_core_class": "InprocClient",
+      "v1_multiprocessing": false,
+      "max_model_len": 20480,
+      "max_num_seqs": 32,
+      "max_num_batched_tokens": 114688,
+      "effective_scheduler_token_budget": 114656,
+      "enable_chunked_prefill": true,
+      "gpu_memory_utilization": 0.96,
+      "async_scheduling": false,
+      "enforce_eager": false,
+      "prefix_caching": false,
+      "native_sampler": true,
+      "dynamic_k_schedule": [
+        [
+          1,
+          32,
+          0
+        ],
+        [
+          33,
+          33,
+          4
+        ]
+      ]
+    },
+    "workload": {
+      "prompt_record_ids": [
+        "R4-s0-p000",
+        "R4-s0-p001",
+        "R4-s0-p002",
+        "R4-s0-p003",
+        "R4-s0-p004",
+        "R4-s0-p005",
+        "R4-s0-p006",
+        "R4-s0-p007"
+      ],
+      "prompt_token_counts": [
+        8077,
+        7839,
+        8368,
+        8435,
+        7836,
+        7876,
+        8597,
+        8172
+      ],
+      "total_prompt_tokens": 65200,
+      "max_output_tokens_per_request": 16,
+      "temperature": 0.0,
+      "ignore_eos": true,
+      "generation_seed": 0,
+      "engine_steps": 2
+    }
+  },
+  "proof_contract": {
+    "recording": "append_only_non_scored_koff_trace",
+    "p4_capture_recorder_enabled": false,
+    "request_admission": "queue_all_before_first_engine_step",
+    "expected_step_count": 2,
+    "expected_initial_step": "eight_request_pure_prefill",
+    "expected_first_decode_step": "eight_request_pure_decode",
+    "expected_first_decode_query_widths": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "expected_first_decode_exclusions": [],
+    "shared_target_kv_required": true,
+    "private_draft_kv_allowed": false,
+    "adaptation_allowed": false,
+    "scoring_allowed": false
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_inprocess_atomic_ingress_proof_only",
+    "invalidated_by": [
+      "bound_source_hash_drift",
+      "output_directory_exists",
+      "gpu4_not_idle",
+      "gpu_identity_drift",
+      "multiprocess_engine_core",
+      "engine_or_workload_drift",
+      "capture_adaptation_or_scoring_enablement"
+    ]
+  },
+  "claims": {
+    "atomic_ingress_proven": false,
+    "value_screen_repaired": false,
+    "v6_authorized": false,
+    "performance_claim_allowed": false,
+    "action_admitted": false
+  },
+  "authorizations": {
+    "atomic_ingress_proof": true,
+    "value_screen": false,
+    "v6_execution": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_boot_count": 1,
+    "engine_step_count": 2,
+    "expected_complete_capture_count": 0,
+    "retry_allowed": false,
+    "partial_resume_allowed": false,
+    "prior_output_reuse_allowed": false,
+    "on_any_failure": "stop_preserve_trace_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_atomic_ingress_proof",
+    "may_request_v6_review_on_pass": true,
+    "may_authorize_v6": false,
+    "may_score_value_screen": false,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

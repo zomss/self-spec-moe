@@ -1,0 +1,564 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_prompt_manifest.schema.json",
+  "title": "Phase 97 exact B0 prompt manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "status",
+    "frozen_date",
+    "source_artifacts",
+    "software",
+    "tokenizer",
+    "datasets",
+    "prompt_plan",
+    "hashing",
+    "bundle",
+    "groups",
+    "prompts",
+    "authorizations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "manifest_id": {
+      "const": "p4-b0-six-regime-prompts-v1"
+    },
+    "status": {
+      "const": "frozen"
+    },
+    "frozen_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_loader",
+        "prompt_generator"
+      ],
+      "properties": {
+        "regime_loader": {
+          "$ref": "#/$defs/artifact"
+        },
+        "prompt_generator": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "software": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "python",
+        "transformers",
+        "tokenizers",
+        "datasets"
+      ],
+      "properties": {
+        "python": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transformers": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tokenizers": {
+          "type": "string",
+          "minLength": 1
+        },
+        "datasets": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tokenizer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "revision",
+        "class_name",
+        "vocab_size",
+        "tokenization_call",
+        "files"
+      ],
+      "properties": {
+        "model_id": {
+          "const": "Qwen/Qwen3-8B"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "class_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vocab_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokenization_call": {
+          "const": "tokenizer.encode(prompt)"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/named_file"
+          }
+        }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/dataset"
+      }
+    },
+    "prompt_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_order",
+        "content_seeds",
+        "prompts_per_seed_and_regime",
+        "total_prompt_records",
+        "generation_seed",
+        "generation_seed_policy",
+        "ignore_eos",
+        "max_model_len",
+        "regimes"
+      ],
+      "properties": {
+        "regime_order": {
+          "type": "array",
+          "const": [
+            "R4",
+            "R5",
+            "R5cot",
+            "R8",
+            "R1",
+            "R6"
+          ]
+        },
+        "content_seeds": {
+          "type": "array",
+          "const": [
+            0,
+            1
+          ]
+        },
+        "prompts_per_seed_and_regime": {
+          "const": 32
+        },
+        "total_prompt_records": {
+          "const": 384
+        },
+        "generation_seed": {
+          "const": 0
+        },
+        "generation_seed_policy": {
+          "const": "same_zero_seed_per_prompt_across_actions"
+        },
+        "ignore_eos": {
+          "const": true
+        },
+        "max_model_len": {
+          "const": 20480
+        },
+        "regimes": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/regime"
+          }
+        }
+      }
+    },
+    "hashing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "token_id_encoding",
+        "group_encoding",
+        "json_encoding",
+        "jsonl_canonicalization"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "token_id_encoding": {
+          "const": "little-endian-uint32"
+        },
+        "group_encoding": {
+          "const": "little-endian-uint32-count-then-token-ids-per-prompt"
+        },
+        "json_encoding": {
+          "const": "utf-8"
+        },
+        "jsonl_canonicalization": {
+          "const": "sort_keys,separators=(comma,colon),ensure_ascii=false,trailing_newline"
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "format",
+        "compression",
+        "compression_level",
+        "gzip_mtime",
+        "record_count",
+        "uncompressed_bytes",
+        "uncompressed_sha256",
+        "compressed_bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "const": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz"
+        },
+        "format": {
+          "const": "canonical-jsonl"
+        },
+        "compression": {
+          "const": "gzip"
+        },
+        "compression_level": {
+          "const": 9
+        },
+        "gzip_mtime": {
+          "const": 0
+        },
+        "record_count": {
+          "const": 384
+        },
+        "uncompressed_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "uncompressed_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "compressed_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/group"
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "minItems": 384,
+      "maxItems": 384,
+      "items": {
+        "$ref": "#/$defs/prompt"
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_prompt_manifest_frozen",
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "exact_prompt_manifest_frozen": {
+          "const": true
+        },
+        "gpu_measurement": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "named_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "dataset_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path_from_hf_home",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path_from_hf_home": {
+          "type": "string",
+          "pattern": "^(datasets|hub)/[^/].+$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_id",
+        "repo_id",
+        "revision",
+        "config",
+        "split",
+        "source_format",
+        "fingerprint",
+        "used_by_regimes",
+        "files"
+      ],
+      "properties": {
+        "dataset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "repo_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "config": {
+          "type": "string",
+          "minLength": 1
+        },
+        "split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_format": {
+          "enum": [
+            "datasets-arrow-cache",
+            "raw-gzip-snapshot"
+          ]
+        },
+        "fingerprint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "used_by_regimes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/dataset_file"
+          }
+        }
+      }
+    },
+    "regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_id",
+        "batch",
+        "max_output_tokens",
+        "temperature",
+        "context_target_tokens"
+      ],
+      "properties": {
+        "regime_id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0
+        },
+        "context_target_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_id",
+        "content_seed",
+        "prompt_count",
+        "minimum_prompt_tokens",
+        "maximum_prompt_tokens",
+        "total_prompt_tokens",
+        "token_ids_sha256"
+      ],
+      "properties": {
+        "regime_id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "content_seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_count": {
+          "const": 32
+        },
+        "minimum_prompt_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_prompt_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_prompt_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "token_ids_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "regime_id",
+        "content_seed",
+        "prompt_index",
+        "token_count",
+        "token_ids_sha256"
+      ],
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^R[0-9A-Za-z]+-s[01]-p[0-9]{3}$"
+        },
+        "regime_id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "content_seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "prompt_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "token_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "token_ids_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

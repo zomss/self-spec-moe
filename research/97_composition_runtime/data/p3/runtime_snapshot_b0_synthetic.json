@@ -1,0 +1,668 @@
+{
+  "schema_version": 1,
+  "boot_class_id": "qwen3-8b-b0-minimal-k4",
+  "binding_id": "qwen3-8b-layer-twins-v1",
+  "target_pool_id": "target-kv-pool",
+  "allocated_pool_ids": [
+    "target-kv-pool"
+  ],
+  "canonical_true_slot_mapping_id": "target-true-slots-v1",
+  "layer_bindings": [
+    {
+      "draft_layer": "draft_model.model.layers.0.self_attn",
+      "target_layer": "model.layers.0.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.1.self_attn",
+      "target_layer": "model.layers.1.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.2.self_attn",
+      "target_layer": "model.layers.2.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.3.self_attn",
+      "target_layer": "model.layers.3.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.4.self_attn",
+      "target_layer": "model.layers.4.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.5.self_attn",
+      "target_layer": "model.layers.5.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.6.self_attn",
+      "target_layer": "model.layers.6.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.7.self_attn",
+      "target_layer": "model.layers.7.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.8.self_attn",
+      "target_layer": "model.layers.8.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.9.self_attn",
+      "target_layer": "model.layers.9.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.10.self_attn",
+      "target_layer": "model.layers.10.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.11.self_attn",
+      "target_layer": "model.layers.11.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.12.self_attn",
+      "target_layer": "model.layers.12.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.13.self_attn",
+      "target_layer": "model.layers.13.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.14.self_attn",
+      "target_layer": "model.layers.14.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.15.self_attn",
+      "target_layer": "model.layers.15.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.16.self_attn",
+      "target_layer": "model.layers.16.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.17.self_attn",
+      "target_layer": "model.layers.17.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.18.self_attn",
+      "target_layer": "model.layers.18.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.19.self_attn",
+      "target_layer": "model.layers.19.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.20.self_attn",
+      "target_layer": "model.layers.20.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.21.self_attn",
+      "target_layer": "model.layers.21.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.22.self_attn",
+      "target_layer": "model.layers.22.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.23.self_attn",
+      "target_layer": "model.layers.23.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.24.self_attn",
+      "target_layer": "model.layers.24.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.25.self_attn",
+      "target_layer": "model.layers.25.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.26.self_attn",
+      "target_layer": "model.layers.26.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.27.self_attn",
+      "target_layer": "model.layers.27.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.28.self_attn",
+      "target_layer": "model.layers.28.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.29.self_attn",
+      "target_layer": "model.layers.29.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.30.self_attn",
+      "target_layer": "model.layers.30.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.31.self_attn",
+      "target_layer": "model.layers.31.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.32.self_attn",
+      "target_layer": "model.layers.32.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.33.self_attn",
+      "target_layer": "model.layers.33.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.34.self_attn",
+      "target_layer": "model.layers.34.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    },
+    {
+      "draft_layer": "draft_model.model.layers.35.self_attn",
+      "target_layer": "model.layers.35.self_attn",
+      "draft_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "target_cache_spec": {
+        "dtype": "bfloat16",
+        "block_size": 16,
+        "layout": "NHD",
+        "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+      },
+      "same_storage": true,
+      "pool_id": "target-kv-pool"
+    }
+  ],
+  "action_views": [
+    {
+      "action_id": "target-matching-k4",
+      "binding_id": "qwen3-8b-layer-twins-v1",
+      "pool_id": "target-kv-pool",
+      "true_slot_mapping_id": "target-true-slots-v1"
+    }
+  ]
+}

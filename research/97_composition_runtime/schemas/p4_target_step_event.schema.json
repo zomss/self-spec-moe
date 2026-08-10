@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_target_step_event.schema.json",
+  "title": "Phase 97 same-event target-step accounting record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "event_id",
+    "action_id",
+    "k",
+    "engine_step_index",
+    "complete",
+    "pure_decode",
+    "source",
+    "quality",
+    "timing",
+    "request_steps",
+    "counters",
+    "score_eligible",
+    "exclusion_reasons"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "contract_id": {
+      "const": "p4-same-event-target-step-v1"
+    },
+    "event_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "action_id": {
+      "enum": [
+        "off",
+        "target-matching-k4",
+        "target-matching-w512-masked-k4"
+      ]
+    },
+    "k": {
+      "type": "integer",
+      "enum": [
+        0,
+        4
+      ]
+    },
+    "engine_step_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "pure_decode": {
+      "type": "boolean"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheduler_event_id",
+        "verified_action_id",
+        "next_action_id",
+        "scheduler_output_observed",
+        "model_runner_output_observed",
+        "post_stop_commit_observed",
+        "prometheus_interval_delta_used"
+      ],
+      "properties": {
+        "scheduler_event_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "verified_action_id": {
+          "enum": [
+            "off",
+            "target-matching-k4",
+            "target-matching-w512-masked-k4"
+          ]
+        },
+        "next_action_id": {
+          "enum": [
+            "off",
+            "target-matching-k4",
+            "target-matching-w512-masked-k4"
+          ]
+        },
+        "scheduler_output_observed": {
+          "const": true
+        },
+        "model_runner_output_observed": {
+          "const": true
+        },
+        "post_stop_commit_observed": {
+          "const": true
+        },
+        "prometheus_interval_delta_used": {
+          "const": false
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preemptions",
+        "recomputed_tokens",
+        "invalid_spec_tokens"
+      ],
+      "properties": {
+        "preemptions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recomputed_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalid_spec_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine_event_elapsed_s",
+        "request_decode_time_s",
+        "source",
+        "queue_time_included",
+        "prefill_time_included"
+      ],
+      "properties": {
+        "engine_event_elapsed_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "request_decode_time_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "source": {
+          "const": "same_scheduler_event_monotonic"
+        },
+        "queue_time_included": {
+          "const": false
+        },
+        "prefill_time_included": {
+          "const": false
+        }
+      }
+    },
+    "request_steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/request_step"
+      }
+    },
+    "counters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H_target_steps",
+        "D_armed",
+        "A_accepted",
+        "C_clipped",
+        "E_committed",
+        "U_unarmed",
+        "closure_holds",
+        "draft_subset_holds"
+      ],
+      "properties": {
+        "H_target_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "D_armed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "A_accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "C_clipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "E_committed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "U_unarmed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "closure_holds": {
+          "const": true
+        },
+        "draft_subset_holds": {
+          "const": true
+        }
+      }
+    },
+    "score_eligible": {
+      "type": "boolean"
+    },
+    "exclusion_reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "incomplete_event",
+          "prefill_or_mixed_batch",
+          "preemption",
+          "recomputation",
+          "invalid_spec_tokens"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "request_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "target_processed",
+        "draft_armed",
+        "accepted_draft_tokens",
+        "raw_generated_tokens",
+        "committed_tokens",
+        "clipped_tokens"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "target_processed": {
+          "const": true
+        },
+        "draft_armed": {
+          "type": "boolean"
+        },
+        "accepted_draft_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "raw_generated_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "committed_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clipped_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

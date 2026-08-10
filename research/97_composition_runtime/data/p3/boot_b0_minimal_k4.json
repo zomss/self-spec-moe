@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "boot_class_id": "qwen3-8b-b0-minimal-k4",
+  "capability_class": "B0",
+  "fixed_environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "environment": {
+    "VLLM_SELF_SPEC_SHARED_KV": "1",
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+    "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+    "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1"
+  },
+  "kv": {
+    "path": "shared_target",
+    "owner": "target",
+    "binding_id": "qwen3-8b-layer-twins-v1",
+    "pool_count": 1,
+    "cache_spec": {
+      "dtype": "bfloat16",
+      "block_size": 16,
+      "layout": "NHD",
+      "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+    },
+    "expected_layer_bindings": [
+      {
+        "draft_layer": "draft_model.model.layers.0.self_attn",
+        "target_layer": "model.layers.0.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.1.self_attn",
+        "target_layer": "model.layers.1.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.2.self_attn",
+        "target_layer": "model.layers.2.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.3.self_attn",
+        "target_layer": "model.layers.3.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.4.self_attn",
+        "target_layer": "model.layers.4.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.5.self_attn",
+        "target_layer": "model.layers.5.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.6.self_attn",
+        "target_layer": "model.layers.6.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.7.self_attn",
+        "target_layer": "model.layers.7.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.8.self_attn",
+        "target_layer": "model.layers.8.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.9.self_attn",
+        "target_layer": "model.layers.9.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.10.self_attn",
+        "target_layer": "model.layers.10.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.11.self_attn",
+        "target_layer": "model.layers.11.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.12.self_attn",
+        "target_layer": "model.layers.12.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.13.self_attn",
+        "target_layer": "model.layers.13.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.14.self_attn",
+        "target_layer": "model.layers.14.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.15.self_attn",
+        "target_layer": "model.layers.15.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.16.self_attn",
+        "target_layer": "model.layers.16.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.17.self_attn",
+        "target_layer": "model.layers.17.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.18.self_attn",
+        "target_layer": "model.layers.18.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.19.self_attn",
+        "target_layer": "model.layers.19.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.20.self_attn",
+        "target_layer": "model.layers.20.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.21.self_attn",
+        "target_layer": "model.layers.21.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.22.self_attn",
+        "target_layer": "model.layers.22.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.23.self_attn",
+        "target_layer": "model.layers.23.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.24.self_attn",
+        "target_layer": "model.layers.24.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.25.self_attn",
+        "target_layer": "model.layers.25.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.26.self_attn",
+        "target_layer": "model.layers.26.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.27.self_attn",
+        "target_layer": "model.layers.27.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.28.self_attn",
+        "target_layer": "model.layers.28.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.29.self_attn",
+        "target_layer": "model.layers.29.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.30.self_attn",
+        "target_layer": "model.layers.30.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.31.self_attn",
+        "target_layer": "model.layers.31.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.32.self_attn",
+        "target_layer": "model.layers.32.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.33.self_attn",
+        "target_layer": "model.layers.33.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.34.self_attn",
+        "target_layer": "model.layers.34.self_attn"
+      },
+      {
+        "draft_layer": "draft_model.model.layers.35.self_attn",
+        "target_layer": "model.layers.35.self_attn"
+      }
+    ]
+  },
+  "draft_weight_paths": [
+    {
+      "path_id": "target-matching",
+      "kind": "target_matching",
+      "quantization": null,
+      "version_policy": "target_alias",
+      "resident_bytes": 0,
+      "refresh_peak_bytes": 0
+    }
+  ],
+  "admitted_windows": [
+    0
+  ],
+  "admitted_skip_sets": [
+    []
+  ],
+  "max_k": 4,
+  "resident_graph_ids": [
+    "target-k1",
+    "target-k5",
+    "draft-target-matching-k1"
+  ],
+  "resources": {
+    "usable_hbm_bytes": 76968728985,
+    "safety_bytes": 0,
+    "target_fixed_bytes": 19097557401,
+    "target_matching_draft_extra_bytes": 0,
+    "quantized_draft_weights_bytes": 0,
+    "weight_refresh_peak_bytes": 0,
+    "graphs_and_workspaces_bytes": 0,
+    "shared_target_kv_blocks": 24529,
+    "kv_block_size_tokens": 16
+  }
+}

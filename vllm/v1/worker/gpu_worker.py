@@ -159,6 +159,7 @@ class Worker(WorkerBase):
             raise ValueError(f"Unknown profiler type: {self.profiler_config.profiler}")
 
         self.use_v2_model_runner = vllm_config.use_v2_model_runner
+        self.cuda_graph_memory_bytes = 0
         # pending non-blocking PP send work from the previous iteration
         self._pp_send_work: list[Handle] = []
 
@@ -656,6 +657,7 @@ class Worker(WorkerBase):
         cuda_graph_memory_bytes = 0
         if not self.model_config.enforce_eager:
             cuda_graph_memory_bytes = self.model_runner.capture_model()
+        self.cuda_graph_memory_bytes = cuda_graph_memory_bytes
 
         # Compare actual vs estimated CUDA graph memory (if we did profiling)
         if (

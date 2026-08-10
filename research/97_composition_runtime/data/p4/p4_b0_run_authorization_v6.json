@@ -1,0 +1,327 @@
+{
+  "schema_version": 6,
+  "package_id": "p4-b0-value-screen-run-authorization-v6",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_inprocess_atomic_ingress_value_screen_only",
+  "prior_authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v5.json",
+    "sha256": "4983659ef991e7612b87f790d9711c48088e0354cff94992d854c12b5db87695",
+    "disposition": "consumed_zero_capture_mixed_ingress_failure"
+  },
+  "failed_attempt": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4/failure.json",
+    "sha256": "5d9635dafd198ff72a0aa83d025cbcd734e506cbe30d3e640b518330dfdf8bd2",
+    "capture_count": 0,
+    "score_emitted": false,
+    "preserve_without_resume": true
+  },
+  "atomic_ingress_proof": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization_v2.json",
+      "sha256": "9811fc0c2a22edd7a127df4a405bd9d66263106becbc000321e54c4b26155983"
+    },
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2/proof.json",
+      "sha256": "d3c92a20d9fa41ed92131b1b704b32c4f2a64b984574cfe37b18d545292307e2"
+    },
+    "trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2/koff_trace.jsonl",
+      "sha256": "09f7e070987827a2970e2e9bc413c4083267ed65231b6acae9ab820d02bec8bc"
+    },
+    "decision": "pass",
+    "engine_core_class": "InprocClient",
+    "v1_multiprocessing": false,
+    "initial_prefill_request_count": 8,
+    "first_decode_request_count": 8,
+    "first_decode_query_widths": [1, 1, 1, 1, 1, 1, 1, 1],
+    "first_decode_exclusion_reasons": [],
+    "preemptions": 0,
+    "recomputed_tokens": 0,
+    "shared_target_kv_blocks": 22090,
+    "shared_target_kv_layer_count": 36,
+    "target_draft_weight_alias_count": 291,
+    "scored": false
+  },
+  "resource_probe": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe_authorization.json",
+      "sha256": "0db3e70bb56087ab7c5213149202aca6018839ca15be26c4546d9cd726e19e53"
+    },
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe.json",
+      "sha256": "1fd328dadaa876158cb786d9d948a53553625411e03cecea1b1da2f56bc07552"
+    },
+    "decision": "pass",
+    "gpu_memory_utilization": 0.96,
+    "num_gpu_blocks": 22113,
+    "minimum_launch_blocks": 21682,
+    "headroom_blocks": 431,
+    "requests_executed": 0
+  },
+  "frozen_inputs": {
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "scorer_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_runner_scorer_contract.json",
+      "sha256": "6bb1de6a2b13725c5b8d3637e024da2dd52e18212a504b9bd384e73a90274736"
+    }
+  },
+  "source_artifacts": {
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "8fa4001a4e91faa4cb316bc602d65cbf7b45ddf8c9968c50876872ecb35d74f2"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "4f98118b91790b5a12c22e1f7f1b014a20d4408df13942e42d1328bdd2610f74"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "6515b420ee7e8e1dea2d68afc3b2d0a84cccfcbca48d2b5e87338967aea0cae7"
+    },
+    "conformance_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "3dcd297faad91b7a76480d738600df5106ea499f9062e9307f001027658c0431"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "d8318b059f8dd7ca2627e27a1065a283176779662c0df92dfa14bc482537f025"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "a4434420cc64503828fe8fac29ba11cd282cdf4d9dca4e7592dd92305ef69ad7"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "4670639b6dde892df006fb6798ad62820f14f806b339963660b354842bfd6d30"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "d57e1ff4fad5ddfc7379a606780fe62188452adab923b95db6ef73734db00562"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    },
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v6.schema.json",
+      "sha256": "eef046fe283348d8c95d08bcdea2d2205fc0aa75b901741b28af0e15df9b7e9e"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v6.py",
+      "sha256": "ba858473ecb6f2ec11a7b52c4a0e08b2a8798a359e9fce8fc06818c80df62491"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v6.py",
+      "sha256": "5cddd4cdf860efd00de6ac5e9939885c246a15ea41cc6c0b80b12a41d13be05a"
+    }
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v6.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v5"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v5",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "measurement_repair": {
+    "state": "pass",
+    "root_cause": "full_prefill_profile_reduced_shared_kv_below_floor",
+    "allowed_engine_overrides": {
+      "max_num_batched_tokens": 114688,
+      "enable_chunked_prefill": true,
+      "gpu_memory_utilization": 0.96
+    },
+    "minimum_shared_kv_blocks": 21682,
+    "measured_shared_kv_blocks": 22113,
+    "headroom_blocks": 431,
+    "checks": [
+      "manifest_derived_full_prefill_budget",
+      "chunked_prefill_retained",
+      "only_measurement_engine_overrides_applied",
+      "zero_request_resource_probe_passes",
+      "serving_8192_boundary_preserved"
+    ]
+  },
+  "serving_chunked_prefill_boundary": {
+    "scope": "post_measurement_real_serving_diagnosis",
+    "max_num_batched_tokens": 8192,
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.9,
+    "measurement_override_is_serving_default": false,
+    "mixed_prefill_decode_diagnosis_required": true
+  },
+  "implementation_audit": {
+    "state": "pass",
+    "checks": [
+      {
+        "code": "w512_boot_contract_blocked",
+        "status": "pass",
+        "evidence": "Capture boot validation permits only window=512, sinks=16 under the named w512 action and rejects all partial conformance fields."
+      },
+      {
+        "code": "w512_recorder_action_blocked",
+        "status": "pass",
+        "evidence": "The recorder accepts the frozen w512 capture label only under a validated boot-static w512 contract."
+      },
+      {
+        "code": "multi_cell_same_boot_capture_missing",
+        "status": "pass",
+        "evidence": "One recorder rotates 48 canonical create-new cells without replacing the engine, and the runner constructs nine physical boot specs totaling 432 captures."
+      },
+      {
+        "code": "boot_static_action_relabel_missing",
+        "status": "pass",
+        "evidence": "A w512 cell relabels only an exact live K4-to-K4 event with K=4 and consistently armed rows; OFF and K4 must match exactly."
+      },
+      {
+        "code": "logical_weight_version_unstable",
+        "status": "pass",
+        "evidence": "The runner supplies one configuration SHA-256 logical ID across boots while live parameter-object and pointer-binding identity remains mandatory within each boot."
+      },
+      {
+        "code": "runtime_resource_floor_guard_missing",
+        "status": "pass",
+        "evidence": "The scheduler stops below 21,682 shared target-KV blocks at recorder construction and rechecks the same floor before every captured event."
+      },
+      {
+        "code": "inprocess_engine_core_not_bound",
+        "status": "pass",
+        "evidence": "Every V6 boot forces VLLM_ENABLE_V1_MULTIPROCESSING=0 before importing vLLM and asserts InprocClient after engine construction."
+      },
+      {
+        "code": "atomic_microbatch_ingress_missing",
+        "status": "pass",
+        "evidence": "The source-bound GPU-4 proof queued all eight requests before execution, then observed one eight-request prefill step and one eight-request q=1/OFF decode step without exclusions."
+      }
+    ]
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_inprocess_atomic_ingress_value_screen_v6_only",
+    "basis": [
+      "v5_zero_capture_failure_preserved",
+      "atomic_ingress_gpu_proof_passes",
+      "inprocess_runner_wiring_fail_closed",
+      "full_prefill_resource_repair_retained",
+      "native_sampler_policy_retained",
+      "current_execution_sources_hash_bound",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "fresh_output_directory_exists",
+      "inprocess_engine_core_preflight_failure",
+      "native_sampler_preflight_failure",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "gpu_not_idle",
+      "resource_floor_failure",
+      "measurement_engine_override_drift",
+      "serving_boundary_drift",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "prior_value_screen_attempts_performed": 4,
+    "latest_prior_capture_count": 0,
+    "latest_prior_score_emitted": false,
+    "atomic_ingress_proof_passed": true,
+    "inprocess_runner_wiring_complete": true,
+    "executable_run_ready": true,
+    "serving_chunked_prefill_validated": true,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": true,
+    "v6_execution": true,
+    "serving_diagnosis": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "fallback_gpu_authorized": false,
+    "engine_core_mode": "in_process",
+    "engine_core_class": "InprocClient",
+    "v1_multiprocessing": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "prior_output_reuse_allowed": false,
+    "partial_resume_allowed": false,
+    "retry_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v4",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v4.json",
+    "sha256": "34dc0e6942b976276aed7ccb16a1f48a4f5a92e462cddc870502db691df38b57"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "empty_capture_placeholders": 1,
+    "failed_at": "2026-08-09T15:59:39+09:00",
+    "physical_gpu_index": 4,
+    "score_emitted": false,
+    "started_at": "2026-08-09T15:58:34+09:00"
+  },
+  "diagnostic": {
+    "cause": "The first frozen R4 prompt microbatch could not complete prefill as one scheduler event under the 8,160-token effective scheduler budget. Decode therefore began for completed requests while other requests were still prefilling. The strict P4 recorder correctly rejected that mixed prefill/decode event as score-ineligible.",
+    "eligibility_evidence": {
+      "effective_scheduler_token_budget": 8160,
+      "exclusion_reason": "prefill_or_mixed_batch",
+      "first_cell": "capture-b1-p1-off-r4-s0-r1",
+      "first_microbatch_prompt_token_counts": [
+        8077,
+        7839,
+        8368,
+        8435,
+        7836,
+        7876,
+        8597,
+        8172
+      ],
+      "first_microbatch_prompt_tokens": 65200,
+      "max_frozen_microbatch_prompt_tokens": 112908,
+      "max_num_batched_tokens": 8192,
+      "speculative_slot_reserve": 32
+    },
+    "exception_chain": [
+      {
+        "message": "P4 capture refuses an ineligible live event",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:P4SameEventRecorder._normalize_event",
+        "type": "KOffRuntimeError"
+      },
+      {
+        "message": "EngineCore encountered an issue. See stack trace for the root cause.",
+        "origin": "vllm/v1/engine/core_client.py:get_output",
+        "type": "EngineDeadError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "last_stage": "first_cell_mixed_prefill_decode_transition",
+    "observed_before_failure": {
+      "cuda_graph_capture_completed": true,
+      "cuda_graph_pool_gib": 0.55,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "gpu_kv_cache_tokens": 392432,
+      "native_sampler_selected": true,
+      "self_spec_weight_alias_count": 291
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false
+  },
+  "output": {
+    "empty_capture_placeholder": "research/97_composition_runtime/data/p4/run_b0_value_screen_v3/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r1.json",
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v3",
+    "preparation_sha256": "221a6d386c0082b321ecebeae4fdbbc6d3453ba062b1a400199ab0c10b264862",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

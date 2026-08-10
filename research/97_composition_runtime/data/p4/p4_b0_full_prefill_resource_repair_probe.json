@@ -1,0 +1,72 @@
+{
+  "claims": {
+    "action_admitted": false,
+    "generation_performed": false,
+    "model_initialized": true,
+    "performance_claim_allowed": false,
+    "serving_configuration_validated": false
+  },
+  "decision": {
+    "authority_granted": false,
+    "state": "pass",
+    "value_screen_may_be_separately_authorized": true
+  },
+  "engine": {
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.96,
+    "max_num_batched_tokens": 114688,
+    "requests_executed": 0,
+    "sampler_backend": "pytorch_native"
+  },
+  "full_prefill_budget": {
+    "chunked_prefill_enabled": true,
+    "effective_scheduler_token_budget": 114656,
+    "headroom_tokens": 1748,
+    "max_microbatch_prompt_tokens": 112908,
+    "max_num_batched_tokens": 114688,
+    "policy": "measurement_only_full_microbatch_prefill",
+    "regime_max_microbatch_prompt_tokens": {
+      "R1": 343,
+      "R4": 68238,
+      "R5": 112304,
+      "R5cot": 112908,
+      "R6": 2498,
+      "R8": 2100
+    },
+    "speculative_slot_reserve": 32
+  },
+  "gpu": {
+    "memory_mib": 81559,
+    "name": "NVIDIA H100 80GB HBM3",
+    "physical_index": 4,
+    "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+  },
+  "memory_repair": {
+    "all_other_engine_fields_unchanged": true,
+    "changed_engine_field": "gpu_memory_utilization",
+    "prior_num_gpu_blocks": 19928,
+    "prior_value": 0.9,
+    "probe_value": 0.96,
+    "projected_num_gpu_blocks": 22102,
+    "projection_is_authority": false,
+    "required_additional_blocks": 1754
+  },
+  "package_id": "p4-b0-full-prefill-resource-repair-probe-v2",
+  "record_type": "p4_b0_full_prefill_resource_repair_probe_result",
+  "schema_version": 2,
+  "serving_chunked_prefill_boundary": {
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.9,
+    "max_num_batched_tokens": 8192,
+    "measurement_override_is_serving_default": false,
+    "mixed_prefill_decode_diagnosis_required": true,
+    "scope": "post_measurement_real_serving_diagnosis"
+  },
+  "shared_kv_capacity": {
+    "block_size_tokens": 16,
+    "capacity_tokens": 353808,
+    "headroom_blocks": 431,
+    "minimum_launch_blocks": 21682,
+    "num_gpu_blocks": 22113
+  }
+}

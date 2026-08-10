@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_r5cot_r8_diagnosis_harness_failure",
+  "status": "consumed_inconclusive",
+  "authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization.json",
+    "sha256": "abe4b3f7fc606115c2a47ab22e6279f8fddc7f67e4c36aac9132d323008622dc"
+  },
+  "attempt": {
+    "output_dir": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1",
+    "physical_gpu_indices": [
+      0,
+      1
+    ],
+    "gpu_warmup_executed": true,
+    "workload_model_steps_executed": false,
+    "case_results_emitted": 2,
+    "score_emitted": false
+  },
+  "cause": {
+    "scope": "diagnostic_observer_only",
+    "exception_type": "TypeError",
+    "message": "'CachedRequestData' object is not iterable",
+    "origin": "run_p4_b0_r5cot_r8_diagnosis.py:_scheduler_snapshot",
+    "explanation": "The read-only observer treated SchedulerOutput.scheduled_cached_reqs as a sequence. The live API stores one CachedRequestData object whose request IDs are in its req_ids field.",
+    "runtime_invariant_reached": false,
+    "v10_output_accessed": false
+  },
+  "artifacts": {
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/preparation.json",
+      "sha256": "d87fd9f8d63411ac1c583a723f628a1321a6ae1d0862993311673fc56f2a432e"
+    },
+    "aggregate_diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/diagnosis.json",
+      "sha256": "91a2ec2845c9e114722cbfab80dbef8ee298ae6f420ea79507b1b125c5aa88e9"
+    },
+    "isolated_r8_result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/isolated-r8/case_result.json",
+      "sha256": "99b90c0fccea2685ee9a2c5368f80a33ae6d493328e1abdb045a01e1fcccd826"
+    },
+    "transition_result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/r5cot-to-r8/case_result.json",
+      "sha256": "8ca42ffa4f53eaf7aee0479130a7a560961854c9b96e038ef5cc4db398cbdc01"
+    },
+    "isolated_r8_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/isolated-r8/child.log",
+      "sha256": "4698ad6a5cc06cecfec6590d919fee859fef385dc1da57e9cdaa5eee4659da8e"
+    },
+    "transition_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/r5cot-to-r8/child.log",
+      "sha256": "ff608194ef0dabbc5d962fc6c2ab2204b9c4d10d383cc425e3a27e2732add500"
+    },
+    "isolated_r8_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/isolated-r8/koff_trace.jsonl",
+      "sha256": "7595fe96c7bd41748db70f5a12c504cf04e1ea81e28a599c42641e85934e0871"
+    },
+    "transition_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/r5cot-to-r8/koff_trace.jsonl",
+      "sha256": "12f119f74418a552620b3081ccb80cb01b17c08123651e737523e96a42ac23d6"
+    }
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "retry_allowed": false,
+    "resume_allowed": false,
+    "output_reuse_allowed": false,
+    "diagnostic_conclusion_allowed": false,
+    "requires_fresh_create_only_authorization": true,
+    "preserve_without_overwrite": true
+  }
+}

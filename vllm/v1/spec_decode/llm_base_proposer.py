@@ -139,6 +139,20 @@ class SpecDecodeBaseProposer:
         # metadata (see _build_draft_decode_capture_metadata).
         self.runner = runner
 
+        self._draft_trace_mode = envs.VLLM_SELF_SPEC_DRAFT_TRACE.lower()
+        if self._draft_trace_mode:
+            if self.method != "draft_model":
+                raise ValueError(
+                    "VLLM_SELF_SPEC_DRAFT_TRACE requires the draft_model "
+                    f"method, got {self.method!r}."
+                )
+            if not envs.VLLM_SELF_SPEC_DRAFT_EAGER:
+                raise ValueError(
+                    "VLLM_SELF_SPEC_DRAFT_TRACE requires "
+                    "VLLM_SELF_SPEC_DRAFT_EAGER=1 so hooks execute."
+                )
+        self._draft_trace_pending = bool(self._draft_trace_mode)
+
         # Self-spec W0: signal the comm-free local-routing MoE path on the draft
         # forward only (verify runs in a separate forward context with no key, so
         # it stays full-EP). Value-driven via ForwardContext.additional_kwargs;
@@ -268,6 +282,12 @@ class SpecDecodeBaseProposer:
         # runtime capture in the wrapper. Capture is lockstep on all ranks,
         # so the claim stays rank-symmetric.
         self._full_captured: set[int] = set()
+        # Phase 97 passive evidence for the most recent live draft dispatch.
+        self._last_step0_query_width: int | None = None
+        self._last_step0_num_tokens: int | None = None
+        self._last_step0_batch_size: int | None = None
+        self._last_step0_runtime_mode: str | None = None
+        self._last_chain_runtime_mode: str | None = None
         # Debug: per-dispatch shape/mode logging (W7_STEP0_DEBUG=1) and
         # runtime force-piecewise bisect knob (W7_STEP0_FORCE_PW=1).
         self._step0_debug = bool(os.environ.get("W7_STEP0_DEBUG"))
@@ -949,6 +969,26 @@ class SpecDecodeBaseProposer:
     def take_last_draft_probs(self) -> torch.Tensor | None:
         return self._last_draft_probs
 
+    def _record_step0_work_evidence(
+        self,
+        *,
+        num_tokens: int,
+        batch_size: int,
+        max_query_len: int,
+        step0_decode: bool,
+    ) -> None:
+        """Record exact work and an optional uniform-width fact."""
+        self._last_step0_query_width = None
+        self._last_step0_num_tokens = num_tokens
+        self._last_step0_batch_size = batch_size
+        exact_width = 1 if step0_decode else max_query_len
+        if (
+            batch_size > 0
+            and exact_width > 0
+            and num_tokens == batch_size * exact_width
+        ):
+            self._last_step0_query_width = exact_width
+
     def propose(
         self,
         num_speculative_tokens,
@@ -976,6 +1016,11 @@ class SpecDecodeBaseProposer:
             torch.cuda.current_stream().wait_event(self._shadow_done_event)
         self.num_speculative_tokens = num_speculative_tokens
         self._last_draft_probs = None
+        self._last_step0_query_width = None
+        self._last_step0_num_tokens = None
+        self._last_step0_batch_size = None
+        self._last_step0_runtime_mode = None
+        self._last_chain_runtime_mode = None
         self._dp_coord_memo.clear()
         self._in_propose = True
         batch_size = common_attn_metadata.batch_size()
@@ -1202,6 +1247,14 @@ class SpecDecodeBaseProposer:
                         _step0_uniform, cudagraph_runtime_mode, num_input_tokens,
                     )
 
+            self._record_step0_work_evidence(
+                num_tokens=num_tokens,
+                batch_size=batch_size,
+                max_query_len=common_attn_metadata.max_query_len,
+                step0_decode=step0_decode,
+            )
+            self._last_step0_runtime_mode = str(cudagraph_runtime_mode)
+
             model_kwargs, slot_mapping_size = self.build_model_inputs_first_pass(
                 num_tokens, num_input_tokens, mm_embed_inputs
             )
@@ -1370,6 +1423,7 @@ class SpecDecodeBaseProposer:
                     piecewise_only=chain_piecewise,
                 )
             )
+            self._last_chain_runtime_mode = str(cudagraph_runtime_mode)
             if chain_piecewise and not self._logged_chain_pw:
                 self._logged_chain_pw = True
                 logger.info(
@@ -2782,15 +2836,23 @@ class SpecDecodeBaseProposer:
     ) -> bool:
         """Whether to compact the step-0 draft forward to a q=1 decode.
 
-        Only for the shared-KV text draft_model path on decode-shaped proposes
-        (num_rejected_tokens_gpu present => not prompt-ingest). Restricted to
-        the plain text case (no M-RoPE / xdrope / mm / hidden-state passthrough)
-        so the compaction only has to gather input_ids/positions.
+        Only for the shared-KV text draft_model path on decode-shaped proposes.
+        A rejection tensor identifies steady-state speculative decode. A
+        uniform q=1 target pass identifies the OFF-to-K bootstrap, where no
+        rejection tensor exists yet. Restricted to the plain text case (no
+        M-RoPE / xdrope / mm / hidden-state passthrough) so the compaction only
+        has to gather input_ids/positions.
         """
+        bootstrap_q = 1 + self.net_num_new_slots_per_request
+        bootstrap_decode = (
+            num_rejected_tokens_gpu is None
+            and cad.max_query_len == bootstrap_q
+            and cad.num_actual_tokens == cad.num_reqs * bootstrap_q
+        )
         active = (
             self._shared_kv_step0_decode
             and self.num_speculative_tokens > 1
-            and num_rejected_tokens_gpu is not None
+            and (num_rejected_tokens_gpu is not None or bootstrap_decode)
             and not self.uses_mrope
             and self.uses_xdrope_dim == 0
             and not self.supports_mm_inputs
@@ -2820,7 +2882,7 @@ class SpecDecodeBaseProposer:
         cad: CommonAttentionMetadata,
         md_cad: CommonAttentionMetadata,
         token_indices_to_sample: torch.Tensor,
-        num_rejected_tokens_gpu: torch.Tensor,
+        num_rejected_tokens_gpu: torch.Tensor | None,
     ) -> tuple[CommonAttentionMetadata, int, torch.Tensor, torch.Tensor]:
         """Compact the step-0 draft forward to a q=1 decode of the appended
         sampled token(s) under shared KV.
@@ -2836,9 +2898,10 @@ class SpecDecodeBaseProposer:
         slots included): correct for the causal ragged forward, but a q=1
         decode has no causal mask and would attend the stale KV of this
         step's rejected draft tokens -- fatal under a KV window, where those
-        slots sit among the ~window most-recent keys. Trim per-request
-        seq_lens by num_rejected so the appended token attends exactly the
-        keys its causal counterpart would have. Returns
+        slots sit among the ~window most-recent keys. When rejection state is
+        present, trim per-request seq_lens by num_rejected so the appended
+        token attends exactly the keys its causal counterpart would have. The
+        OFF-to-K bootstrap has no rejected suffix and needs no trim. Returns
         (compact_cad, num_tokens=batch, token_indices=arange, appended_slots).
         """
         bs = cad.num_reqs
@@ -2851,12 +2914,14 @@ class SpecDecodeBaseProposer:
             # Windowed view: seq_lens is a proposer-owned buffer rewritten by
             # _apply_draft_kv_window each step -- trim in place (captured
             # graphs read it through capture-time pointers).
-            md_cad.seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
+            if num_rejected_tokens_gpu is not None:
+                md_cad.seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
             compact_seq_lens = md_cad.seq_lens
         else:
             # Full-KV: seq_lens is the runner's shared buffer -- copy.
             compact_seq_lens = md_cad.seq_lens.clone()
-            compact_seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
+            if num_rejected_tokens_gpu is not None:
+                compact_seq_lens[:bs].sub_(num_rejected_tokens_gpu[:bs])
         compact = md_cad.replace(
             seq_lens=compact_seq_lens,
             query_start_loc=self.arange[: bs + 1],
@@ -3939,6 +4004,96 @@ class SpecDecodeBaseProposer:
                 "(communication: O(2*tp_size) vs O(vocab_size))."
             )
 
+    def _draft_trace_modules(self) -> list[tuple[str, nn.Module]]:
+        inner_model = getattr(self.model, "model", None)
+        layers = getattr(inner_model, "layers", None)
+        if layers is None:
+            raise RuntimeError("VLLM_SELF_SPEC_DRAFT_TRACE requires model.layers.")
+
+        traced: list[tuple[str, nn.Module]] = []
+        for layer_idx, layer in enumerate(layers):
+            layer_name = f"model.layers.{layer_idx}"
+            traced.append((layer_name, layer))
+            if self._draft_trace_mode != "operator":
+                continue
+            for child_name, child in layer.named_modules():
+                if not child_name or next(child.children(), None) is not None:
+                    continue
+                traced.append((f"{layer_name}.{child_name}", child))
+        return traced
+
+    @_contextlib.contextmanager
+    def _maybe_trace_draft_profile(
+        self,
+        num_tokens: int,
+        fwd_idx: int,
+        is_graph_capturing: bool,
+    ):
+        should_trace = (
+            self._draft_trace_pending
+            and fwd_idx == 0
+            and num_tokens == self.max_num_tokens
+            and not is_graph_capturing
+        )
+        if not should_trace:
+            yield
+            return
+
+        self._draft_trace_pending = False
+        traced = self._draft_trace_modules()
+        handles = []
+
+        def make_pre_hook(name: str, module_type: str):
+            def pre_hook(_module, _inputs):
+                logger.info(
+                    "[draft-trace] enter module=%s type=%s",
+                    name,
+                    module_type,
+                )
+
+            return pre_hook
+
+        def make_post_hook(name: str, module_type: str):
+            def post_hook(_module, _inputs, _output):
+                torch.cuda.synchronize(self.device)
+                logger.info(
+                    "[draft-trace] exit module=%s type=%s",
+                    name,
+                    module_type,
+                )
+
+            return post_hook
+
+        for name, module in traced:
+            module_type = type(module).__name__
+            handles.append(
+                module.register_forward_pre_hook(make_pre_hook(name, module_type))
+            )
+            handles.append(
+                module.register_forward_hook(make_post_hook(name, module_type))
+            )
+
+        torch.cuda.synchronize(self.device)
+        logger.info(
+            "[draft-trace] begin mode=%s fwd=%d tokens=%d modules=%d",
+            self._draft_trace_mode,
+            fwd_idx,
+            num_tokens,
+            len(traced),
+        )
+        try:
+            yield
+            torch.cuda.synchronize(self.device)
+            logger.info(
+                "[draft-trace] end mode=%s fwd=%d tokens=%d",
+                self._draft_trace_mode,
+                fwd_idx,
+                num_tokens,
+            )
+        finally:
+            for handle in handles:
+                handle.remove()
+
     @torch.inference_mode()
     def dummy_run(
         self,
@@ -4058,7 +4213,12 @@ class SpecDecodeBaseProposer:
                 if self.pass_hidden_states_to_model:
                     kwargs["hidden_states"] = self.hidden_states[:num_input_tokens]
                 self._tag_a2a(f"dummy{fwd_idx}")
-                self.model(**kwargs)
+                with self._maybe_trace_draft_profile(
+                    num_input_tokens,
+                    fwd_idx,
+                    is_graph_capturing,
+                ):
+                    self.model(**kwargs)
                 # W7 sampling-in-graph: on the draft FULL (uniform-decode)
                 # capture pass, also capture the combined forward+sample graph
                 # so its per-step replay in the decode loop finds the key.

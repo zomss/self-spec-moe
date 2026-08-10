@@ -1,0 +1,529 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_window_entry.schema.json",
+  "title": "Phase 97 P4 runtime-window entry package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "status",
+    "base_artifacts",
+    "phase96_evidence",
+    "selection",
+    "proposed_boot_delta",
+    "selected_action",
+    "action_view",
+    "boundary_policy",
+    "controls",
+    "resource_gate",
+    "promotion_gates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "package_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "status": {
+      "const": "registered_not_admitted"
+    },
+    "base_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot",
+        "actions",
+        "runtime_snapshot",
+        "p3b_result",
+        "environment",
+        "workload"
+      ],
+      "properties": {
+        "boot": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "actions": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "runtime_snapshot": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "p3b_result": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "environment": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "workload": {
+          "$ref": "#/$defs/artifact_ref"
+        }
+      }
+    },
+    "phase96_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact",
+          "supports",
+          "limitation"
+        ],
+        "properties": {
+          "artifact": {
+            "$ref": "#/$defs/artifact_ref"
+          },
+          "supports": {
+            "enum": [
+              "window_value_selection",
+              "acceptance_only_classification",
+              "separate_boot_cost_transfer",
+              "interval_fix_diagnostic"
+            ]
+          },
+          "limitation": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "window_value",
+        "sink_tokens",
+        "mode",
+        "cost_grade",
+        "cost_credit_allowed",
+        "phase96_exact_action_match",
+        "reason"
+      ],
+      "properties": {
+        "window_value": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sink_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mode": {
+          "const": "masked"
+        },
+        "cost_grade": {
+          "const": "acceptance_only"
+        },
+        "cost_credit_allowed": {
+          "const": false
+        },
+        "phase96_exact_action_match": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "proposed_boot_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_boot_class_id",
+        "proposed_boot_class_id",
+        "capability_class",
+        "admitted_windows",
+        "new_resident_graph_ids",
+        "shared_kv_binding_id",
+        "kv_owner",
+        "kv_pool_count",
+        "draft_kv_dtype",
+        "max_k"
+      ],
+      "properties": {
+        "base_boot_class_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "proposed_boot_class_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "capability_class": {
+          "const": "B0"
+        },
+        "admitted_windows": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "contains": {
+            "const": 0
+          }
+        },
+        "new_resident_graph_ids": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "shared_kv_binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kv_owner": {
+          "const": "target"
+        },
+        "kv_pool_count": {
+          "const": 1
+        },
+        "draft_kv_dtype": {
+          "const": ""
+        },
+        "max_k": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "selected_action": {
+      "$ref": "#/$defs/window_action"
+    },
+    "action_view": {
+      "$ref": "#/$defs/action_view"
+    },
+    "boundary_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatch_scope",
+        "switch_boundary",
+        "mixed_prefill_decode",
+        "mixed_decode_action",
+        "rearm_condition",
+        "discarded_draft_accounting"
+      ],
+      "properties": {
+        "dispatch_scope": {
+          "const": "whole_decode_dispatch"
+        },
+        "switch_boundary": {
+          "const": "target_step"
+        },
+        "mixed_prefill_decode": {
+          "const": "abort_pending_draft"
+        },
+        "mixed_decode_action": {
+          "const": "off_q1"
+        },
+        "rearm_condition": {
+          "const": "later_pure_decode_off_step"
+        },
+        "discarded_draft_accounting": {
+          "const": "neither_armed_nor_accepted"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "correctness_contract",
+        "comparison_action_ids",
+        "proper_subset_action_ids",
+        "matched_fields",
+        "acceptance_evidence",
+        "cross_boot_ar_identity"
+      ],
+      "properties": {
+        "correctness_contract": {
+          "const": "target_local"
+        },
+        "comparison_action_ids": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "proper_subset_action_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "matched_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "acceptance_evidence": {
+          "const": "action_specific_required"
+        },
+        "cross_boot_ar_identity": {
+          "const": "non_gating_diagnostic"
+        }
+      }
+    },
+    "resource_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate",
+        "current_decision",
+        "required_evidence_grade",
+        "required_measurement_relation",
+        "performance_claims_allowed"
+      ],
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "current_decision": {
+          "const": "reject"
+        },
+        "required_evidence_grade": {
+          "const": "measured_exact"
+        },
+        "required_measurement_relation": {
+          "const": "exact_candidate"
+        },
+        "performance_claims_allowed": {
+          "const": false
+        }
+      }
+    },
+    "promotion_gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "p3b_mixed_abort",
+        "phase96_f_resident_value",
+        "runtime_action_transport",
+        "live_shared_kv_and_true_slot",
+        "target_local_controls",
+        "exact_post_capture_resource",
+        "transition_overhead",
+        "cost_true_claim",
+        "private_kv"
+      ],
+      "properties": {
+        "p3b_mixed_abort": {
+          "const": "pass"
+        },
+        "phase96_f_resident_value": {
+          "const": "not_approved"
+        },
+        "runtime_action_transport": {
+          "const": "pending"
+        },
+        "live_shared_kv_and_true_slot": {
+          "const": "pending"
+        },
+        "target_local_controls": {
+          "const": "pending"
+        },
+        "exact_post_capture_resource": {
+          "const": "pending"
+        },
+        "transition_overhead": {
+          "const": "pending"
+        },
+        "cost_true_claim": {
+          "const": "forbidden"
+        },
+        "private_kv": {
+          "const": "forbidden"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^research/"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "graph_descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph_id",
+        "grade",
+        "realization",
+        "query_width"
+      ],
+      "properties": {
+        "graph_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "grade": {
+          "enum": [
+            "eager",
+            "piecewise",
+            "full"
+          ]
+        },
+        "realization": {
+          "$ref": "#/$defs/identifier"
+        },
+        "query_width": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "window_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "base_action_id",
+        "kind",
+        "draft_weight_path_id",
+        "realization",
+        "window",
+        "skip_set",
+        "k",
+        "target_graph_descriptor",
+        "draft_graph_descriptor",
+        "requires_current_draft_weight",
+        "legal_switch_predecessors",
+        "transition_cost"
+      ],
+      "properties": {
+        "action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "base_action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "const": "speculative"
+        },
+        "draft_weight_path_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "realization": {
+          "$ref": "#/$defs/identifier"
+        },
+        "window": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "value",
+            "cost_grade"
+          ],
+          "properties": {
+            "mode": {
+              "const": "masked"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "cost_grade": {
+              "const": "acceptance_only"
+            }
+          }
+        },
+        "skip_set": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "k": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target_graph_descriptor": {
+          "$ref": "#/$defs/graph_descriptor"
+        },
+        "draft_graph_descriptor": {
+          "$ref": "#/$defs/graph_descriptor"
+        },
+        "requires_current_draft_weight": {
+          "const": false
+        },
+        "legal_switch_predecessors": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "transition_cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "value_us"
+          ],
+          "properties": {
+            "status": {
+              "const": "unmeasured"
+            },
+            "value_us": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    "action_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "binding_id",
+        "pool_id",
+        "true_slot_mapping_id"
+      ],
+      "properties": {
+        "action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "pool_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "true_slot_mapping_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    }
+  }
+}

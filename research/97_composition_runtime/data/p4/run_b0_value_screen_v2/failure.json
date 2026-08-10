@@ -1,0 +1,75 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v3",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v3.json",
+    "sha256": "16ae3fb9a9fb1654c325116348a986cfdb6f5eae82a3b1cb6c7d5b5bdda94243"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "failed_at": "2026-08-09T15:36:30+09:00",
+    "physical_gpu_index": 4,
+    "score_emitted": false,
+    "started_at": "2026-08-09T15:35:35+09:00"
+  },
+  "diagnostic": {
+    "cause": "FlashInfer selected a pre-existing cached sampling module linked to libcudart.so.13, but the child dynamic-library search path did not resolve that soname. TVM FFI therefore could not load the sampler during the engine profile run.",
+    "cuda_runtime": {
+      "cached_sampling_module": "/home/smcho/.cache/flashinfer/0.6.12/90a/cached_ops/sampling/sampling.so",
+      "cached_sampling_module_needed": "libcudart.so.13",
+      "default_cuda_toolkit": "/usr/local/cuda-13.0",
+      "ld_library_path_was_set": false,
+      "module_dependency_resolved": false,
+      "torch_build_cuda": "12.9",
+      "torch_version": "2.11.0+cu129"
+    },
+    "exception_chain": [
+      {
+        "message": "Failed to load dynamic shared library sampling.so: libcudart.so.13: cannot open shared object file: No such file or directory",
+        "origin": "tvm_ffi/module.py:load_module",
+        "type": "RuntimeError"
+      },
+      {
+        "message": "Engine core initialization failed. See root cause above.",
+        "origin": "vllm/v1/engine/utils.py:wait_for_engine_startup",
+        "type": "RuntimeError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "flashinfer_version": "0.6.12",
+    "last_stage": "engine_initialization_profile_run_sampler_load",
+    "ninja_preflight": {
+      "executable": ".venv/bin/ninja",
+      "executable_version": "1.13.0.git.kitware.jobserver-pipe-1",
+      "passed": true
+    },
+    "observed_before_failure": {
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "self_spec_weight_alias_count": 291,
+      "target_and_draft_compile_completed": true
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v2",
+    "preparation_sha256": "9f063915c14afaf6ac2de5df680be2bdd539ccf67fa85383aecb3f51df415dda",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

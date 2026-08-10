@@ -1,0 +1,41 @@
+{
+  "artifact_id": "p4-b0-r5cot-r8-transition-diagnosis-v1",
+  "authorization": {
+    "bytes": 11608,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v2.json",
+    "sha256": "8edf7d1bc3a110659ba510b5d9a7f2cde121f118035c030971b3ba6a3ba6bfc7"
+  },
+  "authorization_consumed": true,
+  "case_results": {
+    "isolated-r8": {
+      "bytes": 13687,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v2/isolated-r8/case_result.json",
+      "sha256": "7b6990f4143d8ab4ddb3d3df754a5e71b6c3b2228bdf8271079ca07438936a8b"
+    },
+    "r5cot-to-r8": {
+      "bytes": 24384,
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v2/r5cot-to-r8/case_result.json",
+      "sha256": "5675c5e83742a798fd66815ea54aa10f0a87c4f93f5311acb31e8b57132070fb"
+    }
+  },
+  "claims": {
+    "action_admission_authorized": false,
+    "diagnostic_only": true,
+    "performance_claim_allowed": false,
+    "value_screen_retry_authorized": false
+  },
+  "classification": {
+    "conclusion": "original_failure_not_reproduced",
+    "isolated_r8_expected_failure": false,
+    "transition_expected_failure": false
+  },
+  "failed_attempt": {
+    "bytes": 3350,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/failure.json",
+    "sha256": "78b21f7b6110a2e383f6ce7d6ba2e26a121a30722ed89dddac61f1afa93a852f"
+  },
+  "next_action": "Review the two case artifacts before changing runtime code.",
+  "schema_version": 1,
+  "scored": false,
+  "status": "complete"
+}

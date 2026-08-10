@@ -1,0 +1,129 @@
+{
+  "artifact_id": "p4-b0-gpu-relocation-probe-v1",
+  "authorization": {
+    "bytes": 11608,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v2.json",
+    "sha256": "8edf7d1bc3a110659ba510b5d9a7f2cde121f118035c030971b3ba6a3ba6bfc7"
+  },
+  "authorization_consumed": true,
+  "cases": [
+    {
+      "armed_prefill_observation_count": 1,
+      "case_id": "isolated-r8",
+      "completed_cohorts": [
+        "r8-first"
+      ],
+      "exact_r8_observation": {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 0,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252053.132360594,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      "gpu": {
+        "physical_index": 0,
+        "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+      },
+      "measured_event_count": 647,
+      "shared_target_kv_block_capacity": 24527,
+      "trace_record_count": 649
+    },
+    {
+      "armed_prefill_observation_count": 9,
+      "case_id": "r5cot-to-r8",
+      "completed_cohorts": [
+        "r5cot-last",
+        "r8-first"
+      ],
+      "exact_r8_observation": {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 633,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252100.809733957,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      "gpu": {
+        "physical_index": 1,
+        "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+      },
+      "measured_event_count": 1247,
+      "shared_target_kv_block_capacity": 24527,
+      "trace_record_count": 1263
+    }
+  ],
+  "claims": {
+    "full_value_screen_authorized": false,
+    "gpu0_exact_r8_passed": true,
+    "gpu1_r5cot_to_r8_passed": true,
+    "performance_claim_allowed": false,
+    "shared_kv_floor_passed_on_both": true
+  },
+  "next_action": "Prepare a separate source-bound single-GPU value-screen authorization; do not reuse probe output.",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass"
+}

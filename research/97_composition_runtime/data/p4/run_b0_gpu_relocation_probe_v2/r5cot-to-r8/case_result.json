@@ -1,0 +1,749 @@
+{
+  "active_stage_at_exit": "complete",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-r5cot-to-r8",
+  "authorization": {
+    "bytes": 11608,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v2.json",
+    "sha256": "8edf7d1bc3a110659ba510b5d9a7f2cde121f118035c030971b3ba6a3ba6bfc7"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "r5cot-to-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": false,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r5cot-s1-r4",
+      "label": "r5cot-last",
+      "slice_start": 24,
+      "slice_stop": 32
+    },
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [
+    "r5cot-last",
+    "r8-first"
+  ],
+  "gpu": {
+    "physical_index": 1,
+    "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+  },
+  "instrumentation": {
+    "armed_prefill_evidence": [
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252053.419589749,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 1023,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 3,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252054.284050749,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 2043,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 5,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252055.055326054,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 3064,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 6,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252055.531511798,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 3575,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 8,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252056.312347614,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 4596,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 10,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252057.07822109,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 5616,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          2,
+          4
+        ],
+        "draft_step0_batch_size": 2,
+        "draft_step0_num_tokens": 8162,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 12,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252057.836191391,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 6637,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 2,
+          "draft_step0_num_tokens": 8162,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          1,
+          4
+        ],
+        "draft_step0_batch_size": 1,
+        "draft_step0_num_tokens": 6829,
+        "draft_step0_query_width": 6829,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 13,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252058.315827576,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 7064,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 1,
+          "draft_step0_num_tokens": 6829,
+          "draft_step0_query_width": 6829,
+          "produced_draft_width": 4
+        }
+      },
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 633,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252100.809733957,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      }
+    ],
+    "draft_step0_input": {
+      "batch_size": 1,
+      "max_query_len": 6,
+      "num_actual_tokens": 6,
+      "num_tokens": 6,
+      "num_tokens_mod_batch_size": 0,
+      "uniform_query_width": 6
+    },
+    "drafter_post_step": {
+      "last_chain_runtime_mode": "PIECEWISE",
+      "last_step0_query_width": 1,
+      "last_step0_runtime_mode": "PIECEWISE"
+    },
+    "runner_evidence_attempt": {
+      "draft_chain_runtime_mode": "PIECEWISE",
+      "draft_output_shape": [
+        1,
+        4
+      ],
+      "draft_step0_query_width": 1,
+      "draft_step0_runtime_mode": "PIECEWISE",
+      "metadata": {
+        "aborted_action_id": null,
+        "aborted_draft_request_count": 0,
+        "capture_cohort_arm": false,
+        "decode_req_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "discarded_draft_width": 0,
+        "engine_step_index": 1261,
+        "generated_suffix_max": 2045,
+        "generated_suffix_min": 2045,
+        "next_action_id": "target-matching-k4",
+        "preemptions": 0,
+        "pure_decode": true,
+        "recomputed_tokens": 0,
+        "scheduled_at_s": 252128.055046434,
+        "selection_intent": "exploit",
+        "shared_target_kv_block_capacity": 24527,
+        "shared_target_kv_blocks_in_use": 146,
+        "total_scheduled_kv_tokens": 2306,
+        "verified_action_id": "target-matching-k4"
+      },
+      "proposal_called": true
+    },
+    "scheduler_snapshots": [
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1254,
+          "generated_suffix_max": 2014,
+          "generated_suffix_min": 2014,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.78879458,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 144,
+          "total_scheduled_kv_tokens": 2275,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1255,
+          "generated_suffix_max": 2019,
+          "generated_suffix_min": 2019,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.826816377,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 2280,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1256,
+          "generated_suffix_max": 2024,
+          "generated_suffix_min": 2024,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.864992175,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 2285,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1257,
+          "generated_suffix_max": 2029,
+          "generated_suffix_min": 2029,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.902862811,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 2290,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1258,
+          "generated_suffix_max": 2034,
+          "generated_suffix_min": 2034,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.940997622,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 2295,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1259,
+          "generated_suffix_max": 2036,
+          "generated_suffix_min": 2036,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252127.979019351,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 146,
+          "total_scheduled_kv_tokens": 2297,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1260,
+          "generated_suffix_max": 2041,
+          "generated_suffix_min": 2041,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252128.017121674,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 146,
+          "total_scheduled_kv_tokens": 2302,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p010-848823b0"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p010-848823b0"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 1261,
+          "generated_suffix_max": 2045,
+          "generated_suffix_min": 2045,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 252128.055046434,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 146,
+          "total_scheduled_kv_tokens": 2306,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p010-848823b0": 5
+        },
+        "total_num_scheduled_tokens": 5
+      }
+    ]
+  },
+  "primary_exception": null,
+  "recorder": {
+    "closed": true,
+    "event_count": 1247,
+    "events_by_action": {
+      "target-matching-k4": 1247
+    },
+    "last_event": {
+      "action_id": "target-matching-k4",
+      "engine_step_index": 1261,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_ids": [
+        "R8-s0-p010-848823b0"
+      ]
+    }
+  },
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589299712,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": null,
+  "status": "completed_without_invariant_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v2/r5cot-to-r8/koff_trace.jsonl",
+    "present": true,
+    "record_count": 1263,
+    "sha256": "66685ee770c0b4fee1180f01af129da7a96c763bc7122fb5f00269caa8de6edd"
+  }
+}

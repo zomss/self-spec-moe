@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "workload_id": "phase97-rl-capacity-envelope-v1",
+  "evidence_grade": "engineering_assumption",
+  "scored": false,
+  "mode": "rl_rollout",
+  "concurrency": {
+    "source": "phase97 engineering admission envelope",
+    "percentile": 99.9,
+    "high_percentile_requests": 16,
+    "hard_admission_requests": 16
+  },
+  "token_lengths": {
+    "prompt": {
+      "source": "phase97 engineering admission envelope",
+      "percentile": 99.0,
+      "high_percentile_tokens": 12288,
+      "hard_max_tokens": 16384
+    },
+    "requested_output": {
+      "source": "phase97 engineering admission envelope",
+      "percentile": 99.0,
+      "high_percentile_tokens": 2048,
+      "hard_max_tokens": 4096
+    }
+  },
+  "live_kv": {
+    "source": "phase97 frozen synthetic capacity trace v1",
+    "percentile": 99.9,
+    "high_percentile_tokens": 300000,
+    "hard_admission_tokens": 320000,
+    "safety_margin_tokens": 16000,
+    "frozen_trace_tokens": [
+      196608,
+      245760,
+      286720,
+      300000,
+      311296,
+      320000
+    ]
+  },
+  "prefix_cache": {
+    "enabled": false,
+    "expected_hit_rate": 0.0,
+    "capacity_credit_allowed": false,
+    "assumption": "no prefix-cache capacity credit"
+  },
+  "rl_actor_sync": {
+    "source": "phase97 engineering lifecycle assumption",
+    "max_rollout_batches_between_sync": 16
+  },
+  "service_objective": {
+    "kind": "capacity_feasibility",
+    "latency_slo_source": "not frozen for this non-scored CPU preflight"
+  },
+  "preemption_recompute": {
+    "max_preemptions_per_1000_requests": 0,
+    "max_recomputed_tokens_per_1000_requests": 0
+  },
+  "gateway_routing_allowed": true
+}

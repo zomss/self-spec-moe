@@ -1,0 +1,67 @@
+{
+  "action_id": "target-matching-k4",
+  "action_position": 2,
+  "boot_block_id": 1,
+  "boot_id": "p4-b0-b1-p2-k4",
+  "capture_dir": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_value_screen_v2/captures/p4-b0-b1-p2-k4",
+  "dynamic_k_schedule": [
+    [
+      1,
+      32,
+      4
+    ]
+  ],
+  "engine": {
+    "async_scheduling": false,
+    "enforce_eager": false,
+    "flashinfer_autotune": false,
+    "generation_seed": 0,
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 20480,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 32,
+    "num_speculative_tokens": 4,
+    "pipeline_parallel_size": 1,
+    "prefix_caching": false,
+    "tensor_parallel_size": 1
+  },
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "4",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TOKENIZERS_PARALLELISM": "false",
+    "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+    "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+    "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+    "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+    "VLLM_SELF_SPEC_DRAFT_KV_SINKS": "0",
+    "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": "0",
+    "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "",
+    "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+    "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+    "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+    "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+    "VLLM_SELF_SPEC_P4_BOOT_ACTION": "target-matching-k4",
+    "VLLM_SELF_SPEC_P4_CAPTURE_CONFIG": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_value_screen_v2/plans/p4-b0-b1-p2-k4.json",
+    "VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_value_screen_v2/captures/p4-b0-b1-p2-k4",
+    "VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION": "target-matching-config-sha256-35f24f19abe9fdaea34a2a6ac463af2cd318a5a324ec4894659b7caf8ec8c7b1",
+    "VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS": "21682",
+    "VLLM_SELF_SPEC_SHARED_KV": "1",
+    "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+    "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1"
+  },
+  "logical_draft_weight_version": "target-matching-config-sha256-35f24f19abe9fdaea34a2a6ac463af2cd318a5a324ec4894659b7caf8ec8c7b1",
+  "minimum_shared_kv_blocks": 21682,
+  "model": {
+    "draft_weight_path": "target-matching-alias",
+    "model_id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+    "target_kv_dtype": "bfloat16",
+    "target_quantization": null
+  },
+  "plan_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_value_screen_v2/plans/p4-b0-b1-p2-k4.json",
+  "schema_version": 1
+}

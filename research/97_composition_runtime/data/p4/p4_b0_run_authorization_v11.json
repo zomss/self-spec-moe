@@ -1,0 +1,427 @@
+{
+  "schema_version": 11,
+  "package_id": "p4-b0-value-screen-run-authorization-v11",
+  "date": "2026-08-10",
+  "status": "authorized_gpu4_repaired_variable_prefill_value_screen_only",
+  "prior_authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v10.json",
+    "sha256": "d772e983718cd8e4ccb16c506da1a7a0ef15908221b59c0ea98b014b5d37bc65",
+    "disposition": "consumed_variable_prefill_evidence_failure_attempt"
+  },
+  "consumed_attempt": {
+    "failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/failure.json",
+      "sha256": "78b21f7b6110a2e383f6ce7d6ba2e26a121a30722ed89dddac61f1afa93a852f"
+    },
+    "capture_manifest": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/capture_manifest.json",
+      "sha256": "4b3cb6d8420483b875bc2bfafccd804681b9b847447e448f135533549b77225e"
+    },
+    "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9",
+    "complete_capture_count": 72,
+    "empty_placeholder_count": 1,
+    "adapted_rounds_emitted": false,
+    "score_emitted": false,
+    "preserve_without_resume_or_reuse": true
+  },
+  "variable_prefill_repair_validation": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_authorization_v1.json",
+      "sha256": "bb493e0e11ffd0f37e08c8cb30875c282cf4360979391513c65b5b1ed16af961"
+    },
+    "audit": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_attempt_v1.json",
+      "sha256": "448fd62d713b6b9ee68bca482558b54d11f4b51354c48e423e9521112422492f"
+    },
+    "aggregate": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/diagnosis.json",
+      "sha256": "55cd0e5b6f22b01235cee8ccb28ac5a9ae2ada6a740fdcd7080cd209104382b3"
+    },
+    "isolated_case": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/case_result.json",
+      "sha256": "78575489e4ad34826c3f2018d49790d7163e3a87f6a9099c8a972888ac667da1"
+    },
+    "isolated_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/koff_trace.jsonl",
+      "sha256": "472e2e06d25ec4a9dd4d82d6009048ba682ac367b4bf19592dac267803253667"
+    },
+    "transition_case": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/case_result.json",
+      "sha256": "49815610b5dcf28a71fdc535d52d40498914c586de7192bbc469aaf816cd8e34"
+    },
+    "transition_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/koff_trace.jsonl",
+      "sha256": "d45e5743840216ad9b80d661ea0eaa019c5cfb8963821c55681ef49fcb1f5bf2"
+    },
+    "status": "gpu_cases_passed_parent_aggregate_rejected",
+    "authorization_consumed": true,
+    "scored": false,
+    "parent_aggregate_passed": false,
+    "parent_rejection": {
+      "classification": "observer_cardinality_bug",
+      "caused_gpu_case_failure": false,
+      "expected_count": 2,
+      "observed_transition_armed_prefill_count": 9
+    },
+    "cases": [
+      {
+        "case_id": "isolated-r8",
+        "physical_gpu_index": 0,
+        "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703",
+        "completed_cohorts": [
+          "r8-first"
+        ],
+        "measured_event_count": 610,
+        "trace_record_count": 612,
+        "armed_prefill_observation_count": 1,
+        "exact_r8_observation": {
+          "draft_step0_query_width": null,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_batch_size": 16,
+          "draft_output_shape": [
+            16,
+            4
+          ],
+          "proposal_called": true,
+          "draft_step0_runtime_mode": "NONE",
+          "draft_chain_runtime_mode": "PIECEWISE",
+          "produced_draft_width": 4,
+          "engine_step_index": 0
+        }
+      },
+      {
+        "case_id": "r5cot-to-r8",
+        "physical_gpu_index": 1,
+        "physical_gpu_uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923",
+        "completed_cohorts": [
+          "r5cot-last",
+          "r8-first"
+        ],
+        "measured_event_count": 1273,
+        "trace_record_count": 1289,
+        "armed_prefill_observation_count": 9,
+        "exact_r8_observation": {
+          "draft_step0_query_width": null,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_batch_size": 16,
+          "draft_output_shape": [
+            16,
+            4
+          ],
+          "proposal_called": true,
+          "draft_step0_runtime_mode": "NONE",
+          "draft_chain_runtime_mode": "PIECEWISE",
+          "produced_draft_width": 4,
+          "engine_step_index": 632
+        }
+      }
+    ]
+  },
+  "chunked_prefill_probe": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v5.json",
+      "sha256": "795ead82642faaed18f59e759f870aed86dd4c769d5bd4d80344b4003c1d8599"
+    },
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/preparation.json",
+      "sha256": "2abd491dda5c6dfeabf37c0e98798baf9ea3885552385f72b5267571e16ee13c"
+    },
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/probe_result.json",
+      "sha256": "dc398883c6ed62a81ee46ff5643a68216954983d5b7787951218463149120cc2"
+    },
+    "trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/koff_trace.jsonl",
+      "sha256": "2dd4e36766e9ce19db7914bfcffd5fa32d2f80744d8df61afc4cc4938e61aa57"
+    },
+    "status": "pass",
+    "scored": false,
+    "authorization_consumed": true,
+    "action_id": "target-matching-k4",
+    "regimes": [
+      "R4",
+      "R5",
+      "R5cot"
+    ],
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "gpu_memory_utilization": 0.9,
+    "cohort_count": 3,
+    "complete_request_count": 24,
+    "canonical_request_ids": true,
+    "pure_first_measured_decode": true,
+    "zero_preemption": true,
+    "zero_recomputation": true,
+    "zero_invalid_spec_tokens": true,
+    "shared_target_kv_block_capacity": 24527,
+    "minimum_shared_target_kv_blocks": 21682,
+    "actual_cuda_graph_memory_bytes": 589365248,
+    "trace_record_count": 40
+  },
+  "chunked_prefill_contract": {
+    "state": "pass",
+    "max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "max_num_seqs": 32,
+    "gpu_memory_utilization": 0.9,
+    "enable_chunked_prefill": true,
+    "full_microbatch_prefill_allowed": false,
+    "capture_cohort_contract_id": "p4-capture-cohort-barrier-v1",
+    "queue_all_exact_members_before_first_step": true,
+    "hold_early_prefill_completers": true,
+    "atomic_first_measured_decode": true,
+    "require_every_action_and_prompt_slice": true,
+    "ordinary_serving_without_marker_unchanged": true
+  },
+  "source_artifacts": {
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "d72df58c20af666a54902db83b5f36f853accc18a4e443de78ba9c803f242b59"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "a62e2d05265b62fe22fa27de0b0075031a125db50f19957afff5f5c9205af8f4"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "3c5021a39286cfbc2bf6209fdd05597f1175bd73b9616a7926340cd6d5999d37"
+    },
+    "conformance_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "ae19a5ad02396cc30d653a2d9f6e57b576582f9d832fc19ff2394734046b9c7d"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "e57b95b481f07a661d3af3de08accaa9173b18dbb80ee64683dab987b83e2716"
+    },
+    "atomic_ingress_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+      "sha256": "30e07ca92a9fc2fc5ee63f46dbc04659a490d5e82f952e6040a263d4f6528b1e"
+    },
+    "atomic_ingress_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py",
+      "sha256": "a9e2097144938fae5a3ccb2c28aec0f2c4ea3bc3fac29b90548669ab1f2122d0"
+    },
+    "input_processor": {
+      "path": "vllm/v1/engine/input_processor.py",
+      "sha256": "c5673988c0f7cfec268220e3f044e718702c015a4f236c020937cfd40a793f15"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "55211c6502f766198bad966adb1a4b440015f6c5a62cfc6faad16586934771ac"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "126d87fc8eca5a67cb39e961635ac6cbf95c213a1d48f96b6178f04a83c86612"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "0ab43a92a72d490e302ed326d162059fd6a4688c47a3bd68c67ed835f118521e"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    },
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v11.schema.json",
+      "sha256": "74ca7306c942f2d37f760e1a8fcf2c7a64fe2576d64cd88ee79cd79cdf5899b4"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v11.py",
+      "sha256": "fa74eec463359f731d9ae9e1dddbe1b64b72d2a1f6b07d0f0bdaf6900a252331"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v11.py",
+      "sha256": "56f41c015cb8835e5ff11a4a3c623e637dfce055f904129017f9136d308b9baf"
+    },
+    "scheduler_tests": {
+      "path": "tests/v1/core/test_scheduler.py",
+      "sha256": "c28ca07d8bb48004b74d3c3f1c14a0ef866cc579fd3eed28170f537ae40d34a7"
+    },
+    "cohort_barrier_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "6ba60f85b09c4c254b6df8f67c92ac0527c144986d32f7e2e5a4fe4853b382ed"
+    },
+    "cohort_barrier_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "528a3c1a716e0e46aed5c92f3a4f7ba74c57adb37c53cf1323410eb0e2a524a5"
+    },
+    "cohort_barrier_proof": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof.json",
+      "sha256": "cb24ac0061322518cce8b165662860d505953b6bba0bdcd072dfac382e9e2ca8"
+    },
+    "repair_validation_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "f17b302de9a14c590a9a321a8952585278000a189b66ea38c704eb16b03620e4"
+    },
+    "repair_validation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "cc49cbaf35f29f845073eb10c25127699a23b9318946ec8acbd40518846c1449"
+    },
+    "repair_preservation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation_preservation.py",
+      "sha256": "46cb0ce88a66042e0e8a3d4568a9c376709972407c56d5e8415189fb31b2f1b7"
+    }
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v10"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_repaired_variable_prefill_value_screen_v11_only",
+    "basis": [
+      "v10_partial_attempt_preserved",
+      "v10_output_reuse_forbidden",
+      "variable_prefill_runtime_evidence_repaired",
+      "isolated_r8_gpu_case_passed",
+      "r5cot_to_r8_gpu_case_passed",
+      "parent_rejection_classified_as_observer_cardinality",
+      "bounded_chunked_prefill_cohort_barrier_retained",
+      "current_execution_sources_hash_bound",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "fresh_output_directory_exists",
+      "v10_attempt_artifact_drift",
+      "repair_validation_artifact_drift",
+      "v5_probe_artifact_drift",
+      "chunked_prefill_contract_drift",
+      "full_prefill_geometry_reenabled",
+      "launch_dispatch_contract_drift",
+      "decode_work_contract_drift",
+      "request_id_contract_drift",
+      "inprocess_engine_core_preflight_failure",
+      "native_sampler_preflight_failure",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "gpu_not_idle",
+      "resource_floor_failure",
+      "cohort_abort_or_incomplete_release",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "prior_value_screen_attempts_performed": 9,
+    "latest_prior_complete_capture_count": 72,
+    "latest_prior_empty_placeholder_count": 1,
+    "latest_prior_gpu_executed": true,
+    "latest_prior_score_emitted": false,
+    "prior_outputs_preserved": true,
+    "prior_outputs_reusable": false,
+    "full_prefill_geometry_rejected": true,
+    "chunked_prefill_cohort_cpu_proven": true,
+    "chunked_prefill_k4_gpu_probe_passed": true,
+    "variable_prefill_runtime_evidence_repaired": true,
+    "isolated_r8_gpu_case_passed": true,
+    "r5cot_to_r8_gpu_case_passed": true,
+    "repair_parent_aggregate_passed": false,
+    "repair_parent_rejection_is_observer_only": true,
+    "launch_dispatch_tested": true,
+    "decode_work_offset_tested": true,
+    "all_action_capture_rollover_tested": true,
+    "request_id_canonicalization_tested": true,
+    "internal_request_id_randomization_retained": true,
+    "inprocess_runner_wiring_complete": true,
+    "executable_run_ready": true,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": true,
+    "v11_execution": true,
+    "value_screen_scoring": true,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "fallback_gpu_authorized": false,
+    "engine_core_mode": "in_process",
+    "engine_core_class": "InprocClient",
+    "v1_multiprocessing": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "gpu_memory_utilization": 0.9,
+    "capture_cohort_barrier_required": true,
+    "create_new_output_required": true,
+    "prior_output_reuse_allowed": false,
+    "repair_validation_output_reuse_allowed": false,
+    "partial_resume_allowed": false,
+    "retry_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

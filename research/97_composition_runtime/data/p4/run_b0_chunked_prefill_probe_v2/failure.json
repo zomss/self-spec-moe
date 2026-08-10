@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_chunked_prefill_probe_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-chunked-prefill-probe-authorization-v2",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v2.json",
+    "sha256": "60e1f51b795a089964fa4a831879a2f7758d78f2de558f14d80b8f3ea0cb1e49"
+  },
+  "attempt": {
+    "invocation_started": true,
+    "exit_code": 1,
+    "failed_at": "2026-08-09T22:36:30+09:00",
+    "native_sampler_preflight_passed": true,
+    "inprocess_engine_core_preflight_passed": true,
+    "gpu_identity_idle_preflight_passed": true,
+    "output_directory_created": true,
+    "preparation_emitted": true,
+    "child_launch_started": true,
+    "gpu_model_executed": true,
+    "engine_initialization_completed": true,
+    "physical_boots_started": 1,
+    "completed_probe_boots": 0,
+    "first_request_registration_attempted": true,
+    "first_request_scheduled": false,
+    "complete_cohorts_emitted": 0,
+    "incomplete_cohorts_emitted": 0,
+    "probe_result_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "configured_vs_effective_chunked_prefill_budget_confusion",
+    "last_stage": "first_cohort_request_registration_after_engine_boot",
+    "cause": "The authorized engine correctly retained max_num_batched_tokens=8192. Draft-model speculative decoding then reserved one extra slot for each of max_num_seqs=32, so VllmConfig correctly reduced max_num_scheduled_tokens to the designed effective budget of 8160. The live cohort admission guard compared that effective budget to 8192, although the CPU design and authorization define 8192 as the configured batch bound and 8160 as the effective scheduler budget. It therefore rejected the first marked request before scheduling any cohort work.",
+    "budget_evidence": {
+      "configured_max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "draft_model_slots_per_request": 1,
+      "speculative_slot_reserve_tokens": 32,
+      "effective_max_num_scheduled_tokens": 8160,
+      "cpu_design_expected_effective_scheduler_token_budget": 8160,
+      "admission_guard_required_effective_value": 8192
+    },
+    "observed_before_failure": {
+      "self_spec_weight_alias_count": 291,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "cuda_graph_capture_completed": true,
+      "estimated_cuda_graph_pool_gib": 0.47,
+      "actual_cuda_graph_pool_gib": 0.55,
+      "gpu_kv_cache_tokens": 392432,
+      "gpu_kv_cache_blocks": 24527,
+      "minimum_shared_kv_blocks": 21682,
+      "resource_precheck_passed": true
+    },
+    "exception_chain": [
+      {
+        "type": "KOffRuntimeError",
+        "message": "P4 capture-cohort requests require bounded 8192-token chunked prefill",
+        "origin": "vllm/v1/core/sched/scheduler.py:_register_p4_capture_cohort_request"
+      },
+      {
+        "type": "CalledProcessError",
+        "message": "The authorized V2 child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py:execute_parent"
+      }
+    ],
+    "test_gap": "The live scheduler regression constructed a Scheduler with max_num_batched_tokens=8192 but did not reproduce VllmConfig._set_max_num_scheduled_tokens. The direct Scheduler fallback therefore retained 8192 instead of the real draft-model value 8160, allowing the incorrect admission comparison to pass CPU tests.",
+    "required_repair": [
+      "admit only when enable_chunked_prefill is true and scheduler_config.max_num_batched_tokens is exactly the configured 8192-token bound",
+      "independently require and report the designed effective max_num_scheduled_tokens value of 8160 for this 32-sequence draft-model contract",
+      "label configured and effective budgets separately in cohort history and K/OFF evidence",
+      "add an execution-path regression that applies the real VllmConfig speculative-slot normalization before request registration",
+      "source-bind the repair and regression to a fresh authorization and create-only output path"
+    ]
+  },
+  "artifacts": {
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v2/preparation.json",
+      "sha256": "19fe2dfece118b8f4f008833f57033a3b1539b038f9c0ea60dc564894bbc807c"
+    },
+    "child_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v2/child.log",
+      "sha256": "86270e6be220b61fa9daf2a79ccab7577b79a4b74b03d87494de4e163b4cf1db"
+    },
+    "koff_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v2/koff_trace.jsonl",
+      "sha256": "7563679bf88676f33034225235e5cc3d072038f72353fe1c420def9a6fae5743"
+    },
+    "probe_result_present": false
+  },
+  "post_failure_evidence": {
+    "physical_gpu_index": 4,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "gpu_memory_used_mib": 0,
+    "gpu_compute_processes": 0,
+    "runner_processes": 0
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "v10_authorized": false,
+    "p4a_authorized": false,
+    "preserve_output_without_overwrite_or_resume": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v2",
+    "failure_record_created_after_stop": true,
+    "probe_result_created": false,
+    "score_created": false
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "claims": {
+    "action_admitted": false,
+    "performance_claim_allowed": false,
+    "value_screen_repaired": false
+  },
+  "decision": "mixed_boundary_observed_and_safely_forced_off",
+  "engine": {
+    "effective_scheduler_token_budget": 8160,
+    "enable_chunked_prefill": true,
+    "gpu_memory_utilization": 0.9,
+    "max_num_batched_tokens": 8192
+  },
+  "invariants": {
+    "later_pure_decode_observed": true,
+    "mixed_steps_are_score_ineligible": true,
+    "mixed_steps_dispatch_no_draft": true,
+    "mixed_steps_force_q1_off": true,
+    "private_draft_kv_allocated": false,
+    "shared_target_kv_layer_count": 36,
+    "target_draft_weight_alias_count": 291
+  },
+  "record_type": "p4_b0_real_serving_chunked_prefill_diagnosis",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "trace": {
+    "engine_step_count": 24,
+    "first_mixed_computed_tokens": [
+      8077,
+      0,
+      0
+    ],
+    "first_mixed_prompt_tokens": [
+      8077,
+      7839,
+      8368
+    ],
+    "first_mixed_query_widths": [
+      1,
+      7839,
+      320
+    ],
+    "first_mixed_request_ids": [
+      "R4-s0-p000-81020be0",
+      "R4-s0-p001-a3212dcd",
+      "R4-s0-p002-b033a003"
+    ],
+    "first_mixed_step_index": 1,
+    "mixed_step_count": 8,
+    "pure_decode_step_count": 15,
+    "shared_target_kv_blocks": 24527
+  },
+  "workload": {
+    "output_tokens_per_request": 16,
+    "prompt_count": 8,
+    "total_prompt_tokens": 65200
+  }
+}

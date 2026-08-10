@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "validation_id": "p4-b0-full-prefill-transient-bound-validation-v1",
+  "date": "2026-08-09",
+  "status": "pass",
+  "bound": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_transient_bound.json",
+    "sha256": "2c5f2d1acf30d62424f92667c9744cd35019261c5b44125ae656ae33440dc36a"
+  },
+  "validator": {
+    "path": "research/97_composition_runtime/scripts/validate_p4_b0_full_prefill_transient_bound.py",
+    "sha256": "faad19dbf8e92cba23c91674b15dc1f6185ebf0687abc792267603a718fc144d"
+  },
+  "tests": {
+    "path": "research/97_composition_runtime/tests/test_p4_b0_full_prefill_transient_bound.py",
+    "sha256": "3be7f615348053ab5410d5044ee23ee32f0da2b90779c16ade912691ae2785d7",
+    "passed": 13,
+    "failed": 0
+  },
+  "phase_suite": {
+    "passed": 427,
+    "failed": 2,
+    "subtests_passed": 41,
+    "failure_scope": "historical_v9_preexecution_output_absence_assertions",
+    "interpretation": "The two V9 authorization-review tests require the create-new output to be absent. They now fail closed because the consumed V9 output exists; the consumed source-bound tests were not rewritten."
+  },
+  "result": {
+    "bound_id": "p4-b0-full-prefill-transient-bound-v1",
+    "decision": "reject_current_full_prefill_geometry",
+    "complete_captures_preserved": 8,
+    "score_emitted": false,
+    "r5_live_set_bytes": 11039932416,
+    "r5cot_live_set_bytes": 11099308032,
+    "optimistic_graph_corrected_capacity_blocks": 20092,
+    "minimum_floor_deficit_bytes": 235095982,
+    "gpu_probe_authorized": false,
+    "v10_authorized": false
+  },
+  "lint": {
+    "ruff_check": "pass",
+    "ruff_format": "pass"
+  },
+  "gpu_commands_run_for_validation": 0
+}

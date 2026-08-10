@@ -1,0 +1,321 @@
+{
+  "schema_version": 2,
+  "package_id": "p4-b0-value-screen-run-authorization-v2",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_value_screen_only",
+  "supersedes": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization.json",
+    "sha256": "0e426d7a2a314d76d97ad3b370c8b7917d6205846cce8881b86b0d05c62f9a1b",
+    "historical_decision": "hold"
+  },
+  "source_artifacts": {
+    "capture_runner_conformance": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_capture_runner_conformance.json",
+      "sha256": "fafb43e2e36f3d670d0bffdce2025c8b32cf3403d4a3905987c4b0553e06761c"
+    },
+    "held_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization.json",
+      "sha256": "0e426d7a2a314d76d97ad3b370c8b7917d6205846cce8881b86b0d05c62f9a1b"
+    },
+    "live_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "4670639b6dde892df006fb6798ad62820f14f806b339963660b354842bfd6d30"
+    },
+    "live_scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "a4434420cc64503828fe8fac29ba11cd282cdf4d9dca4e7592dd92305ef69ad7"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "environment_registry": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "28faf4e8e5cb4118dc38dc3e64b37334deae563be02f6570f4ecaf0dd1242dbd"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "3dcd297faad91b7a76480d738600df5106ea499f9062e9307f001027658c0431"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "d8318b059f8dd7ca2627e27a1065a283176779662c0df92dfa14bc482537f025"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "13d16551b4c29e5a1fb4a32f1cda6b41c0a72e2f894554984aea15ac2622381a"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "7820926993c0bbc042a086a80b11bd400b66a8c8cc6c6da51f42ddd0ba2e6815"
+    },
+    "schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_capture_runner_conformance.schema.json",
+      "sha256": "d873aed47cc586c9b02b2c665eea42d0044c6e57c9cce727f20e5eda4272862d"
+    },
+    "validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "110ecf3d1eef33235afc3d773859873c5adeb479c8250400f1c696204d445b1a"
+    }
+  },
+  "evidence_readiness": {
+    "state": "complete",
+    "historical_hold_validated": true,
+    "capture_runner_conformance_status": "pass",
+    "implementation_checks_passed": 6
+  },
+  "run_contract": {
+    "screen_id": "p4-b0-off-k4-w512-value-screen-v1",
+    "scope": "boot_static_acceptance_screen_only",
+    "repository_commit": "cc8ed50f22568a4f6b88b299e9c47ebba7a8046a",
+    "model": {
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_path": "target-matching-alias"
+    },
+    "gpu_assignment": {
+      "cuda_visible_devices": "4",
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+      "model": "NVIDIA H100 80GB HBM3",
+      "memory_mib": 81559,
+      "all_nine_boots_same_gpu": true,
+      "fallback_gpu": {
+        "physical_index": 5,
+        "uuid": "GPU-318614e3-fd51-31a9-399d-9e94cb767967",
+        "authorized": false
+      }
+    },
+    "engine": {
+      "tensor_parallel_size": 1,
+      "pipeline_parallel_size": 1,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "gpu_memory_utilization": 0.9,
+      "num_speculative_tokens": 4,
+      "async_scheduling": false,
+      "prefix_caching": false,
+      "flashinfer_autotune": false,
+      "enforce_eager": false,
+      "generation_seed": 0
+    },
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TOKENIZERS_PARALLELISM": "false",
+      "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+      "VLLM_SELF_SPEC_SHARED_KV": "1",
+      "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+      "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1",
+      "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+      "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+      "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "0",
+      "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+      "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+      "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+      "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULLCG": "0"
+    },
+    "action_boots": [
+      {
+        "action_id": "off",
+        "window_tokens": 0,
+        "sink_tokens": 0,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            0
+          ],
+          [
+            33,
+            33,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      },
+      {
+        "action_id": "target-matching-k4",
+        "window_tokens": 0,
+        "sink_tokens": 0,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      },
+      {
+        "action_id": "target-matching-w512-masked-k4",
+        "window_tokens": 512,
+        "sink_tokens": 16,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      }
+    ],
+    "matrix": {
+      "boot_blocks": [
+        {
+          "block_id": 1,
+          "action_order": [
+            "off",
+            "target-matching-k4",
+            "target-matching-w512-masked-k4"
+          ]
+        },
+        {
+          "block_id": 2,
+          "action_order": [
+            "target-matching-k4",
+            "target-matching-w512-masked-k4",
+            "off"
+          ]
+        },
+        {
+          "block_id": 3,
+          "action_order": [
+            "target-matching-w512-masked-k4",
+            "off",
+            "target-matching-k4"
+          ]
+        }
+      ],
+      "physical_boot_count": 9,
+      "cells_per_boot": 48,
+      "raw_capture_count": 432,
+      "adapted_round_count": 432,
+      "rounds_per_regime_seed": 4,
+      "prompts_per_cell": 32
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v1"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v1",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "resource_gates": {
+    "base_available_shared_kv_blocks": 24529,
+    "conservative_floor_blocks": 21682,
+    "required_live_kv_blocks": 21000,
+    "minimum_launch_capacity_blocks": 21682,
+    "single_target_owned_pool_required": true,
+    "preemption_allowed": false,
+    "recomputation_allowed": false,
+    "on_violation": "stop_without_scoring"
+  },
+  "implementation_audit": {
+    "state": "pass",
+    "checks": [
+      {
+        "code": "w512_boot_contract_blocked",
+        "status": "pass",
+        "evidence": "Capture boot validation permits only window=512, sinks=16 under the named w512 action and rejects all partial conformance fields."
+      },
+      {
+        "code": "w512_recorder_action_blocked",
+        "status": "pass",
+        "evidence": "The recorder accepts the frozen w512 capture label only under a validated boot-static w512 contract."
+      },
+      {
+        "code": "multi_cell_same_boot_capture_missing",
+        "status": "pass",
+        "evidence": "One recorder rotates 48 canonical create-new cells without replacing the engine, and the runner constructs nine physical boot specs totaling 432 captures."
+      },
+      {
+        "code": "boot_static_action_relabel_missing",
+        "status": "pass",
+        "evidence": "A w512 cell relabels only an exact live K4-to-K4 event with K=4 and consistently armed rows; OFF and K4 must match exactly."
+      },
+      {
+        "code": "logical_weight_version_unstable",
+        "status": "pass",
+        "evidence": "The runner supplies one configuration SHA-256 logical ID across boots while live parameter-object and pointer-binding identity remains mandatory within each boot."
+      },
+      {
+        "code": "runtime_resource_floor_guard_missing",
+        "status": "pass",
+        "evidence": "The scheduler stops below 21,682 shared target-KV blocks at recorder construction and rechecks the same floor before every captured event."
+      }
+    ]
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_complete_boot_static_value_screen_only",
+    "basis": [
+      "frozen_evidence_chain_valid",
+      "six_capture_runner_checks_pass",
+      "all_execution_sources_hash_bound",
+      "runtime_resource_floor_fail_closed"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "output_directory_exists",
+      "gpu_identity_drift",
+      "resource_floor_failure",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "evidence_readiness_complete": true,
+    "capture_runner_conformance_complete": true,
+    "executable_run_ready": true,
+    "exact_invocation_registered": true,
+    "gpu_run_performed": false,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": true,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "fallback_gpu_authorized": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "partial_resume_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

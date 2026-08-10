@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/environment.schema.json",
+  "title": "Phase 97 fixed deployment environment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "environment_id",
+    "target",
+    "kv",
+    "parallelism",
+    "hardware",
+    "software",
+    "self_spec_contract"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "environment_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "checkpoint_revision",
+        "architecture",
+        "weight_format",
+        "quantization_is_user_fixed",
+        "max_model_len"
+      ],
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checkpoint_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "architecture": {
+          "$ref": "#/$defs/identifier"
+        },
+        "weight_format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quantization_is_user_fixed": {
+          "const": true
+        },
+        "max_model_len": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "kv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "owner",
+        "pool_count",
+        "dtype",
+        "layout",
+        "block_size_tokens",
+        "bytes_per_token",
+        "spec_fingerprint"
+      ],
+      "properties": {
+        "path": {
+          "const": "shared_target"
+        },
+        "owner": {
+          "const": "target"
+        },
+        "pool_count": {
+          "const": 1
+        },
+        "dtype": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "block_size_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes_per_token": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "spec_fingerprint": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "parallelism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tensor_parallel_size",
+        "pipeline_parallel_size"
+      ],
+      "properties": {
+        "tensor_parallel_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pipeline_parallel_size": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accelerator_model",
+        "accelerators_per_replica",
+        "total_hbm_bytes",
+        "usable_hbm_bytes",
+        "pinned_host_budget_bytes"
+      ],
+      "properties": {
+        "accelerator_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accelerators_per_replica": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_hbm_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "usable_hbm_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pinned_host_budget_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "software": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vllm_commit",
+        "execution_backend"
+      ],
+      "properties": {
+        "vllm_commit": {
+          "type": "string",
+          "minLength": 7
+        },
+        "execution_backend": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "self_spec_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shared_target_kv_required",
+        "private_draft_kv_pool_count",
+        "max_quantized_draft_paths"
+      ],
+      "properties": {
+        "shared_target_kv_required": {
+          "const": true
+        },
+        "private_draft_kv_pool_count": {
+          "const": 0
+        },
+        "max_quantized_draft_paths": {
+          "const": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    }
+  }
+}

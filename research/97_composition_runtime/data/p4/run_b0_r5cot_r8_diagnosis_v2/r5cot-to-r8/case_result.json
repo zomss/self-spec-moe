@@ -1,0 +1,564 @@
+{
+  "active_stage_at_exit": "r8-first",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-r5cot-to-r8",
+  "authorization": {
+    "bytes": 8877,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization_v2.json",
+    "sha256": "8fceecacae885465320a5f586101151b3b36b84927d72e1ab70739574e7ce220"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "r5cot-to-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": true,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r5cot-s1-r4",
+      "label": "r5cot-last",
+      "slice_start": 24,
+      "slice_stop": 32
+    },
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [
+    "r5cot-last"
+  ],
+  "gpu": {
+    "physical_index": 1,
+    "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+  },
+  "instrumentation": {
+    "draft_step0_input": {
+      "batch_size": 16,
+      "max_query_len": 344,
+      "num_actual_tokens": 2116,
+      "num_tokens": 2116,
+      "num_tokens_mod_batch_size": 4,
+      "uniform_query_width": null
+    },
+    "drafter_post_step": {
+      "last_chain_runtime_mode": "PIECEWISE",
+      "last_step0_query_width": null,
+      "last_step0_runtime_mode": "NONE"
+    },
+    "runner_evidence_attempt": {
+      "draft_chain_runtime_mode": "PIECEWISE",
+      "draft_output_shape": [
+        16,
+        4
+      ],
+      "draft_step0_query_width": null,
+      "draft_step0_runtime_mode": "NONE",
+      "metadata": {
+        "aborted_action_id": null,
+        "aborted_draft_request_count": 0,
+        "capture_cohort_arm": true,
+        "decode_req_ids": [],
+        "discarded_draft_width": 0,
+        "engine_step_index": 632,
+        "generated_suffix_max": null,
+        "generated_suffix_min": null,
+        "next_action_id": "target-matching-k4",
+        "preemptions": 0,
+        "pure_decode": false,
+        "recomputed_tokens": 0,
+        "scheduled_at_s": 242511.701303879,
+        "selection_intent": "exploit",
+        "shared_target_kv_block_capacity": 24527,
+        "shared_target_kv_blocks_in_use": 145,
+        "total_scheduled_kv_tokens": 0,
+        "verified_action_id": null
+      },
+      "proposal_called": true
+    },
+    "runner_evidence_exception": {
+      "message": "target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming",
+      "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 472, in make_evidence_wrapper\n    return original_make_evidence(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 1482, in make_runner_evidence\n    raise KOffRuntimeError(\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming\n",
+      "type": "KOffRuntimeError"
+    },
+    "scheduler_snapshots": [
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p026-884bb87d",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p028-9b160c57",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p025-9a6f583a",
+            "R5cot-s1-p026-884bb87d",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p028-9b160c57",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 625,
+          "generated_suffix_max": 3056,
+          "generated_suffix_min": 3042,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.236836669,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 8588,
+          "total_scheduled_kv_tokens": 137279,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p025-9a6f583a": 5,
+          "R5cot-s1-p026-884bb87d": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p028-9b160c57": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 40
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p026-884bb87d",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p028-9b160c57",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p025-9a6f583a",
+            "R5cot-s1-p026-884bb87d",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p028-9b160c57",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 626,
+          "generated_suffix_max": 3061,
+          "generated_suffix_min": 3047,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.307534111,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 8591,
+          "total_scheduled_kv_tokens": 137319,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p025-9a6f583a": 5,
+          "R5cot-s1-p026-884bb87d": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p028-9b160c57": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 40
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p026-884bb87d",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p028-9b160c57",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p025-9a6f583a",
+            "R5cot-s1-p026-884bb87d",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p028-9b160c57",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 627,
+          "generated_suffix_max": 3066,
+          "generated_suffix_min": 3052,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.378196976,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 8596,
+          "total_scheduled_kv_tokens": 137359,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p025-9a6f583a": 5,
+          "R5cot-s1-p026-884bb87d": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p028-9b160c57": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 40
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p026-884bb87d",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p028-9b160c57",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p025-9a6f583a",
+            "R5cot-s1-p026-884bb87d",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p028-9b160c57",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 628,
+          "generated_suffix_max": 3071,
+          "generated_suffix_min": 3057,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.4488953,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 8596,
+          "total_scheduled_kv_tokens": 137399,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p025-9a6f583a": 5,
+          "R5cot-s1-p026-884bb87d": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p028-9b160c57": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 40
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p028-9b160c57",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [
+          "R5cot-s1-p026-884bb87d"
+        ],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p025-9a6f583a",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p028-9b160c57",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 629,
+          "generated_suffix_max": 3070,
+          "generated_suffix_min": 3062,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.520054773,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 7525,
+          "total_scheduled_kv_tokens": 120284,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p025-9a6f583a": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p028-9b160c57": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 35
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p029-b55fbc36",
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [
+          "R5cot-s1-p025-9a6f583a",
+          "R5cot-s1-p028-9b160c57"
+        ],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p024-a2ca9dea",
+            "R5cot-s1-p027-b42ebf51",
+            "R5cot-s1-p029-b55fbc36",
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 630,
+          "generated_suffix_max": 3072,
+          "generated_suffix_min": 3067,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.59088295,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 5371,
+          "total_scheduled_kv_tokens": 85824,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p024-a2ca9dea": 5,
+          "R5cot-s1-p027-b42ebf51": 5,
+          "R5cot-s1-p029-b55fbc36": 5,
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 25
+      },
+      {
+        "cached_request_ids": [
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "finished_req_ids": [
+          "R5cot-s1-p024-a2ca9dea",
+          "R5cot-s1-p027-b42ebf51",
+          "R5cot-s1-p029-b55fbc36"
+        ],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R5cot-s1-p030-8c85a3c1",
+            "R5cot-s1-p031-be159416"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 631,
+          "generated_suffix_max": 3072,
+          "generated_suffix_min": 3072,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.651401599,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 2148,
+          "total_scheduled_kv_tokens": 34324,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R5cot-s1-p030-8c85a3c1": 5,
+          "R5cot-s1-p031-be159416": 5
+        },
+        "total_num_scheduled_tokens": 10
+      },
+      {
+        "cached_request_ids": [],
+        "finished_req_ids": [
+          "R5cot-s1-p030-8c85a3c1",
+          "R5cot-s1-p031-be159416"
+        ],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 632,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242511.701303879,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "new_request_ids": [
+          "R8-s0-p000-9e31424f",
+          "R8-s0-p001-af122a24",
+          "R8-s0-p002-b502b543",
+          "R8-s0-p003-99a09c7f",
+          "R8-s0-p004-843253e5",
+          "R8-s0-p005-993302e7",
+          "R8-s0-p006-97a9c294",
+          "R8-s0-p007-86d3e780",
+          "R8-s0-p008-b613ad1e",
+          "R8-s0-p009-a2fcf81a",
+          "R8-s0-p010-8e763d42",
+          "R8-s0-p011-9c43024a",
+          "R8-s0-p012-bd444670",
+          "R8-s0-p013-8d8b757e",
+          "R8-s0-p014-b02eff47",
+          "R8-s0-p015-80a6eced"
+        ],
+        "num_scheduled_tokens": {
+          "R8-s0-p000-9e31424f": 83,
+          "R8-s0-p001-af122a24": 84,
+          "R8-s0-p002-b502b543": 61,
+          "R8-s0-p003-99a09c7f": 247,
+          "R8-s0-p004-843253e5": 68,
+          "R8-s0-p005-993302e7": 50,
+          "R8-s0-p006-97a9c294": 102,
+          "R8-s0-p007-86d3e780": 47,
+          "R8-s0-p008-b613ad1e": 54,
+          "R8-s0-p009-a2fcf81a": 73,
+          "R8-s0-p010-8e763d42": 262,
+          "R8-s0-p011-9c43024a": 98,
+          "R8-s0-p012-bd444670": 144,
+          "R8-s0-p013-8d8b757e": 286,
+          "R8-s0-p014-b02eff47": 343,
+          "R8-s0-p015-80a6eced": 98
+        },
+        "total_num_scheduled_tokens": 2100
+      }
+    ]
+  },
+  "primary_exception": {
+    "message": "target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 550, in run_child_case\n    _run_prompt_chunk(engine, cell, request_ids, prompt_rows)\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_value_screen.py\", line 4498, in _run_prompt_chunk\n    for output in engine.step():\n                  ^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py\", line 304, in step\n    outputs = self.engine_core.get_output()\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 290, in get_output\n    outputs, model_executed = self.engine_core.step_fn()\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 499, in step\n    model_output = self.model_executor.sample_tokens(grammar_output)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py\", line 126, in sample_tokens\n    return self.collective_rpc(\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py\", line 92, in collective_rpc\n    result = run_method(self.driver_worker, method, args, kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/serial_utils.py\", line 510, in run_method\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_worker.py\", line 835, in sample_tokens\n    return self.model_runner.sample_tokens(grammar_output)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_model_runner.py\", line 4914, in sample_tokens\n    koff_runtime_evidence = make_runner_evidence(\n                            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 472, in make_evidence_wrapper\n    return original_make_evidence(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 1482, in make_runner_evidence\n    raise KOffRuntimeError(\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming\n",
+    "type": "KOffRuntimeError"
+  },
+  "recorder": {
+    "closed": true,
+    "event_count": 618,
+    "events_by_action": {
+      "target-matching-k4": 618
+    },
+    "last_event": {
+      "action_id": "target-matching-k4",
+      "engine_step_index": 631,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_ids": [
+        "R5cot-s1-p030-8c85a3c1",
+        "R5cot-s1-p031-be159416"
+      ]
+    }
+  },
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589299712,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": {
+    "message": "P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 571, in run_child_case\n    engine.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 306, in shutdown\n    self.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 650, in shutdown\n    self.scheduler.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3384, in shutdown\n    raise cohort_error\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3368, in shutdown\n    barrier.close()\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 617, in close\n    self._fail(\"cohort closed before exact work completion\")\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 290, in _fail\n    raise KOffRuntimeError(f\"P4 capture cohort {self.cohort_id!r}: {message}\")\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion\n",
+    "type": "KOffRuntimeError"
+  },
+  "status": "observed_expected_r8_invariant_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2/r5cot-to-r8/koff_trace.jsonl",
+    "present": true,
+    "record_count": 633,
+    "sha256": "75bb84a1445f4da260922567761cbf5f59473f8f39359dc0ac50cf4123d9a857"
+  }
+}

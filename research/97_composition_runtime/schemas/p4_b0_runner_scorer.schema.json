@@ -1,0 +1,458 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_runner_scorer.schema.json",
+  "title": "Phase 97 frozen B0 runner and scorer contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "status",
+    "frozen_date",
+    "source_artifacts",
+    "input_contract",
+    "matrix",
+    "episode_protocol",
+    "estimands",
+    "uncertainty",
+    "decision_rule",
+    "readiness",
+    "authorizations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "contract_id": {
+      "const": "p4-b0-runner-scorer-v1"
+    },
+    "status": {
+      "const": "frozen_unwired"
+    },
+    "frozen_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "input_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preregistration_id",
+        "capture_contract_id",
+        "adapter_contract_id",
+        "round_contract_id",
+        "event_contract_id",
+        "score_only_adapter_output",
+        "transition_event_policy",
+        "ineligible_event_policy",
+        "missing_field_policy",
+        "legacy_p3_status",
+        "legacy_p3_score_reuse"
+      ],
+      "properties": {
+        "preregistration_id": {
+          "const": "p4-b0-off-k4-w512-value-screen-v1"
+        },
+        "capture_contract_id": {
+          "const": "p4-b0-same-event-capture-v1"
+        },
+        "adapter_contract_id": {
+          "const": "p4-b0-same-event-adapter-v1"
+        },
+        "round_contract_id": {
+          "const": "p4-b0-adapted-round-v1"
+        },
+        "event_contract_id": {
+          "const": "p4-same-event-target-step-v1"
+        },
+        "score_only_adapter_output": {
+          "const": true
+        },
+        "transition_event_policy": {
+          "const": "reject_entire_round"
+        },
+        "ineligible_event_policy": {
+          "const": "reject_entire_round"
+        },
+        "missing_field_policy": {
+          "const": "reject_never_infer"
+        },
+        "legacy_p3_status": {
+          "const": "diagnostic_only_unadaptable"
+        },
+        "legacy_p3_score_reuse": {
+          "const": false
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot_blocks",
+        "actions",
+        "regimes",
+        "content_seeds",
+        "rounds_per_boot",
+        "prompts_per_round",
+        "expected_round_records"
+      ],
+      "properties": {
+        "boot_blocks": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "block_id",
+              "action_order"
+            ],
+            "properties": {
+              "block_id": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "action_order": {
+                "$ref": "#/$defs/action_ids"
+              }
+            }
+          }
+        },
+        "actions": {
+          "$ref": "#/$defs/action_ids"
+        },
+        "regimes": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/regime"
+          }
+        },
+        "content_seeds": {
+          "type": "array",
+          "const": [
+            0,
+            1
+          ]
+        },
+        "rounds_per_boot": {
+          "const": 4
+        },
+        "prompts_per_round": {
+          "const": 32
+        },
+        "expected_round_records": {
+          "const": 432
+        }
+      }
+    },
+    "episode_protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference_scope",
+        "b1_reference",
+        "other_batch_reference",
+        "rejection_fraction",
+        "rejection_rule",
+        "minimum_surviving_rounds_per_boot",
+        "boot_summary",
+        "cross_boot_metric",
+        "cross_boot_agreement_fraction",
+        "cross_boot_rule",
+        "failure_policy"
+      ],
+      "properties": {
+        "reference_scope": {
+          "const": "action_regime_seed_across_all_boot_rounds"
+        },
+        "b1_reference": {
+          "const": "second_highest_round"
+        },
+        "other_batch_reference": {
+          "const": "maximum_round"
+        },
+        "rejection_fraction": {
+          "const": 0.05
+        },
+        "rejection_rule": {
+          "const": "decode_rate_req<0.95*reference"
+        },
+        "minimum_surviving_rounds_per_boot": {
+          "const": 2
+        },
+        "boot_summary": {
+          "const": "sum_counters_and_time_over_surviving_rounds"
+        },
+        "cross_boot_metric": {
+          "const": "decode_rate_req"
+        },
+        "cross_boot_agreement_fraction": {
+          "const": 0.02
+        },
+        "cross_boot_rule": {
+          "const": "(max_boot_rate-min_boot_rate)/max_boot_rate<=0.02"
+        },
+        "failure_policy": {
+          "const": "reject_complete_score_input"
+        }
+      }
+    },
+    "estimands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round_rate",
+        "round_tau",
+        "block_action_regime",
+        "draw_aggregation",
+        "k4_speed",
+        "w512_no_cost_credit_speed",
+        "base_score",
+        "candidate_score",
+        "regime_gain",
+        "weighted_gain",
+        "missing_value"
+      ],
+      "properties": {
+        "round_rate": {
+          "const": "E_committed/request_decode_time_s"
+        },
+        "round_tau": {
+          "const": "1+A_accepted/H_target_steps"
+        },
+        "block_action_regime": {
+          "const": "sum_both_seed_survivor_counters_and_time"
+        },
+        "draw_aggregation": {
+          "const": "sum_selected_complete_block_counters_and_time"
+        },
+        "k4_speed": {
+          "const": "rate_k4/rate_off"
+        },
+        "w512_no_cost_credit_speed": {
+          "const": "S_k4*tau_w512/tau_k4"
+        },
+        "base_score": {
+          "const": "max(1,S_k4)"
+        },
+        "candidate_score": {
+          "const": "max(1,S_k4,S_w512_no_cost_credit)"
+        },
+        "regime_gain": {
+          "const": "candidate_score-base_score"
+        },
+        "weighted_gain": {
+          "const": "equal_weight_mean_over_six_regimes"
+        },
+        "missing_value": {
+          "const": "null_never_zero"
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "resampling_unit",
+        "draws",
+        "seed",
+        "confidence_level",
+        "percentile_index_rule"
+      ],
+      "properties": {
+        "method": {
+          "const": "paired_complete_boot_block_bootstrap"
+        },
+        "resampling_unit": {
+          "const": "complete_boot_block"
+        },
+        "draws": {
+          "const": 4000
+        },
+        "seed": {
+          "const": 20260809
+        },
+        "confidence_level": {
+          "const": 0.95
+        },
+        "percentile_index_rule": {
+          "const": "floor(p*n)_zero_based_capped"
+        }
+      }
+    },
+    "decision_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dominance",
+        "mean_gain_fraction",
+        "single_regime_gain_fraction",
+        "single_branch_mean_floor",
+        "proper_subset_tolerance_fraction",
+        "proper_subset_benefit_lcb_fraction",
+        "failing_action_policy",
+        "authority_policy"
+      ],
+      "properties": {
+        "dominance": {
+          "const": "all_regimes_UCB_tau_w512<=LCB_tau_k4"
+        },
+        "mean_gain_fraction": {
+          "const": 0.02
+        },
+        "single_regime_gain_fraction": {
+          "const": 0.05
+        },
+        "single_branch_mean_floor": {
+          "const": 0.0
+        },
+        "proper_subset_tolerance_fraction": {
+          "const": 0.01
+        },
+        "proper_subset_benefit_lcb_fraction": {
+          "const": 0.02
+        },
+        "failing_action_policy": {
+          "const": "mask_w512_and_retain_k4_off"
+        },
+        "authority_policy": {
+          "const": "score_never_grants_authority"
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "same_event_measurement_adapter_frozen",
+        "runner_scorer_frozen",
+        "same_event_live_recorder_wired"
+      ],
+      "properties": {
+        "same_event_measurement_adapter_frozen": {
+          "const": true
+        },
+        "runner_scorer_frozen": {
+          "const": true
+        },
+        "same_event_live_recorder_wired": {
+          "const": false
+        }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "gpu_measurement": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "action_id": {
+      "enum": [
+        "off",
+        "target-matching-k4",
+        "target-matching-w512-masked-k4"
+      ]
+    },
+    "action_ids": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/action_id"
+      }
+    },
+    "regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_id",
+        "weight",
+        "batch",
+        "max_output_tokens",
+        "temperature"
+      ],
+      "properties": {
+        "regime_id": {
+          "enum": [
+            "R4",
+            "R5",
+            "R5cot",
+            "R8",
+            "R1",
+            "R6"
+          ]
+        },
+        "weight": {
+          "const": 0.16666666666666666
+        },
+        "batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

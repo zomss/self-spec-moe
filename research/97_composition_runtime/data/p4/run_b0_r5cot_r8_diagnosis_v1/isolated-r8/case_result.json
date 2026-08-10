@@ -1,0 +1,76 @@
+{
+  "active_stage_at_exit": "r8-first",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-isolated-r8",
+  "authorization": {
+    "bytes": 8893,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization.json",
+    "sha256": "abe4b3f7fc606115c2a47ab22e6279f8fddc7f67e4c36aac9132d323008622dc"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "isolated-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": false,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [],
+  "gpu": {
+    "physical_index": 0,
+    "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "instrumentation": {
+    "drafter_post_step": {
+      "last_chain_runtime_mode": null,
+      "last_step0_query_width": null,
+      "last_step0_runtime_mode": null
+    },
+    "scheduler_snapshots": []
+  },
+  "primary_exception": {
+    "message": "'CachedRequestData' object is not iterable",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 550, in run_child_case\n    _run_prompt_chunk(engine, cell, request_ids, prompt_rows)\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_value_screen.py\", line 4498, in _run_prompt_chunk\n    for output in engine.step():\n                  ^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py\", line 304, in step\n    outputs = self.engine_core.get_output()\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 290, in get_output\n    outputs, model_executed = self.engine_core.step_fn()\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 490, in step\n    scheduler_output = self.scheduler.schedule(self._should_throttle_prefills())\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 449, in schedule_wrapper\n    scheduler_snapshots.append(_scheduler_snapshot(output))\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 428, in _scheduler_snapshot\n    \"cached_request_ids\": [\n                          ^\nTypeError: 'CachedRequestData' object is not iterable\n",
+    "type": "TypeError"
+  },
+  "recorder": {
+    "closed": true,
+    "event_count": 0,
+    "events_by_action": {},
+    "last_event": null
+  },
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589299712,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": {
+    "message": "P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 571, in run_child_case\n    engine.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 306, in shutdown\n    self.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 650, in shutdown\n    self.scheduler.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3384, in shutdown\n    raise cohort_error\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3368, in shutdown\n    barrier.close()\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 617, in close\n    self._fail(\"cohort closed before exact work completion\")\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 290, in _fail\n    raise KOffRuntimeError(f\"P4 capture cohort {self.cohort_id!r}: {message}\")\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion\n",
+    "type": "KOffRuntimeError"
+  },
+  "status": "inconclusive_unexpected_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/isolated-r8/koff_trace.jsonl",
+    "present": true,
+    "record_count": 1,
+    "sha256": "7595fe96c7bd41748db70f5a12c504cf04e1ea81e28a599c42641e85934e0871"
+  }
+}

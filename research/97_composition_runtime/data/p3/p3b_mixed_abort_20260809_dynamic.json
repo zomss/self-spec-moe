@@ -1,0 +1,2792 @@
+{
+  "cuda_visible_devices": "4",
+  "engine": {
+    "async_scheduling": false,
+    "enforce_eager": false,
+    "engine_steps_observed": 13,
+    "gpu_memory_utilization": 0.8,
+    "max_model_len": 2048,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 2,
+    "tensor_parallel_size": 1,
+    "use_v2_model_runner_env": "0"
+  },
+  "injection": {
+    "after_engine_step_index": 2,
+    "after_long_output_tokens": 7,
+    "short_request_added": true,
+    "trigger": "first eligible stable K4-to-K4 record"
+  },
+  "mode": "spec",
+  "model": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+  "model_id": "Qwen/Qwen3-8B",
+  "prompts": {
+    "long": "Continue the sequence and explain its rule in one concise paragraph: 2, 4, 6, 8.",
+    "short": "Write a brief description of a clear daytime sky."
+  },
+  "record_type": "p3_live_smoke_output",
+  "requests": {
+    "long": {
+      "finish_reason": "length",
+      "finished": true,
+      "logprobs": [
+        [
+          {
+            "decoded_token": " Also",
+            "logprob": -1.1719425916671753,
+            "rank": 1,
+            "token_id": 7281
+          },
+          {
+            "decoded_token": " The",
+            "logprob": -1.5469425916671753,
+            "rank": 2,
+            "token_id": 576
+          },
+          {
+            "decoded_token": " Then",
+            "logprob": -2.546942710876465,
+            "rank": 3,
+            "token_id": 5005
+          },
+          {
+            "decoded_token": "  \n",
+            "logprob": -2.796942710876465,
+            "rank": 4,
+            "token_id": 2303
+          },
+          {
+            "decoded_token": " What",
+            "logprob": -2.921942710876465,
+            "rank": 5,
+            "token_id": 3555
+          },
+          {
+            "decoded_token": " ",
+            "logprob": -3.421942710876465,
+            "rank": 6,
+            "token_id": 220
+          },
+          {
+            "decoded_token": " Continue",
+            "logprob": -3.546942710876465,
+            "rank": 7,
+            "token_id": 15003
+          },
+          {
+            "decoded_token": " Additionally",
+            "logprob": -3.546942710876465,
+            "rank": 8,
+            "token_id": 22406
+          },
+          {
+            "decoded_token": " To",
+            "logprob": -3.796942710876465,
+            "rank": 9,
+            "token_id": 2014
+          },
+          {
+            "decoded_token": " This",
+            "logprob": -3.921942710876465,
+            "rank": 10,
+            "token_id": 1096
+          }
+        ],
+        [
+          {
+            "decoded_token": ",",
+            "logprob": -0.0009005781612358987,
+            "rank": 1,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " explain",
+            "logprob": -8.000900268554688,
+            "rank": 2,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -8.250900268554688,
+            "rank": 3,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -9.750900268554688,
+            "rank": 4,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " identify",
+            "logprob": -10.250900268554688,
+            "rank": 5,
+            "token_id": 10542
+          },
+          {
+            "decoded_token": " continue",
+            "logprob": -10.875900268554688,
+            "rank": 6,
+            "token_id": 3060
+          },
+          {
+            "decoded_token": " clarify",
+            "logprob": -10.875900268554688,
+            "rank": 7,
+            "token_id": 37163
+          },
+          {
+            "decoded_token": " describe",
+            "logprob": -11.000900268554688,
+            "rank": 8,
+            "token_id": 7512
+          },
+          {
+            "decoded_token": " define",
+            "logprob": -11.000900268554688,
+            "rank": 9,
+            "token_id": 6979
+          },
+          {
+            "decoded_token": " find",
+            "logprob": -11.000900268554688,
+            "rank": 10,
+            "token_id": 1477
+          }
+        ],
+        [
+          {
+            "decoded_token": " explain",
+            "logprob": -1.4136775732040405,
+            "rank": 1,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -2.16367769241333,
+            "rank": 2,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -2.16367769241333,
+            "rank": 3,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -2.41367769241333,
+            "rank": 4,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " can",
+            "logprob": -2.53867769241333,
+            "rank": 5,
+            "token_id": 646
+          },
+          {
+            "decoded_token": " identify",
+            "logprob": -3.41367769241333,
+            "rank": 6,
+            "token_id": 10542
+          },
+          {
+            "decoded_token": " define",
+            "logprob": -3.66367769241333,
+            "rank": 7,
+            "token_id": 6979
+          },
+          {
+            "decoded_token": " how",
+            "logprob": -3.78867769241333,
+            "rank": 8,
+            "token_id": 1246
+          },
+          {
+            "decoded_token": " find",
+            "logprob": -3.91367769241333,
+            "rank": 9,
+            "token_id": 1477
+          },
+          {
+            "decoded_token": " if",
+            "logprob": -4.03867769241333,
+            "rank": 10,
+            "token_id": 421
+          }
+        ],
+        [
+          {
+            "decoded_token": " the",
+            "logprob": -0.9089491367340088,
+            "rank": 1,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " how",
+            "logprob": -1.2839491367340088,
+            "rank": 2,
+            "token_id": 1246
+          },
+          {
+            "decoded_token": " why",
+            "logprob": -1.5339491367340088,
+            "rank": 3,
+            "token_id": 3170
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -3.158949136734009,
+            "rank": 4,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -3.408949136734009,
+            "rank": 5,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " whether",
+            "logprob": -5.53394889831543,
+            "rank": 6,
+            "token_id": 3425
+          },
+          {
+            "decoded_token": " which",
+            "logprob": -5.65894889831543,
+            "rank": 7,
+            "token_id": 892
+          },
+          {
+            "decoded_token": " if",
+            "logprob": -5.65894889831543,
+            "rank": 8,
+            "token_id": 421
+          },
+          {
+            "decoded_token": " one",
+            "logprob": -5.90894889831543,
+            "rank": 9,
+            "token_id": 825
+          },
+          {
+            "decoded_token": " a",
+            "logprob": -6.53394889831543,
+            "rank": 10,
+            "token_id": 264
+          }
+        ],
+        [
+          {
+            "decoded_token": " difference",
+            "logprob": -1.4597384929656982,
+            "rank": 1,
+            "token_id": 6672
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -2.0847384929656982,
+            "rank": 2,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " concept",
+            "logprob": -2.7097384929656982,
+            "rank": 3,
+            "token_id": 7286
+          },
+          {
+            "decoded_token": " significance",
+            "logprob": -3.0847384929656982,
+            "rank": 4,
+            "token_id": 25361
+          },
+          {
+            "decoded_token": " process",
+            "logprob": -3.0847384929656982,
+            "rank": 5,
+            "token_id": 1882
+          },
+          {
+            "decoded_token": " reasoning",
+            "logprob": -3.3347384929656982,
+            "rank": 6,
+            "token_id": 32711
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -3.5847384929656982,
+            "rank": 7,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " mathematical",
+            "logprob": -3.5847384929656982,
+            "rank": 8,
+            "token_id": 35972
+          },
+          {
+            "decoded_token": " role",
+            "logprob": -3.7097384929656982,
+            "rank": 9,
+            "token_id": 3476
+          },
+          {
+            "decoded_token": " differences",
+            "logprob": -3.9597384929656982,
+            "rank": 10,
+            "token_id": 11799
+          }
+        ],
+        [
+          {
+            "decoded_token": " between",
+            "logprob": -0.007261786609888077,
+            "rank": 1,
+            "token_id": 1948
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -5.132261753082275,
+            "rank": 2,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " of",
+            "logprob": -7.632261753082275,
+            "rank": 3,
+            "token_id": 315
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -8.257262229919434,
+            "rank": 4,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " when",
+            "logprob": -9.132262229919434,
+            "rank": 5,
+            "token_id": 979
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -9.507262229919434,
+            "rank": 6,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " from",
+            "logprob": -9.507262229919434,
+            "rank": 7,
+            "token_id": 504
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -10.257262229919434,
+            "rank": 8,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " that",
+            "logprob": -10.257262229919434,
+            "rank": 9,
+            "token_id": 429
+          },
+          {
+            "decoded_token": " if",
+            "logprob": -10.257262229919434,
+            "rank": 10,
+            "token_id": 421
+          }
+        ],
+        [
+          {
+            "decoded_token": " a",
+            "logprob": -0.5535461902618408,
+            "rank": 1,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -2.178546190261841,
+            "rank": 2,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " an",
+            "logprob": -2.678546190261841,
+            "rank": 3,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -3.053546190261841,
+            "rank": 4,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " arithmetic",
+            "logprob": -3.428546190261841,
+            "rank": 5,
+            "token_id": 34784
+          },
+          {
+            "decoded_token": " \"",
+            "logprob": -4.428545951843262,
+            "rank": 6,
+            "token_id": 330
+          },
+          {
+            "decoded_token": " this",
+            "logprob": -4.428545951843262,
+            "rank": 7,
+            "token_id": 419
+          },
+          {
+            "decoded_token": " even",
+            "logprob": -5.053545951843262,
+            "rank": 8,
+            "token_id": 1496
+          },
+          {
+            "decoded_token": " rational",
+            "logprob": -5.303545951843262,
+            "rank": 9,
+            "token_id": 24438
+          },
+          {
+            "decoded_token": " sequences",
+            "logprob": -5.428545951843262,
+            "rank": 10,
+            "token_id": 23700
+          }
+        ],
+        [
+          {
+            "decoded_token": " sequence",
+            "logprob": -0.4232218563556671,
+            "rank": 1,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " geometric",
+            "logprob": -3.1732218265533447,
+            "rank": 2,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -3.1732218265533447,
+            "rank": 3,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " mathematical",
+            "logprob": -4.173222064971924,
+            "rank": 4,
+            "token_id": 35972
+          },
+          {
+            "decoded_token": " recursive",
+            "logprob": -4.173222064971924,
+            "rank": 5,
+            "token_id": 30819
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -4.173222064971924,
+            "rank": 6,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " function",
+            "logprob": -4.173222064971924,
+            "rank": 7,
+            "token_id": 729
+          },
+          {
+            "decoded_token": " permutation",
+            "logprob": -4.423222064971924,
+            "rank": 8,
+            "token_id": 58441
+          },
+          {
+            "decoded_token": " numerical",
+            "logprob": -4.423222064971924,
+            "rank": 9,
+            "token_id": 34776
+          },
+          {
+            "decoded_token": " prime",
+            "logprob": -4.423222064971924,
+            "rank": 10,
+            "token_id": 10250
+          }
+        ],
+        [
+          {
+            "decoded_token": " and",
+            "logprob": -0.018183674663305283,
+            "rank": 1,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " that",
+            "logprob": -5.143183708190918,
+            "rank": 2,
+            "token_id": 429
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -5.893183708190918,
+            "rank": 3,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " defined",
+            "logprob": -5.893183708190918,
+            "rank": 4,
+            "token_id": 4512
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -5.893183708190918,
+            "rank": 5,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " of",
+            "logprob": -6.893183708190918,
+            "rank": 6,
+            "token_id": 315
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -7.643183708190918,
+            "rank": 7,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " being",
+            "logprob": -7.643183708190918,
+            "rank": 8,
+            "token_id": 1660
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -7.893183708190918,
+            "rank": 9,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " where",
+            "logprob": -8.143183708190918,
+            "rank": 10,
+            "token_id": 1380
+          }
+        ],
+        [
+          {
+            "decoded_token": " a",
+            "logprob": -0.00149555376265198,
+            "rank": 1,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " an",
+            "logprob": -7.001495361328125,
+            "rank": 2,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " series",
+            "logprob": -8.001495361328125,
+            "rank": 3,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -9.126495361328125,
+            "rank": 4,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " its",
+            "logprob": -9.376495361328125,
+            "rank": 5,
+            "token_id": 1181
+          },
+          {
+            "decoded_token": " another",
+            "logprob": -11.376495361328125,
+            "rank": 6,
+            "token_id": 2441
+          },
+          {
+            "decoded_token": " any",
+            "logprob": -12.251495361328125,
+            "rank": 7,
+            "token_id": 894
+          },
+          {
+            "decoded_token": " other",
+            "logprob": -12.251495361328125,
+            "rank": 8,
+            "token_id": 1008
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -13.251495361328125,
+            "rank": 9,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " probability",
+            "logprob": -13.251495361328125,
+            "rank": 10,
+            "token_id": 18927
+          }
+        ],
+        [
+          {
+            "decoded_token": " series",
+            "logprob": -0.022067705169320107,
+            "rank": 1,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " set",
+            "logprob": -4.772067546844482,
+            "rank": 2,
+            "token_id": 738
+          },
+          {
+            "decoded_token": " progression",
+            "logprob": -5.147067546844482,
+            "rank": 3,
+            "token_id": 32724
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -5.772067546844482,
+            "rank": 4,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " function",
+            "logprob": -6.522067546844482,
+            "rank": 5,
+            "token_id": 729
+          },
+          {
+            "decoded_token": " number",
+            "logprob": -7.397067546844482,
+            "rank": 6,
+            "token_id": 1372
+          },
+          {
+            "decoded_token": " string",
+            "logprob": -7.647067546844482,
+            "rank": 7,
+            "token_id": 914
+          },
+          {
+            "decoded_token": " numerical",
+            "logprob": -7.647067546844482,
+            "rank": 8,
+            "token_id": 34776
+          },
+          {
+            "decoded_token": " relation",
+            "logprob": -8.02206802368164,
+            "rank": 9,
+            "token_id": 12687
+          },
+          {
+            "decoded_token": " permutation",
+            "logprob": -8.89706802368164,
+            "rank": 10,
+            "token_id": 58441
+          }
+        ],
+        [
+          {
+            "decoded_token": ".",
+            "logprob": -0.6669202446937561,
+            "rank": 1,
+            "token_id": 13
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -1.4169201850891113,
+            "rank": 2,
+            "token_id": 11
+          },
+          {
+            "decoded_token": ".\n\n",
+            "logprob": -2.0419201850891113,
+            "rank": 3,
+            "token_id": 382
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -2.2919201850891113,
+            "rank": 4,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -4.916920185089111,
+            "rank": 5,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " using",
+            "logprob": -6.041920185089111,
+            "rank": 6,
+            "token_id": 1667
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -6.416920185089111,
+            "rank": 7,
+            "token_id": 448
+          },
+          {
+            "decoded_token": ".\n",
+            "logprob": -7.291920185089111,
+            "rank": 8,
+            "token_id": 624
+          },
+          {
+            "decoded_token": "?",
+            "logprob": -7.416920185089111,
+            "rank": 9,
+            "token_id": 30
+          },
+          {
+            "decoded_token": "?\n\n",
+            "logprob": -8.54192066192627,
+            "rank": 10,
+            "token_id": 1939
+          }
+        ],
+        [
+          {
+            "decoded_token": " Additionally",
+            "logprob": -1.3509825468063354,
+            "rank": 1,
+            "token_id": 22406
+          },
+          {
+            "decoded_token": " Then",
+            "logprob": -1.4759825468063354,
+            "rank": 2,
+            "token_id": 5005
+          },
+          {
+            "decoded_token": " Finally",
+            "logprob": -2.350982666015625,
+            "rank": 3,
+            "token_id": 17375
+          },
+          {
+            "decoded_token": " What",
+            "logprob": -2.475982666015625,
+            "rank": 4,
+            "token_id": 3555
+          },
+          {
+            "decoded_token": " How",
+            "logprob": -2.975982666015625,
+            "rank": 5,
+            "token_id": 2585
+          },
+          {
+            "decoded_token": " Provide",
+            "logprob": -3.225982666015625,
+            "rank": 6,
+            "token_id": 39565
+          },
+          {
+            "decoded_token": " Furthermore",
+            "logprob": -3.225982666015625,
+            "rank": 7,
+            "token_id": 23405
+          },
+          {
+            "decoded_token": " Can",
+            "logprob": -3.975982666015625,
+            "rank": 8,
+            "token_id": 2980
+          },
+          {
+            "decoded_token": " Use",
+            "logprob": -4.100982666015625,
+            "rank": 9,
+            "token_id": 5443
+          },
+          {
+            "decoded_token": " Next",
+            "logprob": -4.225982666015625,
+            "rank": 10,
+            "token_id": 9295
+          }
+        ],
+        [
+          {
+            "decoded_token": ",",
+            "logprob": -2.0265558760002023e-06,
+            "rank": 1,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " explain",
+            "logprob": -14.375001907348633,
+            "rank": 2,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -14.750001907348633,
+            "rank": 3,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " solve",
+            "logprob": -15.250001907348633,
+            "rank": 4,
+            "token_id": 11625
+          },
+          {
+            "decoded_token": " calculate",
+            "logprob": -16.000001907348633,
+            "rank": 5,
+            "token_id": 11047
+          },
+          {
+            "decoded_token": " describe",
+            "logprob": -16.125001907348633,
+            "rank": 6,
+            "token_id": 7512
+          },
+          {
+            "decoded_token": " continue",
+            "logprob": -16.125001907348633,
+            "rank": 7,
+            "token_id": 3060
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -16.375001907348633,
+            "rank": 8,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " identify",
+            "logprob": -16.375001907348633,
+            "rank": 9,
+            "token_id": 10542
+          },
+          {
+            "decoded_token": " determine",
+            "logprob": -16.875001907348633,
+            "rank": 10,
+            "token_id": 8253
+          }
+        ],
+        [
+          {
+            "decoded_token": " explain",
+            "logprob": -1.4404613971710205,
+            "rank": 1,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -2.4404613971710205,
+            "rank": 2,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " find",
+            "logprob": -2.5654613971710205,
+            "rank": 3,
+            "token_id": 1477
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -2.6904613971710205,
+            "rank": 4,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -2.9404613971710205,
+            "rank": 5,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " solve",
+            "logprob": -3.3154613971710205,
+            "rank": 6,
+            "token_id": 11625
+          },
+          {
+            "decoded_token": " determine",
+            "logprob": -3.5654613971710205,
+            "rank": 7,
+            "token_id": 8253
+          },
+          {
+            "decoded_token": " can",
+            "logprob": -3.6904613971710205,
+            "rank": 8,
+            "token_id": 646
+          },
+          {
+            "decoded_token": " define",
+            "logprob": -3.6904613971710205,
+            "rank": 9,
+            "token_id": 6979
+          },
+          {
+            "decoded_token": " create",
+            "logprob": -3.8154613971710205,
+            "rank": 10,
+            "token_id": 1855
+          }
+        ],
+        [
+          {
+            "decoded_token": " the",
+            "logprob": -0.41478124260902405,
+            "rank": 1,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " how",
+            "logprob": -1.9147812128067017,
+            "rank": 2,
+            "token_id": 1246
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -2.539781332015991,
+            "rank": 3,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " why",
+            "logprob": -2.664781332015991,
+            "rank": 4,
+            "token_id": 3170
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -4.164781093597412,
+            "rank": 5,
+            "token_id": 304
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -5.539781093597412,
+            "rank": 6,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " whether",
+            "logprob": -5.539781093597412,
+            "rank": 7,
+            "token_id": 3425
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -5.664781093597412,
+            "rank": 8,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " one",
+            "logprob": -6.039781093597412,
+            "rank": 9,
+            "token_id": 825
+          },
+          {
+            "decoded_token": " two",
+            "logprob": -6.039781093597412,
+            "rank": 10,
+            "token_id": 1378
+          }
+        ],
+        [
+          {
+            "decoded_token": " difference",
+            "logprob": -0.3439632058143616,
+            "rank": 1,
+            "token_id": 6672
+          },
+          {
+            "decoded_token": " concept",
+            "logprob": -2.468963146209717,
+            "rank": 2,
+            "token_id": 7286
+          },
+          {
+            "decoded_token": " Fibonacci",
+            "logprob": -3.593963146209717,
+            "rank": 3,
+            "token_id": 79683
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -4.343963146209717,
+            "rank": 4,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " meaning",
+            "logprob": -4.468963146209717,
+            "rank": 5,
+            "token_id": 7290
+          },
+          {
+            "decoded_token": " importance",
+            "logprob": -4.468963146209717,
+            "rank": 6,
+            "token_id": 12650
+          },
+          {
+            "decoded_token": " differences",
+            "logprob": -4.843963146209717,
+            "rank": 7,
+            "token_id": 11799
+          },
+          {
+            "decoded_token": " purpose",
+            "logprob": -4.968963146209717,
+            "rank": 8,
+            "token_id": 7428
+          },
+          {
+            "decoded_token": " significance",
+            "logprob": -4.968963146209717,
+            "rank": 9,
+            "token_id": 25361
+          },
+          {
+            "decoded_token": " relationship",
+            "logprob": -5.093963146209717,
+            "rank": 10,
+            "token_id": 5025
+          }
+        ],
+        [
+          {
+            "decoded_token": " between",
+            "logprob": -0.002496223896741867,
+            "rank": 1,
+            "token_id": 1948
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -6.127496242523193,
+            "rank": 2,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " among",
+            "logprob": -8.877495765686035,
+            "rank": 3,
+            "token_id": 4221
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -9.627495765686035,
+            "rank": 4,
+            "token_id": 323
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -10.127495765686035,
+            "rank": 5,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -10.877495765686035,
+            "rank": 6,
+            "token_id": 320
+          },
+          {
+            "decoded_token": " of",
+            "logprob": -11.002495765686035,
+            "rank": 7,
+            "token_id": 315
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -12.002495765686035,
+            "rank": 8,
+            "token_id": 448
+          },
+          {
+            "decoded_token": "(s",
+            "logprob": -12.502495765686035,
+            "rank": 9,
+            "token_id": 1141
+          },
+          {
+            "decoded_token": " using",
+            "logprob": -12.752495765686035,
+            "rank": 10,
+            "token_id": 1667
+          }
+        ],
+        [
+          {
+            "decoded_token": " a",
+            "logprob": -0.9007891416549683,
+            "rank": 1,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " an",
+            "logprob": -1.0257891416549683,
+            "rank": 2,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " arithmetic",
+            "logprob": -2.025789260864258,
+            "rank": 3,
+            "token_id": 34784
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -3.150789260864258,
+            "rank": 4,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " finite",
+            "logprob": -4.900789260864258,
+            "rank": 5,
+            "token_id": 34226
+          },
+          {
+            "decoded_token": " conver",
+            "logprob": -5.400789260864258,
+            "rank": 6,
+            "token_id": 19313
+          },
+          {
+            "decoded_token": " geometric",
+            "logprob": -5.525789260864258,
+            "rank": 7,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " rational",
+            "logprob": -5.650789260864258,
+            "rank": 8,
+            "token_id": 24438
+          },
+          {
+            "decoded_token": " convergence",
+            "logprob": -6.150789260864258,
+            "rank": 9,
+            "token_id": 55441
+          },
+          {
+            "decoded_token": " \"",
+            "logprob": -6.275789260864258,
+            "rank": 10,
+            "token_id": 330
+          }
+        ],
+        [
+          {
+            "decoded_token": " geometric",
+            "logprob": -1.1822398900985718,
+            "rank": 1,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " finite",
+            "logprob": -1.5572398900985718,
+            "rank": 2,
+            "token_id": 34226
+          },
+          {
+            "decoded_token": " sequence",
+            "logprob": -1.8072398900985718,
+            "rank": 3,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " conver",
+            "logprob": -1.9322398900985718,
+            "rank": 4,
+            "token_id": 19313
+          },
+          {
+            "decoded_token": " recursive",
+            "logprob": -3.5572400093078613,
+            "rank": 5,
+            "token_id": 30819
+          },
+          {
+            "decoded_token": " term",
+            "logprob": -4.307240009307861,
+            "rank": 6,
+            "token_id": 4647
+          },
+          {
+            "decoded_token": " rational",
+            "logprob": -4.557240009307861,
+            "rank": 7,
+            "token_id": 24438
+          },
+          {
+            "decoded_token": " permutation",
+            "logprob": -4.807240009307861,
+            "rank": 8,
+            "token_id": 58441
+          },
+          {
+            "decoded_token": " diver",
+            "logprob": -4.807240009307861,
+            "rank": 9,
+            "token_id": 36341
+          },
+          {
+            "decoded_token": " prime",
+            "logprob": -4.932240009307861,
+            "rank": 10,
+            "token_id": 10250
+          }
+        ],
+        [
+          {
+            "decoded_token": " sequence",
+            "logprob": -0.17774103581905365,
+            "rank": 1,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -2.177741050720215,
+            "rank": 2,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " progression",
+            "logprob": -3.427741050720215,
+            "rank": 3,
+            "token_id": 32724
+          },
+          {
+            "decoded_token": " series",
+            "logprob": -4.177741050720215,
+            "rank": 4,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " mean",
+            "logprob": -6.427741050720215,
+            "rank": 5,
+            "token_id": 3076
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -10.052741050720215,
+            "rank": 6,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " sequences",
+            "logprob": -10.927741050720215,
+            "rank": 7,
+            "token_id": 23700
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -11.552741050720215,
+            "rank": 8,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " progress",
+            "logprob": -11.677741050720215,
+            "rank": 9,
+            "token_id": 5098
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -11.927741050720215,
+            "rank": 10,
+            "token_id": 320
+          }
+        ],
+        [
+          {
+            "decoded_token": " and",
+            "logprob": -0.00035696811391972005,
+            "rank": 1,
+            "token_id": 323
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -8.375356674194336,
+            "rank": 2,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -9.875356674194336,
+            "rank": 3,
+            "token_id": 320
+          },
+          {
+            "decoded_token": " versus",
+            "logprob": -10.625356674194336,
+            "rank": 4,
+            "token_id": 19041
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -10.750356674194336,
+            "rank": 5,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " or",
+            "logprob": -11.750356674194336,
+            "rank": 6,
+            "token_id": 476
+          },
+          {
+            "decoded_token": "/",
+            "logprob": -12.000356674194336,
+            "rank": 7,
+            "token_id": 14
+          },
+          {
+            "decoded_token": " vs",
+            "logprob": -12.375356674194336,
+            "rank": 8,
+            "token_id": 6165
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -13.250356674194336,
+            "rank": 9,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " where",
+            "logprob": -13.750356674194336,
+            "rank": 10,
+            "token_id": 1380
+          }
+        ],
+        [
+          {
+            "decoded_token": " an",
+            "logprob": -0.04924289882183075,
+            "rank": 1,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " a",
+            "logprob": -3.0492429733276367,
+            "rank": 2,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " arithmetic",
+            "logprob": -7.549242973327637,
+            "rank": 3,
+            "token_id": 34784
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -9.674242973327637,
+            "rank": 4,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " other",
+            "logprob": -10.299242973327637,
+            "rank": 5,
+            "token_id": 1008
+          },
+          {
+            "decoded_token": " geometric",
+            "logprob": -11.549242973327637,
+            "rank": 6,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " another",
+            "logprob": -11.799242973327637,
+            "rank": 7,
+            "token_id": 2441
+          },
+          {
+            "decoded_token": " any",
+            "logprob": -12.674242973327637,
+            "rank": 8,
+            "token_id": 894
+          },
+          {
+            "decoded_token": " its",
+            "logprob": -13.049242973327637,
+            "rank": 9,
+            "token_id": 1181
+          },
+          {
+            "decoded_token": " exponential",
+            "logprob": -13.049242973327637,
+            "rank": 10,
+            "token_id": 58755
+          }
+        ],
+        [
+          {
+            "decoded_token": " arithmetic",
+            "logprob": -0.00015758226800244302,
+            "rank": 1,
+            "token_id": 34784
+          },
+          {
+            "decoded_token": " exponential",
+            "logprob": -9.000157356262207,
+            "rank": 2,
+            "token_id": 58755
+          },
+          {
+            "decoded_token": " ar",
+            "logprob": -10.875157356262207,
+            "rank": 3,
+            "token_id": 796
+          },
+          {
+            "decoded_token": " infinite",
+            "logprob": -12.125157356262207,
+            "rank": 4,
+            "token_id": 23809
+          },
+          {
+            "decoded_token": " Arithmetic",
+            "logprob": -12.500157356262207,
+            "rank": 5,
+            "token_id": 92984
+          },
+          {
+            "decoded_token": " alternating",
+            "logprob": -12.625157356262207,
+            "rank": 6,
+            "token_id": 72362
+          },
+          {
+            "decoded_token": " algebra",
+            "logprob": -14.000157356262207,
+            "rank": 7,
+            "token_id": 46876
+          },
+          {
+            "decoded_token": " explicit",
+            "logprob": -14.500157356262207,
+            "rank": 8,
+            "token_id": 11464
+          },
+          {
+            "decoded_token": " geometric",
+            "logprob": -14.875157356262207,
+            "rank": 9,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " example",
+            "logprob": -15.000157356262207,
+            "rank": 10,
+            "token_id": 3110
+          }
+        ],
+        [
+          {
+            "decoded_token": " sequence",
+            "logprob": -0.0007229813490994275,
+            "rank": 1,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " progression",
+            "logprob": -7.250722885131836,
+            "rank": 2,
+            "token_id": 32724
+          },
+          {
+            "decoded_token": " series",
+            "logprob": -11.750722885131836,
+            "rank": 3,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " one",
+            "logprob": -12.750722885131836,
+            "rank": 4,
+            "token_id": 825
+          },
+          {
+            "decoded_token": " sequences",
+            "logprob": -14.625722885131836,
+            "rank": 5,
+            "token_id": 23700
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -14.750722885131836,
+            "rank": 6,
+            "token_id": 320
+          },
+          {
+            "decoded_token": ".",
+            "logprob": -15.000722885131836,
+            "rank": 7,
+            "token_id": 13
+          },
+          {
+            "decoded_token": " or",
+            "logprob": -15.500722885131836,
+            "rank": 8,
+            "token_id": 476
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -16.250722885131836,
+            "rank": 9,
+            "token_id": 11
+          },
+          {
+            "decoded_token": "sequence",
+            "logprob": -16.250722885131836,
+            "rank": 10,
+            "token_id": 15512
+          }
+        ],
+        [
+          {
+            "decoded_token": ".",
+            "logprob": -0.306535929441452,
+            "rank": 1,
+            "token_id": 13
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -1.8065359592437744,
+            "rank": 2,
+            "token_id": 11
+          },
+          {
+            "decoded_token": ".\n\n",
+            "logprob": -3.1815359592437744,
+            "rank": 3,
+            "token_id": 382
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -3.3065359592437744,
+            "rank": 4,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -4.556535720825195,
+            "rank": 5,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " using",
+            "logprob": -4.681535720825195,
+            "rank": 6,
+            "token_id": 1667
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -6.806535720825195,
+            "rank": 7,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " by",
+            "logprob": -7.806535720825195,
+            "rank": 8,
+            "token_id": 553
+          },
+          {
+            "decoded_token": " as",
+            "logprob": -8.931535720825195,
+            "rank": 9,
+            "token_id": 438
+          },
+          {
+            "decoded_token": ".\n",
+            "logprob": -9.181535720825195,
+            "rank": 10,
+            "token_id": 624
+          }
+        ],
+        [
+          {
+            "decoded_token": " Finally",
+            "logprob": -0.6050971746444702,
+            "rank": 1,
+            "token_id": 17375
+          },
+          {
+            "decoded_token": " Furthermore",
+            "logprob": -2.4800972938537598,
+            "rank": 2,
+            "token_id": 23405
+          },
+          {
+            "decoded_token": " Then",
+            "logprob": -2.6050972938537598,
+            "rank": 3,
+            "token_id": 5005
+          },
+          {
+            "decoded_token": " What",
+            "logprob": -2.8550972938537598,
+            "rank": 4,
+            "token_id": 3555
+          },
+          {
+            "decoded_token": " Provide",
+            "logprob": -3.2300972938537598,
+            "rank": 5,
+            "token_id": 39565
+          },
+          {
+            "decoded_token": " How",
+            "logprob": -3.7300972938537598,
+            "rank": 6,
+            "token_id": 2585
+          },
+          {
+            "decoded_token": " Use",
+            "logprob": -3.9800972938537598,
+            "rank": 7,
+            "token_id": 5443
+          },
+          {
+            "decoded_token": " Can",
+            "logprob": -4.10509729385376,
+            "rank": 8,
+            "token_id": 2980
+          },
+          {
+            "decoded_token": " Suppose",
+            "logprob": -4.35509729385376,
+            "rank": 9,
+            "token_id": 82610
+          },
+          {
+            "decoded_token": " Lastly",
+            "logprob": -4.48009729385376,
+            "rank": 10,
+            "token_id": 70709
+          }
+        ],
+        [
+          {
+            "decoded_token": ",",
+            "logprob": -1.1920928244535389e-07,
+            "rank": 1,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " explain",
+            "logprob": -17.25,
+            "rank": 2,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -17.25,
+            "rank": 3,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " solve",
+            "logprob": -17.875,
+            "rank": 4,
+            "token_id": 11625
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -18.375,
+            "rank": 5,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " describe",
+            "logprob": -18.625,
+            "rank": 6,
+            "token_id": 7512
+          },
+          {
+            "decoded_token": " identify",
+            "logprob": -18.875,
+            "rank": 7,
+            "token_id": 10542
+          },
+          {
+            "decoded_token": ",\n\n",
+            "logprob": -18.9375,
+            "rank": 8,
+            "token_id": 3554
+          },
+          {
+            "decoded_token": " determine",
+            "logprob": -18.9375,
+            "rank": 9,
+            "token_id": 8253
+          },
+          {
+            "decoded_token": ",\n",
+            "logprob": -19.3125,
+            "rank": 10,
+            "token_id": 345
+          }
+        ],
+        [
+          {
+            "decoded_token": " explain",
+            "logprob": -1.3473665714263916,
+            "rank": 1,
+            "token_id": 10339
+          },
+          {
+            "decoded_token": " write",
+            "logprob": -2.3473665714263916,
+            "rank": 2,
+            "token_id": 3270
+          },
+          {
+            "decoded_token": " find",
+            "logprob": -2.3473665714263916,
+            "rank": 3,
+            "token_id": 1477
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -2.8473665714263916,
+            "rank": 4,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " determine",
+            "logprob": -3.2223665714263916,
+            "rank": 5,
+            "token_id": 8253
+          },
+          {
+            "decoded_token": " solve",
+            "logprob": -3.2223665714263916,
+            "rank": 6,
+            "token_id": 11625
+          },
+          {
+            "decoded_token": " provide",
+            "logprob": -3.3473665714263916,
+            "rank": 7,
+            "token_id": 3410
+          },
+          {
+            "decoded_token": " create",
+            "logprob": -3.7223665714263916,
+            "rank": 8,
+            "token_id": 1855
+          },
+          {
+            "decoded_token": " if",
+            "logprob": -3.7223665714263916,
+            "rank": 9,
+            "token_id": 421
+          },
+          {
+            "decoded_token": " use",
+            "logprob": -3.8473665714263916,
+            "rank": 10,
+            "token_id": 990
+          }
+        ],
+        [
+          {
+            "decoded_token": " the",
+            "logprob": -0.4851341247558594,
+            "rank": 1,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " how",
+            "logprob": -1.4851341247558594,
+            "rank": 2,
+            "token_id": 1246
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -2.7351341247558594,
+            "rank": 3,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " why",
+            "logprob": -2.7351341247558594,
+            "rank": 4,
+            "token_id": 3170
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -4.735134124755859,
+            "rank": 5,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " whether",
+            "logprob": -5.485134124755859,
+            "rank": 6,
+            "token_id": 3425
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -5.610134124755859,
+            "rank": 7,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -6.360134124755859,
+            "rank": 8,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " one",
+            "logprob": -6.735134124755859,
+            "rank": 9,
+            "token_id": 825
+          },
+          {
+            "decoded_token": " a",
+            "logprob": -6.985134124755859,
+            "rank": 10,
+            "token_id": 264
+          }
+        ],
+        [
+          {
+            "decoded_token": " difference",
+            "logprob": -0.17005985975265503,
+            "rank": 1,
+            "token_id": 6672
+          },
+          {
+            "decoded_token": " concept",
+            "logprob": -3.1700599193573,
+            "rank": 2,
+            "token_id": 7286
+          },
+          {
+            "decoded_token": " Fibonacci",
+            "logprob": -3.7950599193573,
+            "rank": 3,
+            "token_id": 79683
+          },
+          {
+            "decoded_token": " importance",
+            "logprob": -4.795059680938721,
+            "rank": 4,
+            "token_id": 12650
+          },
+          {
+            "decoded_token": " purpose",
+            "logprob": -4.920059680938721,
+            "rank": 5,
+            "token_id": 7428
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -5.045059680938721,
+            "rank": 6,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " significance",
+            "logprob": -5.170059680938721,
+            "rank": 7,
+            "token_id": 25361
+          },
+          {
+            "decoded_token": " differences",
+            "logprob": -5.170059680938721,
+            "rank": 8,
+            "token_id": 11799
+          },
+          {
+            "decoded_token": " meaning",
+            "logprob": -5.295059680938721,
+            "rank": 9,
+            "token_id": 7290
+          },
+          {
+            "decoded_token": " relationship",
+            "logprob": -5.545059680938721,
+            "rank": 10,
+            "token_id": 5025
+          }
+        ],
+        [
+          {
+            "decoded_token": " between",
+            "logprob": -0.0009895433904603124,
+            "rank": 1,
+            "token_id": 1948
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -7.1259894371032715,
+            "rank": 2,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " among",
+            "logprob": -9.00098991394043,
+            "rank": 3,
+            "token_id": 4221
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -10.50098991394043,
+            "rank": 4,
+            "token_id": 323
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -11.37598991394043,
+            "rank": 5,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " of",
+            "logprob": -12.00098991394043,
+            "rank": 6,
+            "token_id": 315
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -12.12598991394043,
+            "rank": 7,
+            "token_id": 320
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -13.12598991394043,
+            "rank": 8,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " when",
+            "logprob": -13.25098991394043,
+            "rank": 9,
+            "token_id": 979
+          },
+          {
+            "decoded_token": " that",
+            "logprob": -13.75098991394043,
+            "rank": 10,
+            "token_id": 429
+          }
+        ],
+        [
+          {
+            "decoded_token": " a",
+            "logprob": -0.2827731668949127,
+            "rank": 1,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " an",
+            "logprob": -2.53277325630188,
+            "rank": 2,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -2.65777325630188,
+            "rank": 3,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " conver",
+            "logprob": -4.532773017883301,
+            "rank": 4,
+            "token_id": 19313
+          },
+          {
+            "decoded_token": " finite",
+            "logprob": -5.157773017883301,
+            "rank": 5,
+            "token_id": 34226
+          },
+          {
+            "decoded_token": " convergence",
+            "logprob": -5.157773017883301,
+            "rank": 6,
+            "token_id": 55441
+          },
+          {
+            "decoded_token": " sequences",
+            "logprob": -5.282773017883301,
+            "rank": 7,
+            "token_id": 23700
+          },
+          {
+            "decoded_token": " arithmetic",
+            "logprob": -5.407773017883301,
+            "rank": 8,
+            "token_id": 34784
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -5.532773017883301,
+            "rank": 9,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " common",
+            "logprob": -5.907773017883301,
+            "rank": 10,
+            "token_id": 4185
+          }
+        ],
+        [
+          {
+            "decoded_token": " sequence",
+            "logprob": -0.6715888381004333,
+            "rank": 1,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " finite",
+            "logprob": -1.6715888977050781,
+            "rank": 2,
+            "token_id": 34226
+          },
+          {
+            "decoded_token": " conver",
+            "logprob": -2.171588897705078,
+            "rank": 3,
+            "token_id": 19313
+          },
+          {
+            "decoded_token": " recursive",
+            "logprob": -3.046588897705078,
+            "rank": 4,
+            "token_id": 30819
+          },
+          {
+            "decoded_token": " permutation",
+            "logprob": -3.796588897705078,
+            "rank": 5,
+            "token_id": 58441
+          },
+          {
+            "decoded_token": " term",
+            "logprob": -4.671588897705078,
+            "rank": 6,
+            "token_id": 4647
+          },
+          {
+            "decoded_token": " geometric",
+            "logprob": -4.671588897705078,
+            "rank": 7,
+            "token_id": 52484
+          },
+          {
+            "decoded_token": " prime",
+            "logprob": -5.046588897705078,
+            "rank": 8,
+            "token_id": 10250
+          },
+          {
+            "decoded_token": " function",
+            "logprob": -5.171588897705078,
+            "rank": 9,
+            "token_id": 729
+          },
+          {
+            "decoded_token": " common",
+            "logprob": -5.296588897705078,
+            "rank": 10,
+            "token_id": 4185
+          }
+        ],
+        [
+          {
+            "decoded_token": " and",
+            "logprob": -0.0065071601420640945,
+            "rank": 1,
+            "token_id": 323
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -6.631507396697998,
+            "rank": 2,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " being",
+            "logprob": -6.756507396697998,
+            "rank": 3,
+            "token_id": 1660
+          },
+          {
+            "decoded_token": " defined",
+            "logprob": -6.881507396697998,
+            "rank": 4,
+            "token_id": 4512
+          },
+          {
+            "decoded_token": " that",
+            "logprob": -7.131507396697998,
+            "rank": 5,
+            "token_id": 429
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -7.256507396697998,
+            "rank": 6,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " as",
+            "logprob": -7.506507396697998,
+            "rank": 7,
+            "token_id": 438
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -8.00650691986084,
+            "rank": 8,
+            "token_id": 448
+          },
+          {
+            "decoded_token": " of",
+            "logprob": -8.63150691986084,
+            "rank": 9,
+            "token_id": 315
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -9.63150691986084,
+            "rank": 10,
+            "token_id": 320
+          }
+        ],
+        [
+          {
+            "decoded_token": " a",
+            "logprob": -0.001566017628647387,
+            "rank": 1,
+            "token_id": 264
+          },
+          {
+            "decoded_token": " an",
+            "logprob": -6.626565933227539,
+            "rank": 2,
+            "token_id": 458
+          },
+          {
+            "decoded_token": " the",
+            "logprob": -9.251565933227539,
+            "rank": 3,
+            "token_id": 279
+          },
+          {
+            "decoded_token": " set",
+            "logprob": -10.251565933227539,
+            "rank": 4,
+            "token_id": 738
+          },
+          {
+            "decoded_token": " another",
+            "logprob": -10.751565933227539,
+            "rank": 5,
+            "token_id": 2441
+          },
+          {
+            "decoded_token": " its",
+            "logprob": -11.001565933227539,
+            "rank": 6,
+            "token_id": 1181
+          },
+          {
+            "decoded_token": " series",
+            "logprob": -11.126565933227539,
+            "rank": 7,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " what",
+            "logprob": -12.251565933227539,
+            "rank": 8,
+            "token_id": 1128
+          },
+          {
+            "decoded_token": " any",
+            "logprob": -12.501565933227539,
+            "rank": 9,
+            "token_id": 894
+          },
+          {
+            "decoded_token": " probability",
+            "logprob": -12.751565933227539,
+            "rank": 10,
+            "token_id": 18927
+          }
+        ],
+        [
+          {
+            "decoded_token": " progression",
+            "logprob": -0.9479734897613525,
+            "rank": 1,
+            "token_id": 32724
+          },
+          {
+            "decoded_token": " set",
+            "logprob": -1.0729734897613525,
+            "rank": 2,
+            "token_id": 738
+          },
+          {
+            "decoded_token": " function",
+            "logprob": -1.6979734897613525,
+            "rank": 3,
+            "token_id": 729
+          },
+          {
+            "decoded_token": " series",
+            "logprob": -3.0729734897613525,
+            "rank": 4,
+            "token_id": 4013
+          },
+          {
+            "decoded_token": " permutation",
+            "logprob": -4.572973251342773,
+            "rank": 5,
+            "token_id": 58441
+          },
+          {
+            "decoded_token": " string",
+            "logprob": -4.822973251342773,
+            "rank": 6,
+            "token_id": 914
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -5.197973251342773,
+            "rank": 7,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " sequence",
+            "logprob": -5.822973251342773,
+            "rank": 8,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " relation",
+            "logprob": -6.197973251342773,
+            "rank": 9,
+            "token_id": 12687
+          },
+          {
+            "decoded_token": " list",
+            "logprob": -6.447973251342773,
+            "rank": 10,
+            "token_id": 1140
+          }
+        ],
+        [
+          {
+            "decoded_token": ".\n\n",
+            "logprob": -0.40208321809768677,
+            "rank": 1,
+            "token_id": 382
+          },
+          {
+            "decoded_token": ".",
+            "logprob": -1.402083158493042,
+            "rank": 2,
+            "token_id": 13
+          },
+          {
+            "decoded_token": ",",
+            "logprob": -2.652083158493042,
+            "rank": 3,
+            "token_id": 11
+          },
+          {
+            "decoded_token": " in",
+            "logprob": -5.027083396911621,
+            "rank": 4,
+            "token_id": 304
+          },
+          {
+            "decoded_token": " and",
+            "logprob": -5.527083396911621,
+            "rank": 5,
+            "token_id": 323
+          },
+          {
+            "decoded_token": ".\n",
+            "logprob": -6.027083396911621,
+            "rank": 6,
+            "token_id": 624
+          },
+          {
+            "decoded_token": " with",
+            "logprob": -7.402083396911621,
+            "rank": 7,
+            "token_id": 448
+          },
+          {
+            "decoded_token": "?\n\n",
+            "logprob": -8.527083396911621,
+            "rank": 8,
+            "token_id": 1939
+          },
+          {
+            "decoded_token": " (",
+            "logprob": -8.527083396911621,
+            "rank": 9,
+            "token_id": 320
+          },
+          {
+            "decoded_token": " using",
+            "logprob": -9.027083396911621,
+            "rank": 10,
+            "token_id": 1667
+          }
+        ],
+        [
+          {
+            "decoded_token": "The",
+            "logprob": -0.5570392608642578,
+            "rank": 1,
+            "token_id": 785
+          },
+          {
+            "decoded_token": "Let",
+            "logprob": -1.1820392608642578,
+            "rank": 2,
+            "token_id": 10061
+          },
+          {
+            "decoded_token": "To",
+            "logprob": -2.807039260864258,
+            "rank": 3,
+            "token_id": 1249
+          },
+          {
+            "decoded_token": "Certainly",
+            "logprob": -3.807039260864258,
+            "rank": 4,
+            "token_id": 95456
+          },
+          {
+            "decoded_token": "Sure",
+            "logprob": -4.307039260864258,
+            "rank": 5,
+            "token_id": 39814
+          },
+          {
+            "decoded_token": "Sequence",
+            "logprob": -4.807039260864258,
+            "rank": 6,
+            "token_id": 14076
+          },
+          {
+            "decoded_token": "**",
+            "logprob": -5.682039260864258,
+            "rank": 7,
+            "token_id": 334
+          },
+          {
+            "decoded_token": "A",
+            "logprob": -5.807039260864258,
+            "rank": 8,
+            "token_id": 32
+          },
+          {
+            "decoded_token": "In",
+            "logprob": -6.557039260864258,
+            "rank": 9,
+            "token_id": 641
+          },
+          {
+            "decoded_token": "###",
+            "logprob": -6.557039260864258,
+            "rank": 10,
+            "token_id": 14374
+          }
+        ],
+        [
+          {
+            "decoded_token": " sequence",
+            "logprob": -0.057349395006895065,
+            "rank": 1,
+            "token_id": 8500
+          },
+          {
+            "decoded_token": " given",
+            "logprob": -2.932349443435669,
+            "rank": 2,
+            "token_id": 2661
+          },
+          {
+            "decoded_token": " next",
+            "logprob": -6.05734920501709,
+            "rank": 3,
+            "token_id": 1790
+          },
+          {
+            "decoded_token": " continued",
+            "logprob": -9.93234920501709,
+            "rank": 4,
+            "token_id": 8570
+          },
+          {
+            "decoded_token": " number",
+            "logprob": -10.55734920501709,
+            "rank": 5,
+            "token_id": 1372
+          },
+          {
+            "decoded_token": " pattern",
+            "logprob": -11.80734920501709,
+            "rank": 6,
+            "token_id": 5383
+          },
+          {
+            "decoded_token": " sequences",
+            "logprob": -11.93234920501709,
+            "rank": 7,
+            "token_id": 23700
+          },
+          {
+            "decoded_token": " continuation",
+            "logprob": -11.93234920501709,
+            "rank": 8,
+            "token_id": 41171
+          },
+          {
+            "decoded_token": " rule",
+            "logprob": -12.18234920501709,
+            "rank": 9,
+            "token_id": 5912
+          },
+          {
+            "decoded_token": " numbers",
+            "logprob": -12.30734920501709,
+            "rank": 10,
+            "token_id": 5109
+          }
+        ]
+      ],
+      "text": " Also, explain the difference between a sequence and a series. Additionally, explain the difference between a geometric sequence and an arithmetic sequence. Finally, explain the difference between a sequence and a progression.\n\nThe sequence",
+      "token_ids": [
+        7281,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        8500,
+        323,
+        264,
+        4013,
+        13,
+        22406,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        52484,
+        8500,
+        323,
+        458,
+        34784,
+        8500,
+        13,
+        17375,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        8500,
+        323,
+        264,
+        32724,
+        382,
+        785,
+        8500
+      ]
+    },
+    "short": {
+      "finish_reason": "length",
+      "finished": true,
+      "logprobs": [
+        [
+          {
+            "decoded_token": " The",
+            "logprob": -0.8969608545303345,
+            "rank": 1,
+            "token_id": 576
+          },
+          {
+            "decoded_token": " A",
+            "logprob": -1.3969608545303345,
+            "rank": 2,
+            "token_id": 362
+          },
+          {
+            "decoded_token": " Use",
+            "logprob": -2.396960735321045,
+            "rank": 3,
+            "token_id": 5443
+          },
+          {
+            "decoded_token": " Include",
+            "logprob": -3.396960735321045,
+            "rank": 4,
+            "token_id": 29734
+          },
+          {
+            "decoded_token": " Clear",
+            "logprob": -3.646960735321045,
+            "rank": 5,
+            "token_id": 12023
+          },
+          {
+            "decoded_token": " Write",
+            "logprob": -3.771960735321045,
+            "rank": 6,
+            "token_id": 9645
+          },
+          {
+            "decoded_token": " Make",
+            "logprob": -4.146960735321045,
+            "rank": 7,
+            "token_id": 7405
+          },
+          {
+            "decoded_token": " ",
+            "logprob": -4.146960735321045,
+            "rank": 8,
+            "token_id": 220
+          },
+          {
+            "decoded_token": " Focus",
+            "logprob": -4.396960735321045,
+            "rank": 9,
+            "token_id": 25806
+          },
+          {
+            "decoded_token": " Be",
+            "logprob": -4.646960735321045,
+            "rank": 10,
+            "token_id": 2823
+          }
+        ],
+        [
+          {
+            "decoded_token": " description",
+            "logprob": -0.3182682693004608,
+            "rank": 1,
+            "token_id": 4008
+          },
+          {
+            "decoded_token": " sky",
+            "logprob": -1.5682682991027832,
+            "rank": 2,
+            "token_id": 12884
+          },
+          {
+            "decoded_token": " response",
+            "logprob": -4.568268299102783,
+            "rank": 3,
+            "token_id": 2033
+          },
+          {
+            "decoded_token": " text",
+            "logprob": -4.693268299102783,
+            "rank": 4,
+            "token_id": 1467
+          },
+          {
+            "decoded_token": " output",
+            "logprob": -5.193268299102783,
+            "rank": 5,
+            "token_id": 2550
+          },
+          {
+            "decoded_token": " word",
+            "logprob": -5.193268299102783,
+            "rank": 6,
+            "token_id": 3409
+          },
+          {
+            "decoded_token": " answer",
+            "logprob": -5.568268299102783,
+            "rank": 7,
+            "token_id": 4226
+          },
+          {
+            "decoded_token": " sentence",
+            "logprob": -5.568268299102783,
+            "rank": 8,
+            "token_id": 11652
+          },
+          {
+            "decoded_token": " first",
+            "logprob": -5.693268299102783,
+            "rank": 9,
+            "token_id": 1156
+          },
+          {
+            "decoded_token": " user",
+            "logprob": -5.818268299102783,
+            "rank": 10,
+            "token_id": 1196
+          }
+        ],
+        [
+          {
+            "decoded_token": " should",
+            "logprob": -0.05577336996793747,
+            "rank": 1,
+            "token_id": 1265
+          },
+          {
+            "decoded_token": " must",
+            "logprob": -3.0557732582092285,
+            "rank": 2,
+            "token_id": 1969
+          },
+          {
+            "decoded_token": " needs",
+            "logprob": -5.3057732582092285,
+            "rank": 3,
+            "token_id": 3880
+          },
+          {
+            "decoded_token": " is",
+            "logprob": -6.8057732582092285,
+            "rank": 4,
+            "token_id": 374
+          },
+          {
+            "decoded_token": " has",
+            "logprob": -8.180773735046387,
+            "rank": 5,
+            "token_id": 702
+          },
+          {
+            "decoded_token": " can",
+            "logprob": -8.805773735046387,
+            "rank": 6,
+            "token_id": 646
+          },
+          {
+            "decoded_token": " includes",
+            "logprob": -8.930773735046387,
+            "rank": 7,
+            "token_id": 5646
+          },
+          {
+            "decoded_token": " will",
+            "logprob": -9.055773735046387,
+            "rank": 8,
+            "token_id": 686
+          },
+          {
+            "decoded_token": " shall",
+            "logprob": -9.430773735046387,
+            "rank": 9,
+            "token_id": 4880
+          },
+          {
+            "decoded_token": " shouldn",
+            "logprob": -9.805773735046387,
+            "rank": 10,
+            "token_id": 13133
+          }
+        ]
+      ],
+      "text": " The description should",
+      "token_ids": [
+        576,
+        4008,
+        1265
+      ]
+    }
+  },
+  "sampling": {
+    "long": {
+      "ignore_eos": true,
+      "logprobs": 10,
+      "max_tokens": 40,
+      "seed": 0,
+      "temperature": 0.0
+    },
+    "short": {
+      "ignore_eos": true,
+      "logprobs": 10,
+      "max_tokens": 3,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "schema_version": 1,
+  "scored": false,
+  "speculative_config": {
+    "method": "draft_model",
+    "model": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+    "num_speculative_tokens": 4,
+    "num_speculative_tokens_per_batch_size": [
+      [
+        1,
+        1,
+        4
+      ],
+      [
+        2,
+        2,
+        0
+      ]
+    ]
+  }
+}

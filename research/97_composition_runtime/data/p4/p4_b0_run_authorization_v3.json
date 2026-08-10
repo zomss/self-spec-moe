@@ -1,0 +1,131 @@
+{
+  "schema_version": 3,
+  "package_id": "p4-b0-value-screen-run-authorization-v3",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_value_screen_retry_only",
+  "prior_authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+    "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a",
+    "disposition": "consumed_failed_before_capture"
+  },
+  "failed_attempt": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v1/failure.json",
+    "sha256": "1a11f04eeccb45a0362c385067adf9d20cfbb50ef0cc57758d10d94e2f7efd1c",
+    "capture_count": 0,
+    "score_emitted": false,
+    "preserve_without_resume": true
+  },
+  "source_artifacts": {
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "9731ab8b8ac7042e229bfb3eb841dbd557d701206ed549b61a3f3ed34aef34f4"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "e90523385141e0bac89bbd3991f08afb84346adcaef2111676e552c99cc99d23"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "9f1126dbf8568dc8fd0f446a3eb5d6501789a93980b6d18ad1c08a16fc067ebb"
+    },
+    "retry_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v3.schema.json",
+      "sha256": "7be98c5d37b59e3e8afc4965e330a4493e807e54b5887390e7c9ba78484ebd14"
+    },
+    "retry_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v3.py",
+      "sha256": "66a67d0e24a3cdf719a3bf386305cae3ea432b0882fc8b1e10f66dbe52080022"
+    },
+    "retry_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v3.py",
+      "sha256": "d4d82a333f1145827113a3bf63fc8cb54be445410954a50ef8b8ae619e578a6e"
+    }
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v3.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v2"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v2",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "repair_audit": {
+    "state": "pass",
+    "root_cause": "active_virtualenv_bin_absent_from_child_path",
+    "executable_dir_source": "sys.prefix/bin",
+    "required_executable": "ninja",
+    "path_position": 0,
+    "preflight_before_output_creation": true,
+    "checks": [
+      "active_environment_bin_prepended",
+      "ninja_resolves_to_active_environment",
+      "ninja_version_command_succeeds",
+      "boot_spec_cannot_override_path"
+    ]
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_complete_boot_static_value_screen_retry_only",
+    "basis": [
+      "v2_stopped_before_first_capture",
+      "v2_output_preserved_without_resume",
+      "launcher_root_cause_repaired",
+      "retry_sources_hash_bound",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "fresh_output_directory_exists",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "resource_floor_failure",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "prior_gpu_attempt_performed": true,
+    "prior_capture_count": 0,
+    "prior_score_emitted": false,
+    "launcher_repair_complete": true,
+    "executable_run_ready": true,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "gpu_measurement": true,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "fallback_gpu_authorized": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "prior_output_reuse_allowed": false,
+    "partial_resume_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

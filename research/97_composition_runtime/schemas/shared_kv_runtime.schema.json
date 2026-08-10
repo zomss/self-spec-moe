@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/shared_kv_runtime.schema.json",
+  "title": "Phase 97 shared-KV runtime evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "boot_class_id",
+    "binding_id",
+    "target_pool_id",
+    "allocated_pool_ids",
+    "canonical_true_slot_mapping_id",
+    "layer_bindings",
+    "action_views"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "boot_class_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "binding_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "target_pool_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "allocated_pool_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/identifier"
+      }
+    },
+    "canonical_true_slot_mapping_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "layer_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/runtime_layer_binding"
+      }
+    },
+    "action_views": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/action_view"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "cache_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dtype",
+        "block_size",
+        "layout",
+        "spec_fingerprint"
+      ],
+      "properties": {
+        "dtype": {
+          "type": "string",
+          "minLength": 1
+        },
+        "block_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spec_fingerprint": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "runtime_layer_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft_layer",
+        "target_layer",
+        "draft_cache_spec",
+        "target_cache_spec",
+        "same_storage",
+        "pool_id"
+      ],
+      "properties": {
+        "draft_layer": {
+          "$ref": "#/$defs/identifier"
+        },
+        "target_layer": {
+          "$ref": "#/$defs/identifier"
+        },
+        "draft_cache_spec": {
+          "$ref": "#/$defs/cache_spec"
+        },
+        "target_cache_spec": {
+          "$ref": "#/$defs/cache_spec"
+        },
+        "same_storage": {
+          "const": true
+        },
+        "pool_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "action_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "binding_id",
+        "pool_id",
+        "true_slot_mapping_id"
+      ],
+      "properties": {
+        "action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "pool_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "true_slot_mapping_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    }
+  }
+}

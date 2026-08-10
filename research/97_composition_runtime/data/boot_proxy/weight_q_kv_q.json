@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "status": "stalled",
+  "non_scored": true,
+  "static_proxy": true,
+  "operator_record": true,
+  "boot_class": "weight_q_kv_q",
+  "proxy_for": "baseline + both optional paths",
+  "gpu_physical": 5,
+  "model": "Qwen/Qwen3-8B",
+  "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+  "weight_q": true,
+  "kv_q": true,
+  "draft_kv_dtype": "fp8",
+  "engine_args": {
+    "k": 4,
+    "max_model_len": 20480,
+    "max_num_seqs": 32,
+    "max_num_batched_tokens": 8192,
+    "gpu_memory_utilization": 0.9,
+    "flashinfer_autotune": false
+  },
+  "failure_stage": "initial draft profiling/warmup after AOT compilation",
+  "observed_elapsed_before_stop_seconds_gte": 900,
+  "observed_no_log_progress_seconds_gte": 780,
+  "observed_gpu": {
+    "used_mib": 24011,
+    "sm_util_pct": 100,
+    "memory_util_pct": 0,
+    "power_watts_approx": 120
+  },
+  "capacity": null,
+  "smoke": null,
+  "termination": "operator stopped only the owned run after the operational threshold",
+  "gpu_after_shutdown": {
+    "used_mib": 0
+  },
+  "source_log": "research/97_composition_runtime/logs/boot_proxy/weight_q_kv_q.log",
+  "source_log_sha256": "961937d26d3c3fefb555a2a17e3bd6340697276bb81e60c512d0e9b9c82786d4"
+}

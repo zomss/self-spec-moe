@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_gpu_relocation_probe_failure",
+  "status": "inconclusive_launcher_port_collision",
+  "authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v1.json",
+    "sha256": "c8d9e143d91ac16d113805645109ebee60d3e6982d9d753da940a48bb3f29241"
+  },
+  "attempt": {
+    "gpu0_model_loaded": false,
+    "gpu1_model_loaded": true,
+    "gpu0_case_completed": false,
+    "gpu1_case_completed": false,
+    "probe_result_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "classification": "concurrent_rendezvous_port_collision",
+    "failed_case": "isolated-r8",
+    "failed_stage": "engine_initialization",
+    "exception_type": "DistNetworkError",
+    "exception_marker": "EADDRINUSE",
+    "port": 33703,
+    "root_cause": "both concurrently launched in-process engines selected the same free TCP rendezvous port before either listener bound it",
+    "model_or_runtime_invariant_failure": false,
+    "required_repair": "bind disjoint VLLM_PORT ranges per child before process launch"
+  },
+  "artifacts": {
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/preparation.json",
+      "sha256": "030287674da2a2eaa32b0189f67493137359a6f6479d19a4ca1520dbab73f414"
+    },
+    "gpu0_preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/isolated-r8/preparation.json",
+      "sha256": "99d33676d3424795dd74373dba02ca1585ce22f9f4dfe2d8720dcd533061e5fe"
+    },
+    "gpu0_case_result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/isolated-r8/case_result.json",
+      "sha256": "edf263b9ec93d32ea62195c0f1f2ad84309a4b5acaa6e65b69d8a86ede7efcef"
+    },
+    "gpu0_child_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/isolated-r8/child.log",
+      "sha256": "182dea96f93a88a5fa29feaea1a5447209201b41fdfe801629757284eeb37ccf"
+    },
+    "gpu1_preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/r5cot-to-r8/preparation.json",
+      "sha256": "4701bc948d1546a34d6015988afee9ce471bc33c27820d98168c239cfaa96e54"
+    },
+    "gpu1_child_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/r5cot-to-r8/child.log",
+      "sha256": "2c0aef7ebea62272a84c4015df3f573942be0ce6a68a1b469f1192080d92e4d5"
+    },
+    "gpu1_partial_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/r5cot-to-r8/koff_trace.jsonl",
+      "sha256": "ce1024a2079c1990d1f80000e758a95b2a3a38397f17908b6c89430a0d99072e"
+    },
+    "terminal_log": {
+      "path": "research/97_composition_runtime/logs/p4_b0_gpu_relocation_probe_v1_terminal.log",
+      "sha256": "693125e5b27df9639eaf07f922de3e6f569daa4cf1272d95f9e396f2772ef555"
+    }
+  },
+  "disposition": {
+    "v1_authorization_consumed": true,
+    "retry_allowed": false,
+    "resume_allowed": false,
+    "partial_output_reuse_allowed": false,
+    "scoring_allowed": false,
+    "fresh_source_bound_authorization_required": true,
+    "post_stop_gpu0_compute_processes": 0,
+    "post_stop_gpu1_compute_processes": 0
+  }
+}

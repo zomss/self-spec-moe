@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "target": {
+    "model_id": "Qwen/Qwen3-8B",
+    "checkpoint_revision": "unrecorded-at-proxy-time",
+    "architecture": "Qwen3ForCausalLM",
+    "weight_format": "bfloat16-unquantized",
+    "quantization_is_user_fixed": true,
+    "max_model_len": 20480
+  },
+  "kv": {
+    "path": "shared_target",
+    "owner": "target",
+    "pool_count": 1,
+    "dtype": "bfloat16",
+    "layout": "NHD",
+    "block_size_tokens": 16,
+    "bytes_per_token": 147456,
+    "spec_fingerprint": "qwen3-8b-tp1-bf16-kv-v1"
+  },
+  "parallelism": {
+    "tensor_parallel_size": 1,
+    "pipeline_parallel_size": 1
+  },
+  "hardware": {
+    "accelerator_model": "NVIDIA H100 80GB HBM3",
+    "accelerators_per_replica": 1,
+    "total_hbm_bytes": 85520809984,
+    "usable_hbm_bytes": 76968728985,
+    "pinned_host_budget_bytes": 8589934592
+  },
+  "software": {
+    "vllm_commit": "3bb9b1f887f4e082b62d0ca93badcb8473b1077f",
+    "execution_backend": "cuda-fullcg-piecewise"
+  },
+  "self_spec_contract": {
+    "shared_target_kv_required": true,
+    "private_draft_kv_pool_count": 0,
+    "max_quantized_draft_paths": 1
+  }
+}

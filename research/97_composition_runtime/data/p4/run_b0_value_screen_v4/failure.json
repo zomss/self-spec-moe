@@ -1,0 +1,75 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v5",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v5.json",
+    "sha256": "4983659ef991e7612b87f790d9711c48088e0354cff94992d854c12b5db87695"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "empty_capture_placeholders": 1,
+    "failed_at": "2026-08-09T16:54:43+09:00",
+    "physical_gpu_index": 4,
+    "score_emitted": false,
+    "started_at": "2026-08-09T16:53:26+09:00"
+  },
+  "diagnostic": {
+    "cause": "The first live OFF event was score-ineligible. The strict P4 recorder rejected it before writing the event, so this attempt does not distinguish prefill_or_mixed_batch, preemption, recomputation, or invalid_spec_tokens. The 114688-token budget repair is therefore insufficiently diagnosed and cannot support another screen authorization.",
+    "eligibility_evidence": {
+      "effective_scheduler_token_budget": 114656,
+      "exact_exclusion_reason_persisted": false,
+      "first_cell": "capture-b1-p1-off-r4-s0-r1",
+      "first_microbatch_prompt_tokens": 65200,
+      "max_num_batched_tokens": 114688,
+      "recorder_exception": "P4 capture refuses an ineligible live event",
+      "speculative_slot_reserve": 32
+    },
+    "exception_chain": [
+      {
+        "message": "P4 capture refuses an ineligible live event",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:P4SameEventRecorder._normalize_event",
+        "type": "KOffRuntimeError"
+      },
+      {
+        "message": "EngineCore encountered an issue. See stack trace for the root cause.",
+        "origin": "vllm/v1/engine/core_client.py:get_output",
+        "type": "EngineDeadError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "last_stage": "first_live_off_event_eligibility_gate",
+    "observed_before_failure": {
+      "cuda_graph_capture_completed": true,
+      "cuda_graph_pool_gib": 0.55,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "gpu_kv_cache_blocks": 22090,
+      "gpu_kv_cache_tokens": 353440,
+      "native_sampler_selected": true,
+      "self_spec_weight_alias_count": 291
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false
+  },
+  "output": {
+    "empty_capture_placeholder": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r1.json",
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4",
+    "preparation_sha256": "974276e050a71d957a1244358c7cb4d1d22984833708e7831901ef214d7b9a55",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

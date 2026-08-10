@@ -1,0 +1,88 @@
+{
+  "capture": {
+    "adapted_rounds_emitted": false,
+    "complete_capture_count": 0,
+    "empty_placeholder": "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1/captures/capture-b1-p1-off-r4-s0-r1.json",
+    "score_emitted": false
+  },
+  "claims": {
+    "action_admitted": false,
+    "performance_claim_allowed": false,
+    "v6_authorized": false,
+    "value_screen_repaired": false
+  },
+  "decision": "v5_first_event_exclusion_identified",
+  "engine": {
+    "effective_scheduler_token_budget": 114656,
+    "enable_chunked_prefill": true,
+    "gpu_memory_utilization": 0.96,
+    "max_num_batched_tokens": 114688
+  },
+  "invariants": {
+    "passive_trace_flushed_before_recorder_failure": true,
+    "private_draft_kv_allocated": false,
+    "shared_target_kv_layer_count": 36,
+    "target_draft_weight_alias_count": 291
+  },
+  "observed_failure": {
+    "message": "EngineCore encountered an issue. See stack trace (above) for the root cause.",
+    "type": "EngineDeadError"
+  },
+  "record_type": "p4_b0_full_prefill_ingress_diagnosis",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "trace": {
+    "engine_step_count": 2,
+    "first_decode_computed_tokens": [
+      8077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "first_decode_exclusion_reasons": [
+      "prefill_or_mixed_batch"
+    ],
+    "first_decode_p4_exclusions": [
+      "prefill_or_mixed_batch"
+    ],
+    "first_decode_prompt_tokens": [
+      8077,
+      7839,
+      8368,
+      8435,
+      7836,
+      7876,
+      8597,
+      8172
+    ],
+    "first_decode_query_widths": [
+      1,
+      7839,
+      8368,
+      8435,
+      7836,
+      7876,
+      8597,
+      8172
+    ],
+    "first_decode_request_ids": [
+      "R4-s0-p000-af32621e",
+      "R4-s0-p001-936d001d",
+      "R4-s0-p002-8495f4d6",
+      "R4-s0-p003-ac8979cb",
+      "R4-s0-p004-aa3c088f",
+      "R4-s0-p005-9db745b9",
+      "R4-s0-p006-924a44f0",
+      "R4-s0-p007-8eddab37"
+    ],
+    "first_decode_step_index": 1,
+    "preemptions": 0,
+    "recomputed_tokens": 0,
+    "shared_target_kv_blocks": 22090
+  }
+}

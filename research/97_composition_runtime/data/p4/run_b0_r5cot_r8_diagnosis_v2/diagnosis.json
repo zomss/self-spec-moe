@@ -1,0 +1,41 @@
+{
+  "artifact_id": "p4-b0-r5cot-r8-transition-diagnosis-v1",
+  "authorization": {
+    "bytes": 8877,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization_v2.json",
+    "sha256": "8fceecacae885465320a5f586101151b3b36b84927d72e1ab70739574e7ce220"
+  },
+  "authorization_consumed": true,
+  "case_results": {
+    "isolated-r8": {
+      "bytes": 10644,
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2/isolated-r8/case_result.json",
+      "sha256": "7f849ced4e9bb8ddde250b9d6e1a6246eda211da9fca107f06a53076496dbf41"
+    },
+    "r5cot-to-r8": {
+      "bytes": 23628,
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2/r5cot-to-r8/case_result.json",
+      "sha256": "31a4d8b328eec528090f73f852486ba1c6d5f2b0d417136e62a5ee2b36a033a2"
+    }
+  },
+  "claims": {
+    "action_admission_authorized": false,
+    "diagnostic_only": true,
+    "performance_claim_allowed": false,
+    "value_screen_retry_authorized": false
+  },
+  "classification": {
+    "conclusion": "r8_variable_width_prefill_evidence_bug_not_history_contamination",
+    "isolated_r8_expected_failure": true,
+    "transition_expected_failure": true
+  },
+  "failed_attempt": {
+    "bytes": 3350,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/failure.json",
+    "sha256": "78b21f7b6110a2e383f6ce7d6ba2e26a121a30722ed89dddac61f1afa93a852f"
+  },
+  "next_action": "Repair draft step-0 evidence so variable-width pure-prefill records a positive per-request query-width fact without claiming uniform decode width, then add isolated and transition regressions.",
+  "schema_version": 1,
+  "scored": false,
+  "status": "complete"
+}

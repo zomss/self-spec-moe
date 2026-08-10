@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-w512-masked-entry-v1",
+  "status": "registered_not_admitted",
+  "base_artifacts": {
+    "boot": {
+      "path": "research/97_composition_runtime/data/p3/boot_b0_minimal_k4.json",
+      "sha256": "6ac8365f94c43fb0e1ef99117050097f300d37a29bd713f6d421b4da6a2a73ca"
+    },
+    "actions": {
+      "path": "research/97_composition_runtime/data/p3/actions_b0_minimal_k4.json",
+      "sha256": "8b86e31211ee9b71fb94bc6d96c0f1a717f2bf268ee6770460bbfe70539d61d8"
+    },
+    "runtime_snapshot": {
+      "path": "research/97_composition_runtime/data/p3/runtime_snapshot_b0_synthetic.json",
+      "sha256": "d6f5516ab0c12c4d070b1186b1697a4d3f961a6af7cce5d5ec654fb0d417d46c"
+    },
+    "p3b_result": {
+      "path": "research/97_composition_runtime/results_p3b_mixed_abort.md",
+      "sha256": "f0a071fe4f517522732ef106d6d2174549504d26dc44750e92a18d5ac31537c5"
+    },
+    "environment": {
+      "path": "research/97_composition_runtime/data/preflight/environment_qwen3_8b_h100_tp1.json",
+      "sha256": "5bbd0ad031f69c0cd4719ad210c5d85c0a85277f5d49e3b9871500c8f38c1dc7"
+    },
+    "workload": {
+      "path": "research/97_composition_runtime/data/preflight/workload_rl_capacity_v1.json",
+      "sha256": "1b49f6f387586b4ab59e21da9a275b560a8045813989c3f6189e3a06e9bc3804"
+    }
+  },
+  "phase96_evidence": [
+    {
+      "artifact": {
+        "path": "research/96_selector_foundations/results_w6.md",
+        "sha256": "1b48540bfdde0ada58d135cc0631d27e2a21e350771750158e508c55bf68715c"
+      },
+      "supports": "window_value_selection",
+      "limitation": "The winning w512 measurements used a quantized draft and do not transfer acceptance to target-matching B0."
+    },
+    {
+      "artifact": {
+        "path": "research/96_selector_foundations/results_w13.md",
+        "sha256": "9d8452c6a70517f414db6a9f398cbdfd7e5464cd372855dee994066be16bba00"
+      },
+      "supports": "acceptance_only_classification",
+      "limitation": "Window cost separates only at high total KV; the sync-bracketed profiler cannot price the masked runtime realization."
+    },
+    {
+      "artifact": {
+        "path": "research/96_selector_foundations/results_w14b.md",
+        "sha256": "e2e8afbb3e619c0e278c8670d9c8772eade4fdf1d847b17feb6a5707b474f9ac"
+      },
+      "supports": "separate_boot_cost_transfer",
+      "limitation": "The 6/6 transfer result prices separately booted w512, not masked w512 in the P3 graph, and registered directional containment remained 6/12."
+    },
+    {
+      "artifact": {
+        "path": "research/96_selector_foundations/data/w14/w14_interval_fix.json",
+        "sha256": "cc19c72a83a5c50378c5ee31ba7151bf5b962b2f55bf9864feb5aed96066fcaa"
+      },
+      "supports": "interval_fix_diagnostic",
+      "limitation": "The post-hoc 12/12 containment diagnostic had zero elimination flips and is not a registered rescore or a Phase F resident-value result."
+    }
+  ],
+  "selection": {
+    "window_value": 512,
+    "sink_tokens": 16,
+    "mode": "masked",
+    "cost_grade": "acceptance_only",
+    "cost_credit_allowed": false,
+    "phase96_exact_action_match": false,
+    "reason": "w512 is the smallest frozen window with repeated workload value and the strongest active-window contrast; same-graph masking is the minimum P4 mechanism, but its target-matching acceptance and cost remain unmeasured."
+  },
+  "proposed_boot_delta": {
+    "base_boot_class_id": "qwen3-8b-b0-minimal-k4",
+    "proposed_boot_class_id": "qwen3-8b-b0-k4-w512-masked-entry",
+    "capability_class": "B0",
+    "admitted_windows": [
+      0,
+      512
+    ],
+    "new_resident_graph_ids": [],
+    "shared_kv_binding_id": "qwen3-8b-layer-twins-v1",
+    "kv_owner": "target",
+    "kv_pool_count": 1,
+    "draft_kv_dtype": "",
+    "max_k": 4
+  },
+  "selected_action": {
+    "action_id": "target-matching-w512-masked-k4",
+    "base_action_id": "target-matching-k4",
+    "kind": "speculative",
+    "draft_weight_path_id": "target-matching",
+    "realization": "piecewise-fullcg-shared-kv",
+    "window": {
+      "mode": "masked",
+      "value": 512,
+      "cost_grade": "acceptance_only"
+    },
+    "skip_set": [],
+    "k": 4,
+    "target_graph_descriptor": {
+      "graph_id": "target-k5",
+      "grade": "piecewise",
+      "realization": "target-verify-k5",
+      "query_width": 5
+    },
+    "draft_graph_descriptor": {
+      "graph_id": "draft-target-matching-k1",
+      "grade": "full",
+      "realization": "target-matching-shared-kv",
+      "query_width": 1
+    },
+    "requires_current_draft_weight": false,
+    "legal_switch_predecessors": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "transition_cost": {
+      "status": "unmeasured",
+      "value_us": null
+    }
+  },
+  "action_view": {
+    "action_id": "target-matching-w512-masked-k4",
+    "binding_id": "qwen3-8b-layer-twins-v1",
+    "pool_id": "target-kv-pool",
+    "true_slot_mapping_id": "target-true-slots-v1"
+  },
+  "boundary_policy": {
+    "dispatch_scope": "whole_decode_dispatch",
+    "switch_boundary": "target_step",
+    "mixed_prefill_decode": "abort_pending_draft",
+    "mixed_decode_action": "off_q1",
+    "rearm_condition": "later_pure_decode_off_step",
+    "discarded_draft_accounting": "neither_armed_nor_accepted"
+  },
+  "controls": {
+    "correctness_contract": "target_local",
+    "comparison_action_ids": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "proper_subset_action_ids": [
+      "target-matching-k4"
+    ],
+    "matched_fields": [
+      "target_weight_version",
+      "draft_weight_version",
+      "boot_class",
+      "shared_kv_binding",
+      "hardware",
+      "parallel_layout",
+      "workload_trace",
+      "batch",
+      "context",
+      "generated_suffix",
+      "k",
+      "kernel_backend",
+      "graph_grade",
+      "warmup_policy",
+      "measurement_currency"
+    ],
+    "acceptance_evidence": "action_specific_required",
+    "cross_boot_ar_identity": "non_gating_diagnostic"
+  },
+  "resource_gate": {
+    "candidate": {
+      "path": "research/97_composition_runtime/data/p4/candidate_b0_window512_masked_projection.json",
+      "sha256": "fa09df85705d5963038944922ce388a271e028c7a453971829d1c0d69a396dcd"
+    },
+    "current_decision": "reject",
+    "required_evidence_grade": "measured_exact",
+    "required_measurement_relation": "exact_candidate",
+    "performance_claims_allowed": false
+  },
+  "promotion_gates": {
+    "p3b_mixed_abort": "pass",
+    "phase96_f_resident_value": "not_approved",
+    "runtime_action_transport": "pending",
+    "live_shared_kv_and_true_slot": "pending",
+    "target_local_controls": "pending",
+    "exact_post_capture_resource": "pending",
+    "transition_overhead": "pending",
+    "cost_true_claim": "forbidden",
+    "private_kv": "forbidden"
+  }
+}

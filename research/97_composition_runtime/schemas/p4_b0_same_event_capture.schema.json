@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_same_event_capture.schema.json",
+  "title": "Phase 97 raw B0 same-event capture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capture_contract_id",
+    "capture_id",
+    "scored",
+    "complete",
+    "warmup_complete",
+    "runner",
+    "matrix",
+    "generation",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "capture_contract_id": {
+      "const": "p4-b0-same-event-capture-v1"
+    },
+    "capture_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "scored": {
+      "const": false
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "warmup_complete": {
+      "type": "boolean"
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preregistration_id",
+        "prompt_manifest_id",
+        "prompt_manifest_sha256",
+        "prompt_bundle_sha256",
+        "target_checkpoint_revision",
+        "target_quantization",
+        "target_kv_dtype",
+        "draft_weight_version",
+        "shared_kv_binding_id",
+        "shared_kv_alias_proven",
+        "true_slot_mapping_id",
+        "true_slot_identity_proven",
+        "hardware_id",
+        "parallel_layout",
+        "kernel_backend",
+        "graph_grade",
+        "warmup_policy",
+        "measurement_currency"
+      ],
+      "properties": {
+        "preregistration_id": {
+          "const": "p4-b0-off-k4-w512-value-screen-v1"
+        },
+        "prompt_manifest_id": {
+          "const": "p4-b0-six-regime-prompts-v1"
+        },
+        "prompt_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "prompt_bundle_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "target_checkpoint_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_quantization": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "target_kv_dtype": {
+          "type": "string",
+          "minLength": 1
+        },
+        "draft_weight_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_kv_binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "shared_kv_alias_proven": {
+          "const": true
+        },
+        "true_slot_mapping_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "true_slot_identity_proven": {
+          "const": true
+        },
+        "hardware_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parallel_layout": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kernel_backend": {
+          "type": "string",
+          "minLength": 1
+        },
+        "graph_grade": {
+          "type": "string",
+          "minLength": 1
+        },
+        "warmup_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "measurement_currency": {
+          "const": "S_dec"
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot_block_id",
+        "boot_id",
+        "action_id",
+        "action_position",
+        "action_realization",
+        "regime_id",
+        "content_seed",
+        "round_index"
+      ],
+      "properties": {
+        "boot_block_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "boot_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "action_id": {
+          "$ref": "#/$defs/action_id"
+        },
+        "action_position": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "action_realization": {
+          "enum": [
+            "live-b0-forced-off",
+            "live-b0-target-matching-k4",
+            "boot-static-mask-equivalent-surrogate"
+          ]
+        },
+        "regime_id": {
+          "enum": [
+            "R4",
+            "R5",
+            "R5cot",
+            "R8",
+            "R1",
+            "R6"
+          ]
+        },
+        "content_seed": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "round_index": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt_record_ids",
+        "generation_seed",
+        "batch",
+        "max_output_tokens",
+        "temperature",
+        "ignore_eos",
+        "requested_output_tokens"
+      ],
+      "properties": {
+        "prompt_record_ids": {
+          "type": "array",
+          "minItems": 32,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "generation_seed": {
+          "const": 0
+        },
+        "batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ignore_eos": {
+          "const": true
+        },
+        "requested_output_tokens": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "action_id": {
+      "enum": [
+        "off",
+        "target-matching-k4",
+        "target-matching-w512-masked-k4"
+      ]
+    }
+  }
+}

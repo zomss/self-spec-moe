@@ -1,0 +1,43 @@
+{
+  "checks": {
+    "greedy_token_identity": true,
+    "h_d_a_c_e_closure": true,
+    "no_active_private_draft_kv_pool": true,
+    "off_to_k4_q1_bootstrap": true,
+    "ordered_k4_off_k4_transition": true,
+    "stable_live_kv_aliases": true,
+    "stable_live_weight_aliases": true,
+    "stable_target_slot_mapping": true,
+    "target_step_boundary_only": true
+  },
+  "eligible_counter_aggregate": {
+    "A_accepted": 24,
+    "C_clipped": 0,
+    "D_armed": 6,
+    "E_committed": 36,
+    "H_target_steps": 12
+  },
+  "record_type": "p3_live_smoke_verification",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "token_counts": {
+    "long": 40,
+    "short": 3
+  },
+  "token_mismatches": {},
+  "trace": {
+    "binding_id": "live-kv-binding-1fd20c93d17799cd",
+    "bootstrap_draft_chain_runtime_mode": "NONE",
+    "bootstrap_draft_step0_runtime_mode": "NONE",
+    "bootstrap_target_runtime_mode": "PIECEWISE",
+    "eligible_records": 10,
+    "engine_step_records": 12,
+    "k4_to_off_engine_step_index": 4,
+    "off_to_k4_engine_step_index": 7,
+    "pool_id": "target-kv-pool-c5f0324fb6578435",
+    "shared_kv_layer_count": 36,
+    "shared_weight_parameter_count": 291,
+    "true_slot_mapping_id": "target-true-slots-cb1c9961680e7e4b"
+  }
+}

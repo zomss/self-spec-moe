@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_same_event_accounting.schema.json",
+  "title": "Phase 97 same-event target-step accounting contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "status",
+    "registered_date",
+    "event_schema",
+    "measurement_unit",
+    "counter_sources",
+    "derivations",
+    "invariants",
+    "eligibility",
+    "legacy_w14d_disposition",
+    "authorizations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "contract_id": {
+      "const": "p4-same-event-target-step-v1"
+    },
+    "status": {
+      "const": "registered_unwired"
+    },
+    "registered_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "event_schema": {
+      "$ref": "#/$defs/artifact"
+    },
+    "measurement_unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "counter_unit",
+        "boundary",
+        "aggregation_unit"
+      ],
+      "properties": {
+        "event": {
+          "const": "one_scheduler_engine_event"
+        },
+        "counter_unit": {
+          "const": "decode_request_step"
+        },
+        "boundary": {
+          "const": "post_scheduler_output_through_post_stop_commit"
+        },
+        "aggregation_unit": {
+          "const": "paired_boot_block"
+        }
+      }
+    },
+    "counter_sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H_target_steps",
+        "D_armed",
+        "A_accepted",
+        "C_clipped",
+        "E_committed",
+        "request_decode_time_s",
+        "diagnostic_only"
+      ],
+      "properties": {
+        "H_target_steps": {
+          "const": "count_target_processed_decode_rows"
+        },
+        "D_armed": {
+          "const": "count_armed_rows_within_same_target_rows"
+        },
+        "A_accepted": {
+          "const": "sum_same_event_accepted_draft_tokens"
+        },
+        "C_clipped": {
+          "const": "sum_same_event_generated_minus_committed_tokens"
+        },
+        "E_committed": {
+          "const": "sum_same_event_post_stop_committed_tokens"
+        },
+        "request_decode_time_s": {
+          "const": "engine_event_elapsed_s*H_target_steps"
+        },
+        "diagnostic_only": {
+          "type": "array",
+          "const": [
+            "prometheus_interval_deltas",
+            "finished_request_histograms"
+          ]
+        }
+      }
+    },
+    "derivations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H_target_steps",
+        "D_armed",
+        "A_accepted",
+        "C_clipped",
+        "E_committed",
+        "U_unarmed"
+      ],
+      "properties": {
+        "H_target_steps": {
+          "const": "len(request_steps)"
+        },
+        "D_armed": {
+          "const": "sum(draft_armed)"
+        },
+        "A_accepted": {
+          "const": "sum(accepted_draft_tokens)"
+        },
+        "C_clipped": {
+          "const": "sum(clipped_tokens)"
+        },
+        "E_committed": {
+          "const": "sum(committed_tokens)"
+        },
+        "U_unarmed": {
+          "const": "H_target_steps-D_armed"
+        }
+      }
+    },
+    "invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft_subset",
+        "token_closure",
+        "unarmed_definition",
+        "per_row_raw_output",
+        "per_row_commit",
+        "per_row_accept_bound",
+        "off_has_no_draft",
+        "steady_state_action"
+      ],
+      "properties": {
+        "draft_subset": {
+          "const": "0<=D_armed<=H_target_steps"
+        },
+        "token_closure": {
+          "const": "E_committed+C_clipped=A_accepted+H_target_steps"
+        },
+        "unarmed_definition": {
+          "const": "U_unarmed=H_target_steps-D_armed"
+        },
+        "per_row_raw_output": {
+          "const": "raw_generated_tokens=accepted_draft_tokens+1"
+        },
+        "per_row_commit": {
+          "const": "committed_tokens+clipped_tokens=raw_generated_tokens"
+        },
+        "per_row_accept_bound": {
+          "const": "0<=accepted_draft_tokens<=k_if_armed_else_0"
+        },
+        "off_has_no_draft": {
+          "const": "off_implies_k0_D0_A0"
+        },
+        "steady_state_action": {
+          "const": "action_id=verified_action_id=next_action_id"
+        }
+      }
+    },
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_true",
+        "required_zero",
+        "incomplete_policy",
+        "invalid_policy"
+      ],
+      "properties": {
+        "required_true": {
+          "type": "array",
+          "const": [
+            "complete",
+            "pure_decode"
+          ]
+        },
+        "required_zero": {
+          "type": "array",
+          "const": [
+            "preemptions",
+            "recomputed_tokens",
+            "invalid_spec_tokens"
+          ]
+        },
+        "incomplete_policy": {
+          "const": "record_but_never_score"
+        },
+        "invalid_policy": {
+          "const": "reject_before_complete"
+        }
+      }
+    },
+    "legacy_w14d_disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundle_sha256",
+        "round_count",
+        "negative_unarmed_round_count",
+        "minimum_unarmed_steps",
+        "status",
+        "reuse_for_value",
+        "cause_status"
+      ],
+      "properties": {
+        "bundle_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "round_count": {
+          "const": 1680
+        },
+        "negative_unarmed_round_count": {
+          "const": 313
+        },
+        "minimum_unarmed_steps": {
+          "const": -8
+        },
+        "status": {
+          "const": "invalid_for_scored_value"
+        },
+        "reuse_for_value": {
+          "const": false
+        },
+        "cause_status": {
+          "const": "one_b8_boundary_skew_hypothesis_unconfirmed"
+        }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase96_d_rescore",
+        "gpu_recollection",
+        "p4a_engineering"
+      ],
+      "properties": {
+        "phase96_d_rescore": {
+          "const": false
+        },
+        "gpu_recollection": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "artifact_id": "p4-b0-chunked-prefill-cohort-barrier-design-and-cpu-proof-v1",
+  "date": "2026-08-09",
+  "status": "pass_cpu_proof_gpu_unauthorized",
+  "evidence_grade": "executable_cpu_state_machine_proof_no_gpu_execution",
+  "source_artifacts": {
+    "transient_bound": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_transient_bound.json",
+      "sha256": "2c5f2d1acf30d62424f92667c9744cd35019261c5b44125ae656ae33440dc36a"
+    },
+    "v9_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v9.json",
+      "sha256": "1542763ea55e6cda9aaf29fda357bc3818a508eecd34d22d869c22aa13ea1ee4"
+    },
+    "v9_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/failure.json",
+      "sha256": "605e10c42bef250269c346141599dd0af08613f2bd3b8d675ee2fcff187b9986"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "serving_chunked_prefill_diagnosis": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_serving_chunked_prefill_diagnosis_v1/diagnosis.json",
+      "sha256": "c866b644c7baf37f561a3e6f621ee55065a9e64a784b09cdfa2b84f8bb27858d"
+    },
+    "cohort_barrier_implementation": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "55211c6502f766198bad966adb1a4b440015f6c5a62cfc6faad16586934771ac"
+    },
+    "cpu_proof_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "6ba60f85b09c4c254b6df8f67c92ac0527c144986d32f7e2e5a4fe4853b382ed"
+    },
+    "cpu_proof_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "528a3c1a716e0e46aed5c92f3a4f7ba74c57adb37c53cf1323410eb0e2a524a5"
+    }
+  },
+  "rejected_mechanism": {
+    "mechanism": "114688_0.96_full_microbatch_prefill",
+    "disposition": "remains_rejected_no_retry_or_resume",
+    "v9_output": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8",
+    "v9_consumed": true
+  },
+  "bounded_prefill_contract": {
+    "enable_chunked_prefill": true,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 32,
+    "speculative_slot_reserve_tokens": 32,
+    "effective_scheduler_token_budget": 8160,
+    "full_microbatch_prefill_allowed": false,
+    "r5_max_microbatch_prompt_tokens": 112304,
+    "r5cot_max_microbatch_prompt_tokens": 112908,
+    "r5_minimum_prefill_events": 14,
+    "r5cot_minimum_prefill_events": 14,
+    "minimum_shared_target_kv_blocks": 21682,
+    "gpu_memory_utilization": "deferred_to_separate_gpu_probe_authorization"
+  },
+  "cohort_membership_contract": {
+    "source": "active_capture_cell_prompt_slice",
+    "queue_policy": "all_exact_members_before_first_engine_step",
+    "identity_policy": "frozen_id_or_frozen_id_plus_exactly_eight_lowercase_hex",
+    "order_policy": "exact_frozen_queue_order",
+    "foreign_requests_allowed": false,
+    "duplicate_requests_allowed": false,
+    "seal_before_complete_registration_allowed": false
+  },
+  "state_machine": {
+    "states": [
+      "registering",
+      "prefilling",
+      "released",
+      "complete",
+      "aborted"
+    ],
+    "hold_predicate": "num_computed_tokens==num_prompt_tokens_and_num_output_tokens==1",
+    "hold_effect": "skip_decode_scheduling_while_retaining_target_owned_kv",
+    "release_predicate": "every_exact_member_satisfies_hold_predicate",
+    "release_boundary": "next_scheduler_step_only",
+    "member_finish_before_release_allowed": false,
+    "request_refill_or_reprefill_allowed": false,
+    "private_draft_kv_allowed": false,
+    "terminal_states": [
+      "complete",
+      "aborted"
+    ]
+  },
+  "decode_release_contract": {
+    "first_measured_event": "pure_decode",
+    "scheduled_members": "every_unfinished_cohort_member",
+    "action_query_widths": {
+      "off": 1,
+      "target-matching-k4": 5,
+      "target-matching-w512-masked-k4": 5
+    },
+    "mixed_prefill_decode_allowed": false,
+    "preemptions": 0,
+    "recomputed_tokens": 0,
+    "invalid_spec_tokens": 0,
+    "steady_state_action_required": true
+  },
+  "accounting_contract": {
+    "measurement_currency": "S_dec",
+    "unmeasured_prefill_tokens_per_request": 1,
+    "measured_decode_tokens_source": "capture_cell_generation.max_output_tokens",
+    "cpu_proof_measured_decode_tokens_per_request": 512,
+    "cpu_proof_frontend_output_tokens_per_request": 513,
+    "prefill_events_contribute_measured_commits": false,
+    "overcommit_allowed": false,
+    "incomplete_work_score_allowed": false
+  },
+  "failure_policy": {
+    "on_member_abort": "abort_every_unfinished_cohort_member",
+    "on_identity_or_order_drift": "abort_without_capture_or_score",
+    "on_early_decode": "abort_without_capture_or_score",
+    "on_mixed_first_release": "abort_without_capture_or_score",
+    "on_quality_violation": "abort_without_capture_or_score",
+    "on_two_no_progress_steps": "abort_without_capture_or_score",
+    "on_incomplete_close": "abort_without_capture_or_score",
+    "partial_resume_allowed": false
+  },
+  "ordinary_serving_boundary": {
+    "cohort_barrier_enabled": false,
+    "max_num_batched_tokens": 8192,
+    "effective_scheduler_token_budget": 8160,
+    "gpu_memory_utilization": 0.9,
+    "mixed_steps_force_q1_off": true,
+    "mixed_steps_dispatch_draft": false,
+    "serving_behavior_changed_by_this_artifact": false
+  },
+  "cpu_proof": {
+    "status": "pass",
+    "gpu_executed": false,
+    "positive_cases": [
+      {
+        "case_id": "off_early_hold_release_rollover",
+        "status": "pass",
+        "action_id": "off",
+        "target_query_width": 1,
+        "prefill_steps": 3,
+        "decode_steps": 512,
+        "request_count": 3,
+        "unmeasured_prefill_tokens_per_request": 1,
+        "measured_decode_tokens_per_request": 512,
+        "frontend_output_tokens_per_request": 513,
+        "first_release_scheduled_all_members": true,
+        "first_release_pure_decode": true,
+        "first_release_query_widths": [
+          1
+        ]
+      },
+      {
+        "case_id": "target-matching-k4_early_hold_release_rollover",
+        "status": "pass",
+        "action_id": "target-matching-k4",
+        "target_query_width": 5,
+        "prefill_steps": 3,
+        "decode_steps": 103,
+        "request_count": 3,
+        "unmeasured_prefill_tokens_per_request": 1,
+        "measured_decode_tokens_per_request": 512,
+        "frontend_output_tokens_per_request": 513,
+        "first_release_scheduled_all_members": true,
+        "first_release_pure_decode": true,
+        "first_release_query_widths": [
+          5
+        ]
+      },
+      {
+        "case_id": "target-matching-w512-masked-k4_early_hold_release_rollover",
+        "status": "pass",
+        "action_id": "target-matching-w512-masked-k4",
+        "target_query_width": 5,
+        "prefill_steps": 3,
+        "decode_steps": 103,
+        "request_count": 3,
+        "unmeasured_prefill_tokens_per_request": 1,
+        "measured_decode_tokens_per_request": 512,
+        "frontend_output_tokens_per_request": 513,
+        "first_release_scheduled_all_members": true,
+        "first_release_pure_decode": true,
+        "first_release_query_widths": [
+          5
+        ]
+      }
+    ],
+    "rejection_cases": [
+      {
+        "case_id": "seal_missing_member",
+        "status": "pass_rejected",
+        "failure_class": "membership"
+      },
+      {
+        "case_id": "reject_unknown_identity",
+        "status": "pass_rejected",
+        "failure_class": "identity"
+      },
+      {
+        "case_id": "reject_early_decode_release",
+        "status": "pass_rejected",
+        "failure_class": "early_release"
+      },
+      {
+        "case_id": "reject_second_prefill_sample",
+        "status": "pass_rejected",
+        "failure_class": "prefill_offset"
+      },
+      {
+        "case_id": "reject_partial_first_release",
+        "status": "pass_rejected",
+        "failure_class": "atomic_release"
+      },
+      {
+        "case_id": "reject_mixed_first_release",
+        "status": "pass_rejected",
+        "failure_class": "pure_decode"
+      },
+      {
+        "case_id": "reject_quality_corruption",
+        "status": "pass_rejected",
+        "failure_class": "quality"
+      },
+      {
+        "case_id": "reject_decode_overcommit",
+        "status": "pass_rejected",
+        "failure_class": "accounting"
+      },
+      {
+        "case_id": "abort_no_progress_deadlock",
+        "status": "pass_rejected",
+        "failure_class": "deadlock"
+      },
+      {
+        "case_id": "reject_premature_frontend_finish",
+        "status": "pass_rejected",
+        "failure_class": "frontend_work"
+      }
+    ],
+    "abort_cases": [
+      {
+        "case_id": "member_abort_cancels_complete_cohort",
+        "status": "pass",
+        "abort_request_count": 3,
+        "partial_capture_allowed": false,
+        "score_allowed": false
+      }
+    ],
+    "positive_case_count": 3,
+    "rejection_case_count": 10,
+    "abort_case_count": 1,
+    "action_rollover_order": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "state_leak_across_cohorts": false,
+    "all_cases_passed": true
+  },
+  "decision": {
+    "state": "pass",
+    "scope": "cpu_only_cohort_barrier_design",
+    "live_engine_wiring_ready_for_review": true,
+    "gpu_execution_authorized": false,
+    "v10_authorized": false
+  },
+  "claims": {
+    "bounded_prefill_design_complete": true,
+    "cohort_barrier_cpu_proven": true,
+    "ordinary_serving_unchanged": true,
+    "live_engine_wired": false,
+    "gpu_resource_fit_proven": false,
+    "value_screen_run_ready": false,
+    "p4a_ready": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "live_engine_wiring": false,
+    "gpu_probe": false,
+    "v10_value_screen": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_chunked_prefill_cohort_barrier_live_wiring_and_gpu_probe_authorization",
+    "probe_scope": "one_non_scored_boot_gpu4",
+    "probe_regimes": [
+      "R4",
+      "R5",
+      "R5cot"
+    ],
+    "must_measure_actual_graph_memory": true,
+    "minimum_shared_target_kv_blocks": 21682,
+    "must_prove_no_preemption_or_recomputation": true,
+    "must_prove_pure_first_measured_decode": true,
+    "separate_source_bound_authorization_required": true,
+    "separate_v10_authorization_required": true
+  }
+}

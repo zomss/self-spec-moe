@@ -1,0 +1,37 @@
+{
+  "authorization": {
+    "bytes": 11822,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v2.json",
+    "sha256": "7739866d709cea47e3a2df023cffa28103eb6a5925d42f08f079078690044322"
+  },
+  "claims": {
+    "dual_gpu_value_screen_authorized": false,
+    "value_screen_scoring_authorized": false
+  },
+  "gpu_executed": false,
+  "output_dir": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2",
+  "record_type": "p4_b0_gpu_contention_probe_preparation",
+  "rounds_per_run": 4,
+  "run_count": 4,
+  "schedule": [
+    [
+      "serial-gpu0"
+    ],
+    [
+      "serial-gpu1"
+    ],
+    [
+      "concurrent-gpu0",
+      "concurrent-gpu1"
+    ]
+  ],
+  "schema_version": 1,
+  "scored": false,
+  "thresholds": {
+    "episode_floor_fraction": 0.95,
+    "maximum_contention_ratio_disagreement_fraction": 0.01,
+    "maximum_cross_gpu_rate_disagreement_fraction": 0.02,
+    "maximum_per_gpu_concurrent_slowdown_fraction": 0.01,
+    "minimum_surviving_rounds": 2
+  }
+}

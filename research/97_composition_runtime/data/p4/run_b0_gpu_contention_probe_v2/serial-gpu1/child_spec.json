@@ -1,0 +1,102 @@
+{
+  "authorization": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v2.json",
+  "cache_root": "/data/smcho/.cache/vllm-p97-contention-v2/gpu1",
+  "condition": "serial",
+  "configs": [
+    {
+      "capture_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/captures/contention-serial-gpu1-r1.json",
+      "config_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/configs/contention-serial-gpu1-r1.json",
+      "round_index": 1
+    },
+    {
+      "capture_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/captures/contention-serial-gpu1-r2.json",
+      "config_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/configs/contention-serial-gpu1-r2.json",
+      "round_index": 2
+    },
+    {
+      "capture_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/captures/contention-serial-gpu1-r3.json",
+      "config_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/configs/contention-serial-gpu1-r3.json",
+      "round_index": 3
+    },
+    {
+      "capture_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/captures/contention-serial-gpu1-r4.json",
+      "config_path": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/configs/contention-serial-gpu1-r4.json",
+      "round_index": 4
+    }
+  ],
+  "cpu_affinity": "48-95,144-191",
+  "dynamic_k_schedule": [
+    [
+      1,
+      32,
+      4
+    ]
+  ],
+  "engine": {
+    "async_scheduling": false,
+    "enable_chunked_prefill": true,
+    "enforce_eager": false,
+    "flashinfer_autotune": false,
+    "generation_seed": 0,
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 20480,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 32,
+    "num_speculative_tokens": 4,
+    "pipeline_parallel_size": 1,
+    "prefix_caching": false,
+    "tensor_parallel_size": 1
+  },
+  "environment": {
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "CUDA_VISIBLE_DEVICES": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TORCHINDUCTOR_CACHE_DIR": "/data/smcho/.cache/vllm-p97-contention-v2/gpu1/inductor",
+    "TRITON_CACHE_DIR": "/data/smcho/.cache/vllm-p97-contention-v2/gpu1/triton",
+    "VLLM_CACHE_ROOT": "/data/smcho/.cache/vllm-p97-contention-v2/gpu1",
+    "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+    "VLLM_PORT": "20100",
+    "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+    "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+    "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+    "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+    "VLLM_SELF_SPEC_DRAFT_KV_SINKS": "0",
+    "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": "0",
+    "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "",
+    "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+    "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+    "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+    "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+    "VLLM_SELF_SPEC_P4_BOOT_ACTION": "target-matching-k4",
+    "VLLM_SELF_SPEC_P4_CAPTURE_CONFIG": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/configs/contention-serial-gpu1-r1.json",
+    "VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT": "/data/smcho/self-spec-moe/research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/serial-gpu1/captures/contention-serial-gpu1-r1.json",
+    "VLLM_SELF_SPEC_P4_LOGICAL_WEIGHT_VERSION": "target-matching-config-sha256-35f24f19abe9fdaea34a2a6ac463af2cd318a5a324ec4894659b7caf8ec8c7b1",
+    "VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS": "21682",
+    "VLLM_SELF_SPEC_SHARED_KV": "1",
+    "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+    "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1",
+    "VLLM_USE_FLASHINFER_SAMPLER": "0"
+  },
+  "gpu": {
+    "physical_index": 1,
+    "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+  },
+  "gpu_id": "gpu1",
+  "logical_draft_weight_version": "target-matching-config-sha256-35f24f19abe9fdaea34a2a6ac463af2cd318a5a324ec4894659b7caf8ec8c7b1",
+  "minimum_shared_kv_blocks": 21682,
+  "model": {
+    "draft_weight_path": "target-matching-alias",
+    "model_id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+    "target_kv_dtype": "bfloat16",
+    "target_quantization": null
+  },
+  "port_start": 20100,
+  "run_id": "serial-gpu1",
+  "schema_version": 1
+}

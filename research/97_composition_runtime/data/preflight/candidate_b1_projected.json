@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "candidate_id": "qwen3-8b-b1-w4a8-projected",
+  "capability_class": "B1",
+  "fixed_environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "shared_kv": {
+    "path": "shared_target",
+    "owner": "target",
+    "pool_count": 1
+  },
+  "resident_objects": {
+    "draft_weight_paths": [
+      {
+        "path_id": "target-matching",
+        "kind": "target_matching"
+      },
+      {
+        "path_id": "w4a8-humming",
+        "kind": "quantized"
+      }
+    ],
+    "graph_ids": [
+      "target-k1",
+      "target-k5",
+      "draft-target-matching-k1",
+      "draft-w4a8-k1"
+    ]
+  },
+  "evidence": {
+    "grade": "static_proxy_projection",
+    "candidate_realization_match": false,
+    "source_artifacts": [
+      "data/boot_proxy/weight_q.json",
+      "logs/boot_proxy/weight_q.log"
+    ],
+    "capacity": {
+      "measurement_relation": "optimistic_proxy_ceiling",
+      "usable_hbm_bytes": 76968728985,
+      "sampled_peak_hbm_bytes": 76247203840,
+      "available_shared_target_kv_blocks": 21928,
+      "kv_block_size_tokens": 16,
+      "kv_bytes_per_block": 2359296
+    }
+  },
+  "resource_terms": {
+    "co_resident_weight_hbm_bytes": {
+      "value_bytes": null,
+      "grade": "unknown",
+      "source": "W4A8-only proxy does not measure the co-resident B1 weight realization",
+      "included_in_capacity_evidence": false
+    },
+    "co_resident_graphs_and_workspaces_hbm_bytes": {
+      "value_bytes": null,
+      "grade": "unknown",
+      "source": "target-matching and W4A8 graph pools have not co-resided",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_peak_hbm_bytes": {
+      "value_bytes": null,
+      "grade": "unknown",
+      "source": "RL W4A8 refresh peak has not been implemented or measured",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_pinned_host_bytes": {
+      "value_bytes": null,
+      "grade": "unknown",
+      "source": "RL W4A8 refresh host staging has not been implemented or measured"
+    }
+  }
+}

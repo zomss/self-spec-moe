@@ -1,0 +1,662 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_resource_bound.schema.json",
+  "title": "Phase 97 conservative boot-static w512 B0 resource bound",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bound_id",
+    "date",
+    "status",
+    "source_artifacts",
+    "candidate",
+    "base_capacity",
+    "reserve_policy",
+    "result",
+    "fail_closed",
+    "claims",
+    "readiness_update",
+    "authorizations",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "bound_id": {
+      "const": "p4-b0-w512-conservative-resource-bound-v1"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "pass_resource_readiness_only"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measured_b0",
+        "fixed_environment",
+        "workload",
+        "baseline_boot_proxy",
+        "baseline_boot_log",
+        "base_boot_manifest",
+        "rejected_w512_projection",
+        "value_screen_preregistration",
+        "w512_equivalence"
+      ],
+      "properties": {
+        "measured_b0": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "fixed_environment": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "workload": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "baseline_boot_proxy": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "baseline_boot_log": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "base_boot_manifest": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "rejected_w512_projection": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "value_screen_preregistration": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "w512_equivalence": {
+          "$ref": "#/$defs/artifact_ref"
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "capability_class",
+        "realization",
+        "evidence_grade",
+        "measurement_relation",
+        "candidate_realization_match",
+        "exact_post_capture_measurement",
+        "geometry",
+        "shared_kv"
+      ],
+      "properties": {
+        "candidate_id": {
+          "const": "qwen3-8b-b0-k4-w512-boot-static-bound"
+        },
+        "capability_class": {
+          "const": "B0"
+        },
+        "realization": {
+          "const": "boot-static-target-matching-w512-k4"
+        },
+        "evidence_grade": {
+          "const": "measured_base_plus_conservative_delta_bound"
+        },
+        "measurement_relation": {
+          "const": "conservative_candidate_upper_bound"
+        },
+        "candidate_realization_match": {
+          "const": false
+        },
+        "exact_post_capture_measurement": {
+          "const": false
+        },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_model_len",
+            "max_num_batched_tokens",
+            "max_num_seqs",
+            "k",
+            "window_tokens",
+            "sink_tokens",
+            "block_size_tokens"
+          ],
+          "properties": {
+            "max_model_len": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_num_batched_tokens": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_num_seqs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "k": {
+              "const": 4
+            },
+            "window_tokens": {
+              "const": 512
+            },
+            "sink_tokens": {
+              "const": 16
+            },
+            "block_size_tokens": {
+              "const": 16
+            }
+          }
+        },
+        "shared_kv": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "owner",
+            "pool_count",
+            "private_draft_pool_count"
+          ],
+          "properties": {
+            "path": {
+              "const": "shared_target"
+            },
+            "owner": {
+              "const": "target"
+            },
+            "pool_count": {
+              "const": 1
+            },
+            "private_draft_pool_count": {
+              "const": 0
+            }
+          }
+        }
+      }
+    },
+    "base_capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_candidate_id",
+        "base_evidence_grade",
+        "base_measurement_relation",
+        "available_shared_kv_blocks",
+        "kv_bytes_per_block",
+        "kv_block_size_tokens",
+        "required_live_kv_blocks",
+        "apparent_headroom_blocks",
+        "older_projection_relabelled_exact"
+      ],
+      "properties": {
+        "base_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_evidence_grade": {
+          "const": "measured_exact"
+        },
+        "base_measurement_relation": {
+          "const": "exact_candidate"
+        },
+        "available_shared_kv_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kv_bytes_per_block": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kv_block_size_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "required_live_kv_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "apparent_headroom_blocks": {
+          "type": "integer"
+        },
+        "older_projection_relabelled_exact": {
+          "const": false
+        }
+      }
+    },
+    "reserve_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "block_conversion",
+        "persistent_window_buffers",
+        "graph_capture_and_temporary_workspace",
+        "recorder_and_runtime_metadata",
+        "hbm_fragmentation_safety"
+      ],
+      "properties": {
+        "block_conversion": {
+          "const": "ceil_each_reserve_bytes_over_kv_bytes_per_block"
+        },
+        "persistent_window_buffers": {
+          "$ref": "#/$defs/window_reserve"
+        },
+        "graph_capture_and_temporary_workspace": {
+          "$ref": "#/$defs/graph_reserve"
+        },
+        "recorder_and_runtime_metadata": {
+          "$ref": "#/$defs/metadata_reserve"
+        },
+        "hbm_fragmentation_safety": {
+          "$ref": "#/$defs/safety_reserve"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reserved_blocks_total",
+        "lower_bound_shared_kv_blocks",
+        "required_live_kv_blocks",
+        "lower_bound_headroom_blocks",
+        "lower_bound_headroom_tokens",
+        "decision",
+        "decision_scope"
+      ],
+      "properties": {
+        "reserved_blocks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lower_bound_shared_kv_blocks": {
+          "type": "integer"
+        },
+        "required_live_kv_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lower_bound_headroom_blocks": {
+          "type": "integer"
+        },
+        "lower_bound_headroom_tokens": {
+          "type": "integer"
+        },
+        "decision": {
+          "const": "pass"
+        },
+        "decision_scope": {
+          "const": "pre_engineering_resource_readiness_only"
+        }
+      }
+    },
+    "fail_closed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bound_invalidators",
+        "admission_still_requires"
+      ],
+      "properties": {
+        "bound_invalidators": {
+          "type": "array",
+          "minItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "admission_still_requires": {
+          "const": [
+            "measured_exact_post_capture_candidate",
+            "exact_candidate_measurement_relation"
+          ]
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_readiness_cleared",
+        "exact_candidate_measured",
+        "gpu_measurement_authorized",
+        "p4a_engineering_authorized",
+        "action_admitted",
+        "performance_claim_allowed"
+      ],
+      "properties": {
+        "resource_readiness_cleared": {
+          "const": true
+        },
+        "exact_candidate_measured": {
+          "const": false
+        },
+        "gpu_measurement_authorized": {
+          "const": false
+        },
+        "p4a_engineering_authorized": {
+          "const": false
+        },
+        "action_admitted": {
+          "const": false
+        },
+        "performance_claim_allowed": {
+          "const": false
+        }
+      }
+    },
+    "readiness_update": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previously_cleared",
+        "cleared_now",
+        "remaining",
+        "state"
+      ],
+      "properties": {
+        "previously_cleared": {
+          "const": [
+            "same_event_recorder_unwired",
+            "w512_mask_equivalence_unproven"
+          ]
+        },
+        "cleared_now": {
+          "const": [
+            "conservative_resource_bound_missing"
+          ]
+        },
+        "remaining": {
+          "const": []
+        },
+        "state": {
+          "const": "ready_for_separate_authorization_decision"
+        }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "gpu_measurement": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        }
+      }
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "separate_decision_required",
+        "gpu_command_included_here"
+      ],
+      "properties": {
+        "kind": {
+          "const": "run_ready_b0_value_screen_authorization_package"
+        },
+        "separate_decision_required": {
+          "const": true
+        },
+        "gpu_command_included_here": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "reserve_common": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reserved_bytes",
+        "reserved_blocks"
+      ],
+      "properties": {
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_blocks": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "window_reserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "rows",
+        "columns",
+        "element_bytes_upper_bound",
+        "buffers",
+        "derived_bytes_upper_bound",
+        "rounding_quantum_bytes",
+        "reserved_bytes",
+        "reserved_blocks"
+      ],
+      "properties": {
+        "method": {
+          "const": "static_shape_formula_rounded_up"
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "element_bytes_upper_bound": {
+          "const": 8
+        },
+        "buffers": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "elements",
+              "bytes_upper_bound"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/identifier"
+              },
+              "elements": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "bytes_upper_bound": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "derived_bytes_upper_bound": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rounding_quantum_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_blocks": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "graph_reserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "baseline_actual_graph_pool_reported_gib",
+        "report_rounding_allowance_gib",
+        "reported_upper_bound_mib",
+        "conservative_multiplier",
+        "rounding_quantum_bytes",
+        "reserved_bytes",
+        "reserved_blocks"
+      ],
+      "properties": {
+        "method": {
+          "const": "three_times_baseline_full_graph_pool_rounded_to_gib"
+        },
+        "baseline_actual_graph_pool_reported_gib": {
+          "type": "number",
+          "minimum": 0
+        },
+        "report_rounding_allowance_gib": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reported_upper_bound_mib": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "conservative_multiplier": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rounding_quantum_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_blocks": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "metadata_reserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "policy_floor_mib",
+        "hbm_credit_for_cpu_records",
+        "reserved_bytes",
+        "reserved_blocks"
+      ],
+      "properties": {
+        "method": {
+          "const": "fixed_hbm_contingency"
+        },
+        "policy_floor_mib": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hbm_credit_for_cpu_records": {
+          "const": false
+        },
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_blocks": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "safety_reserve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "usable_hbm_bytes",
+        "fraction_basis_points",
+        "fraction_bytes",
+        "minimum_bytes",
+        "reserved_bytes",
+        "reserved_blocks"
+      ],
+      "properties": {
+        "method": {
+          "const": "max_five_percent_usable_hbm_or_four_gib"
+        },
+        "usable_hbm_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fraction_basis_points": {
+          "const": 500
+        },
+        "fraction_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minimum_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reserved_blocks": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    }
+  }
+}

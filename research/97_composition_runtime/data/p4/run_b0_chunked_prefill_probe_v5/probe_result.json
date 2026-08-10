@@ -1,0 +1,475 @@
+{
+  "action_id": "target-matching-k4",
+  "artifact_id": "p4-b0-chunked-prefill-gpu4-probe-result-v5",
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "v10_value_screen": false
+  },
+  "claims": {
+    "chunked_prefill_barrier_gpu_proven": true,
+    "performance_claim_allowed": false,
+    "v10_authorized": false
+  },
+  "cohorts": [
+    {
+      "abort_reason": null,
+      "action_id": "target-matching-k4",
+      "cohort_id": "p4-b0-chunked-prefill-probe-R4:cohort:c9d249a12d352f0d",
+      "committed_by_request": {
+        "R4-s0-p000": 1,
+        "R4-s0-p001": 1,
+        "R4-s0-p002": 1,
+        "R4-s0-p003": 1,
+        "R4-s0-p004": 1,
+        "R4-s0-p005": 1,
+        "R4-s0-p006": 1,
+        "R4-s0-p007": 1
+      },
+      "decode_step_count": 1,
+      "expected_request_count": 8,
+      "finished_request_count": 8,
+      "first_decode_observed": true,
+      "max_num_batched_tokens": 8192,
+      "max_num_scheduled_tokens": 8160,
+      "measured_decode_tokens_per_request": 1,
+      "prefill_step_count": 8,
+      "pure_first_measured_decode": true,
+      "registered_request_count": 8,
+      "shared_target_kv_block_capacity": 24527,
+      "state": "complete",
+      "unmeasured_prefill_tokens_per_request": 1
+    },
+    {
+      "abort_reason": null,
+      "action_id": "target-matching-k4",
+      "cohort_id": "p4-b0-chunked-prefill-probe-R5:cohort:ea718c2dd0a3da89",
+      "committed_by_request": {
+        "R5-s0-p000": 1,
+        "R5-s0-p001": 1,
+        "R5-s0-p002": 1,
+        "R5-s0-p003": 1,
+        "R5-s0-p004": 1,
+        "R5-s0-p005": 1,
+        "R5-s0-p006": 1,
+        "R5-s0-p007": 1
+      },
+      "decode_step_count": 1,
+      "expected_request_count": 8,
+      "finished_request_count": 8,
+      "first_decode_observed": true,
+      "max_num_batched_tokens": 8192,
+      "max_num_scheduled_tokens": 8160,
+      "measured_decode_tokens_per_request": 1,
+      "prefill_step_count": 14,
+      "pure_first_measured_decode": true,
+      "registered_request_count": 8,
+      "shared_target_kv_block_capacity": 24527,
+      "state": "complete",
+      "unmeasured_prefill_tokens_per_request": 1
+    },
+    {
+      "abort_reason": null,
+      "action_id": "target-matching-k4",
+      "cohort_id": "p4-b0-chunked-prefill-probe-R5cot:cohort:8c39064f507e7179",
+      "committed_by_request": {
+        "R5cot-s0-p000": 1,
+        "R5cot-s0-p001": 1,
+        "R5cot-s0-p002": 1,
+        "R5cot-s0-p003": 1,
+        "R5cot-s0-p004": 1,
+        "R5cot-s0-p005": 1,
+        "R5cot-s0-p006": 1,
+        "R5cot-s0-p007": 1
+      },
+      "decode_step_count": 1,
+      "expected_request_count": 8,
+      "finished_request_count": 8,
+      "first_decode_observed": true,
+      "max_num_batched_tokens": 8192,
+      "max_num_scheduled_tokens": 8160,
+      "measured_decode_tokens_per_request": 1,
+      "prefill_step_count": 14,
+      "pure_first_measured_decode": true,
+      "registered_request_count": 8,
+      "shared_target_kv_block_capacity": 24527,
+      "state": "complete",
+      "unmeasured_prefill_tokens_per_request": 1
+    }
+  ],
+  "gpu": {
+    "physical_index": 4,
+    "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+  },
+  "regimes": [
+    "R4",
+    "R5",
+    "R5cot"
+  ],
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589365248,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "target_events": [
+    {
+      "action_id": "target-matching-k4",
+      "complete": true,
+      "contract_id": "p4-same-event-target-step-v1",
+      "counters": {
+        "A_accepted": 32,
+        "C_clipped": 32,
+        "D_armed": 8,
+        "E_committed": 8,
+        "H_target_steps": 8,
+        "U_unarmed": 0,
+        "closure_holds": true,
+        "draft_subset_holds": true
+      },
+      "engine_step_index": 8,
+      "event_id": "p4-b0-chunked-prefill-gpu4-probe:step:8",
+      "exclusion_reasons": [],
+      "k": 4,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_steps": [
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p000",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p001",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p002",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p003",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p004",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p005",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p006",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R4-s0-p007",
+          "target_processed": true
+        }
+      ],
+      "schema_version": 1,
+      "score_eligible": true,
+      "source": {
+        "model_runner_output_observed": true,
+        "next_action_id": "target-matching-k4",
+        "post_stop_commit_observed": true,
+        "prometheus_interval_delta_used": false,
+        "scheduler_event_id": "p4-b0-chunked-prefill-gpu4-probe:step:8",
+        "scheduler_output_observed": true,
+        "verified_action_id": "target-matching-k4"
+      },
+      "timing": {
+        "engine_event_elapsed_s": 0.06626006899750791,
+        "prefill_time_included": false,
+        "queue_time_included": false,
+        "request_decode_time_s": 0.5300805519800633,
+        "source": "same_scheduler_event_monotonic"
+      }
+    },
+    {
+      "action_id": "target-matching-k4",
+      "complete": true,
+      "contract_id": "p4-same-event-target-step-v1",
+      "counters": {
+        "A_accepted": 32,
+        "C_clipped": 32,
+        "D_armed": 8,
+        "E_committed": 8,
+        "H_target_steps": 8,
+        "U_unarmed": 0,
+        "closure_holds": true,
+        "draft_subset_holds": true
+      },
+      "engine_step_index": 23,
+      "event_id": "p4-b0-chunked-prefill-gpu4-probe:step:23",
+      "exclusion_reasons": [],
+      "k": 4,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_steps": [
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p000",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p001",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p002",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p003",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p004",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p005",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p006",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5-s0-p007",
+          "target_processed": true
+        }
+      ],
+      "schema_version": 1,
+      "score_eligible": true,
+      "source": {
+        "model_runner_output_observed": true,
+        "next_action_id": "target-matching-k4",
+        "post_stop_commit_observed": true,
+        "prometheus_interval_delta_used": false,
+        "scheduler_event_id": "p4-b0-chunked-prefill-gpu4-probe:step:23",
+        "scheduler_output_observed": true,
+        "verified_action_id": "target-matching-k4"
+      },
+      "timing": {
+        "engine_event_elapsed_s": 0.06936607000534423,
+        "prefill_time_included": false,
+        "queue_time_included": false,
+        "request_decode_time_s": 0.5549285600427538,
+        "source": "same_scheduler_event_monotonic"
+      }
+    },
+    {
+      "action_id": "target-matching-k4",
+      "complete": true,
+      "contract_id": "p4-same-event-target-step-v1",
+      "counters": {
+        "A_accepted": 32,
+        "C_clipped": 32,
+        "D_armed": 8,
+        "E_committed": 8,
+        "H_target_steps": 8,
+        "U_unarmed": 0,
+        "closure_holds": true,
+        "draft_subset_holds": true
+      },
+      "engine_step_index": 38,
+      "event_id": "p4-b0-chunked-prefill-gpu4-probe:step:38",
+      "exclusion_reasons": [],
+      "k": 4,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_steps": [
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p000",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p001",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p002",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p003",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p004",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p005",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p006",
+          "target_processed": true
+        },
+        {
+          "accepted_draft_tokens": 4,
+          "clipped_tokens": 4,
+          "committed_tokens": 1,
+          "draft_armed": true,
+          "raw_generated_tokens": 5,
+          "request_id": "R5cot-s0-p007",
+          "target_processed": true
+        }
+      ],
+      "schema_version": 1,
+      "score_eligible": true,
+      "source": {
+        "model_runner_output_observed": true,
+        "next_action_id": "target-matching-k4",
+        "post_stop_commit_observed": true,
+        "prometheus_interval_delta_used": false,
+        "scheduler_event_id": "p4-b0-chunked-prefill-gpu4-probe:step:38",
+        "scheduler_output_observed": true,
+        "verified_action_id": "target-matching-k4"
+      },
+      "timing": {
+        "engine_event_elapsed_s": 0.07129175998852588,
+        "prefill_time_included": false,
+        "queue_time_included": false,
+        "request_decode_time_s": 0.5703340799082071,
+        "source": "same_scheduler_event_monotonic"
+      }
+    }
+  ]
+}

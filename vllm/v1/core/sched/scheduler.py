@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+import copy
 import itertools
 import time
 from collections import defaultdict, deque
-
-import vllm.envs as envs
 from collections.abc import Iterable
 from dataclasses import replace
 from typing import Any
 
+import vllm.envs as envs
 from vllm.compilation.cuda_graph import CUDAGraphStat
 from vllm.config import VllmConfig
 from vllm.distributed.ec_transfer.ec_connector.base import (
@@ -60,14 +60,41 @@ from vllm.v1.metrics.stats import PrefixCacheStats, SchedulerStats
 from vllm.v1.outputs import DraftTokenIds, KVConnectorOutput, ModelRunnerOutput
 from vllm.v1.request import Request, RequestStatus, StreamingUpdate
 from vllm.v1.spec_decode.dynamic.utils import build_dynamic_sd_schedule_lookup
+from vllm.v1.spec_decode.koff_runtime import (
+    K4_ACTION_ID,
+    OFF_ACTION_ID,
+    W512_ACTION_ID,
+    KOffRuntimeError,
+    KOffTraceWriter,
+    P4CaptureCohortBarrier,
+    P4CaptureCohortSpec,
+    P4CohortRequestState,
+    P4SameEventRecorder,
+    abort_mixed_decode_drafts,
+    build_live_step_record,
+    build_same_event_record,
+    make_scheduler_metadata,
+    make_trace_header,
+    options_from_env,
+    parse_p4_capture_cohort_spec,
+    validate_boot_config,
+    validate_draft_token_batch,
+    validate_p4_shared_kv_capacity,
+)
 from vllm.v1.spec_decode.metrics import SpecDecodingStats
 from vllm.v1.structured_output import StructuredOutputManager
 from vllm.v1.utils import record_function_or_nullcontext
 
 logger = init_logger(__name__)
 
+_P4_CAPTURE_MAX_NUM_BATCHED_TOKENS = 8192
+_P4_CAPTURE_MAX_NUM_SCHEDULED_TOKENS = 8160
+_P4_CAPTURE_MAX_NUM_SEQS = 32
+
 
 class Scheduler(SchedulerInterface):
+    _koff_runtime_enabled = False
+
     def __init__(
         self,
         vllm_config: VllmConfig,
@@ -237,8 +264,7 @@ class Scheduler(SchedulerInterface):
         # tokens, with periodic probe bursts for recovery (hysteresis).
         self._sd_accept_off_thresh = envs.VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD
         self._sd_accept_on_thresh = (
-            envs.VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD
-            or self._sd_accept_off_thresh
+            envs.VLLM_SELF_SPEC_ACCEPT_ON_THRESHOLD or self._sd_accept_off_thresh
         )
         self._sd_gated_off = False
         self._sd_probe_interval = envs.VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL
@@ -266,11 +292,13 @@ class Scheduler(SchedulerInterface):
         self._sd_policy_dwell = 0
         if envs.VLLM_SELF_SPEC_POLICY_FILE:
             import json as _json
+
             with open(envs.VLLM_SELF_SPEC_POLICY_FILE) as f:
                 self._sd_policy = _json.load(f)["cells"]
             logger.info(
                 "Compiled SD policy loaded: %d cells from %s",
-                len(self._sd_policy), envs.VLLM_SELF_SPEC_POLICY_FILE,
+                len(self._sd_policy),
+                envs.VLLM_SELF_SPEC_POLICY_FILE,
             )
         self._sd_accept_ema = 1.0
         self._sd_req_ema: dict[str, float] = {}
@@ -308,6 +336,53 @@ class Scheduler(SchedulerInterface):
                 # for the last sampled token plus queries for each draft token.
                 self.num_lookahead_tokens = self.num_spec_tokens + 1
 
+        self._koff_options = options_from_env()
+        self._koff_runtime_enabled = self._koff_options.enabled
+        self._koff_draft_action_by_req: dict[str, str] = {}
+        self._koff_engine_step_index = 0
+        self._koff_runtime_identity: tuple[str, str, str, str] | None = None
+        self._koff_last_record: dict[str, Any] | None = None
+        validate_boot_config(
+            vllm_config,
+            self._koff_options,
+            dynamic_k_values=self.dynamic_sd_lookup or (),
+            policy=self._sd_policy,
+        )
+        self._koff_trace_writer: KOffTraceWriter | None = None
+        if self._koff_options.trace_path:
+            assert speculative_config is not None
+            draft_config = speculative_config.draft_model_config
+            assert draft_config is not None
+            header = make_trace_header(
+                {
+                    "target_model": str(vllm_config.model_config.model),
+                    "draft_model": str(draft_config.model),
+                    "target_quantization": vllm_config.model_config.quantization,
+                    "draft_quantization": draft_config.quantization,
+                    "target_kv_dtype": self.cache_config.cache_dtype,
+                    "num_speculative_tokens": self.num_spec_tokens,
+                    "max_model_len": self.max_model_len,
+                    "max_num_seqs": self.max_num_running_reqs,
+                    "max_num_batched_tokens": (
+                        self.scheduler_config.max_num_batched_tokens
+                    ),
+                    "max_num_scheduled_tokens": self.max_num_scheduled_tokens,
+                    "async_scheduling": self.scheduler_config.async_scheduling,
+                    "tensor_parallel_size": self.parallel_config.tensor_parallel_size,
+                    "pipeline_parallel_size": (
+                        self.parallel_config.pipeline_parallel_size
+                    ),
+                }
+            )
+            self._koff_trace_writer = KOffTraceWriter(
+                self._koff_options.trace_path, header
+            )
+        self._p4_capture_recorder: P4SameEventRecorder | None = None
+        self._p4_capture_cohort: P4CaptureCohortBarrier | None = None
+        self._p4_capture_cohort_spec: P4CaptureCohortSpec | None = None
+        self._p4_capture_cohort_step: dict[str, Any] | None = None
+        self._p4_capture_cohort_history: list[dict[str, Any]] = []
+
         # Create the KV cache manager.
         if hash_block_size is None:
             hash_block_size = block_size
@@ -326,6 +401,18 @@ class Scheduler(SchedulerInterface):
             metrics_collector=self.kv_metrics_collector,
             watermark=self.scheduler_config.watermark,
         )
+        if self._koff_options.p4_capture_config_path:
+            validate_p4_shared_kv_capacity(
+                self.kv_cache_manager.block_pool.num_gpu_blocks,
+                self._koff_options.p4_min_kv_blocks,
+            )
+            self._p4_capture_recorder = P4SameEventRecorder(
+                self._koff_options.p4_capture_config_path,
+                self._koff_options.p4_capture_output_path,
+                boot_action_id=self._koff_options.p4_boot_action_id,
+                logical_weight_version=(self._koff_options.p4_logical_weight_version),
+                minimum_shared_kv_blocks=self._koff_options.p4_min_kv_blocks,
+            )
         # Bind GPU block pool to the KV connector. This must happen after
         # kv_cache_manager is constructed so block_pool is available.
         if self.connector is not None:
@@ -445,6 +532,253 @@ class Scheduler(SchedulerInterface):
                 num_new_tokens = num_new_tokens // block_size * block_size
         return num_new_tokens
 
+    @staticmethod
+    def _p4_cohort_request_state(request: Request) -> P4CohortRequestState:
+        return P4CohortRequestState(
+            request_id=request.request_id,
+            num_prompt_tokens=request.num_prompt_tokens,
+            num_computed_tokens=request.num_computed_tokens,
+            num_output_tokens=request.num_output_tokens,
+            num_preemptions=request.num_preemptions,
+        )
+
+    def _archive_p4_capture_cohort(self, barrier: P4CaptureCohortBarrier) -> None:
+        summary = barrier.summary()
+        summary.update(
+            {
+                "max_num_batched_tokens": (
+                    self.scheduler_config.max_num_batched_tokens
+                ),
+                "max_num_scheduled_tokens": self.max_num_scheduled_tokens,
+                "shared_target_kv_block_capacity": (
+                    self.kv_cache_manager.block_pool.num_gpu_blocks
+                ),
+                "pure_first_measured_decode": bool(
+                    summary["first_decode_observed"]
+                    and summary["decode_step_count"] > 0
+                    and summary["abort_reason"] is None
+                ),
+            }
+        )
+        self._p4_capture_cohort_history.append(summary)
+        self._p4_capture_cohort = None
+        self._p4_capture_cohort_spec = None
+        self._p4_capture_cohort_step = None
+
+    def _cancel_p4_capture_cohort_after_failure(
+        self, barrier: P4CaptureCohortBarrier
+    ) -> None:
+        abort_ids = barrier.abort_request_ids
+        self._archive_p4_capture_cohort(barrier)
+        if abort_ids:
+            self.finish_requests(abort_ids, RequestStatus.FINISHED_ABORTED)
+
+    def _fail_p4_capture_cohort(self, message: str) -> None:
+        barrier = self._p4_capture_cohort
+        if barrier is None:
+            raise KOffRuntimeError(f"P4 capture cohort: {message}")
+        cohort_id = barrier.cohort_id
+        if barrier.state != "aborted":
+            barrier.abort(message)
+        self._cancel_p4_capture_cohort_after_failure(barrier)
+        raise KOffRuntimeError(f"P4 capture cohort {cohort_id!r}: {message}")
+
+    def _register_p4_capture_cohort_request(self, request: Request) -> None:
+        sampling_params = request.sampling_params
+        extra_args = None if sampling_params is None else sampling_params.extra_args
+        spec = parse_p4_capture_cohort_spec(extra_args)
+        barrier = self._p4_capture_cohort
+        if spec is None:
+            if barrier is not None:
+                self._fail_p4_capture_cohort(
+                    "an unmarked request entered an active measurement cohort"
+                )
+            return
+
+        if not self._koff_runtime_enabled or self._p4_capture_recorder is None:
+            raise KOffRuntimeError(
+                "P4 capture-cohort requests require the live capture recorder"
+            )
+        if self.scheduler_config.async_scheduling:
+            raise KOffRuntimeError(
+                "P4 capture-cohort requests require synchronous scheduling"
+            )
+        if (
+            not self.scheduler_config.enable_chunked_prefill
+            or self.scheduler_config.max_num_batched_tokens
+            != _P4_CAPTURE_MAX_NUM_BATCHED_TOKENS
+            or self.max_num_scheduled_tokens != _P4_CAPTURE_MAX_NUM_SCHEDULED_TOKENS
+            or self.max_num_running_reqs != _P4_CAPTURE_MAX_NUM_SEQS
+        ):
+            raise KOffRuntimeError(
+                "P4 capture-cohort requests require configured 8192-token "
+                "chunked prefill with an effective 8160-token scheduler budget"
+            )
+        if self.max_num_running_reqs < len(spec.frozen_request_ids):
+            raise KOffRuntimeError(
+                "P4 capture cohort does not fit the configured sequence capacity"
+            )
+        if (
+            sampling_params is None
+            or sampling_params.ignore_eos is not True
+            or request.max_tokens
+            != spec.unmeasured_prefill_tokens + spec.measured_decode_tokens
+            or request.pooling_params is not None
+            or request.resumable
+        ):
+            raise KOffRuntimeError(
+                "P4 capture-cohort frontend work differs from its exact contract"
+            )
+        boot_action_id = self._koff_options.p4_boot_action_id
+        if boot_action_id and spec.action_id != boot_action_id:
+            raise KOffRuntimeError(
+                "P4 capture cohort action differs from the boot-static action"
+            )
+
+        if barrier is None:
+            if self.requests:
+                raise KOffRuntimeError(
+                    "P4 capture cohort requires an otherwise empty synchronous engine"
+                )
+            barrier = P4CaptureCohortBarrier(
+                spec.cohort_id,
+                spec.frozen_request_ids,
+                action_id=spec.action_id,
+                measured_decode_tokens=spec.measured_decode_tokens,
+                unmeasured_prefill_tokens=spec.unmeasured_prefill_tokens,
+            )
+            self._p4_capture_cohort = barrier
+            self._p4_capture_cohort_spec = spec
+        elif spec != self._p4_capture_cohort_spec:
+            self._fail_p4_capture_cohort(
+                "request metadata changed within the frozen measurement cohort"
+            )
+
+        try:
+            barrier.register(request.request_id)
+            if barrier.summary()["registered_request_count"] == len(
+                spec.frozen_request_ids
+            ):
+                barrier.seal()
+        except KOffRuntimeError:
+            self._cancel_p4_capture_cohort_after_failure(barrier)
+            raise
+
+    def _begin_p4_capture_cohort_step(self) -> set[str]:
+        barrier = self._p4_capture_cohort
+        if barrier is None:
+            return set()
+        if self._p4_capture_cohort_step is not None:
+            self._fail_p4_capture_cohort(
+                "a second scheduler step began before output accounting"
+            )
+        if barrier.state == "registering":
+            try:
+                barrier.seal()
+            except KOffRuntimeError:
+                self._cancel_p4_capture_cohort_after_failure(barrier)
+                raise
+
+        snapshots = []
+        for request_id in barrier.abort_request_ids:
+            request = self.requests.get(request_id)
+            if request is not None and not request.is_finished():
+                snapshots.append(self._p4_cohort_request_state(request))
+        try:
+            gate = barrier.begin_step(snapshots)
+        except KOffRuntimeError:
+            self._cancel_p4_capture_cohort_after_failure(barrier)
+            raise
+        self._p4_capture_cohort_step = {
+            "barrier": barrier,
+            "gate": gate,
+            "snapshots": {value.request_id: value for value in snapshots},
+        }
+        return set(gate["held_request_ids"])
+
+    def _validate_p4_capture_cohort_dispatch(
+        self,
+        *,
+        num_scheduled_tokens: dict[str, int],
+        preempted_reqs: list[Request],
+        koff_runtime: Any,
+    ) -> None:
+        step = getattr(self, "_p4_capture_cohort_step", None)
+        if step is None:
+            return
+        barrier: P4CaptureCohortBarrier = step["barrier"]
+        gate = step["gate"]
+        scheduled_ids = tuple(num_scheduled_tokens)
+        active_ids = barrier.abort_request_ids
+        if set(scheduled_ids) - set(active_ids):
+            self._fail_p4_capture_cohort(
+                "a foreign request was scheduled with the measurement cohort"
+            )
+        if preempted_reqs:
+            self._fail_p4_capture_cohort("a measurement-cohort request was preempted")
+
+        if gate["release"]:
+            expected_action = (
+                K4_ACTION_ID
+                if barrier.action_id == W512_ACTION_ID
+                else barrier.action_id
+            )
+            expected_width = 1 if barrier.action_id == OFF_ACTION_ID else 5
+            if (
+                scheduled_ids != active_ids
+                or koff_runtime is None
+                or not koff_runtime.pure_decode
+                or koff_runtime.decode_req_ids != active_ids
+                or koff_runtime.verified_action_id != expected_action
+                or koff_runtime.preemptions
+                or koff_runtime.recomputed_tokens
+                or any(
+                    width != expected_width for width in num_scheduled_tokens.values()
+                )
+            ):
+                self._fail_p4_capture_cohort(
+                    "the first measured release was not one atomic pure decode"
+                )
+
+        if not scheduled_ids:
+            try:
+                barrier.end_step(
+                    scheduled_request_ids=(),
+                    pure_decode=False,
+                    action_id=None,
+                    target_query_widths={},
+                    committed_tokens={},
+                )
+            except KOffRuntimeError:
+                self._cancel_p4_capture_cohort_after_failure(barrier)
+                raise
+            self._p4_capture_cohort_step = None
+
+    def _p4_capture_cohort_arm_k(
+        self, num_scheduled_tokens: dict[str, int]
+    ) -> int | None:
+        """Return the boot action K when this prefill event samples a member."""
+        step = self._p4_capture_cohort_step
+        if step is None or step["gate"]["release"]:
+            return None
+        barrier: P4CaptureCohortBarrier = step["barrier"]
+        snapshots: dict[str, P4CohortRequestState] = step["snapshots"]
+        completes_member = any(
+            request_id in snapshots
+            and snapshots[request_id].num_computed_tokens
+            < snapshots[request_id].num_prompt_tokens
+            and snapshots[request_id].num_computed_tokens + scheduled_tokens
+            >= snapshots[request_id].num_prompt_tokens
+            for request_id, scheduled_tokens in num_scheduled_tokens.items()
+        )
+        if not completes_member:
+            return None
+        return 0 if barrier.action_id == OFF_ACTION_ID else 4
+
+    def get_p4_capture_cohort_history(self) -> tuple[dict[str, Any], ...]:
+        """Return immutable copies of completed or aborted cohort evidence."""
+        return tuple(copy.deepcopy(self._p4_capture_cohort_history))
+
     def schedule(self, throttle_prefills: bool = False) -> SchedulerOutput:
         self.current_step += 1
         # NOTE(woosuk) on the scheduling algorithm:
@@ -480,6 +814,7 @@ class Scheduler(SchedulerInterface):
         scheduled_timestamp = time.monotonic()
 
         self.kv_cache_manager.new_step_starts()
+        p4_held_request_ids = self._begin_p4_capture_cohort_step()
 
         # DP prefill balancing: on a throttled (non-cadence-aligned) step, defer
         # all prefill compute unless saturated.
@@ -491,6 +826,10 @@ class Scheduler(SchedulerInterface):
         req_index = 0
         while req_index < len(self.running) and token_budget > 0:
             request = self.running[req_index]
+
+            if request.request_id in p4_held_request_ids:
+                req_index += 1
+                continue
 
             if (
                 request.num_output_placeholders > 0
@@ -1046,6 +1385,27 @@ class Scheduler(SchedulerInterface):
             if not defer_prefills:
                 self.prefill_capacity_bound = bool(self.waiting)
 
+        koff_aborted_action_id = None
+        koff_discarded_draft_width = 0
+        koff_aborted_draft_request_count = 0
+        if self._koff_runtime_enabled:
+            scheduled_decode_req_ids = [
+                req_id
+                for req_id in num_scheduled_tokens
+                if self.requests[req_id].num_computed_tokens
+                >= self.requests[req_id].num_prompt_tokens
+            ]
+            abort = abort_mixed_decode_drafts(
+                scheduled_decode_req_ids,
+                num_scheduled_tokens,
+                scheduled_spec_decode_tokens,
+                self._koff_draft_action_by_req,
+            )
+            koff_aborted_action_id = abort.action_id
+            koff_discarded_draft_width = abort.draft_width
+            koff_aborted_draft_request_count = abort.request_count
+            token_budget += abort.token_count
+
         # Check if the scheduling constraints are satisfied.
         total_num_scheduled_tokens = sum(num_scheduled_tokens.values())
         assert total_num_scheduled_tokens <= self.max_num_scheduled_tokens
@@ -1110,6 +1470,7 @@ class Scheduler(SchedulerInterface):
         )
 
         # Dynamic speculative decoding: compute optimal K
+        koff_selection_intent = "exploit"
         num_spec_tokens_to_schedule = self.num_spec_tokens
         if self.dynamic_sd_lookup is not None and len(num_scheduled_tokens) > 0:
             num_spec_tokens_to_schedule = self.dynamic_sd_lookup[
@@ -1141,6 +1502,7 @@ class Scheduler(SchedulerInterface):
             # form fired on EVERY drafting step, silently zeroing K on
             # alternate cycles (measured -22% steady decode).
             num_spec_tokens_to_schedule = 0
+            koff_selection_intent = "force_off"
         n_run = max(len(self.running), 1)
         # Phase 82 F4: compiled-policy cell lookup -- K and the accept
         # threshold come from the measured table (nearest cell in
@@ -1153,6 +1515,7 @@ class Scheduler(SchedulerInterface):
             and (self.running or self.waiting)
         ):
             import math
+
             n_load = len(self.running) + len(self.waiting)
             ctx_sum = sum(r.num_computed_tokens for r in self.running) + sum(
                 r.num_prompt_tokens for r in self.waiting
@@ -1161,8 +1524,7 @@ class Scheduler(SchedulerInterface):
             cell = min(
                 self._sd_policy,
                 key=lambda c: (
-                    abs(math.log2(max(c["batch"], 1))
-                        - math.log2(max(n_load, 1))),
+                    abs(math.log2(max(c["batch"], 1)) - math.log2(max(n_load, 1))),
                     abs(c["ctx"] - mean_ctx),
                 ),
             )
@@ -1180,10 +1542,11 @@ class Scheduler(SchedulerInterface):
                         logger.info(
                             "[policy] cell -> b%s/ctx%s opts=%s "
                             "(n_load=%d mean_ctx=%.0f)",
-                            cell["batch"], cell["ctx"],
-                            [(o["K"], o["R"]) for o in
-                             cell.get("options", [])],
-                            n_load, mean_ctx,
+                            cell["batch"],
+                            cell["ctx"],
+                            [(o["K"], o["R"]) for o in cell.get("options", [])],
+                            n_load,
+                            mean_ctx,
                         )
             else:
                 self._sd_policy_pending = key
@@ -1195,8 +1558,7 @@ class Scheduler(SchedulerInterface):
             # argmax over {0} + options; 2% switch penalty (hysteresis);
             # probe bursts keep the signal alive when parked at K=0.
             probing = (
-                self._sd_gate_step % self._sd_probe_interval
-                < self._sd_probe_burst
+                self._sd_gate_step % self._sd_probe_interval < self._sd_probe_burst
             )
             self._sd_gate_step += 1
             f_live = self._sd_accept_ema
@@ -1218,14 +1580,15 @@ class Scheduler(SchedulerInterface):
                 # widening (parked OFF) still drives calibrated
                 # exploration at the resample cadence.
                 import random as _random
+
                 n_rs = envs.VLLM_SELF_SPEC_BANDIT_RESAMPLE
                 step_i = getattr(self, "_sd_bandit_stepi", 0)
                 self._sd_bandit_stepi = step_i + 1
-                if step_i % max(n_rs, 1) == 0 or not hasattr(
-                        self, "_sd_bandit_sample"):
+                if step_i % max(n_rs, 1) == 0 or not hasattr(self, "_sd_bandit_sample"):
                     a_p, b_p = self._sd_bandit_ab
                     self._sd_bandit_sample = _random.betavariate(
-                        max(a_p, 1e-3), max(b_p, 1e-3))
+                        max(a_p, 1e-3), max(b_p, 1e-3)
+                    )
                 f_live = self._sd_bandit_sample
                 # Minimal probe FLOOR (E5e finding): exploration serves
                 # DETECTION, not just estimation -- with probes fully
@@ -1250,18 +1613,26 @@ class Scheduler(SchedulerInterface):
                     k_o, r_o = int(o["K"]), float(o["R"])
                     tau_k = 1.0 + sum(
                         (self._sd_pos_accept[i] / self._sd_pos_reached[i])
-                        if self._sd_pos_reached[i] >= 64 else 1.0
-                        for i in range(min(k_o, 8)))
+                        if self._sd_pos_reached[i] >= 64
+                        else 1.0
+                        for i in range(min(k_o, 8))
+                    )
                     if tau_k / (k_o * r_o + 1) >= 1.0:
                         best_k = k_o
                         break
                 if best_k == 0 and probing and active.get("options"):
                     best_k = int(active["options"][0]["K"])
+                    koff_selection_intent = "probe"
                 if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                     logger.info(
-                        "[ladder] n_run=%d K=%d pos=%s", n_run, best_k,
-                        [f"{a}/{r}" for a, r in zip(
-                            self._sd_pos_accept, self._sd_pos_reached)])
+                        "[ladder] n_run=%d K=%d pos=%s",
+                        n_run,
+                        best_k,
+                        [
+                            f"{a}/{r}"
+                            for a, r in zip(self._sd_pos_accept, self._sd_pos_reached)
+                        ],
+                    )
             else:
                 # Asymmetric hysteresis: disarming is FREE (E0), so OFF's
                 # score is always 1.0 -- staying ON requires S >= 1.0, and
@@ -1279,15 +1650,20 @@ class Scheduler(SchedulerInterface):
                         best_k, best_s = k_o, s_o
                 if best_k == 0 and probing and nz_best_k:
                     best_k = nz_best_k
+                    koff_selection_intent = "probe"
             self._sd_policy_k = best_k
             if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                 cell = self._sd_policy_cell or {}
                 logger.info(
                     "[kpick] step=%d n_run=%d cell=b%s/c%s f=%.3f K=%d",
-                    getattr(self, "_sd_kpick_step", 0), n_run,
-                    cell.get("batch"), cell.get("ctx"), f_live, best_k)
-                self._sd_kpick_step = getattr(
-                    self, "_sd_kpick_step", 0) + 1
+                    getattr(self, "_sd_kpick_step", 0),
+                    n_run,
+                    cell.get("batch"),
+                    cell.get("ctx"),
+                    f_live,
+                    best_k,
+                )
+                self._sd_kpick_step = getattr(self, "_sd_kpick_step", 0) + 1
             num_spec_tokens_to_schedule = min(best_k, self.num_spec_tokens)
         if (
             self._sd_policy is None
@@ -1319,10 +1695,13 @@ class Scheduler(SchedulerInterface):
                 if envs.VLLM_SELF_SPEC_GATE_DEBUG:
                     logger.info(
                         "[ctxveto] n_load=%d mean_ctx=%.0f -> %s",
-                        n_load, mean_ctx, "OFF" if veto else "on",
+                        n_load,
+                        mean_ctx,
+                        "OFF" if veto else "on",
                     )
             if veto:
                 num_spec_tokens_to_schedule = 0
+                koff_selection_intent = "force_off"
         if (
             (self._sd_accept_off_thresh > 0.0 or self._sd_policy is not None)
             and num_spec_tokens_to_schedule > 0
@@ -1342,8 +1721,7 @@ class Scheduler(SchedulerInterface):
                 self._sd_pos_accept = [0] * 8
                 self._sd_pos_reached = [0] * 8
             probing = (
-                self._sd_gate_step % self._sd_probe_interval
-                < self._sd_probe_burst
+                self._sd_gate_step % self._sd_probe_interval < self._sd_probe_burst
             )
             if self._sd_policy is None:
                 self._sd_gate_step += 1
@@ -1361,10 +1739,8 @@ class Scheduler(SchedulerInterface):
             # stale-R tables. Unseen requests now inherit the pooled
             # estimate (no evidence, no pull); an empty pool keeps the
             # phase-82 optimistic init for discovery.
-            seen = [self._sd_req_ema[rid] for rid in run_ids
-                    if rid in self._sd_req_ema]
-            self._sd_accept_ema = (
-                sum(seen) / len(seen) if seen else 1.0)
+            seen = [self._sd_req_ema[rid] for rid in run_ids if rid in self._sd_req_ema]
+            self._sd_accept_ema = sum(seen) / len(seen) if seen else 1.0
             if envs.VLLM_SELF_SPEC_BANDIT:
                 # Per-STEP posterior update (Phase 91): one decay per
                 # step's pooled evidence, half-life 24 drafted tokens.
@@ -1385,9 +1761,7 @@ class Scheduler(SchedulerInterface):
                 off_t = float(self._sd_cell_thresh)
                 on_t = off_t + 0.02
             elif self._sd_thresh_long is not None:
-                run_ctx = sum(
-                    r.num_computed_tokens for r in self.running
-                ) / n_run
+                run_ctx = sum(r.num_computed_tokens for r in self.running) / n_run
                 if run_ctx >= self._sd_thresh_long[0]:
                     off_t = self._sd_thresh_long[1]
                     on_t = off_t + 0.02
@@ -1403,18 +1777,103 @@ class Scheduler(SchedulerInterface):
             if was_off != self._sd_gated_off and envs.VLLM_SELF_SPEC_GATE_DEBUG:
                 logger.info(
                     "[gate] step=%d band=%d n_run=%d ema=%.3f %s",
-                    self._sd_gate_step, self._sd_batch_band, n_run,
+                    self._sd_gate_step,
+                    self._sd_batch_band,
+                    n_run,
                     self._sd_accept_ema,
                     "ON->OFF" if self._sd_gated_off else "OFF->ON",
                 )
-            if (
-                self._sd_gated_off
-                and not probing
-                and self._sd_policy is None
-            ):
+            if self._sd_gated_off and not probing and self._sd_policy is None:
                 # Threshold veto only in hand-rule mode; under a compiled
                 # policy the argmax above already chose K.
                 num_spec_tokens_to_schedule = 0
+                koff_selection_intent = "force_off"
+            elif self._sd_gated_off and self._sd_policy is None:
+                koff_selection_intent = "probe"
+
+        if self._koff_runtime_enabled and any(
+            self.requests[req_id].num_computed_tokens
+            < self.requests[req_id].num_prompt_tokens
+            for req_id in num_scheduled_tokens
+        ):
+            # The strict P3 action registry contains decode graphs only.
+            # Prefill and mixed steps remain observable but cannot dispatch K4.
+            num_spec_tokens_to_schedule = 0
+            koff_selection_intent = "force_off"
+
+        p4_capture_cohort_arm_k = self._p4_capture_cohort_arm_k(num_scheduled_tokens)
+        p4_capture_cohort_arm = p4_capture_cohort_arm_k is not None
+        if p4_capture_cohort_arm:
+            num_spec_tokens_to_schedule = p4_capture_cohort_arm_k
+            koff_selection_intent = "exploit"
+        elif self._p4_capture_cohort_step is not None:
+            barrier = self._p4_capture_cohort_step["barrier"]
+            if barrier.state == "released":
+                num_spec_tokens_to_schedule = (
+                    0 if barrier.action_id == OFF_ACTION_ID else 4
+                )
+                koff_selection_intent = "exploit"
+
+        koff_runtime = None
+        if self._koff_runtime_enabled and total_num_scheduled_tokens > 0:
+            decode_req_ids = [
+                req_id
+                for req_id in num_scheduled_tokens
+                if self.requests[req_id].num_computed_tokens
+                >= self.requests[req_id].num_prompt_tokens
+            ]
+            context_tokens = {
+                req_id: self.requests[req_id].num_computed_tokens
+                for req_id in decode_req_ids
+            }
+            generated_suffixes = {
+                req_id: self.requests[req_id].num_output_tokens
+                for req_id in decode_req_ids
+            }
+            recomputed_tokens = sum(
+                min(
+                    num_scheduled_tokens[req_id],
+                    max(
+                        self.requests[req_id].num_tokens
+                        - 1
+                        - self.requests[req_id].num_computed_tokens,
+                        0,
+                    ),
+                )
+                for req_id in num_scheduled_tokens
+                if self.requests[req_id].num_preemptions > 0
+            )
+            block_pool = self.kv_cache_manager.block_pool
+            blocks_in_use = block_pool.num_gpu_blocks - block_pool.get_num_free_blocks()
+            koff_runtime = make_scheduler_metadata(
+                engine_step_index=self._koff_engine_step_index,
+                next_k=num_spec_tokens_to_schedule,
+                selection_intent=koff_selection_intent,
+                decode_req_ids=decode_req_ids,
+                num_scheduled_tokens=num_scheduled_tokens,
+                scheduled_spec_decode_tokens=scheduled_spec_decode_tokens,
+                draft_action_by_req=self._koff_draft_action_by_req,
+                context_tokens_by_req=context_tokens,
+                generated_suffix_by_req=generated_suffixes,
+                shared_target_kv_blocks_in_use=blocks_in_use,
+                shared_target_kv_block_capacity=block_pool.num_gpu_blocks,
+                preemptions=len(preempted_reqs),
+                recomputed_tokens=recomputed_tokens,
+                scheduled_at_s=scheduled_timestamp,
+                aborted_action_id=koff_aborted_action_id,
+                discarded_draft_width=koff_discarded_draft_width,
+                aborted_draft_request_count=(koff_aborted_draft_request_count),
+                capture_cohort_arm=p4_capture_cohort_arm,
+            )
+            self._koff_engine_step_index += 1
+            for req_id in decode_req_ids:
+                self._koff_draft_action_by_req.pop(req_id, None)
+
+        self._validate_p4_capture_cohort_dispatch(
+            num_scheduled_tokens=num_scheduled_tokens,
+            preempted_reqs=preempted_reqs,
+            koff_runtime=koff_runtime,
+        )
 
         scheduler_output = SchedulerOutput(
             scheduled_new_reqs=new_reqs_data,
@@ -1433,6 +1892,7 @@ class Scheduler(SchedulerInterface):
             free_encoder_mm_hashes=self.encoder_cache_manager.get_freed_mm_hashes(),
             new_block_ids_to_zero=new_block_ids_to_zero,
             num_spec_tokens_to_schedule=num_spec_tokens_to_schedule,
+            koff_runtime=koff_runtime,
         )
 
         # NOTE(Kuntai): this function is designed for multiple purposes:
@@ -1480,6 +1940,8 @@ class Scheduler(SchedulerInterface):
         request.num_computed_tokens = 0
         if request.spec_token_ids:
             request.spec_token_ids = []
+        if self._koff_runtime_enabled:
+            self._koff_draft_action_by_req.pop(request.request_id, None)
         request.num_preemptions += 1
         if self.log_stats:
             request.record_event(EngineCoreEventType.PREEMPTED, timestamp)
@@ -1821,6 +2283,78 @@ class Scheduler(SchedulerInterface):
         )
         return GrammarOutput(structured_output_request_ids, bitmask)
 
+    def _update_p4_capture_cohort_from_output(
+        self,
+        scheduler_output: SchedulerOutput,
+        committed_tokens: dict[str, int],
+        finished_output_tokens: dict[str, int],
+    ) -> None:
+        step = getattr(self, "_p4_capture_cohort_step", None)
+        if step is None:
+            return
+        barrier: P4CaptureCohortBarrier = step["barrier"]
+        if barrier is not self._p4_capture_cohort:
+            raise KOffRuntimeError("P4 capture cohort step lost its active barrier")
+        metadata = scheduler_output.koff_runtime
+        if metadata is None:
+            self._fail_p4_capture_cohort(
+                "a non-empty measurement-cohort step lost K/OFF metadata"
+            )
+
+        scheduled_ids = tuple(scheduler_output.num_scheduled_tokens)
+        snapshots: dict[str, P4CohortRequestState] = step["snapshots"]
+        prefill_progress_tokens = sum(
+            min(
+                scheduler_output.num_scheduled_tokens[request_id],
+                max(
+                    snapshots[request_id].num_prompt_tokens
+                    - snapshots[request_id].num_computed_tokens,
+                    0,
+                ),
+            )
+            for request_id in scheduled_ids
+        )
+        release_or_decode = step["gate"]["release"] or barrier.state == "released"
+        target_query_widths = (
+            {
+                request_id: scheduler_output.num_scheduled_tokens[request_id]
+                for request_id in scheduled_ids
+            }
+            if release_or_decode
+            else {}
+        )
+        same_event_commits = (
+            {request_id: committed_tokens[request_id] for request_id in scheduled_ids}
+            if release_or_decode
+            else {}
+        )
+        invalid_spec_tokens = sum(
+            (scheduler_output.num_invalid_spec_tokens or {}).values()
+        )
+        try:
+            barrier.end_step(
+                scheduled_request_ids=scheduled_ids,
+                pure_decode=metadata.pure_decode,
+                action_id=barrier.action_id if release_or_decode else None,
+                target_query_widths=target_query_widths,
+                committed_tokens=same_event_commits,
+                prefill_progress_tokens=(
+                    0 if release_or_decode else prefill_progress_tokens
+                ),
+                preemptions=metadata.preemptions,
+                recomputed_tokens=metadata.recomputed_tokens,
+                invalid_spec_tokens=invalid_spec_tokens,
+            )
+            self._p4_capture_cohort_step = None
+            for request_id, output_tokens in finished_output_tokens.items():
+                barrier.finish_request(request_id, output_tokens)
+            if barrier.state == "complete":
+                barrier.close()
+                self._archive_p4_capture_cohort(barrier)
+        except KOffRuntimeError:
+            self._cancel_p4_capture_cohort_after_failure(barrier)
+            raise
+
     def update_from_output(
         self,
         scheduler_output: SchedulerOutput,
@@ -1834,6 +2368,45 @@ class Scheduler(SchedulerInterface):
         num_nans_in_logits = model_runner_output.num_nans_in_logits
         kv_connector_output = model_runner_output.kv_connector_output
         cudagraph_stats = model_runner_output.cudagraph_stats
+
+        koff_metadata = scheduler_output.koff_runtime
+        koff_evidence = model_runner_output.koff_runtime_evidence
+        koff_raw_lengths: dict[str, int] = {}
+        koff_accepted_lengths: dict[str, int] = {}
+        koff_committed_lengths: dict[str, int] = {}
+        koff_draft_armed: dict[str, bool] = {}
+        koff_invalid_spec_tokens: dict[str, int] = {}
+        p4_finished_output_tokens: dict[str, int] = {}
+        if self._koff_runtime_enabled and scheduler_output.total_num_scheduled_tokens:
+            if koff_metadata is None:
+                raise KOffRuntimeError("non-empty step is missing K/OFF metadata")
+            if koff_evidence is None:
+                raise KOffRuntimeError("non-empty step is missing runner evidence")
+            identity = (
+                koff_evidence.binding_id,
+                koff_evidence.pool_id,
+                koff_evidence.true_slot_mapping_id,
+                koff_evidence.shared_weight_binding_id,
+            )
+            if self._koff_runtime_identity is None:
+                self._koff_runtime_identity = identity
+            elif identity != self._koff_runtime_identity:
+                raise KOffRuntimeError(
+                    "shared-KV binding, pool, or true slot mapping changed"
+                )
+            for req_id in koff_metadata.decode_req_ids:
+                req_index = model_runner_output.req_id_to_index.get(req_id)
+                if req_index is not None and sampled_token_ids:
+                    koff_raw_lengths[req_id] = len(sampled_token_ids[req_index])
+                else:
+                    koff_raw_lengths[req_id] = 0
+                koff_committed_lengths[req_id] = 0
+                koff_draft_armed[req_id] = bool(
+                    scheduler_output.scheduled_spec_decode_tokens.get(req_id)
+                )
+                koff_invalid_spec_tokens[req_id] = (
+                    scheduler_output.num_invalid_spec_tokens or {}
+                ).get(req_id, 0)
 
         # Every GPU write enqueued by this and earlier steps has completed, so it is
         # safe to return deferred-free blocks to the pool.
@@ -1908,12 +2481,16 @@ class Scheduler(SchedulerInterface):
             scheduled_spec_token_ids = (
                 scheduler_output.scheduled_spec_decode_tokens.get(req_id)
             )
+            if req_id in koff_raw_lengths:
+                koff_accepted_lengths[req_id] = 0
             if scheduled_spec_token_ids and (
                 generated_token_ids or self.num_sampled_tokens_per_step == 0
             ):
                 num_draft_tokens = len(scheduled_spec_token_ids)
                 num_sampled = self.num_sampled_tokens_per_step
                 num_accepted = max(len(generated_token_ids) - num_sampled, 0)
+                if req_id in koff_accepted_lengths:
+                    koff_accepted_lengths[req_id] = num_accepted
                 num_rejected = num_draft_tokens - num_accepted
                 if self._sd_accept_off_thresh > 0.0 or envs.VLLM_SELF_SPEC_POLICY_FILE:
                     # Per-REQUEST accept EMA: the regime unit at small
@@ -1923,8 +2500,8 @@ class Scheduler(SchedulerInterface):
                     ema = self._sd_req_ema.get(req_id, 1.0)
                     w = num_draft_tokens / (num_draft_tokens + 24)
                     self._sd_req_ema[req_id] = (
-                        (1 - w) * ema + w * num_accepted / num_draft_tokens
-                    )
+                        1 - w
+                    ) * ema + w * num_accepted / num_draft_tokens
                     # 96/W6 item 4b: position-resolved acceptance. Chain
                     # verify truncates at the first rejection, so positions
                     # 0..num_accepted-1 accepted and position num_accepted
@@ -1938,10 +2515,8 @@ class Scheduler(SchedulerInterface):
                     if num_accepted < min(num_draft_tokens, 8):
                         self._sd_pos_reached[num_accepted] += 1
                     if self._sd_pos_reached[0] >= 8192:
-                        self._sd_pos_accept = [
-                            a // 2 for a in self._sd_pos_accept]
-                        self._sd_pos_reached = [
-                            r // 2 for r in self._sd_pos_reached]
+                        self._sd_pos_accept = [a // 2 for a in self._sd_pos_accept]
+                        self._sd_pos_reached = [r // 2 for r in self._sd_pos_reached]
                     if envs.VLLM_SELF_SPEC_BANDIT:
                         # Phase 91: accumulate step-level evidence; the
                         # posterior update (with its 24-drafted-token
@@ -2010,6 +2585,9 @@ class Scheduler(SchedulerInterface):
                     request.resumable = False
                     stopped = True
 
+            if req_id in koff_committed_lengths:
+                koff_committed_lengths[req_id] = len(new_token_ids)
+
             routed_experts = None
             if (
                 self.enable_return_routed_experts
@@ -2052,6 +2630,9 @@ class Scheduler(SchedulerInterface):
 
             finish_reason = None
             if stopped:
+                barrier = getattr(self, "_p4_capture_cohort", None)
+                if barrier is not None and req_id in barrier.abort_request_ids:
+                    p4_finished_output_tokens[req_id] = request.num_output_tokens
                 # Capture finish_reason BEFORE _handle_stopped_request, which may
                 # reset the status to WAITING for streaming requests that continue.
                 finish_reason = request.get_finished_reason()
@@ -2111,6 +2692,51 @@ class Scheduler(SchedulerInterface):
         if stopped_preempted_reqs:
             # This is a rare case and unlikely to impact performance.
             self.waiting.remove_requests(stopped_preempted_reqs)
+
+        self._update_p4_capture_cohort_from_output(
+            scheduler_output,
+            koff_committed_lengths,
+            p4_finished_output_tokens,
+        )
+
+        if koff_metadata is not None:
+            assert koff_evidence is not None
+            num_invalid = sum((scheduler_output.num_invalid_spec_tokens or {}).values())
+            elapsed_s = time.monotonic() - koff_metadata.scheduled_at_s
+            record = build_live_step_record(
+                metadata=koff_metadata,
+                evidence=koff_evidence,
+                raw_generated_lengths=koff_raw_lengths,
+                committed_lengths=koff_committed_lengths,
+                invalid_spec_tokens=num_invalid,
+                elapsed_s=elapsed_s,
+            )
+            self._koff_last_record = record
+            if self._koff_trace_writer is not None:
+                self._koff_trace_writer.write(record)
+            if self._p4_capture_recorder is not None and koff_metadata.decode_req_ids:
+                if self._koff_options.p4_capture_config_path:
+                    capacity = self.kv_cache_manager.block_pool.num_gpu_blocks
+                    if koff_metadata.shared_target_kv_block_capacity != capacity:
+                        raise KOffRuntimeError(
+                            "P4 scheduler metadata shared-KV capacity changed"
+                        )
+                    validate_p4_shared_kv_capacity(
+                        capacity,
+                        self._koff_options.p4_min_kv_blocks,
+                    )
+                event = build_same_event_record(
+                    capture_id=self._p4_capture_recorder.capture_id,
+                    metadata=koff_metadata,
+                    evidence=koff_evidence,
+                    accepted_draft_tokens=koff_accepted_lengths,
+                    raw_generated_tokens=koff_raw_lengths,
+                    committed_tokens=koff_committed_lengths,
+                    draft_armed=koff_draft_armed,
+                    invalid_spec_tokens=koff_invalid_spec_tokens,
+                    elapsed_s=elapsed_s,
+                )
+                self._p4_capture_recorder.record(event, koff_evidence)
 
         if failed_kv_load_req_ids and not self.recompute_kv_load_failures:
             requests = [self.requests[req_id] for req_id in failed_kv_load_req_ids]
@@ -2291,6 +2917,12 @@ class Scheduler(SchedulerInterface):
                 self.encoder_cache_manager.free_encoder_input(request, input_id)
 
     def update_draft_token_ids(self, draft_token_ids: DraftTokenIds) -> None:
+        koff_action = None
+        if self._koff_runtime_enabled:
+            koff_action = validate_draft_token_batch(
+                draft_token_ids.koff_action_id,
+                draft_token_ids.draft_token_ids,
+            )
         for req_id, spec_token_ids in zip(
             draft_token_ids.req_ids,
             draft_token_ids.draft_token_ids,
@@ -2300,10 +2932,27 @@ class Scheduler(SchedulerInterface):
                 # The request may have been finished. Skip.
                 continue
 
+            barrier = self._p4_capture_cohort
+            if (
+                barrier is not None
+                and barrier.state == "prefilling"
+                and req_id in barrier.abort_request_ids
+                and request.num_computed_tokens >= request.num_prompt_tokens
+                and request.num_output_tokens == barrier.unmeasured_prefill_tokens
+                and request.spec_token_ids
+            ):
+                if self._koff_draft_action_by_req.get(req_id) != K4_ACTION_ID:
+                    self._fail_p4_capture_cohort(
+                        "a held request lost its armed K4 provenance"
+                    )
+                continue
+
             if request.is_prefill_chunk:
                 # Ignore draft tokens for prefill chunks.
                 if request.spec_token_ids:
                     request.spec_token_ids = []
+                if self._koff_runtime_enabled:
+                    self._koff_draft_action_by_req.pop(req_id, None)
                 continue
 
             # Add newly generated spec token ids to the request.
@@ -2311,11 +2960,31 @@ class Scheduler(SchedulerInterface):
                 metadata = request.structured_output_request
                 spec_token_ids = metadata.grammar.validate_tokens(spec_token_ids)  # type: ignore[union-attr]
             request.spec_token_ids = spec_token_ids
+            if koff_action is not None:
+                self._koff_draft_action_by_req[req_id] = koff_action.action_id
 
     def update_draft_token_ids_in_output(
         self, draft_token_ids: DraftTokenIds, scheduler_output: SchedulerOutput
     ) -> None:
         num_invalid_spec_tokens: dict[str, int] = {}
+
+        if self._koff_runtime_enabled:
+            action = validate_draft_token_batch(
+                draft_token_ids.koff_action_id,
+                draft_token_ids.draft_token_ids,
+            )
+            metadata = scheduler_output.koff_runtime
+            if metadata is None:
+                raise KOffRuntimeError(
+                    "async draft tokens target output without K/OFF metadata"
+                )
+            if (
+                metadata.verified_action_id is not None
+                and metadata.verified_action_id != action.action_id
+            ):
+                raise KOffRuntimeError(
+                    "async draft action does not match the deferred target action"
+                )
 
         sched_spec_tokens = scheduler_output.scheduled_spec_decode_tokens
         for req_id, spec_token_ids in zip(
@@ -2369,6 +3038,7 @@ class Scheduler(SchedulerInterface):
                 # Streaming-input session finished.
                 self.finish_requests(request.request_id, RequestStatus.FINISHED_ABORTED)
         else:
+            self._register_p4_capture_cohort_request(request)
             if request.resumable:
                 request.streaming_queue = deque()
             self._enqueue_waiting_request(request)
@@ -2394,11 +3064,23 @@ class Scheduler(SchedulerInterface):
         """
         assert RequestStatus.is_finished(finished_status)
         if isinstance(request_ids, str):
-            request_ids = (request_ids,)
+            request_ids = {request_ids}
         elif request_ids is not None:
             request_ids = set(request_ids)
         else:
-            request_ids = self.requests.keys()
+            request_ids = set(self.requests)
+
+        barrier = self._p4_capture_cohort
+        if barrier is not None:
+            aborted_member_ids = [
+                request_id
+                for request_id in barrier.abort_request_ids
+                if request_id in request_ids
+            ]
+            if aborted_member_ids:
+                abort_ids = barrier.abort_member(aborted_member_ids[0])
+                self._archive_p4_capture_cohort(barrier)
+                request_ids.update(abort_ids)
 
         running_requests_to_remove = set()
         waiting_requests_to_remove = []
@@ -2450,6 +3132,8 @@ class Scheduler(SchedulerInterface):
         connector_delay_free_blocks, kv_xfer_params = self._connector_finished(request)
         self.encoder_cache_manager.free(request)
         request_id = request.request_id
+        if self._koff_runtime_enabled:
+            self._koff_draft_action_by_req.pop(request_id, None)
         self.finished_req_ids.add(request_id)
         if self.finished_req_ids_dict is not None:
             self.finished_req_ids_dict[request.client_index].add(request_id)
@@ -2677,6 +3361,16 @@ class Scheduler(SchedulerInterface):
 
     def shutdown(self) -> None:
         logger.debug_once("[shutdown] Scheduler: start")
+        cohort_error: KOffRuntimeError | None = None
+        barrier = self._p4_capture_cohort
+        if barrier is not None:
+            try:
+                barrier.close()
+            except KOffRuntimeError as exc:
+                cohort_error = exc
+                self._cancel_p4_capture_cohort_after_failure(barrier)
+        if self._p4_capture_recorder is not None:
+            self._p4_capture_recorder.close()
         if self.kv_event_publisher:
             self.kv_event_publisher.shutdown()
         if self.connector is not None:
@@ -2686,6 +3380,8 @@ class Scheduler(SchedulerInterface):
             self.ec_connector.shutdown()
 
         logger.debug_once("[shutdown] Scheduler: complete")
+        if cohort_error is not None:
+            raise cohort_error
 
     ########################################################################
     # KV Connector Related Methods

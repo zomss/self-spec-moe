@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "artifact_id": "p4-b0-gpu-contention-probe-v1-diagnosis",
+  "status": "complete",
+  "classification": "launcher_port_preflight_collision_ephemeral_range",
+  "authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v1.json",
+    "sha256": "2f6b1980036f24e67f6e8064e69ef4d112004c458df621b296a2d89a8c156629",
+    "bytes": 10324
+  },
+  "failure": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1/failure.json",
+    "sha256": "a7c8dd07e2a3e53aec23eaa86bdcc7f24d41af55097c8b224e6117b9f6b17a43",
+    "bytes": 632
+  },
+  "completed_serial_results": {
+    "serial-gpu0": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1/serial-gpu0/child_result.json",
+      "sha256": "ce3f3cda5158923d859e734080f4e2e19811680f3fce48af4ecdcf9ff756495c",
+      "bytes": 2383
+    },
+    "serial-gpu1": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1/serial-gpu1/child_result.json",
+      "sha256": "0cb1a6035f5c50a6e19ca625f2eb057e51e7f54ba58905c25430c2d09ce58e70",
+      "bytes": 2382
+    }
+  },
+  "diagnostic": {
+    "failed_stage": "preflight_before_concurrent_pair",
+    "failed_registered_range": [47200, 47299],
+    "host_ephemeral_range": [32768, 60999],
+    "observed_conflict": {
+      "local_endpoint": "127.0.0.1:47296",
+      "remote_endpoint": "127.0.0.1:34329",
+      "state": "ESTABLISHED",
+      "owner_pid": 2219456,
+      "owner_process": "MainThread",
+      "probe_process": false
+    },
+    "root_cause": "registered rendezvous range overlapped host ephemeral ports",
+    "model_or_runtime_invariant_failure": false,
+    "gpu_fault_observed": false,
+    "serial_gpu0_episode_passed": true,
+    "serial_gpu1_episode_passed": true,
+    "concurrent_gpu_children_started": false
+  },
+  "disposition": {
+    "v1_authorization_consumed": true,
+    "v1_output_preserved_without_overwrite": true,
+    "v1_serial_results_reusable": false,
+    "v1_partial_resume_allowed": false,
+    "v1_retry_allowed": false,
+    "dual_gpu_value_screen_authorized": false,
+    "value_screen_scoring_authorized": false,
+    "fresh_authorization_required": true
+  },
+  "repair_boundary": {
+    "use_non_ephemeral_rendezvous_ranges": true,
+    "checked_fresh_candidate_range": [20000, 20399],
+    "candidate_range_free_at_diagnosis": true,
+    "rerun_complete_serial_and_concurrent_matrix": true,
+    "reuse_v1_serial_measurements": false
+  }
+}

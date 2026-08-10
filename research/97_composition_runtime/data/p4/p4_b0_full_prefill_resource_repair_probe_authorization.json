@@ -1,0 +1,125 @@
+{
+  "schema_version": 2,
+  "package_id": "p4-b0-full-prefill-resource-repair-probe-v2",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_memory_repair_probe_only",
+  "source_artifacts": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "prior_probe_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_probe_authorization.json",
+      "sha256": "dc8dbe8f9cf3f4b9a99361506ad5ea8ca1f60c41154f552658184e8cb24476f1"
+    },
+    "prior_probe_result": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_probe.json",
+      "sha256": "cbb2987d4e47a96fe179db50535d5363e5d7e7173a2fe6f00b700aa4f741f817"
+    },
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "c47eb1c0bc3d500a83e05f4b19ebf5b706173da2a6fcf802bc4e5b780709a9e9"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "13fc9dde514cafec44da9658c5c222cd5db51009bedad428a322f911f1a11821"
+    },
+    "base_probe_script": {
+      "path": "research/97_composition_runtime/scripts/probe_p4_b0_full_prefill_resource.py",
+      "sha256": "2b7042f1eccb87d0e4dc67e4890a7e0c8da426f710a55c2cdb55955662a8f621"
+    },
+    "repair_probe_script": {
+      "path": "research/97_composition_runtime/scripts/probe_p4_b0_full_prefill_resource_repair.py",
+      "sha256": "552b1b251b784b1d048a298736669806dc3dbdb9d0637ac1de2e7c54f88a1f3e"
+    },
+    "repair_probe_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_full_prefill_resource_repair_probe.py",
+      "sha256": "abf6cdaffdcb3a9cfaa4085c34618f38e554be35e2eb627a4389b0b17009bb1a"
+    },
+    "repair_probe_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_full_prefill_resource_repair_probe.schema.json",
+      "sha256": "6287c19919df1a45f2d719cb71ce1f7dfdfaa4cb3b17026f3e78965c7256226f"
+    }
+  },
+  "probe_contract": {
+    "physical_gpu_index": 4,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "max_num_batched_tokens": 114688,
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.96,
+    "speculative_slot_reserve": 32,
+    "effective_scheduler_token_budget": 114656,
+    "max_microbatch_prompt_tokens": 112908,
+    "minimum_shared_kv_blocks": 21682,
+    "invocation": {
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/probe_p4_b0_full_prefill_resource_repair.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe_authorization.json",
+        "--output",
+        "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe.json"
+      ],
+      "output": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe.json",
+      "create_new_output": true
+    }
+  },
+  "memory_repair": {
+    "changed_engine_field": "gpu_memory_utilization",
+    "prior_value": 0.9,
+    "probe_value": 0.96,
+    "all_other_engine_fields_unchanged": true,
+    "prior_num_gpu_blocks": 19928,
+    "required_additional_blocks": 1754,
+    "projected_num_gpu_blocks": 22102,
+    "projection_is_authority": false
+  },
+  "serving_chunked_prefill_boundary": {
+    "scope": "post_measurement_real_serving_diagnosis",
+    "max_num_batched_tokens": 8192,
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.9,
+    "measurement_override_is_serving_default": false,
+    "mixed_prefill_decode_diagnosis_required": true
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_full_prefill_memory_repair_probe_only",
+    "invalidated_by": [
+      "source_hash_drift",
+      "output_exists",
+      "gpu_identity_drift",
+      "probe_contract_drift",
+      "memory_repair_drift",
+      "serving_boundary_drift"
+    ]
+  },
+  "claims": {
+    "full_screen_run_ready": false,
+    "resource_capacity_measured": false,
+    "serving_configuration_validated": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "gpu_resource_probe": true,
+    "gpu_value_screen": false,
+    "serving_diagnosis": false,
+    "p4a_engineering": false,
+    "action_admission": false
+  },
+  "execution_policy": {
+    "fallback_gpu_authorized": false,
+    "model_initializations": 1,
+    "requests_executed": 0,
+    "create_new_output_required": true,
+    "partial_resume_allowed": false,
+    "on_any_failure": "stop_and_require_fresh_resource_probe_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_full_prefill_resource_repair_probe_result",
+    "passing_result_may_support_v5_review": true,
+    "authorizes_v5": false
+  }
+}

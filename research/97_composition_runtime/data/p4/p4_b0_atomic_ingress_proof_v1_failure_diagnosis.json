@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_atomic_ingress_proof_failure_diagnosis",
+  "status": "failed_before_model_load",
+  "scored": false,
+  "package_id": "p4-b0-atomic-ingress-proof-v1",
+  "authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization.json",
+    "sha256": "0af3504defd834d22eb217c6036109196a6c267312186c810e3a141ae6b8e9ab"
+  },
+  "preparation": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/preparation.json",
+    "sha256": "dfeeafa22b820b6d49688f02ca232bf45704826701624761649c543808950147"
+  },
+  "failure": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v1/failure.json",
+    "sha256": "2502fe7c7640b697bdcab8af734e9b464ee4d7392ca197867ac7eca2fe24d25c"
+  },
+  "observed_exception": {
+    "type": "ValueError",
+    "message": "invalid literal for int() with base 10: ''",
+    "origin": "vllm/envs.py:VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS"
+  },
+  "cause": "The proof disabled P4 capture conformance by assigning an empty string to the integer minimum-KV-block environment variable. Environment parsing failed before GPUModelRunner construction completed.",
+  "repair": {
+    "field": "VLLM_SELF_SPEC_P4_MIN_KV_BLOCKS",
+    "old_value": "",
+    "new_value": "0",
+    "semantic_effect": "disable P4 capture conformance without changing K/OFF tracing or shared target KV"
+  },
+  "attempt": {
+    "engine_core_selected": "InprocClient",
+    "model_weights_loaded": false,
+    "engine_steps_executed": 0,
+    "trace_emitted": false,
+    "capture_emitted": false,
+    "score_emitted": false,
+    "retry_attempted": false,
+    "gpu4_returned_to_zero_mib": true
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "output_immutable": true,
+    "fresh_authorization_required": true,
+    "v6_authorized": false
+  }
+}

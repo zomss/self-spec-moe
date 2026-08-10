@@ -1,0 +1,90 @@
+{
+  "gpu_executed": false,
+  "package_id": "p4-b0-full-prefill-ingress-diagnosis-v1",
+  "preflight": {
+    "gpu_memory_used_mib": 0,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "sampler": "native"
+  },
+  "record_type": "p4_b0_full_prefill_ingress_diagnosis_preparation",
+  "run_contract": {
+    "engine": {
+      "async_scheduling": false,
+      "dynamic_k_schedule": [
+        [
+          1,
+          32,
+          0
+        ],
+        [
+          33,
+          33,
+          4
+        ]
+      ],
+      "effective_scheduler_token_budget": 114656,
+      "enable_chunked_prefill": true,
+      "enforce_eager": false,
+      "gpu_memory_utilization": 0.96,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 114688,
+      "max_num_seqs": 32,
+      "native_sampler": true,
+      "prefix_caching": false
+    },
+    "gpu": {
+      "fallback_authorized": false,
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51"
+    },
+    "invocation": {
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_full_prefill_ingress_diagnosis.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_full_prefill_ingress_diagnosis_authorization.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1"
+      ],
+      "create_new": true,
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_full_prefill_ingress_diagnosis_v1"
+    },
+    "model": {
+      "draft_kv_source": "target_shared_cache",
+      "draft_weight_source": "target_alias",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_kv_dtype": "bfloat16",
+      "target_quantization": null
+    },
+    "workload": {
+      "capture_id": "capture-b1-p1-off-r4-s0-r1",
+      "generation_seed": 0,
+      "ignore_eos": true,
+      "max_output_tokens_per_request": 16,
+      "prompt_record_ids": [
+        "R4-s0-p000",
+        "R4-s0-p001",
+        "R4-s0-p002",
+        "R4-s0-p003",
+        "R4-s0-p004",
+        "R4-s0-p005",
+        "R4-s0-p006",
+        "R4-s0-p007"
+      ],
+      "prompt_token_counts": [
+        8077,
+        7839,
+        8368,
+        8435,
+        7836,
+        7876,
+        8597,
+        8172
+      ],
+      "temperature": 0.0,
+      "total_prompt_tokens": 65200
+    }
+  },
+  "schema_version": 1,
+  "scored": false
+}

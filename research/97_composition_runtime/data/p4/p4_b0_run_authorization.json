@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-value-screen-run-authorization-v1",
+  "date": "2026-08-09",
+  "status": "hold_executable_not_ready",
+  "source_artifacts": {
+    "value_screen_preregistration": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_value_screen_prereg.json",
+      "sha256": "536f2ba56b162ce38569bcbbbe1b43b0fc40fe50b04dedbdf5f576313092b234"
+    },
+    "runner_scorer_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_runner_scorer_contract.json",
+      "sha256": "6bb1de6a2b13725c5b8d3637e024da2dd52e18212a504b9bd384e73a90274736"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "live_recorder_wiring": {
+      "path": "research/97_composition_runtime/data/p4/p4_live_recorder_wiring.json",
+      "sha256": "188dec31061cde98e6534f497e940757f96b073192b4c37fa1d1d5711805e745"
+    },
+    "w512_equivalence": {
+      "path": "research/97_composition_runtime/data/p4/p4_w512_acceptance_equivalence.json",
+      "sha256": "67f6ac822acf208eb7147e386fdd67f7559d9c07460d9c82dd7d1d9297bdd5a1"
+    },
+    "resource_bound": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_conservative_resource_bound.json",
+      "sha256": "228da050563759abb4b4acc2d1915f91b77f1fa69e2d485a18c68a202fdf6609"
+    },
+    "measurement_adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "live_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "37c84eda8ce974688b39b4b8f51934b9a3ccd3e48c862aef204e70049bdc9592"
+    },
+    "live_scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "66381595d235192c10ad15f02b5dfec5b7442f95e45a4ed9ab31eb999490960f"
+    }
+  },
+  "evidence_readiness": {
+    "state": "complete",
+    "satisfied": [
+      "research_objective_and_weights_frozen",
+      "same_event_contract_registered",
+      "matched_action_set_frozen",
+      "legacy_w14d_disposition_fixed",
+      "exact_prompt_manifest_frozen",
+      "same_event_measurement_adapter_frozen",
+      "runner_scorer_frozen",
+      "same_event_live_recorder_wiring",
+      "w512_mask_equivalence_proven",
+      "conservative_resource_bound_complete"
+    ],
+    "remaining": []
+  },
+  "run_contract": {
+    "screen_id": "p4-b0-off-k4-w512-value-screen-v1",
+    "scope": "boot_static_acceptance_screen_only",
+    "repository_commit": "cc8ed50f22568a4f6b88b299e9c47ebba7a8046a",
+    "model": {
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_path": "target-matching-alias"
+    },
+    "gpu_assignment": {
+      "cuda_visible_devices": "4",
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+      "model": "NVIDIA H100 80GB HBM3",
+      "memory_mib": 81559,
+      "all_nine_boots_same_gpu": true,
+      "fallback_gpu": {
+        "physical_index": 5,
+        "uuid": "GPU-318614e3-fd51-31a9-399d-9e94cb767967",
+        "authorized": false
+      }
+    },
+    "engine": {
+      "tensor_parallel_size": 1,
+      "pipeline_parallel_size": 1,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "gpu_memory_utilization": 0.9,
+      "num_speculative_tokens": 4,
+      "async_scheduling": false,
+      "prefix_caching": false,
+      "flashinfer_autotune": false,
+      "enforce_eager": false,
+      "generation_seed": 0
+    },
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TOKENIZERS_PARALLELISM": "false",
+      "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+      "VLLM_SELF_SPEC_SHARED_KV": "1",
+      "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+      "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1",
+      "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+      "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+      "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "0",
+      "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+      "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+      "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+      "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULLCG": "0"
+    },
+    "action_boots": [
+      {
+        "action_id": "off",
+        "window_tokens": 0,
+        "sink_tokens": 0,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            0
+          ],
+          [
+            33,
+            33,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      },
+      {
+        "action_id": "target-matching-k4",
+        "window_tokens": 0,
+        "sink_tokens": 0,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      },
+      {
+        "action_id": "target-matching-w512-masked-k4",
+        "window_tokens": 512,
+        "sink_tokens": 16,
+        "dynamic_k_schedule": [
+          [
+            1,
+            32,
+            4
+          ]
+        ],
+        "cost_credit_allowed": false
+      }
+    ],
+    "matrix": {
+      "boot_blocks": [
+        {
+          "block_id": 1,
+          "action_order": [
+            "off",
+            "target-matching-k4",
+            "target-matching-w512-masked-k4"
+          ]
+        },
+        {
+          "block_id": 2,
+          "action_order": [
+            "target-matching-k4",
+            "target-matching-w512-masked-k4",
+            "off"
+          ]
+        },
+        {
+          "block_id": 3,
+          "action_order": [
+            "target-matching-w512-masked-k4",
+            "off",
+            "target-matching-k4"
+          ]
+        }
+      ],
+      "physical_boot_count": 9,
+      "cells_per_boot": 48,
+      "raw_capture_count": 432,
+      "adapted_round_count": 432,
+      "rounds_per_regime_seed": 4,
+      "prompts_per_cell": 32
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v1"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v1",
+      "overwrite_allowed": false,
+      "runner_exists": false,
+      "launchable_now": false
+    }
+  },
+  "resource_gates": {
+    "base_available_shared_kv_blocks": 24529,
+    "conservative_floor_blocks": 21682,
+    "required_live_kv_blocks": 21000,
+    "minimum_launch_capacity_blocks": 21682,
+    "single_target_owned_pool_required": true,
+    "preemption_allowed": false,
+    "recomputation_allowed": false,
+    "on_violation": "stop_without_scoring"
+  },
+  "implementation_audit": {
+    "state": "fail",
+    "checks": [
+      {
+        "code": "w512_boot_contract_blocked",
+        "status": "fail",
+        "evidence": "validate_boot_config requires draft_kv_window == 0, so the registered window=512 boot is rejected."
+      },
+      {
+        "code": "w512_recorder_action_blocked",
+        "status": "fail",
+        "evidence": "P4SameEventRecorder._ACTION_REALIZATIONS contains only OFF and K4 and rejects the w512 action id."
+      },
+      {
+        "code": "multi_cell_same_boot_capture_missing",
+        "status": "fail",
+        "evidence": "The recorder owns one config/output cell and the required 48-cell-per-boot matrix runner does not exist."
+      },
+      {
+        "code": "boot_static_action_relabel_missing",
+        "status": "fail",
+        "evidence": "Same-event action ids are resolved from the OFF/K4 live registry; no fail-closed boot-static w512 relabel binds K4 events to the w512 realization."
+      },
+      {
+        "code": "logical_weight_version_unstable",
+        "status": "fail",
+        "evidence": "The recorder replaces the logical draft-weight version with a storage-pointer-derived alias id that cannot remain stable across nine boots."
+      },
+      {
+        "code": "runtime_resource_floor_guard_missing",
+        "status": "fail",
+        "evidence": "The live capture path records KV capacity but does not stop launch/capture below the registered 21,682-block conservative floor."
+      }
+    ]
+  },
+  "decision": {
+    "state": "hold",
+    "reason_codes": [
+      "w512_boot_contract_blocked",
+      "w512_recorder_action_blocked",
+      "multi_cell_same_boot_capture_missing",
+      "boot_static_action_relabel_missing",
+      "logical_weight_version_unstable",
+      "runtime_resource_floor_guard_missing"
+    ],
+    "reapproval_required_after_conformance": true
+  },
+  "claims": {
+    "evidence_readiness_complete": true,
+    "executable_run_ready": false,
+    "exact_invocation_registered": true,
+    "gpu_run_performed": false,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_capture_runner_conformance",
+    "must_clear": [
+      "w512_boot_contract_blocked",
+      "w512_recorder_action_blocked",
+      "multi_cell_same_boot_capture_missing",
+      "boot_static_action_relabel_missing",
+      "logical_weight_version_unstable",
+      "runtime_resource_floor_guard_missing"
+    ],
+    "may_self_authorize_gpu": false
+  }
+}

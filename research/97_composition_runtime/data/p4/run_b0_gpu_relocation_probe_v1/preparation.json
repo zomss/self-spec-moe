@@ -1,0 +1,31 @@
+{
+  "authorization": {
+    "bytes": 10298,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v1.json",
+    "sha256": "c8d9e143d91ac16d113805645109ebee60d3e6982d9d753da940a48bb3f29241"
+  },
+  "concurrent_physical_boots": 2,
+  "gpu_preflight": [
+    {
+      "active_processes": [],
+      "case_id": "isolated-r8",
+      "memory_used_mib": 0,
+      "name": "NVIDIA H100 80GB HBM3",
+      "physical_index": 0,
+      "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+    },
+    {
+      "active_processes": [],
+      "case_id": "r5cot-to-r8",
+      "memory_used_mib": 0,
+      "name": "NVIDIA H100 80GB HBM3",
+      "physical_index": 1,
+      "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+    }
+  ],
+  "output_dir": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1",
+  "record_type": "p4_b0_r5cot_r8_diagnosis_preparation",
+  "schema_version": 1,
+  "scored": false,
+  "v10_output_reused": false
+}

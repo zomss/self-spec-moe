@@ -1,0 +1,181 @@
+{
+  "active_stage_at_exit": "r8-first",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-isolated-r8",
+  "authorization": {
+    "bytes": 8877,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization_v2.json",
+    "sha256": "8fceecacae885465320a5f586101151b3b36b84927d72e1ab70739574e7ce220"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "isolated-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": true,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [],
+  "gpu": {
+    "physical_index": 0,
+    "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "instrumentation": {
+    "draft_step0_input": {
+      "batch_size": 16,
+      "max_query_len": 344,
+      "num_actual_tokens": 2116,
+      "num_tokens": 2116,
+      "num_tokens_mod_batch_size": 4,
+      "uniform_query_width": null
+    },
+    "drafter_post_step": {
+      "last_chain_runtime_mode": "PIECEWISE",
+      "last_step0_query_width": null,
+      "last_step0_runtime_mode": "NONE"
+    },
+    "runner_evidence_attempt": {
+      "draft_chain_runtime_mode": "PIECEWISE",
+      "draft_output_shape": [
+        16,
+        4
+      ],
+      "draft_step0_query_width": null,
+      "draft_step0_runtime_mode": "NONE",
+      "metadata": {
+        "aborted_action_id": null,
+        "aborted_draft_request_count": 0,
+        "capture_cohort_arm": true,
+        "decode_req_ids": [],
+        "discarded_draft_width": 0,
+        "engine_step_index": 0,
+        "generated_suffix_max": null,
+        "generated_suffix_min": null,
+        "next_action_id": "target-matching-k4",
+        "preemptions": 0,
+        "pure_decode": false,
+        "recomputed_tokens": 0,
+        "scheduled_at_s": 242464.123572162,
+        "selection_intent": "exploit",
+        "shared_target_kv_block_capacity": 24527,
+        "shared_target_kv_blocks_in_use": 145,
+        "total_scheduled_kv_tokens": 0,
+        "verified_action_id": null
+      },
+      "proposal_called": true
+    },
+    "runner_evidence_exception": {
+      "message": "target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming",
+      "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 472, in make_evidence_wrapper\n    return original_make_evidence(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 1482, in make_runner_evidence\n    raise KOffRuntimeError(\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming\n",
+      "type": "KOffRuntimeError"
+    },
+    "scheduler_snapshots": [
+      {
+        "cached_request_ids": [],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 0,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 242464.123572162,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "new_request_ids": [
+          "R8-s0-p000-976b54a5",
+          "R8-s0-p001-9699c3e3",
+          "R8-s0-p002-9a73764e",
+          "R8-s0-p003-8e9ecc4d",
+          "R8-s0-p004-97471538",
+          "R8-s0-p005-892761f9",
+          "R8-s0-p006-bde1051f",
+          "R8-s0-p007-a18bc734",
+          "R8-s0-p008-a93f9684",
+          "R8-s0-p009-bc8bc2ed",
+          "R8-s0-p010-9c8c0b6d",
+          "R8-s0-p011-a4e95c65",
+          "R8-s0-p012-9ce89ca1",
+          "R8-s0-p013-a0bd4f92",
+          "R8-s0-p014-a47a76c1",
+          "R8-s0-p015-9da1aad0"
+        ],
+        "num_scheduled_tokens": {
+          "R8-s0-p000-976b54a5": 83,
+          "R8-s0-p001-9699c3e3": 84,
+          "R8-s0-p002-9a73764e": 61,
+          "R8-s0-p003-8e9ecc4d": 247,
+          "R8-s0-p004-97471538": 68,
+          "R8-s0-p005-892761f9": 50,
+          "R8-s0-p006-bde1051f": 102,
+          "R8-s0-p007-a18bc734": 47,
+          "R8-s0-p008-a93f9684": 54,
+          "R8-s0-p009-bc8bc2ed": 73,
+          "R8-s0-p010-9c8c0b6d": 262,
+          "R8-s0-p011-a4e95c65": 98,
+          "R8-s0-p012-9ce89ca1": 144,
+          "R8-s0-p013-a0bd4f92": 286,
+          "R8-s0-p014-a47a76c1": 343,
+          "R8-s0-p015-9da1aad0": 98
+        },
+        "total_num_scheduled_tokens": 2100
+      }
+    ]
+  },
+  "primary_exception": {
+    "message": "target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 550, in run_child_case\n    _run_prompt_chunk(engine, cell, request_ids, prompt_rows)\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_value_screen.py\", line 4498, in _run_prompt_chunk\n    for output in engine.step():\n                  ^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py\", line 304, in step\n    outputs = self.engine_core.get_output()\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 290, in get_output\n    outputs, model_executed = self.engine_core.step_fn()\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 499, in step\n    model_output = self.model_executor.sample_tokens(grammar_output)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py\", line 126, in sample_tokens\n    return self.collective_rpc(\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py\", line 92, in collective_rpc\n    result = run_method(self.driver_worker, method, args, kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/serial_utils.py\", line 510, in run_method\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_worker.py\", line 835, in sample_tokens\n    return self.model_runner.sample_tokens(grammar_output)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 124, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_model_runner.py\", line 4914, in sample_tokens\n    koff_runtime_evidence = make_runner_evidence(\n                            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 472, in make_evidence_wrapper\n    return original_make_evidence(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 1482, in make_runner_evidence\n    raise KOffRuntimeError(\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming\n",
+    "type": "KOffRuntimeError"
+  },
+  "recorder": {
+    "closed": true,
+    "event_count": 0,
+    "events_by_action": {},
+    "last_event": null
+  },
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589299712,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": {
+    "message": "P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 571, in run_child_case\n    engine.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 306, in shutdown\n    self.engine_core.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 650, in shutdown\n    self.scheduler.shutdown()\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3384, in shutdown\n    raise cohort_error\n  File \"/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py\", line 3368, in shutdown\n    barrier.close()\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 617, in close\n    self._fail(\"cohort closed before exact work completion\")\n  File \"/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py\", line 290, in _fail\n    raise KOffRuntimeError(f\"P4 capture cohort {self.cohort_id!r}: {message}\")\nvllm.v1.spec_decode.koff_runtime.KOffRuntimeError: P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f': cohort closed before exact work completion\n",
+    "type": "KOffRuntimeError"
+  },
+  "status": "observed_expected_r8_invariant_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2/isolated-r8/koff_trace.jsonl",
+    "present": true,
+    "record_count": 1,
+    "sha256": "f10d4896367bef5e967849adc3150f7fc110bd736faa44fce5f5e5f2d2f675cb"
+  }
+}

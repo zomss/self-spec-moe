@@ -1,0 +1,183 @@
+{
+  "schema_version": 5,
+  "package_id": "p4-b0-value-screen-run-authorization-v5",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_full_prefill_resource_repair_retry_only",
+  "prior_authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v4.json",
+    "sha256": "34dc0e6942b976276aed7ccb16a1f48a4f5a92e462cddc870502db691df38b57",
+    "disposition": "consumed_failed_during_first_capture"
+  },
+  "failed_attempt": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v3/failure.json",
+    "sha256": "e84a2dfe8f99f01f28b88919e0f204806155824ab1f3102477db9b8de86cd03f",
+    "capture_count": 0,
+    "score_emitted": false,
+    "preserve_without_resume": true
+  },
+  "resource_probe": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe_authorization.json",
+      "sha256": "0db3e70bb56087ab7c5213149202aca6018839ca15be26c4546d9cd726e19e53"
+    },
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe.json",
+      "sha256": "1fd328dadaa876158cb786d9d948a53553625411e03cecea1b1da2f56bc07552"
+    },
+    "decision": "pass",
+    "gpu_memory_utilization": 0.96,
+    "num_gpu_blocks": 22113,
+    "minimum_launch_blocks": 21682,
+    "headroom_blocks": 431,
+    "requests_executed": 0
+  },
+  "source_artifacts": {
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "2296880e85f804858ebf393cdb68f95d679de17811c1bf6afb6e4aea4e53d690"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "c872bc26136f824b856bfa903c65ef40d33ba4d43b7de18f9def736428214e4f"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "6515b420ee7e8e1dea2d68afc3b2d0a84cccfcbca48d2b5e87338967aea0cae7"
+    },
+    "validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    },
+    "resource_repair_probe_script": {
+      "path": "research/97_composition_runtime/scripts/probe_p4_b0_full_prefill_resource_repair.py",
+      "sha256": "552b1b251b784b1d048a298736669806dc3dbdb9d0637ac1de2e7c54f88a1f3e"
+    },
+    "resource_repair_probe_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_full_prefill_resource_repair_probe.py",
+      "sha256": "46ecb6834caab8553542ff82e066f2c357c3322a3e804ae77ad2dc66c5eb039f"
+    },
+    "retry_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v5.schema.json",
+      "sha256": "0d8001abce30fc08a7672e895c6e4b7ae5d7990d72e61f0fe5e41b03d2b77d61"
+    },
+    "retry_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v5.py",
+      "sha256": "784436c48f1c96958a4e4ee8cd376042daa4d003df1453ab0d351a4c7bee5e07"
+    },
+    "retry_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v5.py",
+      "sha256": "8b96efaebb8b93bbaff96aeb8cf2efb7d7f364dcd5a00b932632800f0fb687e6"
+    }
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v5.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v4"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "measurement_repair": {
+    "state": "pass",
+    "root_cause": "full_prefill_profile_reduced_shared_kv_below_floor",
+    "allowed_engine_overrides": {
+      "max_num_batched_tokens": 114688,
+      "enable_chunked_prefill": true,
+      "gpu_memory_utilization": 0.96
+    },
+    "minimum_shared_kv_blocks": 21682,
+    "measured_shared_kv_blocks": 22113,
+    "headroom_blocks": 431,
+    "checks": [
+      "manifest_derived_full_prefill_budget",
+      "chunked_prefill_retained",
+      "only_measurement_engine_overrides_applied",
+      "zero_request_resource_probe_passes",
+      "serving_8192_boundary_preserved"
+    ]
+  },
+  "serving_chunked_prefill_boundary": {
+    "scope": "post_measurement_real_serving_diagnosis",
+    "max_num_batched_tokens": 8192,
+    "chunked_prefill_enabled": true,
+    "gpu_memory_utilization": 0.9,
+    "measurement_override_is_serving_default": false,
+    "mixed_prefill_decode_diagnosis_required": true
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_full_prefill_resource_repair_value_screen_retry_only",
+    "basis": [
+      "v4_stopped_with_zero_complete_captures",
+      "v4_output_preserved_without_resume",
+      "full_prefill_budget_closes_capture_ingress",
+      "resource_repair_probe_passes",
+      "native_sampler_policy_retained",
+      "retry_sources_hash_bound",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "fresh_output_directory_exists",
+      "native_sampler_preflight_failure",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "resource_floor_failure",
+      "measurement_engine_override_drift",
+      "serving_boundary_drift",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "prior_gpu_attempts_performed": 3,
+    "latest_prior_capture_count": 0,
+    "latest_prior_score_emitted": false,
+    "full_prefill_resource_repair_complete": true,
+    "executable_run_ready": true,
+    "serving_chunked_prefill_validated": false,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "gpu_measurement": true,
+    "serving_diagnosis": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "fallback_gpu_authorized": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "prior_output_reuse_allowed": false,
+    "partial_resume_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

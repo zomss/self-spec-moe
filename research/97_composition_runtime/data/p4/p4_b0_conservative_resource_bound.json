@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "bound_id": "p4-b0-w512-conservative-resource-bound-v1",
+  "date": "2026-08-09",
+  "status": "pass_resource_readiness_only",
+  "source_artifacts": {
+    "measured_b0": {
+      "path": "research/97_composition_runtime/data/preflight/candidate_b0_measured.json",
+      "sha256": "16b842c567b70a2f23b0a0db230d2c2f98c6bab7af2f63d2cf2c0a3569121ac7"
+    },
+    "fixed_environment": {
+      "path": "research/97_composition_runtime/data/preflight/environment_qwen3_8b_h100_tp1.json",
+      "sha256": "5bbd0ad031f69c0cd4719ad210c5d85c0a85277f5d49e3b9871500c8f38c1dc7"
+    },
+    "workload": {
+      "path": "research/97_composition_runtime/data/preflight/workload_rl_capacity_v1.json",
+      "sha256": "1b49f6f387586b4ab59e21da9a275b560a8045813989c3f6189e3a06e9bc3804"
+    },
+    "baseline_boot_proxy": {
+      "path": "research/97_composition_runtime/data/boot_proxy/baseline.json",
+      "sha256": "63dc14a93d5f2abf1826e73f804e5451e8dd9043d82b245c92ef62a7b823e5f4"
+    },
+    "baseline_boot_log": {
+      "path": "research/97_composition_runtime/logs/boot_proxy/baseline.log",
+      "sha256": "f89debcc545fab9135ef3b87d4c1a1cb0ed53275c71a46f51f4ef00fe1d2382b"
+    },
+    "base_boot_manifest": {
+      "path": "research/97_composition_runtime/data/p3/boot_b0_minimal_k4.json",
+      "sha256": "6ac8365f94c43fb0e1ef99117050097f300d37a29bd713f6d421b4da6a2a73ca"
+    },
+    "rejected_w512_projection": {
+      "path": "research/97_composition_runtime/data/p4/candidate_b0_window512_masked_projection.json",
+      "sha256": "fa09df85705d5963038944922ce388a271e028c7a453971829d1c0d69a396dcd"
+    },
+    "value_screen_preregistration": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_value_screen_prereg.json",
+      "sha256": "536f2ba56b162ce38569bcbbbe1b43b0fc40fe50b04dedbdf5f576313092b234"
+    },
+    "w512_equivalence": {
+      "path": "research/97_composition_runtime/data/p4/p4_w512_acceptance_equivalence.json",
+      "sha256": "67f6ac822acf208eb7147e386fdd67f7559d9c07460d9c82dd7d1d9297bdd5a1"
+    }
+  },
+  "candidate": {
+    "candidate_id": "qwen3-8b-b0-k4-w512-boot-static-bound",
+    "capability_class": "B0",
+    "realization": "boot-static-target-matching-w512-k4",
+    "evidence_grade": "measured_base_plus_conservative_delta_bound",
+    "measurement_relation": "conservative_candidate_upper_bound",
+    "candidate_realization_match": false,
+    "exact_post_capture_measurement": false,
+    "geometry": {
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "k": 4,
+      "window_tokens": 512,
+      "sink_tokens": 16,
+      "block_size_tokens": 16
+    },
+    "shared_kv": {
+      "path": "shared_target",
+      "owner": "target",
+      "pool_count": 1,
+      "private_draft_pool_count": 0
+    }
+  },
+  "base_capacity": {
+    "base_candidate_id": "qwen3-8b-b0-minimal-k4-measured",
+    "base_evidence_grade": "measured_exact",
+    "base_measurement_relation": "exact_candidate",
+    "available_shared_kv_blocks": 24529,
+    "kv_bytes_per_block": 2359296,
+    "kv_block_size_tokens": 16,
+    "required_live_kv_blocks": 21000,
+    "apparent_headroom_blocks": 3529,
+    "older_projection_relabelled_exact": false
+  },
+  "reserve_policy": {
+    "block_conversion": "ceil_each_reserve_bytes_over_kv_bytes_per_block",
+    "persistent_window_buffers": {
+      "method": "static_shape_formula_rounded_up",
+      "rows": 32,
+      "columns": 1280,
+      "element_bytes_upper_bound": 8,
+      "buffers": [
+        {
+          "name": "window_block_table",
+          "elements": 40960,
+          "bytes_upper_bound": 327680
+        },
+        {
+          "name": "window_sequence_lengths",
+          "elements": 32,
+          "bytes_upper_bound": 256
+        },
+        {
+          "name": "column_arange",
+          "elements": 1280,
+          "bytes_upper_bound": 10240
+        },
+        {
+          "name": "source_column_indices",
+          "elements": 40960,
+          "bytes_upper_bound": 327680
+        },
+        {
+          "name": "sink_column_mask",
+          "elements": 1280,
+          "bytes_upper_bound": 10240
+        }
+      ],
+      "derived_bytes_upper_bound": 676096,
+      "rounding_quantum_bytes": 1048576,
+      "reserved_bytes": 1048576,
+      "reserved_blocks": 1
+    },
+    "graph_capture_and_temporary_workspace": {
+      "method": "three_times_baseline_full_graph_pool_rounded_to_gib",
+      "baseline_actual_graph_pool_reported_gib": 0.54,
+      "report_rounding_allowance_gib": 0.01,
+      "reported_upper_bound_mib": 564,
+      "conservative_multiplier": 3,
+      "rounding_quantum_bytes": 1073741824,
+      "reserved_bytes": 2147483648,
+      "reserved_blocks": 911
+    },
+    "recorder_and_runtime_metadata": {
+      "method": "fixed_hbm_contingency",
+      "policy_floor_mib": 256,
+      "hbm_credit_for_cpu_records": false,
+      "reserved_bytes": 268435456,
+      "reserved_blocks": 114
+    },
+    "hbm_fragmentation_safety": {
+      "method": "max_five_percent_usable_hbm_or_four_gib",
+      "usable_hbm_bytes": 76968728985,
+      "fraction_basis_points": 500,
+      "fraction_bytes": 3848436450,
+      "minimum_bytes": 4294967296,
+      "reserved_bytes": 4294967296,
+      "reserved_blocks": 1821
+    }
+  },
+  "result": {
+    "reserved_blocks_total": 2847,
+    "lower_bound_shared_kv_blocks": 21682,
+    "required_live_kv_blocks": 21000,
+    "lower_bound_headroom_blocks": 682,
+    "lower_bound_headroom_tokens": 10912,
+    "decision": "pass",
+    "decision_scope": "pre_engineering_resource_readiness_only"
+  },
+  "fail_closed": {
+    "bound_invalidators": [
+      "source_or_geometry_drift",
+      "window_buffers_exceed_reserved_bytes",
+      "graph_or_workspace_exceeds_reserved_bytes",
+      "recorder_or_runtime_metadata_exceeds_reserved_bytes",
+      "shared_kv_pool_or_alias_invariant_fails",
+      "post_capture_shared_kv_blocks_below_requirement",
+      "unregistered_scratchpad_or_graph_path_enabled"
+    ],
+    "admission_still_requires": [
+      "measured_exact_post_capture_candidate",
+      "exact_candidate_measurement_relation"
+    ]
+  },
+  "claims": {
+    "resource_readiness_cleared": true,
+    "exact_candidate_measured": false,
+    "gpu_measurement_authorized": false,
+    "p4a_engineering_authorized": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "readiness_update": {
+    "previously_cleared": [
+      "same_event_recorder_unwired",
+      "w512_mask_equivalence_unproven"
+    ],
+    "cleared_now": [
+      "conservative_resource_bound_missing"
+    ],
+    "remaining": [],
+    "state": "ready_for_separate_authorization_decision"
+  },
+  "authorizations": {
+    "gpu_measurement": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "run_ready_b0_value_screen_authorization_package",
+    "separate_decision_required": true,
+    "gpu_command_included_here": false
+  }
+}

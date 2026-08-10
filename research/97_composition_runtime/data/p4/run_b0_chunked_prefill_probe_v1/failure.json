@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_chunked_prefill_probe_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-chunked-prefill-probe-authorization-v1",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization.json",
+    "sha256": "ad5f39dac091b6371cc355084eb4105831b0b36b9669956d84f7eda31203d67c"
+  },
+  "attempt": {
+    "invocation_started": true,
+    "exit_code": 1,
+    "failed_at": "2026-08-09T22:16:24+09:00",
+    "native_sampler_preflight_passed": true,
+    "inprocess_engine_core_preflight_passed": true,
+    "gpu_identity_idle_preflight_passed": true,
+    "output_directory_created": true,
+    "preparation_emitted": false,
+    "child_launch_started": false,
+    "gpu_model_executed": false,
+    "completed_physical_boots": 0,
+    "complete_cohorts_emitted": 0,
+    "incomplete_cohorts_emitted": 0,
+    "probe_result_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "relative_output_path_normalization_omission",
+    "last_stage": "parent_preparation_path_serialization",
+    "cause": "The reviewed invocation passed the registered repository-relative output path. Authorization validation compared its resolved form but returned no normalized path. After all preflights and create-new directory creation, execute_parent called output_dir.relative_to(REPO_ROOT) on the still-relative Path, raising ValueError before preparation emission or child launch.",
+    "exception_chain": [
+      {
+        "type": "ValueError",
+        "message": "'research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v1' is not in the subpath of '/data/smcho/self-spec-moe'",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py:execute_parent"
+      }
+    ],
+    "launch_command": [
+      ".venv/bin/python",
+      "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py",
+      "--authorization",
+      "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization.json",
+      "--output-dir",
+      "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v1"
+    ],
+    "runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py",
+      "sha256": "13c0924c0b49e08785c671792553e644567e9f6f8793744c7ab5c43760c00fe3"
+    },
+    "test_gap": "The parent execution regression passed an absolute TemporaryDirectory path directly to execute_parent and did not traverse main with the exact registered relative argv.",
+    "required_repair": [
+      "resolve and validate the reviewed authorization/output pair once before parent or child dispatch",
+      "exercise main with the exact repository-relative registered argv",
+      "bind the repaired runner and regression to a fresh authorization and output path"
+    ]
+  },
+  "post_failure_evidence": {
+    "physical_gpu_index": 4,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "gpu_memory_used_mib": 0,
+    "gpu_compute_processes": 0,
+    "runner_processes": 0,
+    "preparation_present": false,
+    "child_log_present": false,
+    "probe_result_present": false
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "v10_authorized": false,
+    "preserve_output_without_overwrite_or_resume": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v1",
+    "runner_measurement_output_created": false,
+    "failure_record_created_after_stop": true
+  }
+}

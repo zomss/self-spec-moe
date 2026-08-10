@@ -1,0 +1,139 @@
+{
+  "action_aggregates": [
+    {
+      "A_accepted": 0,
+      "C_clipped": 0,
+      "D_armed": 0,
+      "E_committed": 176,
+      "H_target_steps": 176,
+      "U_unarmed": 176,
+      "action_id": "off",
+      "decode_time_s": 0.528,
+      "segments": 3,
+      "tau_eff": 1.0
+    },
+    {
+      "A_accepted": 160,
+      "C_clipped": 0,
+      "D_armed": 80,
+      "E_committed": 240,
+      "H_target_steps": 80,
+      "U_unarmed": 0,
+      "action_id": "target-matching-k4",
+      "decode_time_s": 0.16,
+      "segments": 3,
+      "tau_eff": 3.0
+    }
+  ],
+  "boot_class_id": "qwen3-8b-b0-minimal-k4",
+  "decisions": [
+    {
+      "fallback_reason": null,
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "initial-k4-exploit",
+      "selected_action_id": "target-matching-k4",
+      "switched": true,
+      "tie_set_action_ids": [
+        "target-matching-k4"
+      ]
+    },
+    {
+      "fallback_reason": "requested_ineligible",
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "graph-unavailable-fallback",
+      "selected_action_id": "off",
+      "switched": true,
+      "tie_set_action_ids": [
+        "off"
+      ]
+    },
+    {
+      "fallback_reason": null,
+      "requested_action_id": "off",
+      "segment_id": "forced-off-dwell",
+      "selected_action_id": "off",
+      "switched": false,
+      "tie_set_action_ids": [
+        "target-matching-k4"
+      ]
+    },
+    {
+      "fallback_reason": "stale_evidence",
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "stale-evidence-fallback",
+      "selected_action_id": "off",
+      "switched": false,
+      "tie_set_action_ids": [
+        "off"
+      ]
+    },
+    {
+      "fallback_reason": null,
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "stale-k4-probe",
+      "selected_action_id": "target-matching-k4",
+      "switched": true,
+      "tie_set_action_ids": [
+        "off"
+      ]
+    },
+    {
+      "fallback_reason": null,
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "fresh-k4-exploit",
+      "selected_action_id": "target-matching-k4",
+      "switched": false,
+      "tie_set_action_ids": [
+        "target-matching-k4"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "from_action_id": "off",
+      "kind": "switch",
+      "segment_id": "initial-k4-exploit",
+      "to_action_id": "target-matching-k4"
+    },
+    {
+      "from_action_id": "target-matching-k4",
+      "kind": "switch",
+      "segment_id": "graph-unavailable-fallback",
+      "to_action_id": "off"
+    },
+    {
+      "kind": "fallback",
+      "reason": "requested_ineligible",
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "graph-unavailable-fallback",
+      "selected_action_id": "off"
+    },
+    {
+      "kind": "fallback",
+      "reason": "stale_evidence",
+      "requested_action_id": "target-matching-k4",
+      "segment_id": "stale-evidence-fallback",
+      "selected_action_id": "off"
+    },
+    {
+      "from_action_id": "off",
+      "kind": "switch",
+      "segment_id": "stale-k4-probe",
+      "to_action_id": "target-matching-k4"
+    },
+    {
+      "action_id": "target-matching-k4",
+      "kind": "probe",
+      "segment_id": "stale-k4-probe"
+    }
+  ],
+  "final_action_id": "target-matching-k4",
+  "probe_target_step_fraction": 0.0625,
+  "probe_target_steps": 16,
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "total_engine_steps": 16,
+  "total_target_steps": 256,
+  "trace_id": "p3-b0-k4-off-synthetic-v1"
+}

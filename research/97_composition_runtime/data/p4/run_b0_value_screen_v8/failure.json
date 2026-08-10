@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v9",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v9.json",
+    "sha256": "1542763ea55e6cda9aaf29fda357bc3818a508eecd34d22d869c22aa13ea1ee4"
+  },
+  "attempt": {
+    "boot_id": "p4-b0-b1-p1-off",
+    "physical_gpu_index": 4,
+    "gpu_model_executed": true,
+    "completed_physical_boots": 0,
+    "complete_captures_emitted": 8,
+    "incomplete_captures_emitted": 0,
+    "empty_capture_placeholders": 1,
+    "raw_capture_files": 9,
+    "completed_regimes": [
+      "R4"
+    ],
+    "failed_regime": "R5",
+    "failed_content_seed": 0,
+    "failed_round_index": 1,
+    "adapted_rounds_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "full_prefill_transient_activation_hbm_underbound",
+    "last_stage": "first_r5_full_prefill_compiled_mlp_activation",
+    "cause": "The launch floor guarded post-capture shared-KV capacity but did not reserve prompt-length-scaled transient activation memory. After all eight R4 captures completed, the first 112,304-token R5 full-prefill entered the compiled Qwen3 MLP and failed while allocating its bfloat16 (s72, 12288) SiLU/multiply output. The 4.90 GiB actual CUDA graph pool also exceeded the 0.50 GiB estimate by 4.40 GiB, leaving only 1.45 GiB free for a 2.57 GiB request.",
+    "failed_cell": "capture-b1-p1-off-r5-s0-r1",
+    "full_prefill_evidence": {
+      "max_num_batched_tokens": 114688,
+      "effective_scheduler_token_budget": 114656,
+      "failed_regime_prompt_tokens": 112304,
+      "maximum_registered_prompt_tokens": 112908,
+      "maximum_registered_prompt_regime": "R5cot"
+    },
+    "oom_evidence": {
+      "exception_type": "torch.OutOfMemoryError",
+      "requested_tensor_symbolic_shape": [
+        "s72",
+        12288
+      ],
+      "resolved_s72_tokens": 112304,
+      "dtype": "bfloat16",
+      "element_bytes": 2,
+      "requested_bytes_from_shape": 2759983104,
+      "requested_gib": 2.57,
+      "reported_free_gib": 1.45,
+      "origin": "compiled Qwen3 MLP SiLU/multiply output allocation"
+    },
+    "cuda_graph_evidence": {
+      "estimated_pool_gib": 0.5,
+      "actual_pool_gib": 4.9,
+      "underestimate_gib": 4.4
+    },
+    "observed_before_failure": {
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "self_spec_weight_alias_count": 291,
+      "gpu_kv_cache_blocks": 22090,
+      "gpu_kv_cache_tokens": 353440,
+      "minimum_shared_kv_blocks": 21682,
+      "cuda_graph_capture_completed": true,
+      "native_sampler_selected": true,
+      "engine_core_class": "InprocClient"
+    },
+    "exception_chain": [
+      {
+        "type": "torch.OutOfMemoryError",
+        "message": "CUDA out of memory while requesting 2.57 GiB with 1.45 GiB free",
+        "origin": "compiled forward empty_strided_cuda((s72, 12288), bfloat16)"
+      },
+      {
+        "type": "CalledProcessError",
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py:execute_run"
+      }
+    ]
+  },
+  "capture_evidence": {
+    "complete_capture_count": 8,
+    "complete_event_count": 16384,
+    "complete_committed_tokens": 131072,
+    "all_complete_flags": true,
+    "all_scored_flags": false,
+    "captures": [
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r1.json",
+        "sha256": "1468f8df3ccdbdd927e82a3159bcbc38ab9ed271c97d3f3d0e295d9580fd53e0",
+        "bytes": 7094654,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r2.json",
+        "sha256": "a88245f28b3835f483e9acb8b495524fa6a3c570ec7bece1deb828114de5020a",
+        "bytes": 7097961,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r3.json",
+        "sha256": "ee7c4b24e756317599ffcd0b06b516a49e257dce4ba56b460a7942913310c14a",
+        "bytes": 7097924,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r4.json",
+        "sha256": "dbc41d944bafb57925ef7c6ba16555c54268fa64c3bf65270abfa09d8b7e47cd",
+        "bytes": 7097936,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s1-r1.json",
+        "sha256": "9c6f9c889f3d8cc4002733055c46c23136b9f37dbe7e2248bf21706c5a249a01",
+        "bytes": 7098795,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s1-r2.json",
+        "sha256": "abb9a81d1839d291b07fcb45a69375b7f3a2efc24074b68b80b1db1b6fa129bd",
+        "bytes": 7104105,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s1-r3.json",
+        "sha256": "148a54bfb545b2d87ea41bf8f277c608ec35535b2b766ff151cb077a1b52feeb",
+        "bytes": 7104147,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      },
+      {
+        "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s1-r4.json",
+        "sha256": "c5a6a4f38a81edea3f69e1e3033d70b7ae8a155c9895869342ae52a2d6013be5",
+        "bytes": 7104155,
+        "event_count": 2048,
+        "committed_tokens": 16384
+      }
+    ],
+    "empty_placeholder": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r5-s0-r1.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "disposition": {
+    "v9_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "partial_resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "post_failure_runner_processes": 0,
+    "post_failure_gpu_compute_processes": 0
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8",
+    "preparation_sha256": "4eb2f700c170b2d2ddfca1409e2948d50baee16960e3a69f0abefcf7c92e5ee1",
+    "first_plan_sha256": "7ce7fe4a83bab45d5893c92500a3eba94fc0c947a059d324ff34093f1529b2da",
+    "first_boot_spec_sha256": "e22a1729d9aac8057f1d4f9e2dccf93dd3802584ebb9dd679a5d81f27e4ea6cf",
+    "adapted_rounds_present": false,
+    "score_present": false,
+    "preserve_without_overwrite_or_resume": true
+  }
+}

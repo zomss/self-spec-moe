@@ -1,0 +1,99 @@
+{
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "complete_captures_emitted": 72,
+    "completed_physical_boots": 1,
+    "empty_capture_placeholders": 1,
+    "failed_boot_id": "p4-b0-b1-p2-k4",
+    "failed_capture_id": "capture-b1-p2-k4-r8-s0-r1",
+    "failed_content_seed": 0,
+    "failed_regime": "R8",
+    "failed_round_index": 1,
+    "gpu_model_executed": true,
+    "physical_gpu_index": 4,
+    "score_emitted": false
+  },
+  "authorization": {
+    "bytes": 12391,
+    "package_id": "p4-b0-value-screen-run-authorization-v10",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v10.json",
+    "sha256": "d772e983718cd8e4ccb16c506da1a7a0ef15908221b59c0ea98b014b5d37bc65"
+  },
+  "capture_evidence": {
+    "bytes": 51696,
+    "complete_capture_count": 72,
+    "empty_placeholder_count": 1,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/capture_manifest.json",
+    "sha256": "4b3cb6d8420483b875bc2bfafccd804681b9b847447e448f135533549b77225e"
+  },
+  "diagnostic": {
+    "evidence_provenance": {
+      "artifact_boundary_independently_hash_bound": true,
+      "failed_placeholder_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_complete_event_engine_step_index": 27699,
+      "terminal_exception_observed_during_consumed_run": true,
+      "terminal_transcript_file_retained": false
+    },
+    "failed_step": {
+      "capture_cohort_arm": true,
+      "decode_req_ids": [],
+      "engine_step_index": 27700,
+      "finished_req_ids": [
+        "R5cot-s1-p030",
+        "R5cot-s1-p031"
+      ],
+      "new_request_ids": [
+        "R8-s0-p000",
+        "R8-s0-p001",
+        "R8-s0-p002",
+        "R8-s0-p003",
+        "R8-s0-p004",
+        "R8-s0-p005",
+        "R8-s0-p006",
+        "R8-s0-p007",
+        "R8-s0-p008",
+        "R8-s0-p009",
+        "R8-s0-p010",
+        "R8-s0-p011",
+        "R8-s0-p012",
+        "R8-s0-p013",
+        "R8-s0-p014",
+        "R8-s0-p015"
+      ],
+      "next_action_id": "target-matching-k4",
+      "preemptions": 0,
+      "pure_decode": false,
+      "recomputed_tokens": 0,
+      "shared_target_kv_block_capacity": 24527,
+      "total_num_scheduled_tokens": 2100
+    },
+    "last_stage": "first_k4_r8_pure_prefill_draft_evidence_validation",
+    "primary_exception": {
+      "message": "target-matching-k4 non-decode dispatch requires a positive draft step-0 query width and pure-prefill cohort arming",
+      "type": "KOffRuntimeError"
+    },
+    "scope": "k4_variable_width_pure_prefill_step0_evidence",
+    "secondary_shutdown_exception": {
+      "message": "P4 capture cohort 'capture-b1-p2-k4-r8-s0-r1:cohort:c727fa542ff6239f' closed before exact work completion",
+      "type": "KOffRuntimeError"
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_gpu4_compute_processes": 0,
+    "post_failure_runner_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v10_consumed": true
+  },
+  "output": {
+    "adapted_rounds_present": false,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9",
+    "preserve_without_overwrite_or_resume": true,
+    "score_present": false
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

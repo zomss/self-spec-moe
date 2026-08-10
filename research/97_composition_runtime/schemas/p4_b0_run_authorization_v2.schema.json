@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_run_authorization_v2.schema.json",
+  "title": "Phase 97 B0 value-screen source-bound authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "supersedes",
+    "source_artifacts",
+    "evidence_readiness",
+    "run_contract",
+    "resource_gates",
+    "implementation_audit",
+    "decision",
+    "claims",
+    "authorizations",
+    "execution_policy",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "package_id": { "const": "p4-b0-value-screen-run-authorization-v2" },
+    "date": { "type": "string", "format": "date" },
+    "status": { "const": "authorized_gpu4_value_screen_only" },
+    "supersedes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "historical_decision"],
+      "properties": {
+        "path": {
+          "const": "research/97_composition_runtime/data/p4/p4_b0_run_authorization.json"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "historical_decision": { "const": "hold" }
+      }
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 13,
+      "additionalProperties": { "$ref": "#/$defs/artifact_ref" }
+    },
+    "evidence_readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "historical_hold_validated",
+        "capture_runner_conformance_status",
+        "implementation_checks_passed"
+      ],
+      "properties": {
+        "state": { "const": "complete" },
+        "historical_hold_validated": { "const": true },
+        "capture_runner_conformance_status": { "const": "pass" },
+        "implementation_checks_passed": { "const": 6 }
+      }
+    },
+    "run_contract": { "$ref": "#/$defs/run_contract" },
+    "resource_gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_available_shared_kv_blocks",
+        "conservative_floor_blocks",
+        "required_live_kv_blocks",
+        "minimum_launch_capacity_blocks",
+        "single_target_owned_pool_required",
+        "preemption_allowed",
+        "recomputation_allowed",
+        "on_violation"
+      ],
+      "properties": {
+        "base_available_shared_kv_blocks": { "const": 24529 },
+        "conservative_floor_blocks": { "const": 21682 },
+        "required_live_kv_blocks": { "const": 21000 },
+        "minimum_launch_capacity_blocks": { "const": 21682 },
+        "single_target_owned_pool_required": { "const": true },
+        "preemption_allowed": { "const": false },
+        "recomputation_allowed": { "const": false },
+        "on_violation": { "const": "stop_without_scoring" }
+      }
+    },
+    "implementation_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "checks"],
+      "properties": {
+        "state": { "const": "pass" },
+        "checks": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "status", "evidence"],
+            "properties": {
+              "code": { "$ref": "#/$defs/check_code" },
+              "status": { "const": "pass" },
+              "evidence": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "scope", "basis", "invalidated_by"],
+      "properties": {
+        "state": { "const": "approve" },
+        "scope": { "const": "gpu4_complete_boot_static_value_screen_only" },
+        "basis": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "invalidated_by": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_readiness_complete",
+        "capture_runner_conformance_complete",
+        "executable_run_ready",
+        "exact_invocation_registered",
+        "gpu_run_performed",
+        "runtime_w512_switching_implemented",
+        "action_admitted",
+        "performance_claim_allowed"
+      ],
+      "properties": {
+        "evidence_readiness_complete": { "const": true },
+        "capture_runner_conformance_complete": { "const": true },
+        "executable_run_ready": { "const": true },
+        "exact_invocation_registered": { "const": true },
+        "gpu_run_performed": { "const": false },
+        "runtime_w512_switching_implemented": { "const": false },
+        "action_admitted": { "const": false },
+        "performance_claim_allowed": { "const": false }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_runner_conformance_engineering",
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "capture_runner_conformance_engineering": { "const": true },
+        "gpu_measurement": { "const": true },
+        "p4a_engineering": { "const": false },
+        "action_admission": { "const": false },
+        "production_value_claim": { "const": false }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "physical_gpu_index",
+        "fallback_gpu_authorized",
+        "physical_boot_count",
+        "capture_count",
+        "create_new_output_required",
+        "partial_resume_allowed",
+        "score_grants_authority",
+        "on_any_failure"
+      ],
+      "properties": {
+        "physical_gpu_index": { "const": 4 },
+        "fallback_gpu_authorized": { "const": false },
+        "physical_boot_count": { "const": 9 },
+        "capture_count": { "const": 432 },
+        "create_new_output_required": { "const": true },
+        "partial_resume_allowed": { "const": false },
+        "score_grants_authority": { "const": false },
+        "on_any_failure": {
+          "const": "stop_without_scoring_and_require_fresh_authorization"
+        }
+      }
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "requires_complete_capture_count",
+        "may_authorize_p4a",
+        "may_admit_action"
+      ],
+      "properties": {
+        "kind": { "const": "p4_b0_value_screen_result" },
+        "requires_complete_capture_count": { "const": 432 },
+        "may_authorize_p4a": { "const": false },
+        "may_admit_action": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "check_code": {
+      "enum": [
+        "w512_boot_contract_blocked",
+        "w512_recorder_action_blocked",
+        "multi_cell_same_boot_capture_missing",
+        "boot_static_action_relabel_missing",
+        "logical_weight_version_unstable",
+        "runtime_resource_floor_guard_missing"
+      ]
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "screen_id",
+        "scope",
+        "repository_commit",
+        "model",
+        "gpu_assignment",
+        "engine",
+        "environment",
+        "action_boots",
+        "matrix",
+        "invocation"
+      ],
+      "properties": {
+        "screen_id": { "const": "p4-b0-off-k4-w512-value-screen-v1" },
+        "scope": { "const": "boot_static_acceptance_screen_only" },
+        "repository_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "model_id",
+            "revision",
+            "snapshot_path",
+            "target_quantization",
+            "target_kv_dtype",
+            "draft_weight_path"
+          ],
+          "properties": {
+            "model_id": { "const": "Qwen/Qwen3-8B" },
+            "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "snapshot_path": { "type": "string", "minLength": 1 },
+            "target_quantization": { "type": "null" },
+            "target_kv_dtype": { "const": "bfloat16" },
+            "draft_weight_path": { "const": "target-matching-alias" }
+          }
+        },
+        "gpu_assignment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cuda_visible_devices",
+            "physical_index",
+            "uuid",
+            "model",
+            "memory_mib",
+            "all_nine_boots_same_gpu",
+            "fallback_gpu"
+          ],
+          "properties": {
+            "cuda_visible_devices": { "const": "4" },
+            "physical_index": { "const": 4 },
+            "uuid": { "const": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51" },
+            "model": { "const": "NVIDIA H100 80GB HBM3" },
+            "memory_mib": { "const": 81559 },
+            "all_nine_boots_same_gpu": { "const": true },
+            "fallback_gpu": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["physical_index", "uuid", "authorized"],
+              "properties": {
+                "physical_index": { "const": 5 },
+                "uuid": {
+                  "const": "GPU-318614e3-fd51-31a9-399d-9e94cb767967"
+                },
+                "authorized": { "const": false }
+              }
+            }
+          }
+        },
+        "engine": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tensor_parallel_size",
+            "pipeline_parallel_size",
+            "max_model_len",
+            "max_num_batched_tokens",
+            "max_num_seqs",
+            "gpu_memory_utilization",
+            "num_speculative_tokens",
+            "async_scheduling",
+            "prefix_caching",
+            "flashinfer_autotune",
+            "enforce_eager",
+            "generation_seed"
+          ],
+          "properties": {
+            "tensor_parallel_size": { "const": 1 },
+            "pipeline_parallel_size": { "const": 1 },
+            "max_model_len": { "const": 20480 },
+            "max_num_batched_tokens": { "const": 8192 },
+            "max_num_seqs": { "const": 32 },
+            "gpu_memory_utilization": { "const": 0.9 },
+            "num_speculative_tokens": { "const": 4 },
+            "async_scheduling": { "const": false },
+            "prefix_caching": { "const": false },
+            "flashinfer_autotune": { "const": false },
+            "enforce_eager": { "const": false },
+            "generation_seed": { "const": 0 }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "minProperties": 10,
+          "additionalProperties": { "type": "string" }
+        },
+        "action_boots": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "action_id",
+              "window_tokens",
+              "sink_tokens",
+              "dynamic_k_schedule",
+              "cost_credit_allowed"
+            ],
+            "properties": {
+              "action_id": {
+                "enum": [
+                  "off",
+                  "target-matching-k4",
+                  "target-matching-w512-masked-k4"
+                ]
+              },
+              "window_tokens": { "enum": [0, 512] },
+              "sink_tokens": { "enum": [0, 16] },
+              "dynamic_k_schedule": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "prefixItems": [
+                    { "type": "integer", "minimum": 1 },
+                    { "type": "integer", "minimum": 1 },
+                    { "enum": [0, 4] }
+                  ]
+                }
+              },
+              "cost_credit_allowed": { "const": false }
+            }
+          }
+        },
+        "matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "boot_blocks",
+            "physical_boot_count",
+            "cells_per_boot",
+            "raw_capture_count",
+            "adapted_round_count",
+            "rounds_per_regime_seed",
+            "prompts_per_cell"
+          ],
+          "properties": {
+            "boot_blocks": { "type": "array", "minItems": 3, "maxItems": 3 },
+            "physical_boot_count": { "const": 9 },
+            "cells_per_boot": { "const": 48 },
+            "raw_capture_count": { "const": 432 },
+            "adapted_round_count": { "const": 432 },
+            "rounds_per_regime_seed": { "const": 4 },
+            "prompts_per_cell": { "const": 32 }
+          }
+        },
+        "invocation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runner_path",
+            "argv",
+            "output_dir",
+            "overwrite_allowed",
+            "runner_exists",
+            "launchable_now"
+          ],
+          "properties": {
+            "runner_path": {
+              "const": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py"
+            },
+            "argv": { "type": "array", "minItems": 6, "maxItems": 6 },
+            "output_dir": {
+              "const": "research/97_composition_runtime/data/p4/run_b0_value_screen_v1"
+            },
+            "overwrite_allowed": { "const": false },
+            "runner_exists": { "const": true },
+            "launchable_now": { "const": true }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "candidate_id": "qwen3-8b-b0-minimal-k4-measured",
+  "capability_class": "B0",
+  "fixed_environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "shared_kv": {
+    "path": "shared_target",
+    "owner": "target",
+    "pool_count": 1
+  },
+  "resident_objects": {
+    "draft_weight_paths": [
+      {
+        "path_id": "target-matching",
+        "kind": "target_matching"
+      }
+    ],
+    "graph_ids": [
+      "target-k1",
+      "target-k5",
+      "draft-target-matching-k1"
+    ]
+  },
+  "evidence": {
+    "grade": "measured_exact",
+    "candidate_realization_match": true,
+    "source_artifacts": [
+      "data/boot_proxy/baseline.json",
+      "logs/boot_proxy/baseline.log"
+    ],
+    "capacity": {
+      "measurement_relation": "exact_candidate",
+      "usable_hbm_bytes": 76968728985,
+      "sampled_peak_hbm_bytes": 76203163648,
+      "available_shared_target_kv_blocks": 24529,
+      "kv_block_size_tokens": 16,
+      "kv_bytes_per_block": 2359296
+    }
+  },
+  "resource_terms": {
+    "co_resident_weight_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has only the measured target-matching path",
+      "included_in_capacity_evidence": false
+    },
+    "co_resident_graphs_and_workspaces_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has no co-resident B1 graph or workspace set",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_peak_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has no independently refreshed quantized path",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_pinned_host_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has no independently refreshed quantized path"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "active_stage_at_exit": "engine_initialization",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-isolated-r8",
+  "authorization": {
+    "bytes": 10298,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v1.json",
+    "sha256": "c8d9e143d91ac16d113805645109ebee60d3e6982d9d753da940a48bb3f29241"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "isolated-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": false,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [],
+  "gpu": {
+    "physical_index": 0,
+    "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "instrumentation": {},
+  "primary_exception": {
+    "message": "The server socket has failed to listen on any local network address. port: 33703, useIpv6: false, code: -98, name: EADDRINUSE, message: address already in use",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/smcho/self-spec-moe/research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py\", line 543, in run_child_case\n    engine = LLMEngine.from_engine_args(_engine_args(_engine_spec(authorization)))\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py\", line 179, in from_engine_args\n    return cls(\n           ^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py\", line 105, in __init__\n    self.engine_core = EngineCoreClient.make_client(\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 105, in make_client\n    return InprocClient(vllm_config, executor_class, log_stats)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py\", line 287, in __init__\n    self.engine_core = EngineCore(*args, **kwargs)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/engine/core.py\", line 123, in __init__\n    self.model_executor = executor_class(vllm_config)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/tracing/otel.py\", line 178, in sync_wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/abstract.py\", line 109, in __init__\n    self._init_executor()\n  File \"/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py\", line 63, in _init_executor\n    self.driver_worker.init_device()\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/worker_base.py\", line 331, in init_device\n    self.worker.init_device()  # type: ignore\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/tracing/otel.py\", line 178, in sync_wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_worker.py\", line 323, in init_device\n    init_worker_distributed_environment(\n  File \"/data/smcho/self-spec-moe/vllm/v1/worker/gpu_worker.py\", line 1218, in init_worker_distributed_environment\n    init_distributed_environment(\n  File \"/data/smcho/self-spec-moe/vllm/distributed/parallel_state.py\", line 1672, in init_distributed_environment\n    torch.distributed.init_process_group(\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py\", line 83, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py\", line 97, in wrapper\n    func_return = func(*args, **kwargs)\n                  ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py\", line 1831, in init_process_group\n    store, rank, world_size = next(rendezvous_iterator)\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 232, in _tcp_rendezvous_handler\n    store = _create_c10d_store(\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/distributed/rendezvous.py\", line 199, in _create_c10d_store\n    return TCPStore(\n           ^^^^^^^^^\ntorch.distributed.DistNetworkError: The server socket has failed to listen on any local network address. port: 33703, useIpv6: false, code: -98, name: EADDRINUSE, message: address already in use\n",
+    "type": "DistNetworkError"
+  },
+  "recorder": {
+    "closed": false,
+    "event_count": 0,
+    "events_by_action": {},
+    "last_event": null
+  },
+  "resources": null,
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": null,
+  "status": "inconclusive_unexpected_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v1/isolated-r8/koff_trace.jsonl",
+    "present": false,
+    "record_count": 0,
+    "sha256": null
+  }
+}

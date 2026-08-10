@@ -1,0 +1,34 @@
+{
+  "action_ids": [
+    "off",
+    "target-matching-k4",
+    "target-matching-w512-masked-k4"
+  ],
+  "blocking_reason_codes": [
+    "conservative_resource_bound_missing",
+    "same_event_recorder_unwired",
+    "w512_mask_equivalence_unproven"
+  ],
+  "exact_prompt_manifest_frozen": true,
+  "gpu_measurement_authorized": false,
+  "legacy_w14d_status": "invalid_for_scored_value",
+  "next_artifact": "run_ready_b0_value_screen_package",
+  "p4a_engineering_authorized": false,
+  "preregistration_id": "p4-b0-off-k4-w512-value-screen-v1",
+  "production_workload_evidence": false,
+  "prompt_record_count": 384,
+  "readiness": "blocked",
+  "regime_weights": {
+    "R1": 0.16666666666666666,
+    "R4": 0.16666666666666666,
+    "R5": 0.16666666666666666,
+    "R5cot": 0.16666666666666666,
+    "R6": 0.16666666666666666,
+    "R8": 0.16666666666666666
+  },
+  "runner_scorer_frozen": true,
+  "same_event_measurement_adapter_frozen": true,
+  "scored_research_objective_frozen": true,
+  "status": "pass",
+  "tokenizer_revision": "b968826d9c46dd6066d109eabc6255188de91218"
+}

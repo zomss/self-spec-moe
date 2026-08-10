@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-r5cot-r8-diagnosis-authorization-v2",
+  "date": "2026-08-10",
+  "status": "authorized_gpu0_gpu1_non_scored_transition_diagnosis_only",
+  "prior_diagnosis": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/failure.json",
+    "sha256": "62b0a48b39688ec7bcbbe069acc8932e4d24aa2b041f8702e76a3c9cca0b18bf",
+    "disposition": "consumed_inconclusive_observer_failure"
+  },
+  "repair": {
+    "scope": "read_only_scheduler_snapshot",
+    "old_behavior": "iterate SchedulerOutput.scheduled_cached_reqs",
+    "new_behavior": "read SchedulerOutput.scheduled_cached_reqs.req_ids",
+    "runtime_sources_changed": false,
+    "workload_changed": false,
+    "gpu_assignment_changed": false
+  },
+  "run_contract": {
+    "scope": "source_bound_non_scored_r5cot_r8_transition_diagnosis_only",
+    "scored": false,
+    "output_dir": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2",
+    "model": {
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_path": "target-matching-alias"
+    },
+    "engine": {
+      "tensor_parallel_size": 1,
+      "pipeline_parallel_size": 1,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "gpu_memory_utilization": 0.9,
+      "num_speculative_tokens": 4,
+      "enable_chunked_prefill": true,
+      "async_scheduling": false,
+      "prefix_caching": false,
+      "flashinfer_autotune": false,
+      "enforce_eager": false,
+      "generation_seed": 0
+    },
+    "action": {
+      "action_id": "target-matching-k4",
+      "dynamic_k_schedule": [
+        [
+          1,
+          32,
+          4
+        ]
+      ],
+      "window_tokens": 0,
+      "sink_tokens": 0
+    },
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TOKENIZERS_PARALLELISM": "false",
+      "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+      "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+      "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+      "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+      "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+      "VLLM_SELF_SPEC_DRAFT_KV_SINKS": "0",
+      "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": "0",
+      "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "",
+      "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+      "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+      "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+      "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+      "VLLM_SELF_SPEC_SHARED_KV": "1",
+      "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+      "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1",
+      "VLLM_USE_FLASHINFER_SAMPLER": "0"
+    },
+    "jobs": {
+      "isolated-r8": {
+        "gpu": {
+          "physical_index": 0,
+          "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+        },
+        "cohorts": [
+          {
+            "label": "r8-first",
+            "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+            "slice_start": 0,
+            "slice_stop": 16
+          }
+        ]
+      },
+      "r5cot-to-r8": {
+        "gpu": {
+          "physical_index": 1,
+          "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+        },
+        "cohorts": [
+          {
+            "label": "r5cot-last",
+            "capture_id": "capture-b1-p2-k4-r5cot-s1-r4",
+            "slice_start": 24,
+            "slice_stop": 32
+          },
+          {
+            "label": "r8-first",
+            "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+            "slice_start": 0,
+            "slice_stop": 16
+          }
+        ]
+      }
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis_v2.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis_v2.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization_v2.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v2"
+      ]
+    }
+  },
+  "source_artifacts": {
+    "capture_manifest": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/capture_manifest.json",
+      "sha256": "4b3cb6d8420483b875bc2bfafccd804681b9b847447e448f135533549b77225e"
+    },
+    "capture_plan": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/plans/p4-b0-b1-p2-k4.json",
+      "sha256": "477424a478457fce166dcd261e7f341ee84334d04e1060059c8dea4455172bec"
+    },
+    "capture_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "69d9ca27884969141e47d11ef9828f871ec1753aca85e0300c8f7cefc3fe30f3"
+    },
+    "diagnosis_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis_v2.py",
+      "sha256": "50ef0ca0108c4ed08a452067d6158155dbef956a47163914b32d134b673a51aa"
+    },
+    "diagnosis_runner_base": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_r5cot_r8_diagnosis.py",
+      "sha256": "1c8d26838c31158223d306fcb0844f747c3842a8171170d42ed5e1ec79c7b55b"
+    },
+    "diagnosis_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_r5cot_r8_diagnosis_v2.py",
+      "sha256": "24898b7683390505f06683486afe543d3a642d7ceff5525202d94e6f8e40e75e"
+    },
+    "diagnosis_tests_v1": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_r5cot_r8_diagnosis.py",
+      "sha256": "5327ddf105d2f119fe22963cfaaffbd95613e5e2d958d333343649f9aaeca179"
+    },
+    "diagnosis_v1_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/failure.json",
+      "sha256": "62b0a48b39688ec7bcbbe069acc8932e4d24aa2b041f8702e76a3c9cca0b18bf"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "d57e1ff4fad5ddfc7379a606780fe62188452adab923b95db6ef73734db00562"
+    },
+    "failed_attempt": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/failure.json",
+      "sha256": "78b21f7b6110a2e383f6ce7d6ba2e26a121a30722ed89dddac61f1afa93a852f"
+    },
+    "gpu_model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "gpu_worker": {
+      "path": "vllm/v1/worker/gpu_worker.py",
+      "sha256": "78446ad656008a8ee74b80aaa76e68ff3d528bac781baf5f652e678c2cde9dd6"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "af281b12236a611c3a25a3b92cfe1ae5397b96cb254e61040fbd8c9ba031bfd8"
+    },
+    "preservation_script": {
+      "path": "research/97_composition_runtime/scripts/preserve_p4_b0_value_screen_v10_attempt.py",
+      "sha256": "adfc75d78e4f77686b5b85fd1e374a19f98519e15daf0930ecd688ed761521a7"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328"
+    },
+    "v10_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v10.json",
+      "sha256": "d772e983718cd8e4ccb16c506da1a7a0ef15908221b59c0ea98b014b5d37bc65"
+    }
+  },
+  "execution_policy": {
+    "create_new_output_only": true,
+    "single_parent_launch": true,
+    "concurrent_physical_boots": 2,
+    "physical_gpu_indices": [
+      0,
+      1
+    ],
+    "retry_allowed": false,
+    "resume_allowed": false,
+    "fallback_gpu_allowed": false,
+    "v10_output_reuse_allowed": false,
+    "score_output": false,
+    "downstream_authority_granted": false,
+    "on_any_unexpected_failure": "preserve_and_stop_inconclusive"
+  },
+  "claims": {
+    "diagnosis_v1_preserved": true,
+    "gpu_diagnosis_authorized": true,
+    "value_screen_retry_authorized": false,
+    "performance_claim_allowed": false,
+    "action_admission_allowed": false
+  },
+  "authorizations": {
+    "gpu0_isolated_r8_diagnosis": true,
+    "gpu1_r5cot_r8_transition_diagnosis": true,
+    "value_screen_scoring": false,
+    "value_screen_retry": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "action_admitted": false,
+  "authorization_decision": "hold",
+  "capture_count": 432,
+  "capture_runner_conformance_engineering_authorized": true,
+  "evidence_readiness": "complete",
+  "executable_run_ready": false,
+  "failed_implementation_checks": [
+    "w512_boot_contract_blocked",
+    "w512_recorder_action_blocked",
+    "multi_cell_same_boot_capture_missing",
+    "boot_static_action_relabel_missing",
+    "logical_weight_version_unstable",
+    "runtime_resource_floor_guard_missing"
+  ],
+  "gpu_measurement_authorized": false,
+  "gpu_physical_index": 4,
+  "minimum_launch_capacity_blocks": 21682,
+  "next_artifact": "p4_b0_capture_runner_conformance",
+  "p4a_engineering_authorized": false,
+  "package_id": "p4-b0-value-screen-run-authorization-v1",
+  "physical_boot_count": 9,
+  "status": "pass"
+}

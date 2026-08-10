@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-gpu-contention-probe-authorization-v1",
+  "date": "2026-08-10",
+  "status": "authorized_gpu0_gpu1_non_scored_contention_probe_only",
+  "consumed_v11": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json",
+      "sha256": "143c831383d9e7b2f9b1a4f020c8bbf8c185152f9c94537fb2d2c657eb72f60f",
+      "bytes": 17779
+    },
+    "capture_manifest": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/capture_manifest.json",
+      "sha256": "aca32827e7f15e7d29a09e2bb3d02b47bc894839783150784f34cdfc5c25a3c1",
+      "bytes": 36561
+    },
+    "interruption": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/failure.json",
+      "sha256": "558dc1c9f36c8def16e79bf5d290f365b37085c282193f90afd1ff5dea466afd",
+      "bytes": 2541
+    },
+    "disposition": "consumed_external_resource_reassignment",
+    "complete_capture_count": 48,
+    "empty_placeholder_count": 1,
+    "score_emitted": false,
+    "reuse_allowed": false
+  },
+  "relocation_probe": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v2.json",
+      "sha256": "8edf7d1bc3a110659ba510b5d9a7f2cde121f118035c030971b3ba6a3ba6bfc7",
+      "bytes": 11608
+    },
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v2/probe_result.json",
+      "sha256": "af370f60d9f94091dd3fe7ad98cef088a651e97185e302cdc6fe9165c8fd470b",
+      "bytes": 4185
+    },
+    "status": "pass",
+    "scored": false,
+    "gpu0_exact_r8_passed": true,
+    "gpu1_r5cot_to_r8_passed": true,
+    "shared_kv_floor_passed_on_both": true,
+    "performance_claim_allowed": false
+  },
+  "source_artifacts": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "capture_adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "contention_probe_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_gpu_contention_probe.py",
+      "sha256": "0aeb20d73a84c283d714bfede38f63ed5873e064c95b2b853d0cca81db333334"
+    },
+    "contention_probe_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_gpu_contention_probe_authorization.schema.json",
+      "sha256": "770d91973937baeba3c4dff8dd3c5fbdb34ffde4fe18522520e7f4c203c6dfaf"
+    },
+    "contention_probe_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_gpu_contention_probe.py",
+      "sha256": "9c9372fd553566c10df66cbcdab551ce06e5bb7478467cacfe4e01b6dfafe391"
+    },
+    "contention_probe_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_gpu_contention_probe_authorization.py",
+      "sha256": "6f5895bab52fe6c86dfd01663acceda5b67fafae0815674e444aaf85c2f1f2c9"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "0ab43a92a72d490e302ed326d162059fd6a4688c47a3bd68c67ed835f118521e"
+    },
+    "gpu_model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "126d87fc8eca5a67cb39e961635ac6cbf95c213a1d48f96b6178f04a83c86612"
+    },
+    "gpu_worker": {
+      "path": "vllm/v1/worker/gpu_worker.py",
+      "sha256": "78446ad656008a8ee74b80aaa76e68ff3d528bac781baf5f652e678c2cde9dd6"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "55211c6502f766198bad966adb1a4b440015f6c5a62cfc6faad16586934771ac"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "relocation_probe_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_relocation_probe_authorization_v2.json",
+      "sha256": "8edf7d1bc3a110659ba510b5d9a7f2cde121f118035c030971b3ba6a3ba6bfc7"
+    },
+    "relocation_probe_result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_gpu_relocation_probe_v2/probe_result.json",
+      "sha256": "af370f60d9f94091dd3fe7ad98cef088a651e97185e302cdc6fe9165c8fd470b"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328"
+    },
+    "v11_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json",
+      "sha256": "143c831383d9e7b2f9b1a4f020c8bbf8c185152f9c94537fb2d2c657eb72f60f"
+    },
+    "v11_capture_manifest": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/capture_manifest.json",
+      "sha256": "aca32827e7f15e7d29a09e2bb3d02b47bc894839783150784f34cdfc5c25a3c1"
+    },
+    "v11_interruption": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/failure.json",
+      "sha256": "558dc1c9f36c8def16e79bf5d290f365b37085c282193f90afd1ff5dea466afd"
+    },
+    "value_screen_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "66feab803e54a0929c9860c3cbbab3182d9e83cc1028bda8f8fb89dc4ed2d324"
+    }
+  },
+  "run_contract": {
+    "scope": "source_bound_non_scored_serial_vs_concurrent_aa_probe_only",
+    "scored": false,
+    "output_dir": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1",
+    "source_value_screen": {
+      "base_authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+        "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a",
+        "bytes": 11053
+      },
+      "consumed_v11_authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json",
+        "sha256": "143c831383d9e7b2f9b1a4f020c8bbf8c185152f9c94537fb2d2c657eb72f60f",
+        "bytes": 17779
+      }
+    },
+    "engine": {
+      "tensor_parallel_size": 1,
+      "pipeline_parallel_size": 1,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "effective_max_num_scheduled_tokens": 8160,
+      "max_num_seqs": 32,
+      "gpu_memory_utilization": 0.9,
+      "num_speculative_tokens": 4,
+      "enable_chunked_prefill": true,
+      "async_scheduling": false,
+      "prefix_caching": false,
+      "flashinfer_autotune": false,
+      "enforce_eager": false,
+      "generation_seed": 0
+    },
+    "workload": {
+      "source_boot_id": "p4-b0-b1-p2-k4",
+      "action_id": "target-matching-k4",
+      "boot_block_id": 1,
+      "action_position": 2,
+      "regime_id": "R8",
+      "content_seed": 0,
+      "rounds": [1, 2, 3, 4],
+      "prompts_per_round": 32,
+      "batch": 16,
+      "max_output_tokens": 2048,
+      "measurement_currency": "S_dec"
+    },
+    "gpu_assignments": {
+      "gpu0": {
+        "physical_index": 0,
+        "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703",
+        "cpu_affinity": "0-47,96-143",
+        "cache_root": "/data/smcho/.cache/vllm-p97-contention-v1/gpu0"
+      },
+      "gpu1": {
+        "physical_index": 1,
+        "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923",
+        "cpu_affinity": "48-95,144-191",
+        "cache_root": "/data/smcho/.cache/vllm-p97-contention-v1/gpu1"
+      }
+    },
+    "runs": {
+      "serial-gpu0": {
+        "condition": "serial",
+        "gpu_id": "gpu0",
+        "port_start": 47000
+      },
+      "serial-gpu1": {
+        "condition": "serial",
+        "gpu_id": "gpu1",
+        "port_start": 47100
+      },
+      "concurrent-gpu0": {
+        "condition": "concurrent",
+        "gpu_id": "gpu0",
+        "port_start": 47200
+      },
+      "concurrent-gpu1": {
+        "condition": "concurrent",
+        "gpu_id": "gpu1",
+        "port_start": 47300
+      }
+    },
+    "schedule": [
+      ["serial-gpu0"],
+      ["serial-gpu1"],
+      ["concurrent-gpu0", "concurrent-gpu1"]
+    ],
+    "port_range_size": 100,
+    "thresholds": {
+      "episode_floor_fraction": 0.95,
+      "minimum_surviving_rounds": 2,
+      "maximum_per_gpu_concurrent_slowdown_fraction": 0.01,
+      "maximum_contention_ratio_disagreement_fraction": 0.01,
+      "maximum_cross_gpu_rate_disagreement_fraction": 0.02
+    },
+    "attempt_policy": {
+      "create_new_output_required": true,
+      "partial_resume_allowed": false,
+      "retry_allowed": false,
+      "score_input_allowed": false,
+      "on_any_failure": "preserve_without_dual_gpu_authorization"
+    }
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu0_gpu1_non_scored_contention_probe_v1_only",
+    "basis": [
+      "v11_external_reassignment_preserved",
+      "gpu0_gpu1_relocation_probe_passed",
+      "single_cell_same_event_measurement_reused",
+      "fixed_ports_and_cpu_affinity_registered",
+      "current_execution_sources_hash_bound"
+    ],
+    "invalidated_by": [
+      "source_hash_drift",
+      "output_directory_exists",
+      "gpu_identity_drift",
+      "gpu_not_idle",
+      "port_range_not_free",
+      "cpu_affinity_drift",
+      "capture_or_episode_failure",
+      "threshold_contract_drift"
+    ]
+  },
+  "claims": {
+    "v11_interruption_preserved": true,
+    "gpu0_gpu1_functional_relocation_passed": true,
+    "contention_probe_executable": true,
+    "contention_bound_measured": false,
+    "dual_gpu_value_screen_authorized": false,
+    "value_screen_scoring_authorized": false,
+    "performance_claim_allowed": false,
+    "action_admitted": false
+  },
+  "authorizations": {
+    "contention_probe_execution": true,
+    "dual_gpu_value_screen_execution": false,
+    "value_screen_scoring": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_gpu_contention_probe_result",
+    "may_support_dual_gpu_authorization": true,
+    "direct_value_screen_authority": false,
+    "direct_scoring_authority": false
+  }
+}

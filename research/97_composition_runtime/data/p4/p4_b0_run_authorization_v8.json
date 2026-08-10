@@ -1,0 +1,338 @@
+{
+  "schema_version": 8,
+  "package_id": "p4-b0-value-screen-run-authorization-v8",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_decode_work_offset_value_screen_only",
+  "prior_authorization": {
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v7.json",
+    "sha256": "fabb3fad1fb689758ccb899c3be440e4ea47c4821564a10a1090dbbae67981df",
+    "disposition": "consumed_incomplete_capture_decode_work_failure"
+  },
+  "failed_attempt": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v6/failure.json",
+    "sha256": "4de30879810796b3b6295f3e4bafdb088210a3357d3344daa75781204edaca82",
+    "complete_capture_count": 0,
+    "incomplete_capture_count": 1,
+    "score_emitted": false,
+    "preserve_without_resume": true,
+    "failure_scope": "prefill_sample_vs_decode_only_fixed_work_off_by_one"
+  },
+  "request_id_repair": {
+    "state": "pass",
+    "shared_helper": "canonicalize_p4_request_ids",
+    "randomization_policy": "preserve_vllm_internal_request_id_randomization",
+    "disable_randomization_allowed": false,
+    "accepted_forms": [
+      "exact_frozen_request_id",
+      "frozen_request_id_plus_eight_lowercase_hex"
+    ],
+    "canonical_output": "exact_frozen_request_id",
+    "consumers": [
+      "same_event_recorder",
+      "atomic_ingress_analyzer"
+    ],
+    "fail_closed_cases": [
+      "malformed_suffix",
+      "unknown_request_id",
+      "canonical_collision",
+      "request_order_drift"
+    ]
+  },
+  "decode_work_repair": {
+    "state": "pass",
+    "measurement_currency": "S_dec",
+    "measured_decode_tokens_field": "generation.max_output_tokens",
+    "prefill_sampled_tokens_per_request": 1,
+    "frontend_total_output_tokens": "generation.max_output_tokens + 1",
+    "recorder_completion_tokens": "generation.max_output_tokens",
+    "scorer_requested_output_tokens": "len(prompt_record_ids) * generation.max_output_tokens",
+    "applies_to_actions": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "fail_closed_cases": [
+      "prefill_sample_offset_drift",
+      "frontend_total_output_mismatch",
+      "recorder_fixed_work_underflow",
+      "recorder_fixed_work_overflow",
+      "capture_cell_rollover_drift"
+    ]
+  },
+  "retained_evidence": {
+    "atomic_ingress_proof": {
+      "authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_atomic_ingress_proof_authorization_v2.json",
+        "sha256": "9811fc0c2a22edd7a127df4a405bd9d66263106becbc000321e54c4b26155983"
+      },
+      "result": {
+        "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2/proof.json",
+        "sha256": "d3c92a20d9fa41ed92131b1b704b32c4f2a64b984574cfe37b18d545292307e2"
+      },
+      "trace": {
+        "path": "research/97_composition_runtime/data/p4/run_b0_atomic_ingress_proof_v2/koff_trace.jsonl",
+        "sha256": "09f7e070987827a2970e2e9bc413c4083267ed65231b6acae9ab820d02bec8bc"
+      },
+      "decision": "pass",
+      "engine_core_class": "InprocClient",
+      "v1_multiprocessing": false,
+      "initial_prefill_request_count": 8,
+      "first_decode_request_count": 8,
+      "first_decode_query_widths": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "first_decode_exclusion_reasons": [],
+      "preemptions": 0,
+      "recomputed_tokens": 0,
+      "shared_target_kv_blocks": 22090,
+      "shared_target_kv_layer_count": 36,
+      "target_draft_weight_alias_count": 291,
+      "scored": false
+    },
+    "resource_probe": {
+      "authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe_authorization.json",
+        "sha256": "0db3e70bb56087ab7c5213149202aca6018839ca15be26c4546d9cd726e19e53"
+      },
+      "result": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_resource_repair_probe.json",
+        "sha256": "1fd328dadaa876158cb786d9d948a53553625411e03cecea1b1da2f56bc07552"
+      },
+      "decision": "pass",
+      "gpu_memory_utilization": 0.96,
+      "num_gpu_blocks": 22113,
+      "minimum_launch_blocks": 21682,
+      "headroom_blocks": 431,
+      "requests_executed": 0
+    },
+    "serving_chunked_prefill_boundary": {
+      "scope": "post_measurement_real_serving_diagnosis",
+      "max_num_batched_tokens": 8192,
+      "chunked_prefill_enabled": true,
+      "gpu_memory_utilization": 0.9,
+      "measurement_override_is_serving_default": false,
+      "mixed_prefill_decode_diagnosis_required": true
+    }
+  },
+  "frozen_inputs": {
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "scorer_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_runner_scorer_contract.json",
+      "sha256": "6bb1de6a2b13725c5b8d3637e024da2dd52e18212a504b9bd384e73a90274736"
+    }
+  },
+  "source_artifacts": {
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "23d90e315306be64580ae855ee9075e737df231d6b128a89d74a26dada360b0e"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "f667fb532d30ab4b3b21e40612e76e4e60519aa338033f487b51ec7d72fe1370"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "3c5021a39286cfbc2bf6209fdd05597f1175bd73b9616a7926340cd6d5999d37"
+    },
+    "conformance_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "3dcd297faad91b7a76480d738600df5106ea499f9062e9307f001027658c0431"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "73fb83771c73008c46e9953c6632a76dc484b035667a5e7000978467bbe5df5b"
+    },
+    "atomic_ingress_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+      "sha256": "30e07ca92a9fc2fc5ee63f46dbc04659a490d5e82f952e6040a263d4f6528b1e"
+    },
+    "atomic_ingress_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py",
+      "sha256": "a9e2097144938fae5a3ccb2c28aec0f2c4ea3bc3fac29b90548669ab1f2122d0"
+    },
+    "input_processor": {
+      "path": "vllm/v1/engine/input_processor.py",
+      "sha256": "c5673988c0f7cfec268220e3f044e718702c015a4f236c020937cfd40a793f15"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "a4434420cc64503828fe8fac29ba11cd282cdf4d9dca4e7592dd92305ef69ad7"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "75d55eb7cc84589e035fadf725dd16a81908dfc6b4da46b67e84587226e7259f"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "d57e1ff4fad5ddfc7379a606780fe62188452adab923b95db6ef73734db00562"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    },
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v8.schema.json",
+      "sha256": "5174631cec70397a21056114da7b475c7f1d15d8da827b914c82681a312a39b3"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v8.py",
+      "sha256": "e5785c5ac0dbabd835536c9ed8e0db272999e7bbc8eeaf644a9081d2c02dc31e"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v8.py",
+      "sha256": "054c2a6a4fd8f6949300a50bcc91e738de64d4ae58a266af2a1d09f5a038d252"
+    }
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v8.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v7"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v7",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "launchable_now": true
+    }
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_decode_work_offset_value_screen_v8_only",
+    "basis": [
+      "v7_incomplete_capture_failure_preserved",
+      "prefill_sample_offset_repaired_and_tested",
+      "off_k4_w512_capture_rollover_tested",
+      "strict_request_id_canonicalization_retained",
+      "atomic_ingress_gpu_proof_retained",
+      "full_prefill_resource_repair_retained",
+      "current_execution_sources_hash_bound",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "fresh_output_directory_exists",
+      "decode_work_contract_drift",
+      "request_id_contract_drift",
+      "inprocess_engine_core_preflight_failure",
+      "native_sampler_preflight_failure",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "gpu_not_idle",
+      "resource_floor_failure",
+      "measurement_engine_override_drift",
+      "serving_boundary_drift",
+      "matrix_or_contract_drift"
+    ]
+  },
+  "claims": {
+    "prior_value_screen_attempts_performed": 6,
+    "latest_prior_complete_capture_count": 0,
+    "latest_prior_incomplete_capture_count": 1,
+    "latest_prior_score_emitted": false,
+    "decode_work_offset_tested": true,
+    "all_action_capture_rollover_tested": true,
+    "request_id_canonicalization_tested": true,
+    "internal_request_id_randomization_retained": true,
+    "atomic_ingress_proof_passed": true,
+    "inprocess_runner_wiring_complete": true,
+    "executable_run_ready": true,
+    "serving_chunked_prefill_validated": true,
+    "runtime_w512_switching_implemented": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": true,
+    "v8_execution": true,
+    "serving_diagnosis": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "fallback_gpu_authorized": false,
+    "engine_core_mode": "in_process",
+    "engine_core_class": "InprocClient",
+    "v1_multiprocessing": false,
+    "physical_boot_count": 9,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "prior_output_reuse_allowed": false,
+    "partial_resume_allowed": false,
+    "retry_allowed": false,
+    "score_grants_authority": false,
+    "on_any_failure": "stop_without_scoring_and_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "requires_complete_capture_count": 432,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

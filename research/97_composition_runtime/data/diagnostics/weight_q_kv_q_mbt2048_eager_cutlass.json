@@ -1,0 +1,120 @@
+{
+  "boot_class": "diagnostic_weight_q_kv_q_cutlass",
+  "boot_seconds": 71.236952,
+  "cache": {
+    "block_size": 16,
+    "gpu_memory_utilization": 0.9,
+    "kv_cache_max_concurrency": 11.44140625,
+    "kv_cache_size_tokens": 234320,
+    "num_gpu_blocks": 14645,
+    "target_cache_dtype": "auto"
+  },
+  "cuda_visible_devices": "5",
+  "diagnostic_only": true,
+  "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+  "draft_execution": "eager",
+  "draft_kv_dtype": "fp8",
+  "draft_kv_mode": "private-fp8",
+  "draft_trace": null,
+  "elapsed_seconds_before_shutdown": 81.564159,
+  "engine_args": {
+    "async_scheduling": true,
+    "enable_prefix_caching": false,
+    "enforce_eager": false,
+    "flashinfer_autotune": false,
+    "gpu_memory_utilization": 0.9,
+    "k": 4,
+    "linear_backend": "cutlass",
+    "max_model_len": 20480,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 32
+  },
+  "environment": {
+    "VLLM_DISABLED_KERNELS": "MacheteLinearKernel,AllSparkLinearKernel",
+    "VLLM_SELF_SPEC_CPU_ORCH": "1",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+    "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+    "VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU": "1",
+    "VLLM_SELF_SPEC_DRAFT_EAGER": "1",
+    "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "fp8",
+    "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": "0",
+    "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+    "VLLM_SELF_SPEC_DRAFT_TRACE": "",
+    "VLLM_SELF_SPEC_SHARED_KV": "0",
+    "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "0",
+    "VLLM_SELF_SPEC_SHARE_WEIGHTS": "0",
+    "VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT": "0"
+  },
+  "finished_utc": "2026-08-08T10:40:10.643415+00:00",
+  "git": {
+    "commit": "374961b08bcad6033ecc0bba929b0cb7946aa85b",
+    "tracked_worktree_dirty": true
+  },
+  "gpu_after_boot": {
+    "free_mib": 8209,
+    "temp_c": 34,
+    "total_mib": 81559,
+    "used_mib": 72871,
+    "util_pct": 0
+  },
+  "gpu_after_shutdown": {
+    "free_mib": 81079,
+    "temp_c": 32,
+    "total_mib": 81559,
+    "used_mib": 0,
+    "util_pct": 0
+  },
+  "gpu_after_smoke": {
+    "free_mib": 8207,
+    "temp_c": 34,
+    "total_mib": 81559,
+    "used_mib": 72873,
+    "util_pct": 32
+  },
+  "gpu_before": {
+    "free_mib": 81079,
+    "temp_c": 30,
+    "total_mib": 81559,
+    "used_mib": 0,
+    "util_pct": 0
+  },
+  "gpu_physical": 5,
+  "gpu_processes_after_boot": [
+    {
+      "gpu_uuid": "GPU-318614e3-fd51-31a9-399d-9e94cb767967",
+      "pid": 907124,
+      "process_name": "VLLM::EngineCore",
+      "used_mib": 72862
+    }
+  ],
+  "gpu_processes_after_shutdown": [],
+  "gpu_processes_before": [],
+  "kv_q": true,
+  "memory_sampler": {
+    "interval_s": 0.5,
+    "peak_used_mib": 72873,
+    "sample_count": 123
+  },
+  "model": "Qwen/Qwen3-8B",
+  "non_scored": true,
+  "private_draft_kv": true,
+  "proxy_for": "diagnostic only: isolate W4A8 linear kernel selection",
+  "schema_version": 1,
+  "smoke": {
+    "counters": {
+      "accepted_tokens": 12.0,
+      "draft_tokens": 3.0,
+      "preemptions": 0.0
+    },
+    "finish_reason": "length",
+    "output_tokens": 16,
+    "requested_tokens": 16,
+    "seconds": 1.70099
+  },
+  "started_utc": "2026-08-08T10:38:43.079369+00:00",
+  "static_proxy": true,
+  "status": "booted",
+  "target_execution": "compiled",
+  "weight_q": true
+}

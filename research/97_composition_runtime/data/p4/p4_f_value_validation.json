@@ -1,0 +1,30 @@
+{
+  "action_admission_authorized": false,
+  "approval_state": "not_approved",
+  "blocking_reason_codes": [
+    "exact_action_acceptance_missing",
+    "exact_action_cost_missing",
+    "phase96_d_accounting_invalid",
+    "phase96_d_result_missing",
+    "phase96_e_result_missing",
+    "phase96_f_portfolio_result_missing",
+    "resource_evidence_not_exact",
+    "transition_overhead_unmeasured",
+    "workload_objective_unscored",
+    "workload_weights_not_frozen"
+  ],
+  "decision_id": "phase96-f-p4-w512-masked-value-v1",
+  "gpu_measurement_authorized": false,
+  "next_artifact": "matched_target_matching_b0_value_screen_preregistration",
+  "p4a_engineering_authorized": false,
+  "status": "pass",
+  "value_interpretation": "unresolved_not_disproven",
+  "w14d_audit": {
+    "bundle_sha256": "911409a1a103fabd62bfb5fda672a69c6b1bad6bf3c4a986193edae57e192ee3",
+    "complete_file_count": 21,
+    "minimum_unarmed_steps": -8,
+    "negative_unarmed_round_count": 313,
+    "observed_file_count": 21,
+    "round_count": 1680
+  }
+}

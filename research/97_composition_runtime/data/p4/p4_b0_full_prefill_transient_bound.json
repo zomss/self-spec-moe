@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "bound_id": "p4-b0-full-prefill-transient-bound-v1",
+  "date": "2026-08-09",
+  "status": "reject_current_full_prefill_geometry",
+  "evidence_grade": "observed_failure_plus_static_live_set_lower_bound",
+  "source_artifacts": {
+    "v9_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v9.json",
+      "sha256": "1542763ea55e6cda9aaf29fda357bc3818a508eecd34d22d869c22aa13ea1ee4"
+    },
+    "v9_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/failure.json",
+      "sha256": "605e10c42bef250269c346141599dd0af08613f2bd3b8d675ee2fcff187b9986"
+    },
+    "v9_preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/preparation.json",
+      "sha256": "4eb2f700c170b2d2ddfca1409e2948d50baee16960e3a69f0abefcf7c92e5ee1"
+    },
+    "first_boot_spec": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/boot_specs/p4-b0-b1-p1-off.json",
+      "sha256": "e22a1729d9aac8057f1d4f9e2dccf93dd3802584ebb9dd679a5d81f27e4ea6cf"
+    },
+    "first_plan": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/plans/p4-b0-b1-p1-off.json",
+      "sha256": "7ce7fe4a83bab45d5893c92500a3eba94fc0c947a059d324ff34093f1529b2da"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "model_config": {
+      "path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218/config.json",
+      "sha256": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30"
+    },
+    "qwen3_model_source": {
+      "path": "vllm/model_executor/models/qwen3.py",
+      "sha256": "15d7bb3a63d32712a4043cfdde98aa5481e954db505f73b9693be73595ec8dc7"
+    },
+    "qwen_mlp_source": {
+      "path": "vllm/model_executor/models/qwen2.py",
+      "sha256": "040462bfb0fe47cd1bc85fe2fb48d3e567269d0dfbe7a96d52331bc9d5f460dc"
+    },
+    "silu_and_mul_source": {
+      "path": "vllm/model_executor/layers/activation.py",
+      "sha256": "757209cef4b5cc091d29d95b4a6b29f2511984110c9b66810c760d4499cb156c"
+    }
+  },
+  "source_limitations": {
+    "allocator_stderr_log_persisted_separately": false,
+    "allocator_values_preserved_in_failure_record": true,
+    "torchinductor_cache_used_as_required_evidence": false,
+    "interpretation": "The exact allocator shape and rounded memory reports are transcribed into the immutable failure record. Cache/build files are not research assets; the live-set formula is independently reconstructed from the bound model geometry and checked-in Qwen MLP sources."
+  },
+  "measurement_geometry": {
+    "model_id": "Qwen/Qwen3-8B",
+    "checkpoint_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "physical_gpu_index": 4,
+    "gpu_model": "NVIDIA H100 80GB HBM3",
+    "max_num_batched_tokens": 114688,
+    "effective_scheduler_token_budget": 114656,
+    "gpu_memory_utilization": 0.96,
+    "enable_chunked_prefill": true,
+    "graph_grade": "fullcg-piecewise",
+    "shared_kv": {
+      "owner": "target",
+      "pool_count": 1,
+      "private_draft_pool_count": 0,
+      "dtype": "bfloat16",
+      "layer_count": 36
+    }
+  },
+  "model_geometry": {
+    "hidden_size": 4096,
+    "intermediate_size": 12288,
+    "tensor_parallel_size": 1,
+    "activation_dtype": "bfloat16",
+    "activation_element_bytes": 2,
+    "gate_up_width": 24576,
+    "silu_multiply_output_width": 12288
+  },
+  "observed_attempt": {
+    "completed_physical_boots": 0,
+    "complete_r4_captures": 8,
+    "complete_r4_events": 16384,
+    "empty_r5_placeholder_count": 1,
+    "adapted_rounds": 0,
+    "score_emitted": false,
+    "failed_regime": "R5",
+    "failed_prompt_tokens": 112304,
+    "failed_allocation": {
+      "shape": [
+        112304,
+        12288
+      ],
+      "dtype": "bfloat16",
+      "bytes": 2759983104,
+      "gib": 2.5704345703125,
+      "allocator_reported_gib": 2.57
+    }
+  },
+  "compiled_mlp_live_set": {
+    "method": "sum_simultaneously_live_bfloat16_rows_at_silu_output_allocation",
+    "tensors": [
+      {
+        "name": "attention_output_projection",
+        "width": 4096,
+        "multiplicity": 1
+      },
+      {
+        "name": "post_attention_normalized_hidden",
+        "width": 4096,
+        "multiplicity": 1
+      },
+      {
+        "name": "residual",
+        "width": 4096,
+        "multiplicity": 1
+      },
+      {
+        "name": "gate_up_projection",
+        "width": 24576,
+        "multiplicity": 1
+      },
+      {
+        "name": "silu_multiply_output",
+        "width": 12288,
+        "multiplicity": 1
+      }
+    ],
+    "total_width": 49152,
+    "bytes_per_prompt_token": 98304,
+    "regime_bounds": {
+      "R5": {
+        "prompt_tokens": 112304,
+        "gate_up_projection_bytes": 5519966208,
+        "silu_multiply_output_bytes": 2759983104,
+        "other_live_rows_bytes": 2759983104,
+        "live_set_bytes": 11039932416,
+        "live_set_gib": 10.28173828125,
+        "kv_block_equivalent_ceil": 4680
+      },
+      "R5cot": {
+        "prompt_tokens": 112908,
+        "gate_up_projection_bytes": 5549654016,
+        "silu_multiply_output_bytes": 2774827008,
+        "other_live_rows_bytes": 2774827008,
+        "live_set_bytes": 11099308032,
+        "live_set_gib": 10.3370361328125,
+        "kv_block_equivalent_ceil": 4705
+      }
+    },
+    "claim_boundary": "This is a lower bound on simultaneously live model activations for the observed compiled MLP shape, not a complete CUDA allocator peak and not permission to subtract the full value from KV capacity twice."
+  },
+  "graph_pool_correction": {
+    "estimated_pool_gib_reported": 0.5,
+    "actual_pool_gib_reported": 4.9,
+    "nominal_underestimate_gib": 4.4,
+    "reported_values_decimal_places": 2,
+    "minimum_underestimate_gib_under_round_to_nearest": 4.39,
+    "minimum_underestimate_bytes": 4713726608,
+    "kv_bytes_per_block": 2359296,
+    "minimum_underestimate_blocks_ceil": 1998,
+    "observed_shared_kv_blocks": 22090,
+    "optimistic_graph_corrected_capacity_blocks": 20092,
+    "required_live_kv_blocks": 21000,
+    "launch_floor_blocks": 21682,
+    "shortfall_to_required_live_blocks": 908,
+    "shortfall_to_launch_floor_blocks": 1590,
+    "decision": "fail_even_under_optimistic_report_rounding"
+  },
+  "failed_allocation_at_kv_floor": {
+    "observed_shared_kv_blocks": 22090,
+    "launch_floor_blocks": 21682,
+    "releasable_blocks_before_floor": 408,
+    "kv_bytes_per_block": 2359296,
+    "optimistic_releasable_bytes": 962592768,
+    "allocator_reported_free_gib": 1.45,
+    "reported_values_decimal_places": 2,
+    "optimistic_free_upper_bound_gib": 1.455,
+    "optimistic_free_upper_bound_bytes": 1562294354,
+    "optimistic_bytes_available_at_floor": 2524887122,
+    "failed_request_bytes": 2759983104,
+    "minimum_deficit_bytes": 235095982,
+    "additional_blocks_needed_ceil": 100,
+    "maximum_kv_blocks_compatible_with_failed_request": 21582,
+    "decision": "launch_floor_cannot_cover_first_failed_allocation"
+  },
+  "decision": {
+    "state": "reject",
+    "scope": "fresh_value_screen_authorization_with_114688_0.96_full_microbatch_prefill",
+    "basis": [
+      "v9_consumed_after_cuda_oom",
+      "actual_graph_pool_exceeded_estimate_by_at_least_4.39_gib",
+      "optimistic_graph_corrected_kv_capacity_below_hard_live_requirement",
+      "kv_floor_headroom_cannot_cover_first_failed_r5_allocation",
+      "r5cot_static_live_set_is_larger_than_failed_r5_live_set"
+    ],
+    "not_repaired_by": [
+      "retrying_v9",
+      "resuming_after_eight_r4_captures",
+      "using_gpu5",
+      "lowering_kv_capacity_below_the_registered_floor",
+      "relying_on_the_cuda_graph_estimate"
+    ]
+  },
+  "required_repair": {
+    "preferred_direction": "chunked_prefill_with_capture_cohort_decode_barrier",
+    "requirements": [
+      "restore_a_bounded_chunked_prefill_budget_instead_of_112908_token_forward_shapes",
+      "queue_the_complete_frozen_capture_microbatch_before_the_first_engine_step",
+      "hold_requests_that_finished_prefill_after_their_unmeasured_prefill_sample_until_every_capture_cohort_request_has_finished_prefill",
+      "release_all_cohort_requests_into_the_first_measured_pure_decode_step_together",
+      "preserve_exactly_512_measured_decode_commits_per_request_and_all_same_event_counters",
+      "keep_one_target_owned_36_layer_kv_pool_and_zero_private_draft_kv_pools",
+      "measure_actual_post_capture_graph_memory_and_post_repair_kv_blocks_before_authorization"
+    ],
+    "required_proofs_before_v10": [
+      "cpu_scheduler_barrier_state_machine_and_fail_closed_tests",
+      "one_boot_non_scored_gpu_ingress_and_memory_probe_on_gpu4",
+      "actual_graph_pool_not_estimated_graph_pool_bound",
+      "post_capture_shared_kv_capacity_at_or_above_21682_blocks",
+      "r4_r5_r5cot_first_measured_step_is_pure_decode_for_the_full_cohort",
+      "no_preemption_recomputation_or_invalid_spec_tokens",
+      "fresh_create_only_output_path_and_source_bound_v10_review"
+    ],
+    "alternatives_requiring_scope_change": [
+      "a_larger_hbm_device",
+      "a_proven_lower_memory_graph_or_activation_kernel",
+      "a_revised_workload_kv_floor"
+    ]
+  },
+  "claims": {
+    "v9_result_scoreable": false,
+    "current_full_prefill_geometry_feasible": false,
+    "cohort_barrier_implemented": false,
+    "cohort_barrier_gpu_validated": false,
+    "v10_run_ready": false,
+    "p4a_engineering_authorized": false,
+    "action_admitted": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "gpu_probe": false,
+    "v10_value_screen": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof",
+    "separate_gpu_probe_authorization_required": true,
+    "separate_v10_authorization_required": true
+  }
+}

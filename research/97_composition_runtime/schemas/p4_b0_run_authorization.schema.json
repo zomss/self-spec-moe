@@ -1,0 +1,699 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_run_authorization.schema.json",
+  "title": "Phase 97 B0 value-screen run authorization review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "source_artifacts",
+    "evidence_readiness",
+    "run_contract",
+    "resource_gates",
+    "implementation_audit",
+    "decision",
+    "claims",
+    "authorizations",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "package_id": {
+      "const": "p4-b0-value-screen-run-authorization-v1"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "hold_executable_not_ready"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_screen_preregistration",
+        "runner_scorer_contract",
+        "prompt_manifest",
+        "live_recorder_wiring",
+        "w512_equivalence",
+        "resource_bound",
+        "measurement_adapter",
+        "scorer",
+        "live_runtime",
+        "live_scheduler"
+      ],
+      "properties": {
+        "value_screen_preregistration": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "runner_scorer_contract": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "prompt_manifest": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "live_recorder_wiring": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "w512_equivalence": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "resource_bound": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "measurement_adapter": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "scorer": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "live_runtime": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "live_scheduler": {
+          "$ref": "#/$defs/artifact_ref"
+        }
+      }
+    },
+    "evidence_readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "satisfied",
+        "remaining"
+      ],
+      "properties": {
+        "state": {
+          "const": "complete"
+        },
+        "satisfied": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "remaining": {
+          "const": []
+        }
+      }
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "screen_id",
+        "scope",
+        "repository_commit",
+        "model",
+        "gpu_assignment",
+        "engine",
+        "environment",
+        "action_boots",
+        "matrix",
+        "invocation"
+      ],
+      "properties": {
+        "screen_id": {
+          "const": "p4-b0-off-k4-w512-value-screen-v1"
+        },
+        "scope": {
+          "const": "boot_static_acceptance_screen_only"
+        },
+        "repository_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "model": {
+          "$ref": "#/$defs/model"
+        },
+        "gpu_assignment": {
+          "$ref": "#/$defs/gpu_assignment"
+        },
+        "engine": {
+          "$ref": "#/$defs/engine"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 10
+        },
+        "action_boots": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/action_boot"
+          }
+        },
+        "matrix": {
+          "$ref": "#/$defs/matrix"
+        },
+        "invocation": {
+          "$ref": "#/$defs/invocation"
+        }
+      }
+    },
+    "resource_gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_available_shared_kv_blocks",
+        "conservative_floor_blocks",
+        "required_live_kv_blocks",
+        "minimum_launch_capacity_blocks",
+        "single_target_owned_pool_required",
+        "preemption_allowed",
+        "recomputation_allowed",
+        "on_violation"
+      ],
+      "properties": {
+        "base_available_shared_kv_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conservative_floor_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required_live_kv_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimum_launch_capacity_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "single_target_owned_pool_required": {
+          "const": true
+        },
+        "preemption_allowed": {
+          "const": false
+        },
+        "recomputation_allowed": {
+          "const": false
+        },
+        "on_violation": {
+          "const": "stop_without_scoring"
+        }
+      }
+    },
+    "implementation_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "checks"
+      ],
+      "properties": {
+        "state": {
+          "const": "fail"
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "status",
+              "evidence"
+            ],
+            "properties": {
+              "code": {
+                "$ref": "#/$defs/identifier"
+              },
+              "status": {
+                "const": "fail"
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "reason_codes",
+        "reapproval_required_after_conformance"
+      ],
+      "properties": {
+        "state": {
+          "const": "hold"
+        },
+        "reason_codes": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "reapproval_required_after_conformance": {
+          "const": true
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_readiness_complete",
+        "executable_run_ready",
+        "exact_invocation_registered",
+        "gpu_run_performed",
+        "runtime_w512_switching_implemented",
+        "action_admitted",
+        "performance_claim_allowed"
+      ],
+      "properties": {
+        "evidence_readiness_complete": {
+          "const": true
+        },
+        "executable_run_ready": {
+          "const": false
+        },
+        "exact_invocation_registered": {
+          "const": true
+        },
+        "gpu_run_performed": {
+          "const": false
+        },
+        "runtime_w512_switching_implemented": {
+          "const": false
+        },
+        "action_admitted": {
+          "const": false
+        },
+        "performance_claim_allowed": {
+          "const": false
+        }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_runner_conformance_engineering",
+        "gpu_measurement",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "capture_runner_conformance_engineering": {
+          "const": true
+        },
+        "gpu_measurement": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        }
+      }
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "must_clear",
+        "may_self_authorize_gpu"
+      ],
+      "properties": {
+        "kind": {
+          "const": "p4_b0_capture_runner_conformance"
+        },
+        "must_clear": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "may_self_authorize_gpu": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "revision",
+        "snapshot_path",
+        "target_quantization",
+        "target_kv_dtype",
+        "draft_weight_path"
+      ],
+      "properties": {
+        "model_id": {
+          "const": "Qwen/Qwen3-8B"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "snapshot_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_quantization": {
+          "type": "null"
+        },
+        "target_kv_dtype": {
+          "const": "bfloat16"
+        },
+        "draft_weight_path": {
+          "const": "target-matching-alias"
+        }
+      }
+    },
+    "gpu_assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cuda_visible_devices",
+        "physical_index",
+        "uuid",
+        "model",
+        "memory_mib",
+        "all_nine_boots_same_gpu",
+        "fallback_gpu"
+      ],
+      "properties": {
+        "cuda_visible_devices": {
+          "const": "4"
+        },
+        "physical_index": {
+          "const": 4
+        },
+        "uuid": {
+          "type": "string",
+          "pattern": "^GPU-[0-9a-f-]+$"
+        },
+        "model": {
+          "const": "NVIDIA H100 80GB HBM3"
+        },
+        "memory_mib": {
+          "type": "integer",
+          "minimum": 80000
+        },
+        "all_nine_boots_same_gpu": {
+          "const": true
+        },
+        "fallback_gpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "physical_index",
+            "uuid",
+            "authorized"
+          ],
+          "properties": {
+            "physical_index": {
+              "const": 5
+            },
+            "uuid": {
+              "type": "string",
+              "pattern": "^GPU-[0-9a-f-]+$"
+            },
+            "authorized": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tensor_parallel_size",
+        "pipeline_parallel_size",
+        "max_model_len",
+        "max_num_batched_tokens",
+        "max_num_seqs",
+        "gpu_memory_utilization",
+        "num_speculative_tokens",
+        "async_scheduling",
+        "prefix_caching",
+        "flashinfer_autotune",
+        "enforce_eager",
+        "generation_seed"
+      ],
+      "properties": {
+        "tensor_parallel_size": {
+          "const": 1
+        },
+        "pipeline_parallel_size": {
+          "const": 1
+        },
+        "max_model_len": {
+          "const": 20480
+        },
+        "max_num_batched_tokens": {
+          "const": 8192
+        },
+        "max_num_seqs": {
+          "const": 32
+        },
+        "gpu_memory_utilization": {
+          "const": 0.9
+        },
+        "num_speculative_tokens": {
+          "const": 4
+        },
+        "async_scheduling": {
+          "const": false
+        },
+        "prefix_caching": {
+          "const": false
+        },
+        "flashinfer_autotune": {
+          "const": false
+        },
+        "enforce_eager": {
+          "const": false
+        },
+        "generation_seed": {
+          "const": 0
+        }
+      }
+    },
+    "action_boot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "window_tokens",
+        "sink_tokens",
+        "dynamic_k_schedule",
+        "cost_credit_allowed"
+      ],
+      "properties": {
+        "action_id": {
+          "enum": [
+            "off",
+            "target-matching-k4",
+            "target-matching-w512-masked-k4"
+          ]
+        },
+        "window_tokens": {
+          "type": "integer",
+          "enum": [
+            0,
+            512
+          ]
+        },
+        "sink_tokens": {
+          "type": "integer",
+          "enum": [
+            0,
+            16
+          ]
+        },
+        "dynamic_k_schedule": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  4
+                ]
+              }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "cost_credit_allowed": {
+          "const": false
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot_blocks",
+        "physical_boot_count",
+        "cells_per_boot",
+        "raw_capture_count",
+        "adapted_round_count",
+        "rounds_per_regime_seed",
+        "prompts_per_cell"
+      ],
+      "properties": {
+        "boot_blocks": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "block_id",
+              "action_order"
+            ],
+            "properties": {
+              "block_id": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "action_order": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "physical_boot_count": {
+          "const": 9
+        },
+        "cells_per_boot": {
+          "const": 48
+        },
+        "raw_capture_count": {
+          "const": 432
+        },
+        "adapted_round_count": {
+          "const": 432
+        },
+        "rounds_per_regime_seed": {
+          "const": 4
+        },
+        "prompts_per_cell": {
+          "const": 32
+        }
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runner_path",
+        "argv",
+        "output_dir",
+        "overwrite_allowed",
+        "runner_exists",
+        "launchable_now"
+      ],
+      "properties": {
+        "runner_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "argv": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string"
+          }
+        },
+        "output_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overwrite_allowed": {
+          "const": false
+        },
+        "runner_exists": {
+          "const": false
+        },
+        "launchable_now": {
+          "const": false
+        }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    }
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_gpu_contention_probe_authorization.schema.json",
+  "title": "Phase 97 GPU contention-probe authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "consumed_v11",
+    "relocation_probe",
+    "source_artifacts",
+    "run_contract",
+    "decision",
+    "claims",
+    "authorizations",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "package_id": {
+      "const": "p4-b0-gpu-contention-probe-authorization-v1"
+    },
+    "date": { "type": "string", "format": "date" },
+    "status": {
+      "const": "authorized_gpu0_gpu1_non_scored_contention_probe_only"
+    },
+    "consumed_v11": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization",
+        "capture_manifest",
+        "interruption",
+        "disposition",
+        "complete_capture_count",
+        "empty_placeholder_count",
+        "score_emitted",
+        "reuse_allowed"
+      ],
+      "properties": {
+        "authorization": { "$ref": "#/$defs/artifact_ref" },
+        "capture_manifest": { "$ref": "#/$defs/artifact_ref" },
+        "interruption": { "$ref": "#/$defs/artifact_ref" },
+        "disposition": { "const": "consumed_external_resource_reassignment" },
+        "complete_capture_count": { "const": 48 },
+        "empty_placeholder_count": { "const": 1 },
+        "score_emitted": { "const": false },
+        "reuse_allowed": { "const": false }
+      }
+    },
+    "relocation_probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization",
+        "result",
+        "status",
+        "scored",
+        "gpu0_exact_r8_passed",
+        "gpu1_r5cot_to_r8_passed",
+        "shared_kv_floor_passed_on_both",
+        "performance_claim_allowed"
+      ],
+      "properties": {
+        "authorization": { "$ref": "#/$defs/artifact_ref" },
+        "result": { "$ref": "#/$defs/artifact_ref" },
+        "status": { "const": "pass" },
+        "scored": { "const": false },
+        "gpu0_exact_r8_passed": { "const": true },
+        "gpu1_r5cot_to_r8_passed": { "const": true },
+        "shared_kv_floor_passed_on_both": { "const": true },
+        "performance_claim_allowed": { "const": false }
+      }
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/source_ref" }
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "scored",
+        "output_dir",
+        "source_value_screen",
+        "engine",
+        "workload",
+        "gpu_assignments",
+        "runs",
+        "schedule",
+        "port_range_size",
+        "thresholds",
+        "attempt_policy"
+      ],
+      "properties": {
+        "scope": {
+          "const": "source_bound_non_scored_serial_vs_concurrent_aa_probe_only"
+        },
+        "scored": { "const": false },
+        "output_dir": {
+          "const": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1"
+        },
+        "source_value_screen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base_authorization", "consumed_v11_authorization"],
+          "properties": {
+            "base_authorization": { "$ref": "#/$defs/artifact_ref" },
+            "consumed_v11_authorization": { "$ref": "#/$defs/artifact_ref" }
+          }
+        },
+        "engine": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tensor_parallel_size",
+            "pipeline_parallel_size",
+            "max_model_len",
+            "max_num_batched_tokens",
+            "effective_max_num_scheduled_tokens",
+            "max_num_seqs",
+            "gpu_memory_utilization",
+            "num_speculative_tokens",
+            "enable_chunked_prefill",
+            "async_scheduling",
+            "prefix_caching",
+            "flashinfer_autotune",
+            "enforce_eager",
+            "generation_seed"
+          ],
+          "properties": {
+            "tensor_parallel_size": { "const": 1 },
+            "pipeline_parallel_size": { "const": 1 },
+            "max_model_len": { "const": 20480 },
+            "max_num_batched_tokens": { "const": 8192 },
+            "effective_max_num_scheduled_tokens": { "const": 8160 },
+            "max_num_seqs": { "const": 32 },
+            "gpu_memory_utilization": { "const": 0.9 },
+            "num_speculative_tokens": { "const": 4 },
+            "enable_chunked_prefill": { "const": true },
+            "async_scheduling": { "const": false },
+            "prefix_caching": { "const": false },
+            "flashinfer_autotune": { "const": false },
+            "enforce_eager": { "const": false },
+            "generation_seed": { "const": 0 }
+          }
+        },
+        "workload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_boot_id",
+            "action_id",
+            "boot_block_id",
+            "action_position",
+            "regime_id",
+            "content_seed",
+            "rounds",
+            "prompts_per_round",
+            "batch",
+            "max_output_tokens",
+            "measurement_currency"
+          ],
+          "properties": {
+            "source_boot_id": { "const": "p4-b0-b1-p2-k4" },
+            "action_id": { "const": "target-matching-k4" },
+            "boot_block_id": { "const": 1 },
+            "action_position": { "const": 2 },
+            "regime_id": { "const": "R8" },
+            "content_seed": { "const": 0 },
+            "rounds": { "const": [1, 2, 3, 4] },
+            "prompts_per_round": { "const": 32 },
+            "batch": { "const": 16 },
+            "max_output_tokens": { "const": 2048 },
+            "measurement_currency": { "const": "S_dec" }
+          }
+        },
+        "gpu_assignments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gpu0", "gpu1"],
+          "properties": {
+            "gpu0": { "$ref": "#/$defs/gpu_assignment" },
+            "gpu1": { "$ref": "#/$defs/gpu_assignment" }
+          }
+        },
+        "runs": {
+          "type": "object",
+          "minProperties": 4,
+          "maxProperties": 4,
+          "additionalProperties": { "$ref": "#/$defs/run" }
+        },
+        "schedule": {
+          "const": [
+            ["serial-gpu0"],
+            ["serial-gpu1"],
+            ["concurrent-gpu0", "concurrent-gpu1"]
+          ]
+        },
+        "port_range_size": { "const": 100 },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "episode_floor_fraction",
+            "minimum_surviving_rounds",
+            "maximum_per_gpu_concurrent_slowdown_fraction",
+            "maximum_contention_ratio_disagreement_fraction",
+            "maximum_cross_gpu_rate_disagreement_fraction"
+          ],
+          "properties": {
+            "episode_floor_fraction": { "const": 0.95 },
+            "minimum_surviving_rounds": { "const": 2 },
+            "maximum_per_gpu_concurrent_slowdown_fraction": { "const": 0.01 },
+            "maximum_contention_ratio_disagreement_fraction": { "const": 0.01 },
+            "maximum_cross_gpu_rate_disagreement_fraction": { "const": 0.02 }
+          }
+        },
+        "attempt_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "create_new_output_required",
+            "partial_resume_allowed",
+            "retry_allowed",
+            "score_input_allowed",
+            "on_any_failure"
+          ],
+          "properties": {
+            "create_new_output_required": { "const": true },
+            "partial_resume_allowed": { "const": false },
+            "retry_allowed": { "const": false },
+            "score_input_allowed": { "const": false },
+            "on_any_failure": {
+              "const": "preserve_without_dual_gpu_authorization"
+            }
+          }
+        }
+      }
+    },
+    "decision": { "type": "object" },
+    "claims": { "type": "object" },
+    "authorizations": { "type": "object" },
+    "next_artifact": { "type": "object" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "gpu_assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physical_index", "uuid", "cpu_affinity", "cache_root"],
+      "properties": {
+        "physical_index": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "uuid": { "type": "string", "pattern": "^GPU-[0-9a-f-]+$" },
+        "cpu_affinity": { "type": "string", "minLength": 1 },
+        "cache_root": { "type": "string", "minLength": 1 }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["condition", "gpu_id", "port_start"],
+      "properties": {
+        "condition": { "enum": ["serial", "concurrent"] },
+        "gpu_id": { "enum": ["gpu0", "gpu1"] },
+        "port_start": { "type": "integer", "minimum": 47000, "maximum": 47300 }
+      }
+    }
+  }
+}

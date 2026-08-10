@@ -1,0 +1,452 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_f_value.schema.json",
+  "title": "Phase 96/F value approval decision for the Phase 97 P4 action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "evaluated_date",
+    "scope",
+    "source_artifacts",
+    "prerequisite_audit",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "decision_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "evaluated_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_type",
+        "entry_package_id",
+        "candidate_action_id",
+        "proper_subset_action_id",
+        "capability_class"
+      ],
+      "properties": {
+        "approval_type": {
+          "const": "phase96_f_pre_engineering_value"
+        },
+        "entry_package_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "candidate_action_id": {
+          "const": "target-matching-w512-masked-k4"
+        },
+        "proper_subset_action_id": {
+          "const": "target-matching-k4"
+        },
+        "capability_class": {
+          "const": "B0"
+        }
+      }
+    },
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "w3_value_threshold",
+        "phase96_f_plan",
+        "p4_entry",
+        "workload",
+        "resource_plan",
+        "resource_candidate",
+        "w14d_preregistration",
+        "w14d_scorer"
+      ],
+      "properties": {
+        "w3_value_threshold": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "phase96_f_plan": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "p4_entry": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "workload": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "resource_plan": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "resource_candidate": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "w14d_preregistration": {
+          "$ref": "#/$defs/artifact_ref"
+        },
+        "w14d_scorer": {
+          "$ref": "#/$defs/artifact_ref"
+        }
+      }
+    },
+    "prerequisite_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload_value_contract",
+        "exact_action_value",
+        "phase96_d",
+        "phase96_e",
+        "phase96_f_portfolio",
+        "resource_feasibility",
+        "transition_overhead"
+      ],
+      "properties": {
+        "workload_value_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evidence_grade",
+            "scored",
+            "objective_kind",
+            "workload_weights",
+            "pass"
+          ],
+          "properties": {
+            "evidence_grade": {
+              "const": "engineering_assumption"
+            },
+            "scored": {
+              "const": false
+            },
+            "objective_kind": {
+              "const": "capacity_feasibility"
+            },
+            "workload_weights": {
+              "type": "null"
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "exact_action_value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase96_exact_action_match",
+            "acceptance_result",
+            "cost_result",
+            "robust_gain_lcb",
+            "pass"
+          ],
+          "properties": {
+            "phase96_exact_action_match": {
+              "const": false
+            },
+            "acceptance_result": {
+              "type": "null"
+            },
+            "cost_result": {
+              "type": "null"
+            },
+            "robust_gain_lcb": {
+              "type": "null"
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "phase96_d": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "data_glob",
+            "expected_file_count",
+            "observed_file_count",
+            "complete_file_count",
+            "round_count",
+            "negative_unarmed_round_count",
+            "minimum_unarmed_steps",
+            "bundle_sha256",
+            "result_path",
+            "result_present",
+            "pass"
+          ],
+          "properties": {
+            "data_glob": {
+              "const": "research/96_selector_foundations/data/w14/w14d_block*.json"
+            },
+            "expected_file_count": {
+              "const": 21
+            },
+            "observed_file_count": {
+              "const": 21
+            },
+            "complete_file_count": {
+              "const": 21
+            },
+            "round_count": {
+              "const": 1680
+            },
+            "negative_unarmed_round_count": {
+              "const": 313
+            },
+            "minimum_unarmed_steps": {
+              "const": -8
+            },
+            "bundle_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "result_path": {
+              "const": "research/96_selector_foundations/results_w14d.md"
+            },
+            "result_present": {
+              "const": false
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "phase96_e": {
+          "$ref": "#/$defs/absent_gate_result"
+        },
+        "phase96_f_portfolio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "result_path",
+            "result_present",
+            "workload_weights",
+            "robust_objective_value",
+            "robust_gain_lcb",
+            "sensitivity_result",
+            "pass"
+          ],
+          "properties": {
+            "result_path": {
+              "const": "research/96_selector_foundations/results_w14f.md"
+            },
+            "result_present": {
+              "const": false
+            },
+            "workload_weights": {
+              "type": "null"
+            },
+            "robust_objective_value": {
+              "type": "null"
+            },
+            "robust_gain_lcb": {
+              "type": "null"
+            },
+            "sensitivity_result": {
+              "type": "null"
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "resource_feasibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "decision",
+            "candidate_realization_match",
+            "measurement_relation",
+            "reason_codes",
+            "pass"
+          ],
+          "properties": {
+            "decision": {
+              "const": "reject"
+            },
+            "candidate_realization_match": {
+              "const": false
+            },
+            "measurement_relation": {
+              "const": "optimistic_proxy_ceiling"
+            },
+            "reason_codes": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "const": "capacity_evidence_not_exact"
+              }
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "transition_overhead": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "p95_switch_latency_us",
+            "target_decode_step_us",
+            "amortized_switch_probe_overhead_fraction",
+            "pass"
+          ],
+          "properties": {
+            "p95_switch_latency_us": {
+              "type": "null"
+            },
+            "target_decode_step_us": {
+              "type": "null"
+            },
+            "amortized_switch_probe_overhead_fraction": {
+              "type": "null"
+            },
+            "pass": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "value_interpretation",
+        "blocking_reason_codes",
+        "authorizations",
+        "next_artifact"
+      ],
+      "properties": {
+        "state": {
+          "const": "not_approved"
+        },
+        "value_interpretation": {
+          "const": "unresolved_not_disproven"
+        },
+        "blocking_reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "workload_objective_unscored",
+              "workload_weights_not_frozen",
+              "exact_action_acceptance_missing",
+              "exact_action_cost_missing",
+              "phase96_d_result_missing",
+              "phase96_d_accounting_invalid",
+              "phase96_e_result_missing",
+              "phase96_f_portfolio_result_missing",
+              "resource_evidence_not_exact",
+              "transition_overhead_unmeasured"
+            ]
+          }
+        },
+        "authorizations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "p4a_engineering",
+            "gpu_measurement",
+            "action_admission",
+            "performance_claim"
+          ],
+          "properties": {
+            "p4a_engineering": {
+              "const": false
+            },
+            "gpu_measurement": {
+              "const": false
+            },
+            "action_admission": {
+              "const": false
+            },
+            "performance_claim": {
+              "const": false
+            }
+          }
+        },
+        "next_artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requires"
+          ],
+          "properties": {
+            "kind": {
+              "const": "matched_target_matching_b0_value_screen_preregistration"
+            },
+            "requires": {
+              "type": "array",
+              "minItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "frozen_scored_workload_objective",
+                  "declared_workload_weights",
+                  "repaired_target_step_accounting",
+                  "matched_off_k4_w512_controls"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^research/"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "absent_gate_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result_path",
+        "result_present",
+        "pass"
+      ],
+      "properties": {
+        "result_path": {
+          "const": "research/96_selector_foundations/results_w14e.md"
+        },
+        "result_present": {
+          "const": false
+        },
+        "pass": {
+          "const": false
+        }
+      }
+    }
+  }
+}

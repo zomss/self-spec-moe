@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "cross_boot_ar_identity_diagnostic": false,
+    "discarded_draft_not_counted": true,
+    "fixed_k4_steady_decode": true,
+    "h_d_a_c_e_closure": true,
+    "mixed_decode_query_width_one": true,
+    "mixed_pending_k4_aborted": true,
+    "off_to_k4_q1_bootstrap": true,
+    "shape_matched_off_boundary_geometry": true,
+    "shape_matched_off_top_candidate_set": true,
+    "stable_live_kv_aliases": true,
+    "stable_live_weight_aliases": true,
+    "stable_target_slot_mapping": true,
+    "target_local_verifier_correctness": true
+  },
+  "cross_boot_ar_mismatches": {
+    "long": {
+      "first_index": 12,
+      "left_token_id": 22406,
+      "right_token_id": 5005
+    }
+  },
+  "identities": {
+    "binding_id": "live-kv-binding-a48905e7d0c4c456",
+    "pool_id": "target-kv-pool-0e5fdf4834f97338",
+    "true_slot_mapping_id": "target-true-slots-6f96ca8567361912"
+  },
+  "record_type": "p3b_mixed_abort_verification",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "transition": {
+    "abort_engine_step_index": 4,
+    "aborted_draft_request_count": 1,
+    "boundary_argmax_identity_diagnostic": false,
+    "boundary_output_index": 12,
+    "discarded_draft_width": 4,
+    "dynamic_boundary_token_id": 22406,
+    "injection_after_long_output_tokens": 7,
+    "max_shape_matched_top_logit_delta": 0.125,
+    "off_control_boundary_token_id": 5005,
+    "off_to_k4_engine_step_index": 7
+  }
+}

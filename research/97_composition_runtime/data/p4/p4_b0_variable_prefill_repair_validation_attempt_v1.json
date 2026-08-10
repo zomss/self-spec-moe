@@ -1,0 +1,170 @@
+{
+  "artifact_id": "p4-b0-variable-prefill-repair-validation-attempt-v1",
+  "artifacts": {
+    "aggregate_diagnosis": {
+      "bytes": 1593,
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/diagnosis.json",
+      "sha256": "55cd0e5b6f22b01235cee8ccb28ac5a9ae2ada6a740fdcd7080cd209104382b3"
+    },
+    "authorization": {
+      "bytes": 9290,
+      "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_authorization_v1.json",
+      "sha256": "bb493e0e11ffd0f37e08c8cb30875c282cf4360979391513c65b5b1ed16af961"
+    },
+    "isolated_case": {
+      "bytes": 13713,
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/case_result.json",
+      "sha256": "78575489e4ad34826c3f2018d49790d7163e3a87f6a9099c8a972888ac667da1"
+    },
+    "isolated_trace": {
+      "bytes": 7830882,
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/koff_trace.jsonl",
+      "sha256": "472e2e06d25ec4a9dd4d82d6009048ba682ac367b4bf19592dac267803253667"
+    },
+    "transition_case": {
+      "bytes": 24452,
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/case_result.json",
+      "sha256": "49815610b5dcf28a71fdc535d52d40498914c586de7192bbc469aaf816cd8e34"
+    },
+    "transition_trace": {
+      "bytes": 15586118,
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/koff_trace.jsonl",
+      "sha256": "d45e5743840216ad9b80d661ea0eaa019c5cfb8963821c55681ef49fcb1f5bf2"
+    }
+  },
+  "authorization_consumed": true,
+  "cases": [
+    {
+      "armed_prefill_observation_count": 1,
+      "case_id": "isolated-r8",
+      "completed_cohorts": [
+        "r8-first"
+      ],
+      "exact_r8_observation": {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 0,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243952.828884317,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      "exact_r8_observation_count": 1,
+      "gpu": {
+        "physical_index": 0,
+        "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+      },
+      "measured_event_count": 610,
+      "shared_target_kv_block_capacity": 24527,
+      "trace_record_count": 612
+    },
+    {
+      "armed_prefill_observation_count": 9,
+      "case_id": "r5cot-to-r8",
+      "completed_cohorts": [
+        "r5cot-last",
+        "r8-first"
+      ],
+      "exact_r8_observation": {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 632,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243999.39938239,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      },
+      "exact_r8_observation_count": 1,
+      "gpu": {
+        "physical_index": 1,
+        "uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+      },
+      "measured_event_count": 1273,
+      "shared_target_kv_block_capacity": 24527,
+      "trace_record_count": 1289
+    }
+  ],
+  "disposition": {
+    "gpu_repair_validation_passed": true,
+    "isolated_r8_passed": true,
+    "output_reuse_allowed": false,
+    "parent_aggregate_passed": false,
+    "performance_claim_allowed": false,
+    "r5cot_to_r8_passed": true,
+    "resume_allowed": false,
+    "retry_allowed": false,
+    "v11_authorized": false,
+    "value_screen_retry_authorized": false
+  },
+  "next_action": "Use this immutable case-level audit in a separate source-bound V11 authorization review; do not rerun or modify this attempt.",
+  "parent_rejection": {
+    "caused_gpu_case_failure": false,
+    "classification": "observer_cardinality_bug",
+    "expected_count": 2,
+    "message": "r5cot-to-r8 armed-prefill evidence count drifted",
+    "observed_transition_armed_prefill_count": 9
+  },
+  "schema_version": 1,
+  "scored": false,
+  "status": "gpu_cases_passed_parent_aggregate_rejected"
+}

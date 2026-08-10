@@ -1,0 +1,68 @@
+{
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "complete_captures_emitted": 48,
+    "completed_physical_boots": 1,
+    "empty_capture_placeholders": 1,
+    "gpu_model_executed": true,
+    "interrupted_boot_id": "p4-b0-b1-p2-k4",
+    "interrupted_capture_id": "capture-b1-p2-k4-r4-s0-r1",
+    "interrupted_content_seed": 0,
+    "interrupted_regime": "R4",
+    "interrupted_round_index": 1,
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "score_emitted": false
+  },
+  "authorization": {
+    "bytes": 17779,
+    "package_id": "p4-b0-value-screen-run-authorization-v11",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v11.json",
+    "sha256": "143c831383d9e7b2f9b1a4f020c8bbf8c185152f9c94537fb2d2c657eb72f60f"
+  },
+  "capture_evidence": {
+    "bytes": 36561,
+    "complete_capture_count": 48,
+    "empty_placeholder_count": 1,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10/capture_manifest.json",
+    "sha256": "aca32827e7f15e7d29a09e2bb3d02b47bc894839783150784f34cdfc5c25a3c1"
+  },
+  "diagnostic": {
+    "classification": "external_resource_reassignment",
+    "evidence_provenance": {
+      "interrupted_placeholder_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_complete_capture_id": "capture-b1-p1-off-r6-s1-r4",
+      "last_complete_event_engine_step_index": 429487,
+      "terminal_transcript": {
+        "bytes": 39471,
+        "path": "research/97_composition_runtime/logs/p4_b0_value_screen_v11_gpu4_terminal.log",
+        "sha256": "22f64f1945f96b5c4b72236f47819f417de338f1aa611efd357a73d4450060dd"
+      }
+    },
+    "reason": "physical_gpu4_reserved_by_another_user",
+    "termination": {
+      "parent_exception_type": "KeyboardInterrupt",
+      "requested_by_user": true,
+      "runtime_fault_observed": false,
+      "signal": "SIGINT"
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_interruption_gpu4_compute_processes": 0,
+    "post_interruption_runner_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v11_consumed": true
+  },
+  "output": {
+    "adapted_rounds_present": false,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v10",
+    "preserve_without_overwrite_or_resume": true,
+    "score_present": false
+  },
+  "record_type": "p4_b0_value_screen_execution_interruption",
+  "schema_version": 1
+}

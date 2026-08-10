@@ -1,0 +1,23 @@
+{
+  "artifact_id": "p4-b0-gpu-contention-probe-v1-failure",
+  "authorization_consumed": true,
+  "child_results_present": {
+    "concurrent-gpu0": false,
+    "concurrent-gpu1": false,
+    "serial-gpu0": true,
+    "serial-gpu1": true
+  },
+  "disposition": {
+    "dual_gpu_value_screen_authorized": false,
+    "partial_resume_allowed": false,
+    "retry_allowed": false,
+    "value_screen_scoring_authorized": false
+  },
+  "exception": {
+    "message": "port range for concurrent-gpu0 is not free",
+    "type": "ContentionProbeError"
+  },
+  "schema_version": 1,
+  "scored": false,
+  "status": "failed_without_dual_gpu_authorization"
+}

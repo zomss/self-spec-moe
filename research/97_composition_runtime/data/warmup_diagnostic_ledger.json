@@ -1,0 +1,414 @@
+{
+  "additional_control_complete": true,
+  "all_booted": false,
+  "controls": [
+    {
+      "accepted_tokens": null,
+      "boot_class": "diagnostic_weight_q_private_bf16",
+      "conclusion": "FP8 KV dtype is not required; the large W4A8/private-draft-KV path remains implicated",
+      "diagnostic_only": true,
+      "draft_execution": "compiled",
+      "draft_kv_dtype": "bfloat16",
+      "draft_kv_mode": "private-bfloat16",
+      "draft_tokens": null,
+      "failure_stage": "initial compiled draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 4,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.39
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          17.41,
+          21.82
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "samples_at_0_memory_util": 1794,
+        "samples_at_100_sm_util": 1511,
+        "samples_at_peak_used_mib": 1557,
+        "sm_util_pct": 100,
+        "telemetry_samples": 1798,
+        "used_mib": 23633
+      },
+      "private_draft_kv": true,
+      "smoke_output_tokens": null,
+      "source_gpu_telemetry": "research/97_composition_runtime/logs/diagnostics/weight_q_private_bf16_mbt2048_compiled.gpu.csv",
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_private_bf16_mbt2048_compiled.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_private_bf16_mbt2048_compiled.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 900,
+      "weight_q": true
+    },
+    {
+      "accepted_tokens": null,
+      "boot_class": "diagnostic_weight_q_private_bf16",
+      "conclusion": "the first non-completing operation is the layer-0 Humming QKV projection; rotary embedding and private-KV attention are not reached",
+      "diagnostic_only": true,
+      "draft_execution": "eager",
+      "draft_kv_dtype": "bfloat16",
+      "draft_kv_mode": "private-bfloat16",
+      "draft_tokens": null,
+      "draft_trace": "operator",
+      "failure_stage": "initial scoped-eager draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 4,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "last_trace_marker": "enter module=model.layers.0.self_attn.qkv_proj type=QKVParallelLinear",
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.38
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          16.96
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "samples_at_0_memory_util": 713,
+        "samples_at_100_sm_util": 472,
+        "samples_at_peak_used_mib": 475,
+        "sm_util_pct": 100,
+        "telemetry_samples": 719,
+        "used_mib": 23633
+      },
+      "operator_localization": {
+        "first_non_completing_module": "model.layers.0.self_attn.qkv_proj",
+        "matching_exit_observed": false,
+        "module_type": "QKVParallelLinear",
+        "private_kv_attention_reached": false,
+        "rotary_embedding_reached": false,
+        "w4a8_kernel": "Humming"
+      },
+      "private_draft_kv": true,
+      "smoke_output_tokens": null,
+      "source_gpu_telemetry": "research/97_composition_runtime/logs/diagnostics/weight_q_private_bf16_mbt2048_operator_trace_eager.gpu.csv",
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_private_bf16_mbt2048_operator_trace_eager.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_private_bf16_mbt2048_operator_trace_eager.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 360,
+      "weight_q": true
+    }
+  ],
+  "created_utc": "2026-08-08T10:43:40.698075+00:00",
+  "kernel_control_protocol": {
+    "boot_class": "diagnostic_weight_q_kv_q_cutlass",
+    "compile_cache": "separate cold root per case",
+    "draft_execution": [
+      "eager",
+      "compiled"
+    ],
+    "draft_kv_dtype": "fp8",
+    "gpu_memory_utilization": 0.9,
+    "gpu_physical": 5,
+    "k": 4,
+    "linear_backend": "cutlass",
+    "max_model_len": 20480,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 32,
+    "model": "Qwen/Qwen3-8B",
+    "note": "non-scored W4A8 kernel-isolation control",
+    "target_execution": "compiled",
+    "timeout_seconds": 900
+  },
+  "kernel_control_protocol_sha256": "abe2ef148576e288dc02f600ba005c85cdb84fbf076723ece8c8ffc8385b898d",
+  "kernel_controls": [
+    {
+      "accepted_tokens": 12.0,
+      "boot_class": "diagnostic_weight_q_kv_q_cutlass",
+      "boot_seconds": 71.236952,
+      "conclusion": "Cutlass completes the MBT2048 combined realization; the prior stall requires the Humming W4A8 realization",
+      "cutlass_selection_verified": true,
+      "diagnostic_only": true,
+      "draft_counter": 3.0,
+      "draft_execution": "eager",
+      "draft_kv_dtype": "fp8",
+      "draft_kv_mode": "private-fp8",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 5,
+      "gpu_telemetry": {
+        "memory_util_pct": 0,
+        "samples_at_0_memory_util": 126,
+        "samples_at_100_sm_util": 0,
+        "samples_at_peak_used_mib": 5,
+        "sm_util_pct": 96,
+        "telemetry_samples": 179,
+        "used_mib": 72873
+      },
+      "kv_cache_max_concurrency": 11.44140625,
+      "kv_cache_size_tokens": 234320,
+      "linear_backend": "cutlass",
+      "log_evidence": {
+        "engine_ready": true,
+        "graph_capture_reached": true,
+        "initial_warmups_s": [
+          0.38
+        ],
+        "jit_linear_prewarm_reached": false,
+        "kv_sizing_reached": true,
+        "torch_compile_totals_s": [
+          16.98
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "peak_used_mib": 72873,
+      "preemptions": 0.0,
+      "private_draft_kv": true,
+      "smoke_output_tokens": 16,
+      "smoke_seconds": 1.70099,
+      "source_gpu_telemetry": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_eager_cutlass.gpu.csv",
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_eager_cutlass.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt2048_eager_cutlass.json",
+      "status": "booted",
+      "target_execution": "compiled",
+      "weight_q": true
+    },
+    {
+      "accepted_tokens": 12.0,
+      "boot_class": "diagnostic_weight_q_kv_q_cutlass",
+      "boot_seconds": 94.285136,
+      "conclusion": "Cutlass completes the MBT2048 combined realization; the prior stall requires the Humming W4A8 realization",
+      "cutlass_selection_verified": true,
+      "diagnostic_only": true,
+      "draft_counter": 3.0,
+      "draft_execution": "compiled",
+      "draft_kv_dtype": "fp8",
+      "draft_kv_mode": "private-fp8",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 5,
+      "gpu_telemetry": {
+        "memory_util_pct": 0,
+        "samples_at_0_memory_util": 188,
+        "samples_at_100_sm_util": 0,
+        "samples_at_peak_used_mib": 3,
+        "sm_util_pct": 83,
+        "telemetry_samples": 222,
+        "used_mib": 72733
+      },
+      "kv_cache_max_concurrency": 11.3578125,
+      "kv_cache_size_tokens": 232608,
+      "linear_backend": "cutlass",
+      "log_evidence": {
+        "engine_ready": true,
+        "graph_capture_reached": true,
+        "initial_warmups_s": [
+          0.4,
+          0.42
+        ],
+        "jit_linear_prewarm_reached": false,
+        "kv_sizing_reached": true,
+        "torch_compile_totals_s": [
+          16.55,
+          31.61
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "peak_used_mib": 72733,
+      "preemptions": 0.0,
+      "private_draft_kv": true,
+      "smoke_output_tokens": 16,
+      "smoke_seconds": 0.757936,
+      "source_gpu_telemetry": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_compiled_cutlass.gpu.csv",
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_compiled_cutlass.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt2048_compiled_cutlass.json",
+      "status": "booted",
+      "target_execution": "compiled",
+      "weight_q": true
+    }
+  ],
+  "kernel_controls_all_booted": true,
+  "kernel_controls_complete": true,
+  "matrix_complete": true,
+  "non_scored": true,
+  "operator_trace_complete": true,
+  "protocol": {
+    "boot_class": "weight_q_kv_q",
+    "compile_cache": "separate cold root per case",
+    "draft_execution": [
+      "compiled",
+      "eager"
+    ],
+    "draft_kv_dtype": "fp8",
+    "gpu_assignment": {
+      "mbt2048_compiled": 4,
+      "mbt2048_eager": 5,
+      "mbt4096_compiled": 5,
+      "mbt4096_eager": 4
+    },
+    "gpu_memory_utilization": 0.9,
+    "k": 4,
+    "max_model_len": 20480,
+    "max_num_batched_tokens": [
+      2048,
+      4096
+    ],
+    "max_num_seqs": 32,
+    "model": "Qwen/Qwen3-8B",
+    "note": "non-scored warmup localization with private fp8 draft KV",
+    "target_execution": "compiled",
+    "timeout_seconds": 900
+  },
+  "protocol_sha256": "948c5791d1700d77032f7b203911ad99a3a20b36ce45a7c212a76e813e58df67",
+  "rows": [
+    {
+      "accepted_tokens": null,
+      "boot_seconds": null,
+      "draft_execution": "compiled",
+      "draft_tokens": null,
+      "failure_stage": "initial compiled draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 4,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.37
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          21.09,
+          22.56
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "sm_util_pct": 100,
+        "used_mib": 23665
+      },
+      "smoke_output_tokens": null,
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_compiled.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt2048_compiled.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 900
+    },
+    {
+      "accepted_tokens": null,
+      "boot_seconds": null,
+      "draft_execution": "eager",
+      "draft_tokens": null,
+      "failure_stage": "initial scoped-eager draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 5,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.36
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          18.91
+        ]
+      },
+      "max_num_batched_tokens": 2048,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "sm_util_pct": 100,
+        "used_mib": 23665
+      },
+      "smoke_output_tokens": null,
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_eager.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt2048_eager.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 900
+    },
+    {
+      "accepted_tokens": null,
+      "boot_seconds": null,
+      "draft_execution": "compiled",
+      "draft_tokens": null,
+      "failure_stage": "initial compiled draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 5,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.43
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          16.92,
+          23.23
+        ]
+      },
+      "max_num_batched_tokens": 4096,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "sm_util_pct": 100,
+        "used_mib": 23789
+      },
+      "smoke_output_tokens": null,
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt4096_compiled.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt4096_compiled.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 900
+    },
+    {
+      "accepted_tokens": null,
+      "boot_seconds": null,
+      "draft_execution": "eager",
+      "draft_tokens": null,
+      "failure_stage": "initial scoped-eager draft profiling/warmup",
+      "gpu_after_shutdown_mib": 0,
+      "gpu_physical": 4,
+      "kv_cache_max_concurrency": null,
+      "kv_cache_size_tokens": null,
+      "log_evidence": {
+        "engine_ready": false,
+        "graph_capture_reached": false,
+        "initial_warmups_s": [
+          0.44
+        ],
+        "jit_linear_prewarm_reached": true,
+        "kv_sizing_reached": false,
+        "torch_compile_totals_s": [
+          17.25
+        ]
+      },
+      "max_num_batched_tokens": 4096,
+      "observed_gpu_during_stall": {
+        "memory_util_pct": 0,
+        "sm_util_pct": 100,
+        "used_mib": 23789
+      },
+      "smoke_output_tokens": null,
+      "source_log": "research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt4096_eager.log",
+      "source_record": "research/97_composition_runtime/data/diagnostics/weight_q_kv_q_mbt4096_eager.json",
+      "status": "timed_out",
+      "target_execution": "compiled",
+      "timeout_seconds": 900
+    }
+  ],
+  "schema_version": 1,
+  "static_proxy": true
+}

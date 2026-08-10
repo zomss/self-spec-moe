@@ -1,0 +1,41 @@
+{
+  "artifact_id": "p4-b0-r5cot-r8-transition-diagnosis-v1",
+  "authorization": {
+    "bytes": 8893,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_r5cot_r8_diagnosis_authorization.json",
+    "sha256": "abe4b3f7fc606115c2a47ab22e6279f8fddc7f67e4c36aac9132d323008622dc"
+  },
+  "authorization_consumed": true,
+  "case_results": {
+    "isolated-r8": {
+      "bytes": 5060,
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/isolated-r8/case_result.json",
+      "sha256": "99b90c0fccea2685ee9a2c5368f80a33ae6d493328e1abdb045a01e1fcccd826"
+    },
+    "r5cot-to-r8": {
+      "bytes": 5210,
+      "path": "research/97_composition_runtime/data/p4/run_b0_r5cot_r8_diagnosis_v1/r5cot-to-r8/case_result.json",
+      "sha256": "8ca42ffa4f53eaf7aee0479130a7a560961854c9b96e038ef5cc4db398cbdc01"
+    }
+  },
+  "claims": {
+    "action_admission_authorized": false,
+    "diagnostic_only": true,
+    "performance_claim_allowed": false,
+    "value_screen_retry_authorized": false
+  },
+  "classification": {
+    "conclusion": "inconclusive_unexpected_execution_failure",
+    "isolated_r8_expected_failure": false,
+    "transition_expected_failure": false
+  },
+  "failed_attempt": {
+    "bytes": 3350,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v9/failure.json",
+    "sha256": "78b21f7b6110a2e383f6ce7d6ba2e26a121a30722ed89dddac61f1afa93a852f"
+  },
+  "next_action": "Review the two case artifacts before changing runtime code.",
+  "schema_version": 1,
+  "scored": false,
+  "status": "complete"
+}

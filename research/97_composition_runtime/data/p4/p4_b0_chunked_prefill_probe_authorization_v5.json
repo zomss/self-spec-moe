@@ -1,0 +1,239 @@
+{
+  "schema_version": 5,
+  "package_id": "p4-b0-chunked-prefill-probe-authorization-v5",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_non_scored_chunked_prefill_probe_v5_only",
+  "source_artifacts": {
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_chunked_prefill_probe_authorization_v5.schema.json",
+      "sha256": "a8bfb08184f87136b8376aeac4cdd5a36a93ae42a23039ef534a9c88bab019c8"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_probe_authorization.py",
+      "sha256": "a9ff38da229c421456ee8b55f53870206bf19e3c272269d8f9a53d750a5a1af9"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_probe_authorization_v5.py",
+      "sha256": "9f2d6102003b8fee56664cf35461756c6797bd2f56aa528f0a6a7ded0ce89460"
+    },
+    "authorization_validator_base": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_probe_authorization.py",
+      "sha256": "f35156ae86c570ffa3e4ef2af7e9096bb0d0cf0c58fc9635556b6cb876d96484"
+    },
+    "capture_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "09aa05c65704ebfc01a9c033bc208fe712836ca9537c9cb0626839a29360b088"
+    },
+    "capture_runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "a62e2d05265b62fe22fa27de0b0075031a125db50f19957afff5f5c9205af8f4"
+    },
+    "cohort_barrier_cpu_proof": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof.json",
+      "sha256": "22e3c03e39ce8246204db7658ffe1e94b40e0b6e6ba8a6f9d3e93b3f03bcaad0"
+    },
+    "cohort_barrier_implementation": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "af281b12236a611c3a25a3b92cfe1ae5397b96cb254e61040fbd8c9ba031bfd8"
+    },
+    "cohort_barrier_implementation_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "7510905ae17918bb7b95e1fa9dd356ef32a28b929f71cca316d94f880528006c"
+    },
+    "gpu_worker": {
+      "path": "vllm/v1/worker/gpu_worker.py",
+      "sha256": "78446ad656008a8ee74b80aaa76e68ff3d528bac781baf5f652e678c2cde9dd6"
+    },
+    "probe_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py",
+      "sha256": "86a9df0ad0cc0bea57d602dd042b7c64f07044d3e2825728929e18c7e992508e"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328"
+    },
+    "scheduler_test_utils": {
+      "path": "tests/v1/core/utils.py",
+      "sha256": "5fb999e8744142e5c88896c51f6ffe30c692209869e6ff4a84750fc86075c6d5"
+    },
+    "scheduler_tests": {
+      "path": "tests/v1/core/test_scheduler.py",
+      "sha256": "f092690238a1913296d406dda830afab0227a3de19eaa1b9f40ee453d2285524"
+    },
+    "transient_bound": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_full_prefill_transient_bound.json",
+      "sha256": "2c5f2d1acf30d62424f92667c9744cd35019261c5b44125ae656ae33440dc36a"
+    },
+    "v4_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v4.json",
+      "sha256": "da86335dc02c6b96c873c6b8ee800be69826bb3450b28f113f502ea3d34a3499"
+    },
+    "v4_consumed_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v4/failure.json",
+      "sha256": "a12bb41ddc31ceb96f35fad9e750d95908045bc6d4b7ff41634c2202894fde0e"
+    },
+    "v9_consumed_failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v8/failure.json",
+      "sha256": "605e10c42bef250269c346141599dd0af08613f2bd3b8d675ee2fcff187b9986"
+    }
+  },
+  "run_contract": {
+    "scope": "gpu4_chunked_prefill_cohort_barrier_probe_only",
+    "scored": false,
+    "physical_boot_count": 1,
+    "gpu": {
+      "cuda_visible_devices": "4",
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+      "fallback_gpu_authorized": false
+    },
+    "model": {
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_path": "target-matching-alias"
+    },
+    "engine": {
+      "tensor_parallel_size": 1,
+      "pipeline_parallel_size": 1,
+      "max_model_len": 20480,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 32,
+      "gpu_memory_utilization": 0.9,
+      "num_speculative_tokens": 4,
+      "enable_chunked_prefill": true,
+      "async_scheduling": false,
+      "prefix_caching": false,
+      "flashinfer_autotune": false,
+      "enforce_eager": false,
+      "generation_seed": 0
+    },
+    "action": {
+      "action_id": "target-matching-k4",
+      "dynamic_k_schedule": [[1, 32, 4]],
+      "window_tokens": 0,
+      "sink_tokens": 0
+    },
+    "workload": {
+      "regimes": ["R4", "R5", "R5cot"],
+      "content_seed": 0,
+      "prompts_per_cohort": 8,
+      "unmeasured_prefill_tokens_per_request": 1,
+      "measured_decode_tokens_per_request": 1
+    },
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TOKENIZERS_PARALLELISM": "false",
+      "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+      "VLLM_SELF_SPEC_AHEAD_CHAIN": "0",
+      "VLLM_SELF_SPEC_CONSUME_AHEAD": "0",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD": "1",
+      "VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE": "1",
+      "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+      "VLLM_SELF_SPEC_DRAFT_FULL_CG": "1",
+      "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "",
+      "VLLM_SELF_SPEC_DRAFT_KV_SINKS": "0",
+      "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": "0",
+      "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": "",
+      "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": "",
+      "VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG": "0",
+      "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+      "VLLM_SELF_SPEC_KOFF_RUNTIME": "1",
+      "VLLM_SELF_SPEC_SHARED_KV": "1",
+      "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE": "1",
+      "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1",
+      "VLLM_USE_FLASHINFER_SAMPLER": "0"
+    },
+    "invocation": {
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py",
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v5.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5",
+      "overwrite_allowed": false
+    },
+    "pass_gates": {
+      "actual_cuda_graph_memory_bytes_positive": true,
+      "minimum_shared_target_kv_blocks": 21682,
+      "pure_first_measured_decode_every_cohort": true,
+      "zero_preemption": true,
+      "zero_recomputation": true,
+      "zero_invalid_spec_tokens": true,
+      "exact_one_plus_one_token_accounting": true,
+      "configured_max_num_batched_tokens": 8192,
+      "effective_max_num_scheduled_tokens": 8160,
+      "pure_decode_draft_step0_query_width": 1,
+      "prefill_draft_step0_query_width_positive": true,
+      "non_decode_k4_requires_pure_prefill_cohort_arm": true,
+      "canonical_probe_result_request_ids": true,
+      "randomized_internal_request_ids_preserved": true
+    }
+  },
+  "execution_policy": {
+    "create_new_output_only": true,
+    "single_parent_launch": true,
+    "single_child_boot": true,
+    "retry_allowed": false,
+    "resume_allowed": false,
+    "reuse_v1_output_allowed": false,
+    "reuse_v2_output_allowed": false,
+    "reuse_v3_output_allowed": false,
+    "reuse_v4_output_allowed": false,
+    "reuse_v9_captures_allowed": false,
+    "fallback_gpu_allowed": false,
+    "score_output": false
+  },
+  "decision": {
+    "decision": "authorize",
+    "scope": "one_non_scored_gpu4_probe_v5",
+    "reason": "v4_probe_result_request_id_canonicalization_repaired_and_cpu_proven"
+  },
+  "claims": {
+    "live_engine_wired": true,
+    "relative_path_dispatch_repaired": true,
+    "configured_effective_budget_repaired": true,
+    "prefill_query_width_phase_repaired": true,
+    "prefill_query_width_execution_path_tested": true,
+    "pure_decode_query_width_fail_closed": true,
+    "probe_result_request_id_canonicalization_repaired": true,
+    "randomized_internal_request_ids_preserved": true,
+    "probe_result_request_id_fail_closed_tested": true,
+    "v4_three_cohort_diagnostic_evidence": true,
+    "real_draft_model_normalization_tested": true,
+    "ordinary_serving_unchanged": true,
+    "gpu_resource_fit_proven": false,
+    "value_screen_run_ready": false,
+    "p4a_ready": false,
+    "performance_claim_allowed": false
+  },
+  "authorizations": {
+    "gpu4_non_scored_probe_v5": true,
+    "v10_value_screen": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_chunked_prefill_gpu_probe_result_v5",
+    "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/probe_result.json",
+    "on_pass": "draft_separate_source_bound_v10_authorization",
+    "on_fail": "diagnose_without_retry_or_fallback",
+    "v10_authorized_here": false
+  }
+}

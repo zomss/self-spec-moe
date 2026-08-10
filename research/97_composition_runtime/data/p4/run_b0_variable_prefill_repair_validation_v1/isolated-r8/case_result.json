@@ -1,0 +1,430 @@
+{
+  "active_stage_at_exit": "complete",
+  "artifact_id": "p4-b0-r5cot-r8-diagnosis-isolated-r8",
+  "authorization": {
+    "bytes": 9290,
+    "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_authorization_v1.json",
+    "sha256": "bb493e0e11ffd0f37e08c8cb30875c282cf4360979391513c65b5b1ed16af961"
+  },
+  "authorization_consumed": true,
+  "authorizations": {
+    "action_admission": false,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "value_screen_retry": false
+  },
+  "case_id": "isolated-r8",
+  "claims": {
+    "expected_r8_invariant_failure_observed": false,
+    "performance_claim_allowed": false,
+    "score_eligible": false
+  },
+  "cohorts": [
+    {
+      "capture_id": "capture-b1-p2-k4-r8-s0-r1",
+      "label": "r8-first",
+      "slice_start": 0,
+      "slice_stop": 16
+    }
+  ],
+  "completed_cohorts": [
+    "r8-first"
+  ],
+  "gpu": {
+    "physical_index": 0,
+    "uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "instrumentation": {
+    "armed_prefill_evidence": [
+      {
+        "draft_chain_runtime_mode": "PIECEWISE",
+        "draft_output_shape": [
+          16,
+          4
+        ],
+        "draft_step0_batch_size": 16,
+        "draft_step0_num_tokens": 2116,
+        "draft_step0_query_width": null,
+        "draft_step0_runtime_mode": "NONE",
+        "metadata": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": true,
+          "decode_req_ids": [],
+          "discarded_draft_width": 0,
+          "engine_step_index": 0,
+          "generated_suffix_max": null,
+          "generated_suffix_min": null,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": false,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243952.828884317,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 145,
+          "total_scheduled_kv_tokens": 0,
+          "verified_action_id": null
+        },
+        "proposal_called": true,
+        "validated_evidence": {
+          "draft_dispatched": true,
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "produced_draft_width": 4
+        }
+      }
+    ],
+    "draft_step0_input": {
+      "batch_size": 1,
+      "max_query_len": 6,
+      "num_actual_tokens": 6,
+      "num_tokens": 6,
+      "num_tokens_mod_batch_size": 0,
+      "uniform_query_width": 6
+    },
+    "drafter_post_step": {
+      "last_chain_runtime_mode": "PIECEWISE",
+      "last_step0_query_width": 1,
+      "last_step0_runtime_mode": "PIECEWISE"
+    },
+    "runner_evidence_attempt": {
+      "draft_chain_runtime_mode": "PIECEWISE",
+      "draft_output_shape": [
+        1,
+        4
+      ],
+      "draft_step0_query_width": 1,
+      "draft_step0_runtime_mode": "PIECEWISE",
+      "metadata": {
+        "aborted_action_id": null,
+        "aborted_draft_request_count": 0,
+        "capture_cohort_arm": false,
+        "decode_req_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "discarded_draft_width": 0,
+        "engine_step_index": 610,
+        "generated_suffix_max": 2048,
+        "generated_suffix_min": 2048,
+        "next_action_id": "target-matching-k4",
+        "preemptions": 0,
+        "pure_decode": true,
+        "recomputed_tokens": 0,
+        "scheduled_at_s": 243979.63272087,
+        "selection_intent": "exploit",
+        "shared_target_kv_block_capacity": 24527,
+        "shared_target_kv_blocks_in_use": 151,
+        "total_scheduled_kv_tokens": 2390,
+        "verified_action_id": "target-matching-k4"
+      },
+      "proposal_called": true
+    },
+    "scheduler_snapshots": [
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 603,
+          "generated_suffix_max": 2019,
+          "generated_suffix_min": 2019,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.367566241,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 150,
+          "total_scheduled_kv_tokens": 2361,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 604,
+          "generated_suffix_max": 2024,
+          "generated_suffix_min": 2024,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.405486187,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 150,
+          "total_scheduled_kv_tokens": 2366,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 605,
+          "generated_suffix_max": 2029,
+          "generated_suffix_min": 2029,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.443380196,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 150,
+          "total_scheduled_kv_tokens": 2371,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 606,
+          "generated_suffix_max": 2034,
+          "generated_suffix_min": 2034,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.481260806,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 151,
+          "total_scheduled_kv_tokens": 2376,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 607,
+          "generated_suffix_max": 2037,
+          "generated_suffix_min": 2037,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.519090776,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 151,
+          "total_scheduled_kv_tokens": 2379,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 608,
+          "generated_suffix_max": 2042,
+          "generated_suffix_min": 2042,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.556918627,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 151,
+          "total_scheduled_kv_tokens": 2384,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 609,
+          "generated_suffix_max": 2043,
+          "generated_suffix_min": 2043,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.594790593,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 151,
+          "total_scheduled_kv_tokens": 2385,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      },
+      {
+        "cached_request_ids": [
+          "R8-s0-p014-b5475774"
+        ],
+        "finished_req_ids": [],
+        "koff_runtime": {
+          "aborted_action_id": null,
+          "aborted_draft_request_count": 0,
+          "capture_cohort_arm": false,
+          "decode_req_ids": [
+            "R8-s0-p014-b5475774"
+          ],
+          "discarded_draft_width": 0,
+          "engine_step_index": 610,
+          "generated_suffix_max": 2048,
+          "generated_suffix_min": 2048,
+          "next_action_id": "target-matching-k4",
+          "preemptions": 0,
+          "pure_decode": true,
+          "recomputed_tokens": 0,
+          "scheduled_at_s": 243979.63272087,
+          "selection_intent": "exploit",
+          "shared_target_kv_block_capacity": 24527,
+          "shared_target_kv_blocks_in_use": 151,
+          "total_scheduled_kv_tokens": 2390,
+          "verified_action_id": "target-matching-k4"
+        },
+        "new_request_ids": [],
+        "num_scheduled_tokens": {
+          "R8-s0-p014-b5475774": 5
+        },
+        "total_num_scheduled_tokens": 5
+      }
+    ]
+  },
+  "primary_exception": null,
+  "recorder": {
+    "closed": true,
+    "event_count": 610,
+    "events_by_action": {
+      "target-matching-k4": 610
+    },
+    "last_event": {
+      "action_id": "target-matching-k4",
+      "engine_step_index": 610,
+      "pure_decode": true,
+      "quality": {
+        "invalid_spec_tokens": 0,
+        "preemptions": 0,
+        "recomputed_tokens": 0
+      },
+      "request_ids": [
+        "R8-s0-p014-b5475774"
+      ]
+    }
+  },
+  "resources": {
+    "actual_cuda_graph_memory_bytes": 589299712,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "estimated_cuda_graph_memory_bytes": 507510784,
+    "minimum_shared_target_kv_blocks": 21682,
+    "shared_target_kv_block_capacity": 24527
+  },
+  "schema_version": 1,
+  "scored": false,
+  "shutdown_exception": null,
+  "status": "completed_without_invariant_failure",
+  "trace": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/koff_trace.jsonl",
+    "present": true,
+    "record_count": 612,
+    "sha256": "472e2e06d25ec4a9dd4d82d6009048ba682ac367b4bf19592dac267803253667"
+  }
+}

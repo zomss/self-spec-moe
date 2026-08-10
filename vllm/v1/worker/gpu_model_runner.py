@@ -183,6 +183,19 @@ from vllm.v1.spec_decode.draft_model import DraftModelProposer
 from vllm.v1.spec_decode.eagle import EagleProposer
 from vllm.v1.spec_decode.extract_hidden_states import ExtractHiddenStatesProposer
 from vllm.v1.spec_decode.gemma4 import Gemma4Proposer
+from vllm.v1.spec_decode.koff_runtime import (
+    K4_ACTION_ID,
+    SharedKVIdentity,
+    SharedWeightIdentity,
+    action_for_id,
+    make_runner_evidence,
+    options_from_env,
+    slot_mapping_identity,
+    validate_action_transport,
+    validate_boot_config,
+    validate_shared_kv_aliases,
+    validate_shared_weight_aliases,
+)
 from vllm.v1.spec_decode.medusa import MedusaProposer
 from vllm.v1.spec_decode.metadata import SpecDecodeMetadata
 from vllm.v1.spec_decode.ngram_proposer_gpu import (
@@ -423,7 +436,9 @@ class ExecuteModelState(NamedTuple):
     aux_hidden_states: list[torch.Tensor] | None
     ec_connector_output: ECConnectorOutput | None
     cudagraph_stats: CUDAGraphStat | None
+    target_runtime_mode: str
     slot_mappings: dict[str, torch.Tensor] | list[dict[str, torch.Tensor]] | None
+    koff_diagnostic: dict[str, Any] | None
 
 
 class GPUModelRunner(
@@ -445,6 +460,24 @@ class GPUModelRunner(
         self.scheduler_config = vllm_config.scheduler_config
         self.speculative_config = vllm_config.speculative_config
         self.observability_config = vllm_config.observability_config
+
+        self._koff_options = options_from_env()
+        self._koff_runtime_enabled = self._koff_options.enabled
+        dynamic_k_values = ()
+        if self.speculative_config is not None:
+            schedule = (
+                self.speculative_config.num_speculative_tokens_per_batch_size or ()
+            )
+            dynamic_k_values = tuple(int(entry[2]) for entry in schedule)
+        validate_boot_config(
+            vllm_config,
+            self._koff_options,
+            dynamic_k_values=dynamic_k_values,
+        )
+        self._koff_shared_kv_identity: SharedKVIdentity | None = None
+        self._koff_shared_weight_identity: SharedWeightIdentity | None = None
+        self._koff_draft_action_id: str | None = None
+        self._koff_proposal_called = False
 
         model_config = self.model_config
         cache_config = self.cache_config
@@ -4096,6 +4129,66 @@ class GPUModelRunner(
 
         return slot_mappings_by_gid, slot_mappings_by_layer
 
+    def _capture_koff_diagnostic(
+        self,
+        req_ids: list[str],
+        num_scheduled_tokens: np.ndarray,
+        logits_indices: torch.Tensor,
+        spec_decode_metadata: SpecDecodeMetadata | None,
+        slot_mappings_by_group: dict[int, torch.Tensor] | None,
+        logits: torch.Tensor,
+    ) -> dict[str, Any] | None:
+        """Capture exact target packing only for an explicit K/OFF trace."""
+        if not self._koff_runtime_enabled or not self._koff_options.trace_path:
+            return None
+        if slot_mappings_by_group is None:
+            raise RuntimeError("K/OFF diagnostic is missing target slot mappings")
+
+        num_reqs = len(req_ids)
+        num_tokens = int(num_scheduled_tokens.sum())
+        top_k = min(8, logits.shape[-1])
+        top_values, top_ids = logits.float().topk(top_k, dim=-1)
+        draft_tokens = None
+        target_logits_indices = None
+        bonus_logits_indices = None
+        num_draft_tokens = [0] * num_reqs
+        if spec_decode_metadata is not None:
+            num_draft_tokens = spec_decode_metadata.num_draft_tokens
+            draft_tokens = spec_decode_metadata.draft_token_ids.cpu().tolist()
+            target_logits_indices = (
+                spec_decode_metadata.target_logits_indices.cpu().tolist()
+            )
+            bonus_logits_indices = (
+                spec_decode_metadata.bonus_logits_indices.cpu().tolist()
+            )
+
+        return {
+            "request_ids": list(req_ids),
+            "num_scheduled_tokens": num_scheduled_tokens.tolist(),
+            "num_draft_tokens": list(num_draft_tokens),
+            "num_computed_tokens": self.input_batch.num_computed_tokens_cpu[
+                :num_reqs
+            ].tolist(),
+            "num_prompt_tokens": self.input_batch.num_prompt_tokens[
+                :num_reqs
+            ].tolist(),
+            "query_start_loc": self.query_start_loc.np[: num_reqs + 1].tolist(),
+            "input_token_ids": self.input_ids.cpu[:num_tokens].tolist(),
+            "positions": self.positions[:num_tokens].cpu().tolist(),
+            "seq_lens": self.seq_lens[:num_reqs].cpu().tolist(),
+            "slot_mappings_by_group": {
+                str(group_id): slots[:num_tokens].cpu().tolist()
+                for group_id, slots in slot_mappings_by_group.items()
+            },
+            "logits_indices": logits_indices.cpu().tolist(),
+            "target_logits_indices": target_logits_indices,
+            "bonus_logits_indices": bonus_logits_indices,
+            "draft_token_ids": draft_tokens,
+            "logit_argmax_token_ids": logits.argmax(dim=-1).cpu().tolist(),
+            "logit_top_token_ids": top_ids.cpu().tolist(),
+            "logit_top_values": top_values.cpu().tolist(),
+        }
+
     def _is_all_reqs_chunked_prefill(self) -> bool:
         """Check if all scheduled requests are marked to discard sampled tokens.
 
@@ -4221,6 +4314,18 @@ class GPUModelRunner(
             num_scheduled_tokens_np = np.array(tokens, dtype=np.int32)
             max_num_scheduled_tokens = int(num_scheduled_tokens_np.max())
             num_tokens_unpadded = scheduler_output.total_num_scheduled_tokens
+            if self._koff_runtime_enabled:
+                metadata = scheduler_output.koff_runtime
+                if metadata is None:
+                    raise RuntimeError("non-empty step is missing K/OFF metadata")
+                validate_action_transport(
+                    metadata,
+                    next_k=scheduler_output.num_spec_tokens_to_schedule,
+                    num_scheduled_tokens=scheduler_output.num_scheduled_tokens,
+                    scheduled_spec_decode_tokens=(
+                        scheduler_output.scheduled_spec_decode_tokens
+                    ),
+                )
 
             with _self_spec_profiler().cpu_region("cpu_exec_prepare_inputs"):
                 logits_indices, spec_decode_metadata = self._prepare_inputs(
@@ -4414,17 +4519,17 @@ class GPUModelRunner(
                 scheduler_output,
                 defer_finalize=defer_kv_connector_finalize,
             ) as kv_connector_output,
+            _self_spec_profiler().region("verify"),
         ):
             # Self-spec W7 micro-bench: time the target (verify) forward. With
             # spec on, this forward covers the K+1 proposed tokens per request.
-            with _self_spec_profiler().region("verify"):
-                model_output = self._model_forward(
-                    input_ids=input_ids,
-                    positions=positions,
-                    intermediate_tensors=intermediate_tensors,
-                    inputs_embeds=inputs_embeds,
-                    **model_kwargs,
-                )
+            model_output = self._model_forward(
+                input_ids=input_ids,
+                positions=positions,
+                intermediate_tensors=intermediate_tensors,
+                inputs_embeds=inputs_embeds,
+                **model_kwargs,
+            )
 
         # Self-spec OV0b (phase 49): the verify forward above is ENQUEUED (its
         # kernels run async); replay the shadow draft chain on a side stream so
@@ -4537,7 +4642,18 @@ class GPUModelRunner(
             aux_hidden_states,
             ec_connector_output,
             cudagraph_stats,
+            str(cudagraph_mode),
             slot_mappings,
+            self._capture_koff_diagnostic(
+                req_ids,
+                num_scheduled_tokens_np,
+                logits_indices,
+                spec_decode_metadata,
+                slot_mappings_by_group,
+                logits,
+            )
+            if logits is not None
+            else None,
         )
         self.kv_connector_output = kv_connector_output
 
@@ -4588,7 +4704,9 @@ class GPUModelRunner(
             aux_hidden_states,
             ec_connector_output,
             cudagraph_stats,
+            target_runtime_mode,
             slot_mappings,
+            koff_diagnostic,
         ) = self.execute_model_state
         # Clear ephemeral state.
         self.execute_model_state = None
@@ -4619,6 +4737,8 @@ class GPUModelRunner(
         self._draft_probs = None
         self._draft_prob_req_ids = None
         self._draft_token_req_ids = None
+        self._koff_draft_action_id = None
+        self._koff_proposal_called = False
         self.valid_sampled_token_count_gpu = None
         self.input_batch.prev_sampled_token_ids = None
 
@@ -4636,6 +4756,11 @@ class GPUModelRunner(
                     spec_decode_common_attn_metadata,
                     slot_mappings,
                 )
+                self._koff_proposal_called = True
+                if self._koff_runtime_enabled:
+                    metadata = scheduler_output.koff_runtime
+                    assert metadata is not None
+                    self._koff_draft_action_id = metadata.next_action_id
                 self._copy_draft_token_ids_to_cpu(scheduler_output)
 
         spec_config = self.speculative_config
@@ -4708,9 +4833,15 @@ class GPUModelRunner(
                 # For Nemotron-H: it is necessary to zero out the draft tokens,
                 # otherwise the stale tokens will corrupt Mamba recurrent
                 # state and logprobs for sequences near max_model_len.
+                zero_width = self.num_spec_tokens
+                if self._koff_runtime_enabled:
+                    metadata = scheduler_output.koff_runtime
+                    assert metadata is not None
+                    zero_width = action_for_id(metadata.next_action_id).k
+                    self._koff_draft_action_id = metadata.next_action_id
                 self._draft_token_ids = torch.zeros(
                     1, device=self.device, dtype=torch.int32
-                ).expand(len(self.input_batch.req_ids), self.num_spec_tokens)
+                ).expand(len(self.input_batch.req_ids), zero_width)
                 self._draft_probs = None
                 self._draft_prob_req_ids = None
                 self._copy_draft_token_ids_to_cpu(scheduler_output, zeros_only=True)
@@ -4750,6 +4881,62 @@ class GPUModelRunner(
         kv_connector_output = self.kv_connector_output
         self.kv_connector_output = None
 
+        koff_runtime_evidence = None
+        if (
+            self._koff_runtime_enabled
+            and scheduler_output.total_num_scheduled_tokens > 0
+        ):
+            metadata = scheduler_output.koff_runtime
+            if metadata is None:
+                raise RuntimeError("non-empty step is missing K/OFF metadata")
+            if self._draft_token_ids is None:
+                raise RuntimeError("minimal-B0 step did not produce a draft result")
+            if self._koff_shared_kv_identity is None:
+                raise RuntimeError("shared-KV aliases were not validated")
+            if self._koff_shared_weight_identity is None:
+                raise RuntimeError("shared-weight aliases were not validated")
+            is_k4 = metadata.next_action_id == K4_ACTION_ID
+            step0_query_width = (
+                getattr(self.drafter, "_last_step0_query_width", None)
+                if is_k4
+                else None
+            )
+            step0_num_tokens = (
+                getattr(self.drafter, "_last_step0_num_tokens", None)
+                if is_k4
+                else None
+            )
+            step0_batch_size = (
+                getattr(self.drafter, "_last_step0_batch_size", None)
+                if is_k4
+                else None
+            )
+            step0_runtime_mode = (
+                getattr(self.drafter, "_last_step0_runtime_mode", None)
+                if is_k4
+                else None
+            )
+            chain_runtime_mode = (
+                getattr(self.drafter, "_last_chain_runtime_mode", None)
+                if is_k4
+                else None
+            )
+            koff_runtime_evidence = make_runner_evidence(
+                metadata=metadata,
+                target_runtime_mode=target_runtime_mode,
+                output=self._draft_token_ids,
+                proposal_called=self._koff_proposal_called,
+                draft_step0_query_width=step0_query_width,
+                draft_step0_num_tokens=step0_num_tokens,
+                draft_step0_batch_size=step0_batch_size,
+                draft_step0_runtime_mode=step0_runtime_mode,
+                draft_chain_runtime_mode=chain_runtime_mode,
+                shared_kv=self._koff_shared_kv_identity,
+                shared_weights=self._koff_shared_weight_identity,
+                true_slot_mapping_id=slot_mapping_identity(slot_mappings),
+                diagnostic=koff_diagnostic,
+            )
+
         with record_function_or_nullcontext("gpu_model_runner: ModelRunnerOutput"):
             output = ModelRunnerOutput(
                 req_ids=req_ids_output_copy,
@@ -4763,6 +4950,7 @@ class GPUModelRunner(
                 else None,
                 num_nans_in_logits=num_nans_in_logits,
                 cudagraph_stats=cudagraph_stats,
+                koff_runtime_evidence=koff_runtime_evidence,
                 routed_experts=None,
             )
 
@@ -4876,7 +5064,11 @@ class GPUModelRunner(
         if not self.num_spec_tokens or not self._draft_token_req_ids:
             return None
         draft_token_ids, req_ids = self._get_draft_token_ids_cpu()
-        return DraftTokenIds(req_ids, draft_token_ids)
+        return DraftTokenIds(
+            req_ids,
+            draft_token_ids,
+            koff_action_id=self._koff_draft_action_id,
+        )
 
     def _copy_draft_token_ids_to_cpu(
         self, scheduler_output: "SchedulerOutput", zeros_only: bool = False
@@ -5347,6 +5539,16 @@ class GPUModelRunner(
                     logger.info_once("Loading drafter model...")
                     if hasattr(self.drafter, "load_model"):
                         self.drafter.load_model(self.model)
+                    if self._koff_runtime_enabled:
+                        if not isinstance(self.drafter, DraftModelProposer):
+                            raise RuntimeError("minimal-B0 requires DraftModelProposer")
+                        self._koff_shared_weight_identity = (
+                            validate_shared_weight_aliases(
+                                self.model,
+                                self.drafter.model,
+                                self._koff_options.p4_logical_weight_version or None,
+                            )
+                        )
                     if (
                         hasattr(self.drafter, "model")
                         and is_mixture_of_experts(self.drafter.model)
@@ -5494,14 +5696,13 @@ class GPUModelRunner(
                 # RAW (unwrapped) model and we don't nest cudagraphs. It is then
                 # FULL-wrapped as its own graph (sibling to drafter.model, which
                 # keeps serving step-0 PIECEWISE and the dummy capture path).
-                from vllm.v1.spec_decode.llm_base_proposer import (
-                    _DraftDecodeForwardSample,
-                )
-
                 # Self-spec OV0b/OV1: draft-tagged graphs get a dedicated pool
                 # so they can replay on a side stream concurrently with the
                 # verify's graphs (None -> shared global pool, unchanged).
                 from vllm.compilation.cuda_graph import maybe_draft_graph_pool
+                from vllm.v1.spec_decode.llm_base_proposer import (
+                    _DraftDecodeForwardSample,
+                )
 
                 _draft_pool = maybe_draft_graph_pool("draft_model")
                 drafter._decode_fwd_sample = CUDAGraphWrapper(
@@ -7560,6 +7761,13 @@ class GPUModelRunner(
         for layer_name, target_layer_name in self.shared_kv_cache_layers.items():
             logger.debug("%s reuses KV cache of %s", layer_name, target_layer_name)
             kv_caches[layer_name] = kv_caches[target_layer_name]
+
+        if self._koff_runtime_enabled:
+            self._koff_shared_kv_identity = validate_shared_kv_aliases(
+                self.shared_kv_cache_layers,
+                kv_caches,
+                kv_cache_config,
+            )
 
         num_attn_module = (
             2 if self.model_config.hf_config.model_type == "longcat_flash" else 1

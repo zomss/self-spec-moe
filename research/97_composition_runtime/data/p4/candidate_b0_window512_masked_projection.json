@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "candidate_id": "qwen3-8b-b0-k4-w512-masked-projection",
+  "capability_class": "B0",
+  "fixed_environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "shared_kv": {
+    "path": "shared_target",
+    "owner": "target",
+    "pool_count": 1
+  },
+  "resident_objects": {
+    "draft_weight_paths": [
+      {
+        "path_id": "target-matching",
+        "kind": "target_matching"
+      }
+    ],
+    "graph_ids": [
+      "target-k1",
+      "target-k5",
+      "draft-target-matching-k1"
+    ]
+  },
+  "evidence": {
+    "grade": "static_proxy_projection",
+    "candidate_realization_match": false,
+    "source_artifacts": [
+      "data/preflight/candidate_b0_measured.json",
+      "data/p3/boot_b0_minimal_k4.json"
+    ],
+    "capacity": {
+      "measurement_relation": "optimistic_proxy_ceiling",
+      "usable_hbm_bytes": 76968728985,
+      "sampled_peak_hbm_bytes": 76203163648,
+      "available_shared_target_kv_blocks": 24529,
+      "kv_block_size_tokens": 16,
+      "kv_bytes_per_block": 2359296
+    }
+  },
+  "resource_terms": {
+    "co_resident_weight_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 retains only the target-matching draft path",
+      "included_in_capacity_evidence": false
+    },
+    "co_resident_graphs_and_workspaces_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "masked P4 proposes no additional resident graph",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_peak_hbm_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has no independently refreshed quantized path",
+      "included_in_capacity_evidence": false
+    },
+    "weight_refresh_pinned_host_bytes": {
+      "value_bytes": 0,
+      "grade": "not_applicable",
+      "source": "B0 has no independently refreshed quantized path"
+    }
+  }
+}

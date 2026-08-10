@@ -1,0 +1,37 @@
+{
+  "action_admitted": false,
+  "approved_scope": "gpu4_request_id_canonicalization_value_screen_v7_only",
+  "authorization_decision": "approve",
+  "capture_count": 432,
+  "engine_core_preflight": {
+    "engine_core_class": "InprocClient",
+    "v1_multiprocessing": false
+  },
+  "gpu_executed": false,
+  "gpu_physical_index": 4,
+  "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+  "internal_request_id_randomization_retained": true,
+  "latest_prior_capture_count": 0,
+  "measurement_gpu_memory_utilization": 0.96,
+  "measurement_max_num_batched_tokens": 114688,
+  "minimum_launch_capacity_blocks": 21682,
+  "native_sampler_preflight": {
+    "backend": "native",
+    "flashinfer_enabled": false
+  },
+  "next_artifact": "p4_b0_value_screen_result",
+  "ninja_preflight_passed": true,
+  "output_dir_create_new_ready": true,
+  "p4a_engineering_authorized": false,
+  "package_id": "p4-b0-value-screen-run-authorization-v7",
+  "physical_boot_count": 9,
+  "prior_outputs_preserved": true,
+  "prior_value_screen_attempts": 5,
+  "request_id_canonicalization_tested": true,
+  "serving_chunked_prefill_preserved": true,
+  "serving_gpu_memory_utilization": 0.9,
+  "serving_max_num_batched_tokens": 8192,
+  "source_bindings_current": true,
+  "status": "pass",
+  "v7_execution_authorized": true
+}

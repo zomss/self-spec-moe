@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         KVConnectorWorkerMetadata,
     )
     from vllm.distributed.kv_transfer.kv_connector.v1.metrics import KVConnectorStats
+    from vllm.v1.spec_decode.koff_runtime import KOffRunnerEvidence
 else:
     KVConnectorStats = object
     KVConnectorWorkerMetadata = object
@@ -269,6 +270,9 @@ class ModelRunnerOutput:
     # information related to cudagraph execution
     cudagraph_stats: CUDAGraphStat | None = None
 
+    # Phase 97 minimal-B0 worker-side action, graph-mode, and alias evidence.
+    koff_runtime_evidence: "KOffRunnerEvidence | None" = None
+
     # Per-step routed experts data captured by the worker.
     # ``routing_data`` shape: (num_scheduled_tokens, num_layers,
     #                         num_experts_per_tok); expert IDs as uint8/uint16.
@@ -313,6 +317,8 @@ class DraftTokenIds:
     req_ids: list[str]
     # num_reqs x num_draft_tokens
     draft_token_ids: list[list[int]]
+    # Phase 97 provenance for the whole draft dispatch.
+    koff_action_id: str | None = None
 
 
 def make_empty_encoder_model_runner_output(

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "p4_b0_chunked_prefill_probe_authorization_v2.schema.json",
+  "title": "Phase 97 B0 chunked-prefill probe authorization V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "source_artifacts",
+    "run_contract",
+    "execution_policy",
+    "decision",
+    "claims",
+    "authorizations",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "package_id": {
+      "const": "p4-b0-chunked-prefill-probe-authorization-v2"
+    },
+    "date": {"const": "2026-08-09"},
+    "status": {
+      "const": "authorized_gpu4_non_scored_chunked_prefill_probe_v2_only"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/fileReference"}
+    },
+    "run_contract": {"type": "object"},
+    "execution_policy": {"type": "object"},
+    "decision": {"type": "object"},
+    "claims": {"type": "object"},
+    "authorizations": {"type": "object"},
+    "next_artifact": {"type": "object"}
+  },
+  "$defs": {
+    "fileReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

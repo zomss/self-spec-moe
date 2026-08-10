@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_chunked_prefill_probe_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-chunked-prefill-probe-authorization-v4",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v4.json",
+    "sha256": "da86335dc02c6b96c873c6b8ee800be69826bb3450b28f113f502ea3d34a3499"
+  },
+  "attempt": {
+    "invocation_started": true,
+    "exit_code": 1,
+    "failed_at": "2026-08-09T23:42:29+09:00",
+    "native_sampler_preflight_passed": true,
+    "inprocess_engine_core_preflight_passed": true,
+    "gpu_identity_idle_preflight_passed": true,
+    "output_directory_created": true,
+    "preparation_emitted": true,
+    "child_launch_started": true,
+    "gpu_model_executed": true,
+    "engine_initialization_completed": true,
+    "physical_boots_started": 1,
+    "completed_probe_boots": 0,
+    "all_three_cohorts_submitted": true,
+    "complete_cohort_histories_observed_in_child": 3,
+    "same_event_records_observed_in_child": 3,
+    "probe_result_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "probe_result_request_id_canonicalization_omission",
+    "last_stage": "post_execution_probe_evidence_validation_after_three_complete_cohorts",
+    "cause": "The GPU execution and all three cohort barriers completed. vLLM preserved its normal internal request-ID randomization by appending exactly eight lowercase hexadecimal characters to each frozen manifest ID. The probe's lightweight _NonScoredRecorder retained those internal IDs, but _validate_probe_evidence compared them directly with the unsuffixed frozen IDs. The ordinary P4 recorder and cohort barrier canonicalize this representation before identity comparison; the probe-only final validator omitted that step and rejected otherwise equivalent R4 identities.",
+    "runtime_evidence": {
+      "configured_max_num_batched_tokens": 8192,
+      "effective_max_num_scheduled_tokens": 8160,
+      "max_num_seqs": 32,
+      "trace_record_count": 40,
+      "trace_engine_step_count": 39,
+      "trace_engine_step_range": [
+        0,
+        38
+      ],
+      "self_spec_weight_alias_count": 291,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "estimated_cuda_graph_pool_gib": 0.47,
+      "actual_cuda_graph_pool_gib": 0.55,
+      "gpu_kv_cache_tokens": 392432,
+      "gpu_kv_cache_blocks": 24527,
+      "minimum_shared_kv_blocks": 21682,
+      "resource_precheck_passed": true,
+      "total_preemptions": 0,
+      "total_recomputed_tokens": 0,
+      "all_trace_closure_checks_passed": true
+    },
+    "cohort_evidence": [
+      {
+        "regime_id": "R4",
+        "decode_engine_step_index": 8,
+        "verified_action_id": "target-matching-k4",
+        "pure_decode": true,
+        "draft_step0_query_width": 1,
+        "draft_output_width": 4,
+        "request_count": 8,
+        "accepted_draft_tokens": 32,
+        "committed_tokens": 8,
+        "clipped_tokens": 32,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "closure_holds": true
+      },
+      {
+        "regime_id": "R5",
+        "decode_engine_step_index": 23,
+        "verified_action_id": "target-matching-k4",
+        "pure_decode": true,
+        "draft_step0_query_width": 1,
+        "draft_output_width": 4,
+        "request_count": 8,
+        "accepted_draft_tokens": 32,
+        "committed_tokens": 8,
+        "clipped_tokens": 32,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "closure_holds": true
+      },
+      {
+        "regime_id": "R5cot",
+        "decode_engine_step_index": 38,
+        "verified_action_id": "target-matching-k4",
+        "pure_decode": true,
+        "draft_step0_query_width": 1,
+        "draft_output_width": 4,
+        "request_count": 8,
+        "accepted_draft_tokens": 32,
+        "committed_tokens": 8,
+        "clipped_tokens": 32,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "closure_holds": true
+      }
+    ],
+    "probe_validator_progress": {
+      "expected_history_count_passed": true,
+      "expected_event_count_passed": true,
+      "r4_complete_history_contract_passed": true,
+      "r4_exact_committed_work_passed": true,
+      "r4_pure_decode_quality_passed": true,
+      "failed_check": "set(event.request_steps[*].request_id) == set(frozen_request_ids)",
+      "exception_message": "probe cohort R4 target rows changed identity"
+    },
+    "r4_identity_evidence": {
+      "frozen_request_ids": [
+        "R4-s0-p000",
+        "R4-s0-p001",
+        "R4-s0-p002",
+        "R4-s0-p003",
+        "R4-s0-p004",
+        "R4-s0-p005",
+        "R4-s0-p006",
+        "R4-s0-p007"
+      ],
+      "observed_internal_request_ids": [
+        "R4-s0-p007-a1b27b8a",
+        "R4-s0-p000-a3388847",
+        "R4-s0-p001-94efccaa",
+        "R4-s0-p002-b757cfd6",
+        "R4-s0-p003-b27b208f",
+        "R4-s0-p004-947d323d",
+        "R4-s0-p005-9d0cddf8",
+        "R4-s0-p006-b402b32b"
+      ],
+      "all_suffixes_match_eight_lowercase_hex": true,
+      "canonicalized_set_matches_frozen_set": true,
+      "identity_or_work_was_actually_lost": false
+    },
+    "exception_chain": [
+      {
+        "type": "P4ChunkedPrefillProbeError",
+        "message": "probe cohort R4 target rows changed identity",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py:_validate_probe_evidence"
+      },
+      {
+        "type": "CalledProcessError",
+        "message": "The authorized V4 child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py:execute_parent"
+      }
+    ],
+    "test_gap": "The V4 authorization tests covered source binding and dispatcher behavior, while scheduler/cohort CPU tests exercised canonical identities or the ordinary recorder's existing canonicalization. No direct probe-result test supplied valid randomized internal request IDs to _validate_probe_evidence, so the probe-only lightweight recorder's missing normalization was not exercised before GPU launch.",
+    "required_repair": [
+      "canonicalize probe event request rows with the existing canonicalize_p4_request_ids helper before comparing them with frozen cohort identities",
+      "preserve randomized internal vLLM request IDs and fail closed on malformed suffixes, foreign identities, and post-canonicalization collisions",
+      "add a direct execution-path regression using valid suffixed IDs in scheduler order and negative malformed, foreign, and collision cases",
+      "revalidate the complete Phase 97 CPU surface before considering a fresh source-bound V5 authorization and create-only output"
+    ]
+  },
+  "artifacts": {
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v4/preparation.json",
+      "sha256": "fd1bb870c842e7b5d8625139c01768a9e130fd13c411a88361406bf2e5ae6a46"
+    },
+    "child_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v4/child.log",
+      "sha256": "70572141de9f7d7eedefe9ecf1fc21ac380bb8cdf7e2791adabf59f8939f0f9f"
+    },
+    "koff_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v4/koff_trace.jsonl",
+      "sha256": "962b943b3a45b9f90d7130be757121c76cc3ccc82a1c165f336c94be745123b7",
+      "records": 40,
+      "header_records": 1,
+      "engine_step_records": 39,
+      "header_only": false
+    },
+    "probe_result_present": false
+  },
+  "post_failure_evidence": {
+    "physical_gpu_index": 4,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "gpu_memory_used_mib": 0,
+    "gpu_compute_processes": 0,
+    "runner_processes": 0
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "v10_authorized": false,
+    "p4a_authorized": false,
+    "preserve_output_without_overwrite_or_resume": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v4",
+    "failure_record_created_after_stop": true,
+    "probe_result_created": false,
+    "score_created": false
+  }
+}

@@ -26,6 +26,8 @@ class AsyncScheduler(Scheduler):
         for req_id in scheduler_output.num_scheduled_tokens:
             request = self.requests[req_id]
             if request.is_prefill_chunk:
+                if self._koff_runtime_enabled:
+                    self._koff_draft_action_by_req.pop(req_id, None)
                 continue
 
             scheduler_output.pending_structured_output_tokens |= (
@@ -42,6 +44,10 @@ class AsyncScheduler(Scheduler):
             # Add placeholders for the new draft/spec tokens.
             # We will update the actual spec token ids in the worker process.
             request.spec_token_ids = self._spec_token_placeholders
+            if self._koff_runtime_enabled:
+                metadata = scheduler_output.koff_runtime
+                assert metadata is not None
+                self._koff_draft_action_by_req[req_id] = metadata.next_action_id
 
             if self.use_v2_model_runner:
                 # Set the next step index in which this request is eligible to be

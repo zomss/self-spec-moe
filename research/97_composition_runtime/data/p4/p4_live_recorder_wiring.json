@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "artifact_id": "p4-synchronous-live-recorder-wiring-v1",
+  "date": "2026-08-09",
+  "status": "pass_synchronous_cpu_contract",
+  "scope": {
+    "scheduler": "synchronous_only",
+    "actions": [
+      "off",
+      "target-matching-k4"
+    ],
+    "capture_contract_id": "p4-b0-same-event-capture-v1",
+    "event_contract_id": "p4-same-event-target-step-v1"
+  },
+  "frozen_interfaces": {
+    "capture_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_same_event_capture.schema.json",
+      "sha256": "883707c9c2ea71a4667c2104e84e8f099d165410c6c9f01a4af5393cf6c115d7"
+    },
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    }
+  },
+  "implementation": {
+    "runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "37c84eda8ce974688b39b4b8f51934b9a3ccd3e48c862aef204e70049bdc9592"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "66381595d235192c10ad15f02b5dfec5b7442f95e45a4ed9ab31eb999490960f"
+    }
+  },
+  "proofs": {
+    "explicit_per_request_rows": true,
+    "explicit_invalid_spec_tokens": true,
+    "same_scheduler_event_timing": true,
+    "live_shared_kv_identity_bound": true,
+    "live_true_slot_identity_bound": true,
+    "live_weight_version_bound": true,
+    "unchanged_adapter_accepts_complete_capture": true,
+    "legacy_p3_fields_inferred": false,
+    "gpu_capture_performed": false
+  },
+  "readiness_update": {
+    "cleared": [
+      "same_event_recorder_unwired"
+    ],
+    "remaining": [
+      "w512_mask_equivalence_unproven",
+      "conservative_resource_bound_missing"
+    ]
+  },
+  "validation": {
+    "vllm_cpu_tests_passed": 149,
+    "phase97_tests_passed": 178,
+    "phase97_subtests_passed": 14,
+    "ruff_check_passed": true,
+    "ruff_format_check_passed": true
+  },
+  "authorizations": {
+    "gpu_measurement": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  }
+}

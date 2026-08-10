@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "p4-b0-off-k4-w512-value-screen-v1",
+  "status": "registered_blocked",
+  "registered_date": "2026-08-09",
+  "source_artifacts": {
+    "w3_value_threshold": {
+      "path": "research/96_selector_foundations/w3_preregistration.md",
+      "sha256": "01c527e35f823315a14d4b4d0cb622107c60ee1309a165e1b67981fe21e1dfc0"
+    },
+    "phase96_f_plan": {
+      "path": "research/96_selector_foundations/w14_plan.md",
+      "sha256": "b50c92d6166938f3678bb5db90d7557d300c2eb64ce76964e56c7f0729a978f4"
+    },
+    "regime_loader": {
+      "path": "research/88_regime_eval/scripts/regime_datasets.py",
+      "sha256": "d072fc7e8865c0d8406ad01bb6f67b91b6c8ca8426678bc68cd1fbf77ace94e8"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "p4_entry": {
+      "path": "research/97_composition_runtime/data/p4/p4_window_entry_w512_masked.json",
+      "sha256": "2bcadc1d9b78a6fb28e70400aecbd63cf26a66e0add411f8d9a164284d1471e9"
+    },
+    "f_decision": {
+      "path": "research/97_composition_runtime/data/p4/p4_f_value_decision.json",
+      "sha256": "002edb37af0a345bac86afd9e466186db8eccc755b182aa09422224927442514"
+    },
+    "environment": {
+      "path": "research/97_composition_runtime/data/preflight/environment_qwen3_8b_h100_tp1.json",
+      "sha256": "5bbd0ad031f69c0cd4719ad210c5d85c0a85277f5d49e3b9871500c8f38c1dc7"
+    },
+    "accounting_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_same_event_accounting_contract.json",
+      "sha256": "c0d6ef619614eccfc61a66577d43154fc59fca886750339bef0ed94c8da8624a"
+    },
+    "runner_scorer_contract": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_runner_scorer_contract.json",
+      "sha256": "6bb1de6a2b13725c5b8d3637e024da2dd52e18212a504b9bd384e73a90274736"
+    },
+    "resource_candidate": {
+      "path": "research/97_composition_runtime/data/p4/candidate_b0_window512_masked_projection.json",
+      "sha256": "fa09df85705d5963038944922ce388a271e028c7a453971829d1c0d69a396dcd"
+    },
+    "p3b_result": {
+      "path": "research/97_composition_runtime/results_p3b_mixed_abort.md",
+      "sha256": "f0a071fe4f517522732ef106d6d2174549504d26dc44750e92a18d5ac31537c5"
+    }
+  },
+  "scope": {
+    "capability_class": "B0",
+    "screen_kind": "pre_engineering_research_value",
+    "evidence_grade": "registered_research_suite",
+    "scored": true,
+    "production_workload_evidence": false,
+    "production_value_claim_allowed": false,
+    "legacy_w14d_reuse_allowed": false
+  },
+  "objective": {
+    "currency": "S_dec",
+    "service_metric": "per_request_decode_rate_ratio",
+    "portfolio_comparison": "candidate_pool_minus_base_pool",
+    "base_pool": [
+      "off",
+      "target-matching-k4"
+    ],
+    "candidate_pool": [
+      "off",
+      "target-matching-k4",
+      "target-matching-w512-masked-k4"
+    ],
+    "workload_weighting": "equal_w3_research_suite",
+    "weight_sum": 1.0,
+    "deployment_interpretation": "forbidden_without_measured_workload_distribution",
+    "regimes": [
+      {
+        "regime_id": "R4",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 512,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R5",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 512,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R5cot",
+        "weight": 0.16666666666666666,
+        "batch": 8,
+        "max_output_tokens": 3072,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R8",
+        "weight": 0.16666666666666666,
+        "batch": 16,
+        "max_output_tokens": 2048,
+        "temperature": 1.0
+      },
+      {
+        "regime_id": "R1",
+        "weight": 0.16666666666666666,
+        "batch": 1,
+        "max_output_tokens": 1024,
+        "temperature": 0.0
+      },
+      {
+        "regime_id": "R6",
+        "weight": 0.16666666666666666,
+        "batch": 32,
+        "max_output_tokens": 256,
+        "temperature": 0.0
+      }
+    ]
+  },
+  "actions": [
+    {
+      "action_id": "off",
+      "kind": "off",
+      "k": 0,
+      "draft_weight_path_id": null,
+      "kv_path": "shared_target",
+      "window": {
+        "mode": "off",
+        "value": 0,
+        "sink_tokens": 0,
+        "cost_grade": "none",
+        "cost_credit_allowed": false
+      },
+      "skip_set": [],
+      "proper_subset_action_id": null,
+      "measurement": {
+        "realization": "live-b0-forced-off",
+        "equivalence_status": "not_applicable",
+        "acceptance_source": "same-event",
+        "cost_source": "same-event",
+        "surrogate_latency_use": "not_applicable"
+      }
+    },
+    {
+      "action_id": "target-matching-k4",
+      "kind": "speculative",
+      "k": 4,
+      "draft_weight_path_id": "target-matching",
+      "kv_path": "shared_target",
+      "window": {
+        "mode": "off",
+        "value": 0,
+        "sink_tokens": 0,
+        "cost_grade": "none",
+        "cost_credit_allowed": false
+      },
+      "skip_set": [],
+      "proper_subset_action_id": "off",
+      "measurement": {
+        "realization": "live-b0-target-matching-k4",
+        "equivalence_status": "not_applicable",
+        "acceptance_source": "same-event",
+        "cost_source": "same-event",
+        "surrogate_latency_use": "not_applicable"
+      }
+    },
+    {
+      "action_id": "target-matching-w512-masked-k4",
+      "kind": "speculative",
+      "k": 4,
+      "draft_weight_path_id": "target-matching",
+      "kv_path": "shared_target",
+      "window": {
+        "mode": "masked",
+        "value": 512,
+        "sink_tokens": 16,
+        "cost_grade": "acceptance_only",
+        "cost_credit_allowed": false
+      },
+      "skip_set": [],
+      "proper_subset_action_id": "target-matching-k4",
+      "measurement": {
+        "realization": "boot-static-mask-equivalent-surrogate",
+        "equivalence_status": "pending",
+        "acceptance_source": "same-event-after-equivalence",
+        "cost_source": "target-matching-k4-no-window-credit",
+        "surrogate_latency_use": "diagnostic_only"
+      }
+    }
+  ],
+  "measurement_design": {
+    "prompt_manifest": {
+      "status": "frozen",
+      "required_before_gpu": true,
+      "manifest_source_role": "prompt_manifest",
+      "manifest_id": "p4-b0-six-regime-prompts-v1",
+      "loader_source_role": "regime_loader",
+      "tokenizer_model": "Qwen/Qwen3-8B",
+      "tokenizer_revision_status": "frozen_exact_revision",
+      "tokenizer_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "content_seeds": [
+        0,
+        1
+      ],
+      "prompts_per_seed_and_regime": 32,
+      "token_id_hashes_required": true,
+      "bundle_record_count": 384,
+      "bundle_sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "generation": {
+      "equal_work": true,
+      "ignore_eos": true,
+      "fixed_output_from_regime": true,
+      "generation_seed_policy": "same_seed_per_prompt_across_actions"
+    },
+    "engine": {
+      "async_scheduling": false,
+      "enable_flashinfer_autotune": false,
+      "prefix_caching": false,
+      "shared_target_kv": true,
+      "target_quantization_is_fixed": true
+    },
+    "paired_boot_blocks": [
+      {
+        "block_id": 1,
+        "action_order": [
+          "off",
+          "target-matching-k4",
+          "target-matching-w512-masked-k4"
+        ]
+      },
+      {
+        "block_id": 2,
+        "action_order": [
+          "target-matching-k4",
+          "target-matching-w512-masked-k4",
+          "off"
+        ]
+      },
+      {
+        "block_id": 3,
+        "action_order": [
+          "target-matching-w512-masked-k4",
+          "off",
+          "target-matching-k4"
+        ]
+      }
+    ],
+    "rounds_per_boot": 4,
+    "episode_protocol": {
+      "rejection_fraction": 0.05,
+      "minimum_surviving_rounds": 2,
+      "b1_reference": "second_highest_round",
+      "other_batch_reference": "maximum_round",
+      "cross_boot_agreement_fraction": 0.02
+    },
+    "matched_fields": [
+      "target_checkpoint_revision",
+      "target_quantization",
+      "target_kv_dtype",
+      "draft_weight_version",
+      "shared_kv_binding",
+      "true_slot_mapping",
+      "hardware",
+      "parallel_layout",
+      "prompt_token_ids",
+      "generation_seed",
+      "batch",
+      "generated_suffix",
+      "k",
+      "kernel_backend",
+      "graph_grade",
+      "warmup_policy",
+      "measurement_currency"
+    ],
+    "accounting": {
+      "contract_id": "p4-same-event-target-step-v1",
+      "source_unit": "one_scheduler_engine_event",
+      "timing_source": "same_scheduler_event_monotonic",
+      "prometheus_use": "diagnostic_only",
+      "invalid_event_policy": "reject_before_complete"
+    },
+    "correctness": {
+      "contract": "target_local",
+      "shared_kv_alias_proof": "required_each_boot",
+      "true_slot_identity": "required_each_boot",
+      "cross_boot_ar_identity": "diagnostic_only"
+    }
+  },
+  "estimands": {
+    "tau": "1+A_accepted/H_target_steps",
+    "k4_speed": "S_dec(target-matching-k4,off)",
+    "w512_no_cost_credit_speed": "S_k4*tau_w512/tau_k4",
+    "base_score": "max(1,S_k4)",
+    "candidate_score": "max(1,S_k4,S_w512_no_cost_credit)",
+    "regime_gain": "candidate_score-base_score",
+    "weighted_gain": "sum(w_g*regime_gain_g)",
+    "uncertainty": {
+      "method": "paired_block_bootstrap",
+      "resampling_unit": "complete_boot_block",
+      "draws": 4000,
+      "confidence_level": 0.95
+    },
+    "missing_value": "null_never_zero"
+  },
+  "decision_rule": {
+    "dominance_short_circuit": {
+      "condition": "all_regimes_UCB_tau_w512<=LCB_tau_k4",
+      "decision": "stop_masked_p4_no_p4a"
+    },
+    "pre_engineering_gate": {
+      "use_lower_confidence_bound": true,
+      "mean_gain_fraction": 0.02,
+      "single_regime_gain_fraction": 0.05,
+      "single_branch_mean_floor": 0.0,
+      "branch_logic": "mean_branch_or_single_branch"
+    },
+    "proper_subset_non_regression": {
+      "tolerance_fraction": 0.01,
+      "benefit_lcb_fraction": 0.02,
+      "failing_action_policy": "mask_and_retain_best_subset"
+    },
+    "resource_gate": {
+      "required_before_p4a": true,
+      "evidence_grade": "measured_base_plus_conservative_delta_bound",
+      "measurement_relation": "conservative_candidate_upper_bound",
+      "current_state": "reject"
+    },
+    "post_engineering_gate": {
+      "p95_switch_below_target_step": true,
+      "max_switch_probe_overhead_fraction": 0.005,
+      "remeasure_exact_action": true,
+      "exact_resource_evidence_grade": "measured_exact",
+      "exact_resource_measurement_relation": "exact_candidate"
+    }
+  },
+  "readiness": {
+    "state": "blocked",
+    "satisfied": [
+      "research_objective_and_weights_frozen",
+      "same_event_contract_registered",
+      "matched_action_set_frozen",
+      "legacy_w14d_disposition_fixed",
+      "exact_prompt_manifest_frozen",
+      "same_event_measurement_adapter_frozen",
+      "runner_scorer_frozen"
+    ],
+    "blocking_reason_codes": [
+      "same_event_recorder_unwired",
+      "w512_mask_equivalence_unproven",
+      "conservative_resource_bound_missing"
+    ]
+  },
+  "authorizations": {
+    "gpu_measurement": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "next_artifact": {
+    "kind": "run_ready_b0_value_screen_package",
+    "requires": [
+      "same_event_live_recorder_wiring",
+      "w512_mask_equivalence_proof",
+      "conservative_resource_bound"
+    ]
+  }
+}

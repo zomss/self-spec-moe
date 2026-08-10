@@ -1,0 +1,94 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v6",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v6.json",
+    "sha256": "f3348821c2f8c8ed6bbb74df620c51a33e88eec3b3b0971cc64637e664c4afca"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "empty_capture_placeholders": 1,
+    "failed_at": "2026-08-09T17:57:59+09:00",
+    "physical_gpu_index": 4,
+    "score_emitted": false,
+    "started_at": "2026-08-09T17:56:35+09:00"
+  },
+  "diagnostic": {
+    "cause": "The V1 input processor appended an eight-hex internal-uniqueness suffix to every frozen external prompt id. The atomic-ingress proof accepted that representation, but the scored recorder compared scheduler-row ids directly with the unsuffixed prompt_record_ids and rejected all eight rows before persisting the first event.",
+    "exception_chain": [
+      {
+        "message": "P4 event contains requests outside the frozen prompt cell: ['R4-s0-p000-aa61a533', 'R4-s0-p001-80727903', 'R4-s0-p002-b9f38372', 'R4-s0-p003-977c84ad', 'R4-s0-p004-8e00e3c6', 'R4-s0-p005-8671c90b', 'R4-s0-p006-85b1517c', 'R4-s0-p007-97cdba3d']",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:P4SameEventRecorder.record",
+        "type": "KOffRuntimeError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "expected_request_ids": [
+      "R4-s0-p000",
+      "R4-s0-p001",
+      "R4-s0-p002",
+      "R4-s0-p003",
+      "R4-s0-p004",
+      "R4-s0-p005",
+      "R4-s0-p006",
+      "R4-s0-p007"
+    ],
+    "identifier_contract": {
+      "atomic_proof_policy": "actual_id == expected_id or actual_id starts with expected_id plus '-'",
+      "internal_id_source": "vllm/v1/engine/input_processor.py:InputProcessor.assign_request_id",
+      "internal_suffix_format": "-<8 hex>",
+      "recorder_policy": "exact membership in frozen prompt_record_ids"
+    },
+    "last_stage": "first_scheduler_event_request_identity_gate",
+    "observed_before_failure": {
+      "all_eight_requests_queued_before_first_step": true,
+      "cuda_graph_capture_completed": true,
+      "cuda_graph_pool_gib": 0.55,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "engine_core_class": "InprocClient",
+      "gpu_kv_cache_blocks": 22090,
+      "gpu_kv_cache_tokens": 353440,
+      "native_sampler_selected": true,
+      "self_spec_weight_alias_count": 291
+    },
+    "scope": "request_identity_normalization_mismatch",
+    "unexpected_internal_request_ids": [
+      "R4-s0-p000-aa61a533",
+      "R4-s0-p001-80727903",
+      "R4-s0-p002-b9f38372",
+      "R4-s0-p003-977c84ad",
+      "R4-s0-p004-8e00e3c6",
+      "R4-s0-p005-8671c90b",
+      "R4-s0-p006-85b1517c",
+      "R4-s0-p007-97cdba3d"
+    ]
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v6_consumed": true
+  },
+  "output": {
+    "boot_spec_sha256": "359027e4276d43356cd199b55aff701335dba3976df0cd39436e39692b3ba123",
+    "empty_capture_placeholder": "research/97_composition_runtime/data/p4/run_b0_value_screen_v5/captures/p4-b0-b1-p1-off/capture-b1-p1-off-r4-s0-r1.json",
+    "empty_capture_placeholder_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v5",
+    "plan_sha256": "7ce7fe4a83bab45d5893c92500a3eba94fc0c947a059d324ff34093f1529b2da",
+    "preparation_sha256": "1237af4a0ec9c64ea7318783e221d340be76a2f77836532a574e7f79b2935420",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

@@ -1,0 +1,107 @@
+{
+  "cuda_visible_devices": "5",
+  "engine": {
+    "async_scheduling": false,
+    "enforce_eager": false,
+    "engine_steps_observed": 40,
+    "gpu_memory_utilization": 0.8,
+    "max_model_len": 2048,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 2,
+    "tensor_parallel_size": 1,
+    "use_v2_model_runner_env": "0"
+  },
+  "injection": {
+    "after_long_output_tokens": 7,
+    "short_request_added": true,
+    "trigger": "matched switched-engine arrival point"
+  },
+  "mode": "ar",
+  "model": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+  "model_id": "Qwen/Qwen3-8B",
+  "prompts": {
+    "long": "Continue the sequence and explain its rule in one concise paragraph: 2, 4, 6, 8.",
+    "short": "Write a brief description of a clear daytime sky."
+  },
+  "record_type": "p3_live_smoke_output",
+  "requests": {
+    "long": {
+      "finish_reason": "length",
+      "finished": true,
+      "logprobs": null,
+      "text": " Also, explain the difference between a sequence and a series. Additionally, explain the difference between a geometric sequence and an arithmetic sequence. Finally, explain the difference between a sequence and a progression.\n\nThe sequence",
+      "token_ids": [
+        7281,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        8500,
+        323,
+        264,
+        4013,
+        13,
+        22406,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        52484,
+        8500,
+        323,
+        458,
+        34784,
+        8500,
+        13,
+        17375,
+        11,
+        10339,
+        279,
+        6672,
+        1948,
+        264,
+        8500,
+        323,
+        264,
+        32724,
+        382,
+        785,
+        8500
+      ]
+    },
+    "short": {
+      "finish_reason": "length",
+      "finished": true,
+      "logprobs": null,
+      "text": " The description should",
+      "token_ids": [
+        576,
+        4008,
+        1265
+      ]
+    }
+  },
+  "sampling": {
+    "long": {
+      "ignore_eos": true,
+      "logprobs": null,
+      "max_tokens": 40,
+      "seed": 0,
+      "temperature": 0.0
+    },
+    "short": {
+      "ignore_eos": true,
+      "logprobs": null,
+      "max_tokens": 3,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "schema_version": 1,
+  "scored": false,
+  "speculative_config": null
+}

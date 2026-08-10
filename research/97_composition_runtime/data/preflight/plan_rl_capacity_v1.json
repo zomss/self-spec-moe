@@ -1,0 +1,60 @@
+{
+  "admitted_candidate_ids": [
+    "qwen3-8b-b0-minimal-k4-measured"
+  ],
+  "decisions": [
+    {
+      "available_shared_target_kv_blocks": 24529,
+      "candidate_id": "qwen3-8b-b0-minimal-k4-measured",
+      "capability_class": "B0",
+      "capacity_measurement_relation": "exact_candidate",
+      "decision": "admit",
+      "evidence_grade": "measured_exact",
+      "frozen_trace_peak_tokens": 320000,
+      "reasons": [],
+      "required_live_kv_blocks": 21000,
+      "required_live_kv_tokens": 336000,
+      "shared_target_kv_headroom_blocks": 3529
+    },
+    {
+      "available_shared_target_kv_blocks": 21928,
+      "candidate_id": "qwen3-8b-b1-w4a8-projected",
+      "capability_class": "B1",
+      "capacity_measurement_relation": "optimistic_proxy_ceiling",
+      "decision": "reject",
+      "evidence_grade": "static_proxy_projection",
+      "frozen_trace_peak_tokens": 320000,
+      "reasons": [
+        {
+          "code": "capacity_evidence_not_exact",
+          "detail": "a static path proxy cannot authorize the co-resident class"
+        },
+        {
+          "code": "unknown_co_resident_weight_hbm",
+          "detail": "co_resident_weight_hbm_bytes has no conservative measured value"
+        },
+        {
+          "code": "unknown_graphs_and_workspaces_hbm",
+          "detail": "co_resident_graphs_and_workspaces_hbm_bytes has no conservative measured value"
+        },
+        {
+          "code": "unknown_weight_refresh_peak_hbm",
+          "detail": "weight_refresh_peak_hbm_bytes has no conservative measured value"
+        },
+        {
+          "code": "unknown_weight_refresh_pinned_host",
+          "detail": "RL refresh pinned-host memory is unknown"
+        }
+      ],
+      "required_live_kv_blocks": 21000,
+      "required_live_kv_tokens": 336000,
+      "shared_target_kv_headroom_blocks": 928
+    }
+  ],
+  "environment_id": "qwen3-8b-h100-tp1-proxy-v1",
+  "schema_version": 1,
+  "scored": false,
+  "status": "pass",
+  "workload_evidence_grade": "engineering_assumption",
+  "workload_id": "phase97-rl-capacity-envelope-v1"
+}

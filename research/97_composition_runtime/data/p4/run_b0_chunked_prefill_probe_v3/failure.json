@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_chunked_prefill_probe_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-chunked-prefill-probe-authorization-v3",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v3.json",
+    "sha256": "9e15f80a9eb4abfbc73e24cb72f7cdd7ea1bdd96c79824b2be0aeca3dc27f3f6"
+  },
+  "attempt": {
+    "invocation_started": true,
+    "exit_code": 1,
+    "failed_at": "2026-08-09T23:06:05+09:00",
+    "native_sampler_preflight_passed": true,
+    "inprocess_engine_core_preflight_passed": true,
+    "gpu_identity_idle_preflight_passed": true,
+    "output_directory_created": true,
+    "preparation_emitted": true,
+    "child_launch_started": true,
+    "gpu_model_executed": true,
+    "engine_initialization_completed": true,
+    "physical_boots_started": 1,
+    "completed_probe_boots": 0,
+    "first_request_registration_attempted": true,
+    "first_request_scheduled": true,
+    "first_model_step_attempted": true,
+    "complete_cohorts_emitted": 0,
+    "incomplete_cohorts_emitted": 0,
+    "probe_result_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "chunked_prefill_misclassified_by_decode_only_draft_query_width_guard",
+    "last_stage": "first_cohort_chunked_prefill_model_step_after_engine_boot",
+    "cause": "The repaired 8192/8160 budget guard admitted the cohort and the first scheduler event correctly armed target-matching K4 during pure chunked prefill. That event had no decode requests and was not scoreable. The draft proposer nevertheless has to process the prefill state and reported a step-0 query width of 4081. make_runner_evidence applied the width-one decode invariant to every next K4 action instead of only to pure-decode execution, so it rejected this valid prefill-side draft dispatch before the scheduler could consume the model output.",
+    "scheduler_evidence": {
+      "engine_step_index": 0,
+      "configured_max_num_batched_tokens": 8192,
+      "effective_max_num_scheduled_tokens": 8160,
+      "max_num_seqs": 32,
+      "verified_action_id": null,
+      "next_action_id": "target-matching-k4",
+      "selection_intent": "exploit",
+      "capture_cohort_arm": true,
+      "pure_decode": false,
+      "decode_request_ids": [],
+      "scheduled_request_ids": [
+        "R4-s0-p000-8ff7ad35",
+        "R4-s0-p001-a66d2119"
+      ],
+      "prompt_token_lengths": {
+        "R4-s0-p000-8ff7ad35": 8077,
+        "R4-s0-p001-a66d2119": 7839
+      },
+      "scheduled_token_counts": {
+        "R4-s0-p000-8ff7ad35": 8077,
+        "R4-s0-p001-a66d2119": 83
+      },
+      "total_scheduled_tokens": 8160,
+      "scheduled_spec_decode_tokens": {},
+      "shared_target_kv_blocks_in_use": 513,
+      "shared_target_kv_block_capacity": 24527,
+      "preemptions": 0,
+      "recomputed_tokens": 0
+    },
+    "worker_evidence": {
+      "target_runtime_mode": "not_serialized_before_guard_failure",
+      "draft_output_width": 4,
+      "draft_proposal_called": true,
+      "draft_step0_query_width": 4081,
+      "decode_only_expected_query_width": 1,
+      "draft_step0_runtime_mode": "PIECEWISE",
+      "draft_chain_runtime_mode": "PIECEWISE",
+      "rejection_was_on_scoreable_pure_decode": false
+    },
+    "observed_before_failure": {
+      "self_spec_weight_alias_count": 291,
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "cuda_graph_capture_completed": true,
+      "estimated_cuda_graph_pool_gib": 0.47,
+      "actual_cuda_graph_pool_gib": 0.55,
+      "gpu_kv_cache_tokens": 392432,
+      "gpu_kv_cache_blocks": 24527,
+      "minimum_shared_kv_blocks": 21682,
+      "resource_precheck_passed": true
+    },
+    "exception_chain": [
+      {
+        "type": "KOffRuntimeError",
+        "message": "target-matching-k4 used draft step-0 query width 4081, expected 1",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:make_runner_evidence"
+      },
+      {
+        "type": "KOffRuntimeError",
+        "message": "P4 capture cohort 'p4-b0-chunked-prefill-probe-R4:cohort:c9d249a12d352f0d': cohort closed before exact work completion",
+        "origin": "vllm/v1/spec_decode/koff_runtime.py:P4CaptureCohortBarrier.close"
+      },
+      {
+        "type": "CalledProcessError",
+        "message": "The authorized V3 child returned non-zero exit status 1.",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_chunked_prefill_probe.py:execute_parent"
+      }
+    ],
+    "test_gap": "The CPU cohort helper supplied draft_step0_query_width=1 whenever K4 was armed, including the pure-prefill arming event. Existing make_runner_evidence tests covered decode K4 and mixed-abort OFF, but did not reproduce a K4 prefill-side proposer invocation with a non-decode query width. The live 8077+83 chunk at the 8160-token effective budget therefore exercised an untested execution phase.",
+    "required_repair": [
+      "scope the exact draft step-0 query-width-one invariant to scoreable pure-decode K4 execution",
+      "retain K4 output-width, proposal-called, execution-mode, shared-KV, and shared-weight checks on prefill-side dispatch without treating its query width as decode work",
+      "keep every prefill or mixed event unscored and require the first measured cohort event to remain atomic pure decode",
+      "add a regression in which a pure-prefill cohort arming event uses K4 with a non-one draft step-0 query width and passes, while pure-decode K4 with the same width still fails closed",
+      "bind any repair and its execution-path regression to a fresh authorization and create-only output path"
+    ]
+  },
+  "artifacts": {
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v3/preparation.json",
+      "sha256": "c5b830bebc737b3cae78e0e97e51040fab7e26d1bee8f11e1bf7c06f85aa4de4"
+    },
+    "child_log": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v3/child.log",
+      "sha256": "215af247c7e9a0015b2248836a0801df1b4a31fdea54ee3d3ee01ed12e63f1d0"
+    },
+    "koff_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v3/koff_trace.jsonl",
+      "sha256": "0407fed3e3ef4f25a092a2bba1870362e13f5fc203e2866a1fd49ab71a8c506c",
+      "records": 1,
+      "header_only": true
+    },
+    "probe_result_present": false
+  },
+  "post_failure_evidence": {
+    "physical_gpu_index": 4,
+    "gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "gpu_memory_used_mib": 0,
+    "gpu_compute_processes": 0,
+    "runner_processes": 0
+  },
+  "disposition": {
+    "authorization_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "v10_authorized": false,
+    "p4a_authorized": false,
+    "preserve_output_without_overwrite_or_resume": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v3",
+    "failure_record_created_after_stop": true,
+    "probe_result_created": false,
+    "score_created": false
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "package_id": "p4-b0-real-serving-chunked-prefill-diagnosis-v1",
+  "date": "2026-08-09",
+  "status": "authorized_gpu4_non_scored_serving_diagnosis_only",
+  "prior_measurement_attempt": {
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v5.json",
+      "sha256": "4983659ef991e7612b87f790d9711c48088e0354cff94992d854c12b5db87695"
+    },
+    "failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v4/failure.json",
+      "sha256": "5d9635dafd198ff72a0aa83d025cbcd734e506cbe30d3e640b518330dfdf8bd2"
+    },
+    "disposition": "v5_consumed_zero_captures_no_score"
+  },
+  "source_artifacts": {
+    "diagnostic_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_serving_chunked_prefill_diagnosis.py",
+      "sha256": "830012a28848f4d0e419ed228d38e1016848cc4607f93cdc0fdb72790aa40fa4"
+    },
+    "prompt_manifest": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_manifest.json",
+      "sha256": "10de0f73897c08b278d532a5764d3e45ccb67dbc52c1dc9d1e85a3da4c54ad93"
+    },
+    "prompt_bundle": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_prompt_tokens.jsonl.gz",
+      "sha256": "0615cf0174bc476dcc744cb947440b09be4b61043685a262e62f573821de1506"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "a4434420cc64503828fe8fac29ba11cd282cdf4d9dca4e7592dd92305ef69ad7"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "4670639b6dde892df006fb6798ad62820f14f806b339963660b354842bfd6d30"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "c6e4ba93b3054276a12ba61c4a488c357bc695bb6a794756fd610b5625edbfd1"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "d57e1ff4fad5ddfc7379a606780fe62188452adab923b95db6ef73734db00562"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    }
+  },
+  "run_contract": {
+    "invocation": {
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_serving_chunked_prefill_diagnosis.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_serving_chunked_prefill_diagnosis_authorization.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_serving_chunked_prefill_diagnosis_v1"
+      ],
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_serving_chunked_prefill_diagnosis_v1",
+      "create_new": true
+    },
+    "gpu": {
+      "physical_index": 4,
+      "uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+      "fallback_authorized": false
+    },
+    "model": {
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "snapshot_path": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+      "target_quantization": null,
+      "target_kv_dtype": "bfloat16",
+      "draft_weight_source": "target_alias",
+      "draft_kv_source": "target_shared_cache"
+    },
+    "engine": {
+      "max_model_len": 20480,
+      "max_num_seqs": 32,
+      "max_num_batched_tokens": 8192,
+      "effective_scheduler_token_budget": 8160,
+      "enable_chunked_prefill": true,
+      "gpu_memory_utilization": 0.9,
+      "async_scheduling": false,
+      "enforce_eager": false,
+      "prefix_caching": false,
+      "native_sampler": true,
+      "dynamic_k_schedule": [
+        [
+          1,
+          32,
+          0
+        ],
+        [
+          33,
+          33,
+          4
+        ]
+      ]
+    },
+    "workload": {
+      "regime_id": "R4",
+      "content_seed": 0,
+      "prompt_record_ids": [
+        "R4-s0-p000",
+        "R4-s0-p001",
+        "R4-s0-p002",
+        "R4-s0-p003",
+        "R4-s0-p004",
+        "R4-s0-p005",
+        "R4-s0-p006",
+        "R4-s0-p007"
+      ],
+      "prompt_token_counts": [
+        8077,
+        7839,
+        8368,
+        8435,
+        7836,
+        7876,
+        8597,
+        8172
+      ],
+      "total_prompt_tokens": 65200,
+      "canonical_workload_sha256": "204ed66b50bf7d0b8d0487be1d5a892e20550b4d14ce968edcb07a7dc06af631",
+      "max_output_tokens_per_request": 16,
+      "temperature": 0.0,
+      "ignore_eos": true,
+      "generation_seed": 0
+    }
+  },
+  "diagnostic_contract": {
+    "recording": "append_only_non_scored_koff_trace",
+    "p4_capture_recorder_enabled": false,
+    "expected_boundary": "natural_mixed_prefill_decode",
+    "mixed_decode_policy": "q1_off_force_off",
+    "require_later_pure_decode": true,
+    "shared_target_kv_required": true,
+    "private_draft_kv_allowed": false,
+    "score_eligible_output_allowed": false
+  },
+  "decision": {
+    "state": "approve",
+    "scope": "gpu4_real_serving_8192_chunked_prefill_diagnosis_only",
+    "invalidated_by": [
+      "bound_source_hash_drift",
+      "output_directory_exists",
+      "gpu4_not_idle",
+      "gpu_identity_drift",
+      "engine_or_workload_drift",
+      "scoring_or_capture_enablement"
+    ]
+  },
+  "claims": {
+    "v5_screen_passed": false,
+    "serving_chunked_prefill_validated": false,
+    "performance_claim_allowed": false,
+    "action_admitted": false
+  },
+  "authorizations": {
+    "serving_diagnosis": true,
+    "value_screen": false,
+    "p4a_engineering": false,
+    "action_admission": false,
+    "production_value_claim": false
+  },
+  "execution_policy": {
+    "physical_boot_count": 1,
+    "retry_allowed": false,
+    "partial_resume_allowed": false,
+    "prior_output_reuse_allowed": false,
+    "on_any_failure": "stop_preserve_trace_require_fresh_authorization"
+  },
+  "next_artifact": {
+    "kind": "p4_b0_real_serving_chunked_prefill_diagnosis",
+    "may_score_value_screen": false,
+    "may_authorize_p4a": false,
+    "may_admit_action": false
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "boot_class": "weight_q_kv_q",
+  "compile_cache_root": "/data/smcho/.cache/vllm-p97-warmup/weight_q_kv_q_mbt2048_eager",
+  "draft": "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq",
+  "draft_execution": "eager",
+  "draft_kv_dtype": "fp8",
+  "engine_args": {
+    "enforce_eager": false,
+    "flashinfer_autotune": false,
+    "gpu_memory_utilization": 0.9,
+    "k": 4,
+    "max_model_len": 20480,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 32
+  },
+  "environment": {
+    "VLLM_SELF_SPEC_DRAFT_EAGER": "1",
+    "VLLM_SELF_SPEC_DRAFT_KV_DTYPE": "fp8",
+    "VLLM_SELF_SPEC_SHARED_KV": "0"
+  },
+  "failure_stage": "initial scoped-eager draft profiling/warmup",
+  "finished_utc": "2026-08-08T09:11:31.265048+00:00",
+  "gpu_after_shutdown": {
+    "free_mib": 81079,
+    "total_mib": 81559,
+    "used_mib": 0,
+    "util_pct": 0
+  },
+  "gpu_physical": 5,
+  "kv_q": true,
+  "model": "Qwen/Qwen3-8B",
+  "non_scored": true,
+  "observed_elapsed_before_stop_seconds_gte": 900,
+  "observed_gpu_during_stall": {
+    "memory_util_pct": 0,
+    "sm_util_pct": 100,
+    "used_mib": 23665
+  },
+  "operator_record": true,
+  "proxy_for": "baseline + both optional paths",
+  "runner_status": 124,
+  "schema_version": 1,
+  "source_log": "/data/smcho/self-spec-moe/research/97_composition_runtime/logs/diagnostics/weight_q_kv_q_mbt2048_eager.log",
+  "source_log_sha256": "7c3bee45c9503875dc3163f7b98c99138722a0014c95133c9a960e246dfab9f6",
+  "static_proxy": true,
+  "status": "timed_out",
+  "target_execution": "compiled",
+  "termination": "runner stopped only the owned run at the threshold",
+  "weight_q": true
+}

@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from vllm.pooling_params import PoolingParams
     from vllm.sampling_params import SamplingParams
     from vllm.v1.request import Request
+    from vllm.v1.spec_decode.koff_runtime import KOffSchedulerMetadata
 else:
     ECConnectorMetadata = object
     KVConnectorMetadata = object
@@ -243,6 +244,10 @@ class SchedulerOutput:
     # Dynamic speculative decoding: optimal K chosen by scheduler.
     # Number of spec tokens to schedule for the next step.
     num_spec_tokens_to_schedule: int = 0
+
+    # Phase 97 minimal-B0 action provenance and passive accounting inputs.
+    # None unless VLLM_SELF_SPEC_KOFF_RUNTIME is explicitly enabled.
+    koff_runtime: "KOffSchedulerMetadata | None" = None
 
     @classmethod
     def make_empty(cls) -> "SchedulerOutput":

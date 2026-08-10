@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v8",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v8.json",
+    "sha256": "37197ba9ca87bd73dda2ada78689c40f401002ba4a55bfb7c60b8555021a6cc7"
+  },
+  "attempt": {
+    "invocation_started": true,
+    "exit_code": 2,
+    "failed_at": "2026-08-09T19:18:33+09:00",
+    "gpu_preflight_started": false,
+    "gpu_model_executed": false,
+    "completed_physical_boots": 0,
+    "complete_captures_emitted": 0,
+    "incomplete_captures_emitted": 0,
+    "adapted_rounds_emitted": false,
+    "score_emitted": false
+  },
+  "diagnostic": {
+    "scope": "reviewed_authorization_path_dispatch_omission",
+    "last_stage": "parent_reviewed_authorization_path_gate",
+    "cause": "V8 package resolution and execution-authority validation supported V8, but the final parent and child pathname dispatchers still admitted only V6 and V7. The exact reviewed V8 command therefore failed closed before sampler, EngineCore, GPU identity, output creation, model execution, capture, adaptation, or scoring.",
+    "exception_chain": [
+      {
+        "type": "P4RunnerError",
+        "message": "execution must use a reviewed authorization path",
+        "origin": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py:execute_run"
+      }
+    ],
+    "launch_command": [
+      ".venv/bin/python",
+      "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "--authorization",
+      "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v8.json",
+      "--output-dir",
+      "research/97_composition_runtime/data/p4/run_b0_value_screen_v7"
+    ],
+    "package_layers_supporting_v8": [
+      "resolve_authorization_package",
+      "validate_execution_authority"
+    ],
+    "stale_dispatch_consumers": [
+      "execute_run",
+      "main_child_mode"
+    ]
+  },
+  "disposition": {
+    "v8_consumed": true,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "partial_resume_attempted": false,
+    "fallback_gpu_used": false,
+    "scoring_allowed": false,
+    "post_failure_runner_processes": 0,
+    "post_failure_gpu_compute_processes": 0
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v7",
+    "runner_output_created": false,
+    "failure_record_created_after_stop": true,
+    "preserve_without_overwrite_or_resume": true
+  }
+}

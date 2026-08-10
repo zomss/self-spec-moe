@@ -1,0 +1,66 @@
+{
+  "authorization": {
+    "package_id": "p4-b0-value-screen-run-authorization-v2",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+    "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+  },
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_id": "p4-b0-b1-p1-off",
+    "captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "failed_at": "2026-08-09T15:20:37+09:00",
+    "physical_gpu_index": 4,
+    "score_emitted": false,
+    "started_at": "2026-08-09T15:19:43+09:00"
+  },
+  "diagnostic": {
+    "cause": "The active virtual environment contains an executable .venv/bin/ninja, but the exact direct-Python invocation did not place .venv/bin on PATH. FlashInfer therefore could not discover ninja for its sampling-module JIT build.",
+    "exception_chain": [
+      {
+        "message": "[Errno 2] No such file or directory: 'ninja'",
+        "origin": "flashinfer/jit/cpp_ext.py:run_ninja",
+        "type": "FileNotFoundError"
+      },
+      {
+        "message": "Engine core initialization failed. See root cause above.",
+        "origin": "vllm/v1/engine/utils.py:wait_for_engine_startup",
+        "type": "RuntimeError"
+      },
+      {
+        "message": "The first boot child returned non-zero exit status 1.",
+        "origin": "run_p4_b0_value_screen.py:execute_run",
+        "type": "CalledProcessError"
+      }
+    ],
+    "installed_ninja": {
+      "executable": ".venv/bin/ninja",
+      "executable_version": "1.13.0.git.kitware.jobserver-pipe-1",
+      "package_version": "1.13.0",
+      "was_discoverable_on_child_path": false
+    },
+    "last_stage": "engine_initialization_profile_run",
+    "observed_before_failure": {
+      "draft_attention_layers_bound_to_target_kv": 36,
+      "draft_private_kv_allocation": false,
+      "self_spec_weight_alias_count": 291,
+      "target_and_draft_compile_completed": true
+    }
+  },
+  "disposition": {
+    "fallback_gpu_used": false,
+    "partial_resume_attempted": false,
+    "post_failure_engine_processes": 0,
+    "post_failure_gpu_compute_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v1",
+    "preparation_sha256": "39d391f542d31c2ae9fea6c6a3415c3b4ef9c9f737654f44396ff17694c9304d",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1
+}

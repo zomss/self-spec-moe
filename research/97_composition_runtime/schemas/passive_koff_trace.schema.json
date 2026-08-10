@@ -1,0 +1,381 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/passive_koff_trace.schema.json",
+  "title": "Phase 97 passive K/OFF synthetic trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "trace_id",
+    "boot_class_id",
+    "workload_id",
+    "scored",
+    "binding_id",
+    "target_pool_id",
+    "canonical_true_slot_mapping_id",
+    "initial_action_id",
+    "policy",
+    "segments"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "trace_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "boot_class_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "workload_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "scored": {
+      "const": false
+    },
+    "binding_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "target_pool_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "canonical_true_slot_mapping_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "initial_action_id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "epsilon_sel",
+        "max_evidence_age_target_steps",
+        "max_probe_target_step_fraction"
+      ],
+      "properties": {
+        "epsilon_sel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_evidence_age_target_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_probe_target_step_fraction": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/segment"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "interval_estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "q_lo",
+        "q_hi",
+        "tau_lo",
+        "tau_hi",
+        "observed_at_target_step"
+      ],
+      "properties": {
+        "action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "q_lo": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "q_hi": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tau_lo": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tau_hi": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "observed_at_target_step": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "runtime_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_weight_version",
+        "draft_weight_versions",
+        "available_weight_path_ids",
+        "available_graph_ids",
+        "binding_id",
+        "pool_id",
+        "true_slot_mapping_id"
+      ],
+      "properties": {
+        "target_weight_version": {
+          "$ref": "#/$defs/identifier"
+        },
+        "draft_weight_versions": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "available_weight_path_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "available_graph_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "binding_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "pool_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "true_slot_mapping_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "expected_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_action_id",
+        "tie_set_action_ids",
+        "fallback_reason",
+        "switched"
+      ],
+      "properties": {
+        "selected_action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "tie_set_action_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "fallback_reason": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "requested_ineligible",
+                "stale_evidence",
+                "incumbent_tie",
+                "outside_tie_set"
+              ]
+            }
+          ]
+        },
+        "switched": {
+          "type": "boolean"
+        }
+      }
+    },
+    "counters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H_target_steps",
+        "D_armed",
+        "A_accepted",
+        "C_clipped",
+        "E_committed",
+        "decode_time_s",
+        "shared_target_kv_blocks_in_use",
+        "preemptions",
+        "recomputed_tokens"
+      ],
+      "properties": {
+        "H_target_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "D_armed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "A_accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "C_clipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "E_committed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decode_time_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "shared_target_kv_blocks_in_use": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preemptions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recomputed_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "engine_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine_step_index",
+        "total_scheduled_kv_tokens",
+        "active_request_count",
+        "generated_suffix_min",
+        "generated_suffix_max",
+        "target_graph_id",
+        "draft_graph_id"
+      ],
+      "properties": {
+        "engine_step_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_scheduled_kv_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "active_request_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generated_suffix_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generated_suffix_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_graph_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "draft_graph_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/identifier"
+            }
+          ]
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segment_id",
+        "start_target_step",
+        "target_step_boundary",
+        "intent",
+        "requested_action_id",
+        "runtime_state",
+        "interval_estimates",
+        "expected",
+        "counters",
+        "engine_steps"
+      ],
+      "properties": {
+        "segment_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "start_target_step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_step_boundary": {
+          "type": "boolean"
+        },
+        "intent": {
+          "enum": [
+            "exploit",
+            "probe",
+            "force_off"
+          ]
+        },
+        "requested_action_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "runtime_state": {
+          "$ref": "#/$defs/runtime_state"
+        },
+        "interval_estimates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/interval_estimate"
+          }
+        },
+        "expected": {
+          "$ref": "#/$defs/expected_selection"
+        },
+        "counters": {
+          "$ref": "#/$defs/counters"
+        },
+        "engine_steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/engine_step"
+          }
+        }
+      }
+    }
+  }
+}
