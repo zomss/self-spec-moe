@@ -1,0 +1,540 @@
+{
+  "authorizations": {
+    "action_admission": false,
+    "block_parallel_two_lane_execution": true,
+    "capture_runner_conformance_engineering": true,
+    "gpu_measurement": true,
+    "p4a_engineering": false,
+    "production_value_claim": false,
+    "v13_execution": true,
+    "value_screen_scoring": true
+  },
+  "chunked_prefill_contract": {
+    "atomic_first_measured_decode": true,
+    "capture_cohort_contract_id": "p4-capture-cohort-barrier-v1",
+    "effective_max_num_scheduled_tokens": 8160,
+    "enable_chunked_prefill": true,
+    "full_microbatch_prefill_allowed": false,
+    "gpu_memory_utilization": 0.9,
+    "hold_early_prefill_completers": true,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 32,
+    "ordinary_serving_without_marker_unchanged": true,
+    "queue_all_exact_members_before_first_step": true,
+    "require_every_action_and_prompt_slice": true,
+    "state": "pass"
+  },
+  "chunked_prefill_probe": {
+    "action_id": "target-matching-k4",
+    "actual_cuda_graph_memory_bytes": 589365248,
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_probe_authorization_v5.json",
+      "sha256": "795ead82642faaed18f59e759f870aed86dd4c769d5bd4d80344b4003c1d8599"
+    },
+    "authorization_consumed": true,
+    "canonical_request_ids": true,
+    "cohort_count": 3,
+    "complete_request_count": 24,
+    "configured_max_num_batched_tokens": 8192,
+    "effective_max_num_scheduled_tokens": 8160,
+    "gpu_memory_utilization": 0.9,
+    "minimum_shared_target_kv_blocks": 21682,
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-c9d19019-5065-2353-80a9-f1797eb19d51",
+    "preparation": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/preparation.json",
+      "sha256": "2abd491dda5c6dfeabf37c0e98798baf9ea3885552385f72b5267571e16ee13c"
+    },
+    "pure_first_measured_decode": true,
+    "regimes": [
+      "R4",
+      "R5",
+      "R5cot"
+    ],
+    "result": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/probe_result.json",
+      "sha256": "dc398883c6ed62a81ee46ff5643a68216954983d5b7787951218463149120cc2"
+    },
+    "scored": false,
+    "shared_target_kv_block_capacity": 24527,
+    "status": "pass",
+    "trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_chunked_prefill_probe_v5/koff_trace.jsonl",
+      "sha256": "2dd4e36766e9ce19db7914bfcffd5fa32d2f80744d8df61afc4cc4938e61aa57"
+    },
+    "trace_record_count": 40,
+    "zero_invalid_spec_tokens": true,
+    "zero_preemption": true,
+    "zero_recomputation": true
+  },
+  "claims": {
+    "action_admitted": false,
+    "all_action_capture_rollover_tested": true,
+    "block_restart_unit_tested": true,
+    "chunked_prefill_cohort_cpu_proven": true,
+    "chunked_prefill_k4_gpu_probe_passed": true,
+    "contention_bound_measured": false,
+    "contention_probe_attempts_performed": 2,
+    "decode_work_offset_tested": true,
+    "executable_run_ready": true,
+    "full_prefill_geometry_rejected": true,
+    "inprocess_runner_wiring_complete": true,
+    "internal_request_id_randomization_retained": true,
+    "isolated_r8_gpu_case_passed": true,
+    "lane_assignment_tested": true,
+    "lane_precedent_is_prior_phase_read_only": true,
+    "latest_prior_complete_capture_count": 0,
+    "latest_prior_empty_placeholder_count": 0,
+    "latest_prior_gpu_executed": false,
+    "latest_prior_interrupted_externally": false,
+    "latest_prior_refused_before_gpu": true,
+    "latest_prior_score_emitted": false,
+    "path_normalization_repair_tested": true,
+    "performance_claim_allowed": false,
+    "prior_outputs_preserved": true,
+    "prior_outputs_reusable": false,
+    "prior_value_screen_attempts_performed": 11,
+    "r5cot_to_r8_gpu_case_passed": true,
+    "repair_parent_aggregate_passed": false,
+    "repair_parent_rejection_is_observer_only": true,
+    "request_id_canonicalization_tested": true,
+    "runtime_w512_switching_implemented": false,
+    "source_snapshot_verification_tested": true,
+    "variable_prefill_runtime_evidence_repaired": true
+  },
+  "consumed_attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_children_launched": 0,
+    "complete_capture_count": 0,
+    "failure": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v11/failure.json",
+      "sha256": "541a3af17338e3f802a4731461704fc2f542813467e5465cf1169bcc141ec9b1"
+    },
+    "gpu_model_executed": false,
+    "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v11",
+    "preserve_without_resume_or_reuse": true,
+    "score_emitted": false
+  },
+  "contention_probe_disposition": {
+    "decision": "removed_from_the_value_screen_critical_path",
+    "dual_gpu_authority_from_probe": false,
+    "measured_contention_bound_available": false,
+    "v1": {
+      "authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v1.json",
+        "sha256": "2f6b1980036f24e67f6e8064e69ef4d112004c458df621b296a2d89a8c156629"
+      },
+      "classification": "launcher_ephemeral_port_collision",
+      "failure": {
+        "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v1/failure.json",
+        "sha256": "a7c8dd07e2a3e53aec23eaa86bdcc7f24d41af55097c8b224e6117b9f6b17a43"
+      }
+    },
+    "v2": {
+      "authorization": {
+        "path": "research/97_composition_runtime/data/p4/p4_b0_gpu_contention_probe_authorization_v2.json",
+        "sha256": "7739866d709cea47e3a2df023cffa28103eb6a5925d42f08f079078690044322"
+      },
+      "classification": "concurrent_worktree_write_during_run",
+      "failure": {
+        "path": "research/97_composition_runtime/data/p4/run_b0_gpu_contention_probe_v2/failure.json",
+        "sha256": "576a5a1cc8696fbe9c561d1f25fd9544e9634178e25fa7ba642cf080c75cd188"
+      }
+    }
+  },
+  "date": "2026-08-10",
+  "decision": {
+    "basis": [
+      "v12_attempt_preserved_and_unscored",
+      "v12_output_reuse_forbidden",
+      "v12_refusal_was_pre_gpu_and_emitted_no_capture",
+      "launcher_path_normalization_repaired_and_regression_tested",
+      "v11_interruption_was_external_reassignment_not_runtime_fault",
+      "gpu0_gpu1_relocation_probe_passed",
+      "contention_probe_removed_from_critical_path",
+      "phase96_block_per_gpu_precedent_referenced_read_only",
+      "latin_square_gives_every_action_one_boot_per_block",
+      "complete_boot_block_is_already_the_bootstrap_unit",
+      "cross_boot_certification_retained_as_lane_tripwire",
+      "current_execution_sources_hash_bound",
+      "source_snapshot_verified_before_any_child",
+      "fresh_output_path_registered"
+    ],
+    "invalidated_by": [
+      "approved_source_hash_drift",
+      "source_snapshot_mismatch",
+      "fresh_output_directory_exists",
+      "v11_attempt_artifact_drift",
+      "lane_assignment_drift",
+      "block_split_across_lanes",
+      "repair_validation_artifact_drift",
+      "v5_probe_artifact_drift",
+      "chunked_prefill_contract_drift",
+      "full_prefill_geometry_reenabled",
+      "decode_work_contract_drift",
+      "request_id_contract_drift",
+      "inprocess_engine_core_preflight_failure",
+      "native_sampler_preflight_failure",
+      "virtualenv_tool_preflight_failure",
+      "gpu_identity_drift",
+      "gpu_not_idle",
+      "resource_floor_failure",
+      "cohort_abort_or_incomplete_release",
+      "cross_boot_certification_failure",
+      "matrix_or_contract_drift",
+      "unnormalized_output_path",
+      "v12_attempt_artifact_drift"
+    ],
+    "scope": "block_parallel_two_lane_value_screen_v13_only",
+    "state": "approve"
+  },
+  "execution_policy": {
+    "block_restart_requires_fresh_authorization": true,
+    "block_restart_unit": true,
+    "capture_cohort_barrier_required": true,
+    "capture_count": 432,
+    "create_new_output_required": true,
+    "effective_max_num_scheduled_tokens": 8160,
+    "engine_core_class": "InprocClient",
+    "engine_core_mode": "in_process",
+    "fallback_gpu_authorized": false,
+    "gpu_memory_utilization": 0.9,
+    "lane_assignment": [
+      {
+        "block_ids": [
+          1,
+          3
+        ],
+        "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
+        "cpu_affinity": "0-95",
+        "lane_id": "lane-a",
+        "physical_gpu_index": 0,
+        "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+      },
+      {
+        "block_ids": [
+          2
+        ],
+        "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-b",
+        "cpu_affinity": "96-191",
+        "lane_id": "lane-b",
+        "physical_gpu_index": 1,
+        "physical_gpu_uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
+      }
+    ],
+    "lane_parallel": true,
+    "max_num_batched_tokens": 8192,
+    "on_any_failure": "preserve_block_and_require_fresh_block_authorization",
+    "partial_resume_within_block_allowed": false,
+    "physical_boot_count": 9,
+    "prior_output_reuse_allowed": false,
+    "repair_validation_output_reuse_allowed": false,
+    "retry_allowed": false,
+    "score_grants_authority": false,
+    "source_snapshot_required": true,
+    "v1_multiprocessing": false
+  },
+  "lane_precedent": {
+    "artifact": {
+      "path": "research/96_selector_foundations/data/w14/w14d_prereg.json",
+      "sha256": "e32b580e7564ca167696237e6e59e9d02d885df0cdf08764a9bf56ef84b54129"
+    },
+    "cross_boot_agreement_fraction": 0.02,
+    "measured_spread_fraction": {
+      "b1": 0.0045,
+      "b8": 0.0049
+    },
+    "phase": 96,
+    "phase_97_basis": [
+      "tau_metrics_are_pure_counts_and_lane_independent",
+      "committed_tokens_per_action_are_equal_by_design",
+      "latin_square_gives_every_action_one_boot_per_block",
+      "lane_factor_cancels_in_s_k4_under_action_block_separability",
+      "residual_is_a_block_effect_resampled_by_the_paired_bootstrap",
+      "cross_boot_certification_fails_closed_above_two_percent"
+    ],
+    "policy": "one COMPLETE block per GPU; boots sequential within a block",
+    "reused_as_calibration": false
+  },
+  "next_artifact": {
+    "kind": "p4_b0_value_screen_result",
+    "may_admit_action": false,
+    "may_authorize_p4a": false,
+    "requires_complete_block_count": 3,
+    "requires_complete_capture_count": 432
+  },
+  "package_id": "p4-b0-value-screen-run-authorization-v13",
+  "path_normalization_repair": {
+    "defect": "launcher_relative_output_path_not_normalized",
+    "gpu_required": false,
+    "regression_tested_relative_output_dir": true,
+    "repairs": [
+      "snapshot_sources_resolves_output_dir_before_building_targets",
+      "verify_against_snapshot_resolves_output_dir",
+      "execute_run_resolves_authorization_and_output_paths",
+      "main_resolves_both_paths_before_any_use",
+      "reviewed_output_pair_resolved_through_the_shared_dispatcher"
+    ],
+    "same_class_as": "p4_b0_chunked_prefill_probe_attempt_v1",
+    "state": "pass"
+  },
+  "prior_authorization": {
+    "disposition": "consumed_relative_output_path_refusal",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v12.json",
+    "sha256": "e4e265407b4c9def58cb797e71884f73621e52cadd55f3117c35bb031b8c04dc"
+  },
+  "run_contract": {
+    "base_authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v2.json",
+      "sha256": "73b3416517ca4a8dcd07d7bd5c0b3c468aa6145eca05afca9954ebc929c5b09a"
+    },
+    "invocation": {
+      "argv": [
+        ".venv/bin/python",
+        "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py",
+        "--authorization",
+        "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v13.json",
+        "--output-dir",
+        "research/97_composition_runtime/data/p4/run_b0_value_screen_v12"
+      ],
+      "launchable_now": true,
+      "output_dir": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12",
+      "overwrite_allowed": false,
+      "runner_exists": true,
+      "runner_path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py"
+    }
+  },
+  "schema_version": 13,
+  "source_artifacts": {
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789"
+    },
+    "atomic_ingress_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+      "sha256": "30e07ca92a9fc2fc5ee63f46dbc04659a490d5e82f952e6040a263d4f6528b1e"
+    },
+    "atomic_ingress_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py",
+      "sha256": "a9e2097144938fae5a3ccb2c28aec0f2c4ea3bc3fac29b90548669ab1f2122d0"
+    },
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v13.schema.json",
+      "sha256": "5a0d5d74f0b6f2216e4930e5c5a900829874a211c503288041eb93d826e86103"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v13.py",
+      "sha256": "4cfffd401175b3f99b63a2a7d26a4707bb812807320d5695a1d4384e036ad49e"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v13.py",
+      "sha256": "f13a6a11e898db9632de7ed73b3b218fb489243059b3ab6094ab29108e513232"
+    },
+    "cohort_barrier_proof": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof.json",
+      "sha256": "cb24ac0061322518cce8b165662860d505953b6bba0bdcd072dfac382e9e2ca8"
+    },
+    "cohort_barrier_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "528a3c1a716e0e46aed5c92f3a4f7ba74c57adb37c53cf1323410eb0e2a524a5"
+    },
+    "cohort_barrier_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "6ba60f85b09c4c254b6df8f67c92ac0527c144986d32f7e2e5a4fe4853b382ed"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "3c5021a39286cfbc2bf6209fdd05597f1175bd73b9616a7926340cd6d5999d37"
+    },
+    "conformance_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "0ab43a92a72d490e302ed326d162059fd6a4688c47a3bd68c67ed835f118521e"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20"
+    },
+    "input_processor": {
+      "path": "vllm/v1/engine/input_processor.py",
+      "sha256": "c5673988c0f7cfec268220e3f044e718702c015a4f236c020937cfd40a793f15"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "55211c6502f766198bad966adb1a4b440015f6c5a62cfc6faad16586934771ac"
+    },
+    "lane_launcher": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py",
+      "sha256": "65ad47953246ff89f9ad4623b8dacc432a994f482c9891b2b24055c77c9b2b3d"
+    },
+    "lane_launcher_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_value_screen_v12.py",
+      "sha256": "384a116dec18fad3205d7202a387f6263b02bcd6ee59d5eb8abd3a9fd14f0369"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e"
+    },
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "42d1c3b774a3ddecf1fdd71f3e510742a156781658f50720209defcfccc9f1cf"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "126d87fc8eca5a67cb39e961635ac6cbf95c213a1d48f96b6178f04a83c86612"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "e57b95b481f07a661d3af3de08accaa9173b18dbb80ee64683dab987b83e2716"
+    },
+    "repair_preservation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation_preservation.py",
+      "sha256": "46cb0ce88a66042e0e8a3d4568a9c376709972407c56d5e8415189fb31b2f1b7"
+    },
+    "repair_validation_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "f17b302de9a14c590a9a321a8952585278000a189b66ea38c704eb16b03620e4"
+    },
+    "repair_validation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "cc49cbaf35f29f845073eb10c25127699a23b9318946ec8acbd40518846c1449"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "265e1d67d7f9dbe2161f2921a9e76840ec3375e049ebddce7275d45a8ea63989"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "ae19a5ad02396cc30d653a2d9f6e57b576582f9d832fc19ff2394734046b9c7d"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328"
+    },
+    "scheduler_tests": {
+      "path": "tests/v1/core/test_scheduler.py",
+      "sha256": "c28ca07d8bb48004b74d3c3f1c14a0ef866cc579fd3eed28170f537ae40d34a7"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe"
+    }
+  },
+  "status": "authorized_block_parallel_two_lane_value_screen_repaired_paths_only",
+  "variable_prefill_repair_validation": {
+    "aggregate": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/diagnosis.json",
+      "sha256": "55cd0e5b6f22b01235cee8ccb28ac5a9ae2ada6a740fdcd7080cd209104382b3"
+    },
+    "audit": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_attempt_v1.json",
+      "sha256": "448fd62d713b6b9ee68bca482558b54d11f4b51354c48e423e9521112422492f"
+    },
+    "authorization": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_variable_prefill_repair_validation_authorization_v1.json",
+      "sha256": "bb493e0e11ffd0f37e08c8cb30875c282cf4360979391513c65b5b1ed16af961"
+    },
+    "authorization_consumed": true,
+    "cases": [
+      {
+        "armed_prefill_observation_count": 1,
+        "case_id": "isolated-r8",
+        "completed_cohorts": [
+          "r8-first"
+        ],
+        "exact_r8_observation": {
+          "draft_chain_runtime_mode": "PIECEWISE",
+          "draft_output_shape": [
+            16,
+            4
+          ],
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "draft_step0_runtime_mode": "NONE",
+          "engine_step_index": 0,
+          "produced_draft_width": 4,
+          "proposal_called": true
+        },
+        "measured_event_count": 610,
+        "physical_gpu_index": 0,
+        "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703",
+        "trace_record_count": 612
+      },
+      {
+        "armed_prefill_observation_count": 9,
+        "case_id": "r5cot-to-r8",
+        "completed_cohorts": [
+          "r5cot-last",
+          "r8-first"
+        ],
+        "exact_r8_observation": {
+          "draft_chain_runtime_mode": "PIECEWISE",
+          "draft_output_shape": [
+            16,
+            4
+          ],
+          "draft_step0_batch_size": 16,
+          "draft_step0_num_tokens": 2116,
+          "draft_step0_query_width": null,
+          "draft_step0_runtime_mode": "NONE",
+          "engine_step_index": 632,
+          "produced_draft_width": 4,
+          "proposal_called": true
+        },
+        "measured_event_count": 1273,
+        "physical_gpu_index": 1,
+        "physical_gpu_uuid": "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923",
+        "trace_record_count": 1289
+      }
+    ],
+    "isolated_case": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/case_result.json",
+      "sha256": "78575489e4ad34826c3f2018d49790d7163e3a87f6a9099c8a972888ac667da1"
+    },
+    "isolated_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/isolated-r8/koff_trace.jsonl",
+      "sha256": "472e2e06d25ec4a9dd4d82d6009048ba682ac367b4bf19592dac267803253667"
+    },
+    "parent_aggregate_passed": false,
+    "parent_rejection": {
+      "caused_gpu_case_failure": false,
+      "classification": "observer_cardinality_bug",
+      "expected_count": 2,
+      "observed_transition_armed_prefill_count": 9
+    },
+    "scored": false,
+    "status": "gpu_cases_passed_parent_aggregate_rejected",
+    "transition_case": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/case_result.json",
+      "sha256": "49815610b5dcf28a71fdc535d52d40498914c586de7192bbc469aaf816cd8e34"
+    },
+    "transition_trace": {
+      "path": "research/97_composition_runtime/data/p4/run_b0_variable_prefill_repair_validation_v1/r5cot-to-r8/koff_trace.jsonl",
+      "sha256": "d45e5743840216ad9b80d661ea0eaa019c5cfb8963821c55681ef49fcb1f5bf2"
+    }
+  }
+}

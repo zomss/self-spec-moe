@@ -2,9 +2,13 @@
 
 Status: **active shared-KV-only design; the matched B0 value screen remains
 preregistered but unscored. The current authority is the block-parallel
-two-lane V12 package, which passes CPU validation, registers the fresh
-create-only `run_b0_value_screen_v11` output, and is unexecuted; see
-`results_p4_b0_run_authorization_v12.md`. The history below is retained. V5
+two-lane V13 package, which passes CPU validation and registers the fresh
+create-only `run_b0_value_screen_v12` output; see
+`results_p4_b0_run_authorization_v13.md`. V12 established the two-lane design
+(`results_p4_b0_run_authorization_v12.md`) and was consumed by one pre-GPU
+refusal: a relative `--output-dir` was not normalized inside the source
+snapshot, so it emitted zero captures and loaded no model. V13 is V12 plus
+that path repair and its regression tests. The history below is retained. V5
 was executed once on GPU 4 and failed closed at
 the first live OFF event with zero complete captures and no score. A separate
 source-bound `114688 / 0.96` ingress diagnosis now identifies the exact
@@ -1479,8 +1483,8 @@ interrupted attempt:
   research/97_composition_runtime/data/p4/run_b0_value_screen_v10
 ```
 
-The current authority is the block-parallel two-lane V12 package. Its
-registered command is create-only and remains unexecuted:
+The V12 command below was consumed by one pre-GPU refusal that emitted zero
+captures; its output is preserved and never reused:
 
 ```bash
 .venv/bin/python \
@@ -1489,6 +1493,17 @@ registered command is create-only and remains unexecuted:
   research/97_composition_runtime/data/p4/p4_b0_run_authorization_v12.json \
   --output-dir \
   research/97_composition_runtime/data/p4/run_b0_value_screen_v11
+```
+
+The current authority is the repaired V13 package:
+
+```bash
+.venv/bin/python \
+  research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py \
+  --authorization \
+  research/97_composition_runtime/data/p4/p4_b0_run_authorization_v13.json \
+  --output-dir \
+  research/97_composition_runtime/data/p4/run_b0_value_screen_v12
 ```
 
 V12 adds these phase-local artifacts:

@@ -1,0 +1,59 @@
+{
+  "artifact_id": "p4-b0-value-screen-v12-failure",
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "boot_children_launched": 0,
+    "complete_captures_emitted": 0,
+    "completed_physical_boots": 0,
+    "empty_capture_placeholders": 0,
+    "gpu_model_executed": false,
+    "model_loaded": false,
+    "score_emitted": false,
+    "snapshot_files_copied": 1
+  },
+  "authorization": {
+    "bytes": 21689,
+    "package_id": "p4-b0-value-screen-run-authorization-v12",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v12.json",
+    "sha256": "e4e265407b4c9def58cb797e71884f73621e52cadd55f3117c35bb031b8c04dc"
+  },
+  "diagnostic": {
+    "classification": "launcher_relative_output_path_not_normalized",
+    "gpu_fault_observed": false,
+    "reason": "snapshot_sources called Path.relative_to(REPO_ROOT) on a snapshot target built from a relative --output-dir, so the copy verification raised ValueError before the first child launched",
+    "runtime_fault_observed": false,
+    "same_class_as": "p4_b0_chunked_prefill_probe_attempt_v1",
+    "scope": "source_snapshot_path_resolution",
+    "terminal_transcript": {
+      "bytes": 1379,
+      "path": "research/97_composition_runtime/logs/p4_b0_value_screen_v12_terminal.log",
+      "sha256": "50894774c344f200662e090df255be0432513292a9c5d5222356f4d7cf0ff5bb"
+    }
+  },
+  "disposition": {
+    "partial_resume_attempted": false,
+    "post_attempt_gpu_compute_processes": 0,
+    "post_attempt_runner_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v12_consumed": true
+  },
+  "output": {
+    "adapted_rounds_present": false,
+    "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v11",
+    "preserve_without_overwrite_or_resume": true,
+    "score_present": false
+  },
+  "preflights_passed": {
+    "gpu0_identity_and_idle": true,
+    "gpu1_identity_and_idle": true,
+    "inprocess_engine_core": true,
+    "native_sampler": true,
+    "plan_preparation": true,
+    "worktree_quiescent": true
+  },
+  "record_type": "p4_b0_value_screen_execution_failure",
+  "schema_version": 1,
+  "scored": false
+}

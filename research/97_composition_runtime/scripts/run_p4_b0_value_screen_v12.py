@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import hashlib
 import json
 import os
 import shutil
@@ -38,6 +39,7 @@ REPO_ROOT = PHASE_DIR.parents[1]
 LAUNCHER_ARTIFACT_ID = "p4-b0-value-screen-v12-lane-launcher"
 SNAPSHOT_DIRNAME = "source_snapshot"
 SNAPSHOT_RECORD = "source_snapshot.json"
+LANE_PACKAGE_IDS = frozenset({matrix.V12_PACKAGE_ID, matrix.V13_PACKAGE_ID})
 
 
 class LaneLauncherError(RuntimeError):
@@ -54,6 +56,20 @@ def _load_json(path: Path) -> dict[str, Any]:
         payload = json.load(handle)
     _require(isinstance(payload, dict), f"{path} is not a JSON object")
     return payload
+
+
+def _digest(path: Path) -> str:
+    """Hash a file directly, independent of where it sits on disk."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _record_path(path: Path) -> str:
+    """Record a snapshot copy repository-relative when it is inside the repo."""
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(resolved)
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -79,6 +95,7 @@ def snapshot_sources(output_dir: Path, authorization: Mapping[str, Any]) -> Path
     Raises:
         LaneLauncherError: If any registered source has already drifted.
     """
+    output_dir = output_dir.resolve()
     references = authorization["source_artifacts"]
     snapshot_dir = output_dir / SNAPSHOT_DIRNAME
     _require(not snapshot_dir.exists(), "source snapshot already exists")
@@ -101,11 +118,10 @@ def snapshot_sources(output_dir: Path, authorization: Mapping[str, Any]) -> Path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
         _require(
-            matrix._file_reference(str(target.relative_to(REPO_ROOT)))["sha256"]
-            == reference["sha256"],
+            _digest(target) == reference["sha256"],
             f"snapshot copy does not match the registered hash: {role}",
         )
-        rows[role] = {**reference, "snapshot_path": str(target.relative_to(REPO_ROOT))}
+        rows[role] = {**reference, "snapshot_path": _record_path(target)}
     _write_json(
         output_dir / SNAPSHOT_RECORD,
         {
@@ -133,13 +149,12 @@ def verify_against_snapshot(output_dir: Path) -> dict[str, Any]:
     Raises:
         LaneLauncherError: If a snapshot entry no longer matches its copy.
     """
-    record = _load_json(output_dir / SNAPSHOT_RECORD)
+    record = _load_json(output_dir.resolve() / SNAPSHOT_RECORD)
     for role, reference in record["sources"].items():
         target = REPO_ROOT / reference["snapshot_path"]
         _require(target.is_file(), f"snapshot copy is missing: {role}")
-        observed = matrix._file_reference(reference["snapshot_path"])
         _require(
-            observed["sha256"] == reference["sha256"],
+            _digest(target) == reference["sha256"],
             f"snapshot copy drifted after preparation: {role}",
         )
     return record
@@ -360,8 +375,10 @@ def execute_run(
     Returns:
         Zero when all three blocks complete and the frozen score is emitted.
     """
+    output_dir = output_dir.resolve()
+    authorization_path = authorization_path.resolve()
     _require(
-        output_dir.resolve() == matrix._repository_path(matrix.V12_OUTPUT_PATH),
+        output_dir == matrix._reviewed_output_path(authorization_path),
         "execution output differs from the reviewed create-new path",
     )
     matrix.validate_execution_authority(authorization)
@@ -452,18 +469,20 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Prepare without GPU, or launch the two authorized lanes."""
     args = parse_args()
-    package = _load_json(args.authorization)
+    authorization_path = args.authorization.resolve()
+    output_dir = args.output_dir.resolve()
+    package = _load_json(authorization_path)
     _require(
-        package.get("package_id") == matrix.V12_PACKAGE_ID,
-        "the lane launcher accepts only the V12 authorization",
+        package.get("package_id") in LANE_PACKAGE_IDS,
+        "the lane launcher accepts only a registered block-parallel authorization",
     )
     authorization = matrix.resolve_authorization_package(
         package, require_output_absent=True
     )
     if args.prepare_only:
         matrix.validate_preparation_contract(authorization)
-        matrix.prepare_run(authorization, args.output_dir)
-        snapshot_sources(args.output_dir, authorization)
+        matrix.prepare_run(authorization, output_dir)
+        snapshot_sources(output_dir, authorization)
         print(
             json.dumps(
                 {
@@ -471,13 +490,13 @@ def main() -> int:
                     "mode": "prepare_only",
                     "gpu_executed": False,
                     "gpu_authority_granted": False,
-                    "output_dir": str(args.output_dir),
+                    "output_dir": str(output_dir),
                 },
                 sort_keys=True,
             )
         )
         return 0
-    return execute_run(args.authorization, authorization, args.output_dir)
+    return execute_run(authorization_path, authorization, output_dir)
 
 
 if __name__ == "__main__":

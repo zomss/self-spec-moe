@@ -180,6 +180,41 @@ class SourceSnapshotTests(unittest.TestCase):
                 launcher.verify_against_snapshot(output_dir)
 
 
+class RelativeOutputPathTests(unittest.TestCase):
+    """The V12 attempt died because a relative --output-dir was not resolved."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.relative = (
+            "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py"
+        )
+        self.authorization = {
+            "source_artifacts": {"adapter": matrix._file_reference(self.relative)}
+        }
+
+    def test_snapshot_accepts_a_relative_output_dir(self) -> None:
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        with mock.patch.object(launcher, "REPO_ROOT", REPO_ROOT):
+            snapshot_dir = launcher.snapshot_sources(
+                Path("run_relative"), self.authorization
+            )
+        self.assertTrue(snapshot_dir.is_absolute())
+        self.assertTrue((snapshot_dir / self.relative).is_file())
+
+    def test_snapshot_and_verify_agree_under_a_relative_output_dir(self) -> None:
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        with mock.patch.object(launcher, "REPO_ROOT", REPO_ROOT):
+            launcher.snapshot_sources(Path("run_relative"), self.authorization)
+            record = launcher.verify_against_snapshot(Path("run_relative"))
+        self.assertEqual(record["source_count"], 1)
+
+
 class ExecutingCodeGuardTests(unittest.TestCase):
     """The executing module is still compared byte-for-byte."""
 

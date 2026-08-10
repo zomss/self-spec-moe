@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
-"""CPU tests for the Phase 97 block-parallel two-lane V12 authorization."""
+"""CPU tests for the Phase 97 block-parallel two-lane V13 authorization."""
 
 from __future__ import annotations
 
@@ -15,12 +15,12 @@ REPO_ROOT = PHASE_DIR.parents[1]
 sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
-from validate_p4_b0_run_authorization_v12 import (  # noqa: E402
-    B0RunAuthorizationV12Error,
-    validate_authorization_v12,
+from validate_p4_b0_run_authorization_v13 import (  # noqa: E402
+    B0RunAuthorizationV13Error,
+    validate_authorization_v13,
 )
 
-AUTHORIZATION_PATH = REPO_ROOT / matrix.V12_AUTHORIZATION_PATH
+AUTHORIZATION_PATH = REPO_ROOT / matrix.V13_AUTHORIZATION_PATH
 
 
 def _package() -> dict:
@@ -29,30 +29,15 @@ def _package() -> dict:
 
 
 class RegisteredPackageTests(unittest.TestCase):
-    """The checked-in V12 package must validate against every frozen source."""
+    """The checked-in V13 package must validate against every frozen source."""
 
-    def test_package_is_consumed_and_refuses_relaunch(self) -> None:
-        """V12 was consumed by one pre-GPU refusal; V13 carries the repair.
-
-        Its registered create-only output now exists and the launcher it
-        hash-binds moved on with the path-normalization repair, so the package
-        must refuse rather than validate. The attempt record stays immutable.
-        """
-        with self.assertRaises(B0RunAuthorizationV12Error):
-            validate_authorization_v12(_package())
-        failure = json.loads(
-            (REPO_ROOT / matrix.V13_FAILED_ATTEMPT_PATH).read_text(encoding="utf-8")
-        )
-        self.assertTrue(failure["disposition"]["v12_consumed"])
-        self.assertFalse(failure["attempt"]["gpu_model_executed"])
-        self.assertEqual(failure["attempt"]["complete_captures_emitted"], 0)
-        self.assertFalse(failure["scored"])
-
-    def test_package_shape_is_still_the_reviewed_two_lane_screen(self) -> None:
-        package = _package()
-        self.assertEqual(package["execution_policy"]["physical_boot_count"], 9)
-        self.assertEqual(package["execution_policy"]["capture_count"], 432)
-        self.assertEqual(len(package["execution_policy"]["lane_assignment"]), 2)
+    def test_package_validates(self) -> None:
+        result = validate_authorization_v13(_package())
+        self.assertEqual(result["status"], "pass")
+        self.assertFalse(result["gpu_executed"])
+        self.assertEqual(result["physical_boot_count"], 9)
+        self.assertEqual(result["capture_count"], 432)
+        self.assertEqual(result["lane_count"], 2)
 
     def test_package_grants_no_downstream_authority(self) -> None:
         package = _package()
@@ -75,15 +60,15 @@ class RegisteredPackageTests(unittest.TestCase):
         package = _package()
         self.assertFalse(package["execution_policy"]["prior_output_reuse_allowed"])
         self.assertTrue(package["consumed_attempt"]["preserve_without_resume_or_reuse"])
-        self.assertEqual(package["consumed_attempt"]["complete_capture_count"], 48)
+        self.assertEqual(package["consumed_attempt"]["complete_capture_count"], 0)
         self.assertFalse(package["consumed_attempt"]["score_emitted"])
 
     def test_registered_output_is_fresh(self) -> None:
         self.assertEqual(
-            matrix.V12_OUTPUT_PATH,
-            "research/97_composition_runtime/data/p4/run_b0_value_screen_v11",
+            matrix.V13_OUTPUT_PATH,
+            "research/97_composition_runtime/data/p4/run_b0_value_screen_v12",
         )
-        self.assertNotEqual(matrix.V12_OUTPUT_PATH, matrix.V11_OUTPUT_PATH)
+        self.assertNotEqual(matrix.V13_OUTPUT_PATH, matrix.V12_OUTPUT_PATH)
 
     def test_lane_assignment_matches_the_runner(self) -> None:
         package = _package()
@@ -98,8 +83,8 @@ class FailClosedTests(unittest.TestCase):
     def _rejects(self, mutate) -> None:
         package = copy.deepcopy(_package())
         mutate(package)
-        with self.assertRaises(B0RunAuthorizationV12Error):
-            validate_authorization_v12(package)
+        with self.assertRaises(B0RunAuthorizationV13Error):
+            validate_authorization_v13(package)
 
     def test_source_hash_drift_is_rejected(self) -> None:
         def mutate(package: dict) -> None:
@@ -169,13 +154,13 @@ class FailClosedTests(unittest.TestCase):
 
     def test_a_foreign_output_directory_is_rejected(self) -> None:
         def mutate(package: dict) -> None:
-            package["run_contract"]["invocation"]["output_dir"] = matrix.V11_OUTPUT_PATH
+            package["run_contract"]["invocation"]["output_dir"] = matrix.V12_OUTPUT_PATH
 
         self._rejects(mutate)
 
     def test_a_wrong_package_id_is_rejected(self) -> None:
         def mutate(package: dict) -> None:
-            package["package_id"] = matrix.V11_PACKAGE_ID
+            package["package_id"] = matrix.V12_PACKAGE_ID
 
         self._rejects(mutate)
 

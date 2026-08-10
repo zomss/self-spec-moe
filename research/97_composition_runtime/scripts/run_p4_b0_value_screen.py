@@ -112,6 +112,15 @@ V12_CAPTURE_MANIFEST_PATH = (
     "research/97_composition_runtime/data/p4/"
     "run_b0_value_screen_v10/capture_manifest.json"
 )
+V13_PACKAGE_ID = "p4-b0-value-screen-run-authorization-v13"
+V13_AUTHORIZATION_PATH = (
+    "research/97_composition_runtime/data/p4/p4_b0_run_authorization_v13.json"
+)
+V13_OUTPUT_PATH = "research/97_composition_runtime/data/p4/run_b0_value_screen_v12"
+V13_FAILED_ATTEMPT_PATH = (
+    "research/97_composition_runtime/data/p4/run_b0_value_screen_v11/failure.json"
+)
+V13_STATUS = "authorized_block_parallel_two_lane_value_screen_repaired_paths_only"
 LANE_PRECEDENT_PATH = "research/96_selector_foundations/data/w14/w14d_prereg.json"
 CONTENTION_V1_AUTHORIZATION_PATH = (
     "research/97_composition_runtime/data/p4/"
@@ -3210,6 +3219,90 @@ def _validate_v9_package(
     return base
 
 
+def _v13_source_paths() -> dict[str, str]:
+    paths = _v12_source_paths()
+    paths["authorization_schema"] = (
+        "research/97_composition_runtime/schemas/"
+        "p4_b0_run_authorization_v13.schema.json"
+    )
+    paths["authorization_validator"] = (
+        "research/97_composition_runtime/scripts/"
+        "validate_p4_b0_run_authorization_v13.py"
+    )
+    paths["authorization_tests"] = (
+        "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v13.py"
+    )
+    return paths
+
+
+def _v13_consumed_attempt_evidence() -> dict[str, Any]:
+    return {
+        "failure": _file_reference(V13_FAILED_ATTEMPT_PATH),
+        "output_dir": V12_OUTPUT_PATH,
+        "complete_capture_count": 0,
+        "boot_children_launched": 0,
+        "gpu_model_executed": False,
+        "adapted_rounds_emitted": False,
+        "score_emitted": False,
+        "preserve_without_resume_or_reuse": True,
+    }
+
+
+def _validate_v13_consumed_attempt(evidence: Mapping[str, Any]) -> None:
+    """Bind the consumed V12 attempt, which never reached a GPU."""
+    _require(
+        evidence == _v13_consumed_attempt_evidence(),
+        "V13 consumed V12 attempt binding drifted",
+    )
+    failure = _load_json(_repository_path(V13_FAILED_ATTEMPT_PATH))
+    attempt = failure.get("attempt", {})
+    diagnostic = failure.get("diagnostic", {})
+    disposition = failure.get("disposition", {})
+    _require(
+        failure.get("record_type") == "p4_b0_value_screen_execution_failure"
+        and failure.get("authorization", {}).get("package_id") == V12_PACKAGE_ID
+        and attempt.get("gpu_model_executed") is False
+        and attempt.get("boot_children_launched") == 0
+        and attempt.get("complete_captures_emitted") == 0
+        and attempt.get("score_emitted") is False,
+        "V12 failure does not describe a pre-GPU refusal",
+    )
+    _require(
+        diagnostic.get("classification")
+        == "launcher_relative_output_path_not_normalized"
+        and diagnostic.get("runtime_fault_observed") is False
+        and diagnostic.get("gpu_fault_observed") is False,
+        "V12 failure is not a launcher path-normalization refusal",
+    )
+    _require(
+        disposition.get("v12_consumed") is True
+        and disposition.get("requires_fresh_authorization") is True
+        and disposition.get("retry_attempted") is False
+        and disposition.get("scoring_allowed") is False
+        and failure.get("output", {}).get("path") == V12_OUTPUT_PATH
+        and failure.get("output", {}).get("preserve_without_overwrite_or_resume")
+        is True,
+        "V12 failure does not forbid resume, retry, or scoring",
+    )
+
+
+def _v13_path_normalization_repair() -> dict[str, Any]:
+    return {
+        "state": "pass",
+        "defect": "launcher_relative_output_path_not_normalized",
+        "same_class_as": "p4_b0_chunked_prefill_probe_attempt_v1",
+        "repairs": [
+            "snapshot_sources_resolves_output_dir_before_building_targets",
+            "verify_against_snapshot_resolves_output_dir",
+            "execute_run_resolves_authorization_and_output_paths",
+            "main_resolves_both_paths_before_any_use",
+            "reviewed_output_pair_resolved_through_the_shared_dispatcher",
+        ],
+        "regression_tested_relative_output_dir": True,
+        "gpu_required": False,
+    }
+
+
 def _v12_execution_policy() -> dict[str, Any]:
     return {
         "lane_assignment": lane_assignment(),
@@ -3368,6 +3461,176 @@ def _v12_expected_run_contract() -> dict[str, Any]:
     }
 
 
+def _v13_invocation() -> dict[str, Any]:
+    source_paths = _v13_source_paths()
+    return {
+        "runner_path": source_paths["lane_launcher"],
+        "argv": [
+            ".venv/bin/python",
+            source_paths["lane_launcher"],
+            "--authorization",
+            V13_AUTHORIZATION_PATH,
+            "--output-dir",
+            V13_OUTPUT_PATH,
+        ],
+        "output_dir": V13_OUTPUT_PATH,
+        "overwrite_allowed": False,
+        "runner_exists": True,
+        "launchable_now": True,
+    }
+
+
+def _v13_decision() -> dict[str, Any]:
+    decision = _v12_decision()
+    decision["scope"] = "block_parallel_two_lane_value_screen_v13_only"
+    decision["basis"] = [
+        "v12_attempt_preserved_and_unscored",
+        "v12_output_reuse_forbidden",
+        "v12_refusal_was_pre_gpu_and_emitted_no_capture",
+        "launcher_path_normalization_repaired_and_regression_tested",
+        *decision["basis"][2:],
+    ]
+    decision["invalidated_by"] = [
+        *decision["invalidated_by"],
+        "unnormalized_output_path",
+        "v12_attempt_artifact_drift",
+    ]
+    return decision
+
+
+def _v13_claims() -> dict[str, Any]:
+    claims = _v12_claims()
+    claims["prior_value_screen_attempts_performed"] = 11
+    claims["latest_prior_complete_capture_count"] = 0
+    claims["latest_prior_empty_placeholder_count"] = 0
+    claims["latest_prior_gpu_executed"] = False
+    claims["latest_prior_interrupted_externally"] = False
+    claims["latest_prior_refused_before_gpu"] = True
+    claims["path_normalization_repair_tested"] = True
+    return claims
+
+
+def _v13_authorizations() -> dict[str, Any]:
+    authorizations = _v12_authorizations()
+    del authorizations["v12_execution"]
+    authorizations["v13_execution"] = True
+    return authorizations
+
+
+def _v13_expected_run_contract() -> dict[str, Any]:
+    return {
+        "base_authorization": _file_reference(BASE_AUTHORIZATION_PATH),
+        "invocation": _v13_invocation(),
+    }
+
+
+def _validate_v13_package(
+    package: Mapping[str, Any], *, require_output_absent: bool = True
+) -> dict[str, Any]:
+    """Validate the V13 repaired block-parallel package."""
+    expected_keys = {
+        "schema_version",
+        "package_id",
+        "date",
+        "status",
+        "prior_authorization",
+        "consumed_attempt",
+        "path_normalization_repair",
+        "contention_probe_disposition",
+        "lane_precedent",
+        "variable_prefill_repair_validation",
+        "chunked_prefill_probe",
+        "chunked_prefill_contract",
+        "source_artifacts",
+        "run_contract",
+        "decision",
+        "claims",
+        "authorizations",
+        "execution_policy",
+        "next_artifact",
+    }
+    _require(set(package) == expected_keys, "V13 authorization fields drifted")
+    _require(
+        package.get("schema_version") == 13
+        and package.get("package_id") == V13_PACKAGE_ID
+        and package.get("status") == V13_STATUS,
+        "runner accepts only the reviewed V13 value-screen authority",
+    )
+    _require(
+        package["prior_authorization"]
+        == {
+            **_file_reference(V12_AUTHORIZATION_PATH),
+            "disposition": "consumed_relative_output_path_refusal",
+        },
+        "V13 does not bind the consumed V12 authorization",
+    )
+    prior = _load_json(_repository_path(V12_AUTHORIZATION_PATH))
+    _require(
+        prior.get("package_id") == V12_PACKAGE_ID and prior.get("schema_version") == 12,
+        "V13 prior package is not the immutable V12 authorization",
+    )
+    _validate_v13_consumed_attempt(package["consumed_attempt"])
+    _require(
+        package["path_normalization_repair"] == _v13_path_normalization_repair(),
+        "V13 path-normalization repair contract drifted",
+    )
+    _validate_v12_contention_disposition(package["contention_probe_disposition"])
+    _validate_v12_lane_precedent(package["lane_precedent"])
+    _validate_v11_repair_validation(package["variable_prefill_repair_validation"])
+    _validate_v10_probe_evidence(package["chunked_prefill_probe"])
+    _require(
+        package["chunked_prefill_contract"] == _v10_chunked_prefill_contract(),
+        "V13 bounded chunked-prefill contract drifted",
+    )
+    base = _load_json(_repository_path(BASE_AUTHORIZATION_PATH))
+    _require(
+        base.get("package_id") == BASE_PACKAGE_ID and base.get("schema_version") == 2,
+        "V13 base is not the immutable full V2 authorization",
+    )
+    source_paths = _v13_source_paths()
+    references = package["source_artifacts"]
+    _require(
+        set(references) == set(source_paths),
+        "V13 source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V13 source hash drifted for {role}",
+        )
+    _require(
+        package["run_contract"] == _v13_expected_run_contract(),
+        "V13 invocation differs from the create-new lane contract",
+    )
+    _require(package["decision"] == _v13_decision(), "V13 decision boundary drifted")
+    _require(
+        package["claims"] == _v13_claims(), "V13 claims drifted or overstate evidence"
+    )
+    _require(
+        package["authorizations"] == _v13_authorizations(),
+        "V13 authority exceeds one block-parallel value screen",
+    )
+    _require(
+        package["execution_policy"] == _v12_execution_policy(),
+        "V13 execution policy drifted",
+    )
+    _validate_lane_assignment(package["execution_policy"]["lane_assignment"])
+    _require(
+        package["next_artifact"] == _v12_next_artifact(),
+        "V13 post-run boundary drifted",
+    )
+    if require_output_absent:
+        _require(
+            not _repository_path(V13_OUTPUT_PATH).exists(),
+            "V13 registered output directory already exists",
+        )
+    authorization = copy.deepcopy(base)
+    authorization["run_contract"]["invocation"] = copy.deepcopy(
+        package["run_contract"]["invocation"]
+    )
+    return authorization
+
+
 def _validate_v12_package(
     package: Mapping[str, Any], *, require_output_absent: bool = True
 ) -> dict[str, Any]:
@@ -3492,6 +3755,44 @@ def resolve_authorization_package(
     package: Mapping[str, Any], *, require_output_absent: bool = True
 ) -> dict[str, Any]:
     """Materialize the frozen V2 contract under an additive retry review."""
+    if package.get("package_id") == V13_PACKAGE_ID:
+        authorization = copy.deepcopy(
+            _validate_v13_package(
+                package,
+                require_output_absent=require_output_absent,
+            )
+        )
+        authorization = apply_chunked_prefill_engine_contract(authorization)
+        environment = authorization["run_contract"]["environment"]
+        environment[V1_MULTIPROCESSING_ENV] = V1_MULTIPROCESSING_VALUE
+        environment.pop(DEVICE_PIN_ENV, None)
+        authorization["schema_version"] = 13
+        authorization["package_id"] = V13_PACKAGE_ID
+        authorization["status"] = V13_STATUS
+        authorization["run_contract"]["invocation"] = copy.deepcopy(
+            package["run_contract"]["invocation"]
+        )
+        retained_contract = _load_json(_repository_path(V8_AUTHORIZATION_PATH))
+        for field in ("request_id_repair", "decode_work_repair", "frozen_inputs"):
+            authorization[field] = copy.deepcopy(retained_contract[field])
+        for field in (
+            "prior_authorization",
+            "consumed_attempt",
+            "path_normalization_repair",
+            "contention_probe_disposition",
+            "lane_precedent",
+            "variable_prefill_repair_validation",
+            "chunked_prefill_probe",
+            "chunked_prefill_contract",
+            "source_artifacts",
+            "decision",
+            "claims",
+            "authorizations",
+            "execution_policy",
+            "next_artifact",
+        ):
+            authorization[field] = copy.deepcopy(package[field])
+        return authorization
     if package.get("package_id") == V12_PACKAGE_ID:
         authorization = copy.deepcopy(
             _validate_v12_package(
@@ -4036,6 +4337,7 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         V10_PACKAGE_ID,
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
+        V13_PACKAGE_ID,
     }:
         _require(
             engine.get("max_num_batched_tokens") == SERVING_MAX_NUM_BATCHED_TOKENS
@@ -4057,6 +4359,7 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         V10_PACKAGE_ID,
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
+        V13_PACKAGE_ID,
     }:
         _require(
             run.get("environment", {}).get(V1_MULTIPROCESSING_ENV)
@@ -4189,6 +4492,96 @@ def _validate_v6_execution_authority(authorization: Mapping[str, Any]) -> None:
             "may_admit_action": False,
         },
         "V6 post-run boundary drifted",
+    )
+
+
+def _validate_v13_execution_authority(authorization: Mapping[str, Any]) -> None:
+    _require(
+        authorization.get("schema_version") == 13
+        and authorization.get("package_id") == V13_PACKAGE_ID
+        and authorization.get("status") == V13_STATUS,
+        "runner accepts only the reviewed V13 value-screen authority",
+    )
+    validate_preparation_contract(authorization)
+    _require(
+        authorization.get("request_id_repair") == _v7_request_id_repair(),
+        "V13 request-ID canonicalization contract drifted",
+    )
+    _require(
+        authorization.get("decode_work_repair") == _v8_decode_work_repair(),
+        "V13 decode-work offset contract drifted",
+    )
+    _validate_v13_consumed_attempt(authorization.get("consumed_attempt", {}))
+    _require(
+        authorization.get("path_normalization_repair")
+        == _v13_path_normalization_repair(),
+        "V13 path-normalization repair contract drifted",
+    )
+    _validate_v12_contention_disposition(
+        authorization.get("contention_probe_disposition", {})
+    )
+    _validate_v12_lane_precedent(authorization.get("lane_precedent", {}))
+    _validate_v11_repair_validation(
+        authorization.get("variable_prefill_repair_validation", {})
+    )
+    _validate_v10_probe_evidence(authorization.get("chunked_prefill_probe", {}))
+    _require(
+        authorization.get("chunked_prefill_contract")
+        == _v10_chunked_prefill_contract(),
+        "V13 chunked-prefill cohort contract drifted",
+    )
+    _require(
+        authorization.get("authorizations") == _v13_authorizations(),
+        "V13 authorities drifted beyond the value screen",
+    )
+    _require(
+        authorization.get("claims") == _v13_claims(),
+        "V13 does not claim the required repaired lane path",
+    )
+    _require(
+        authorization.get("decision") == _v13_decision(),
+        "V13 decision does not approve the narrow block-parallel screen",
+    )
+    policy = authorization.get("execution_policy", {})
+    _require(policy == _v12_execution_policy(), "V13 execution policy drifted")
+    _validate_lane_assignment(policy["lane_assignment"])
+
+    references = authorization.get("source_artifacts", {})
+    source_paths = _v13_source_paths()
+    _require(
+        set(references) == set(source_paths),
+        "V13 execution source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V13 execution source hash drifted for {role}",
+        )
+
+    base = _load_json(_repository_path(BASE_AUTHORIZATION_PATH))
+    expected_run = copy.deepcopy(base["run_contract"])
+    expected_run["engine"]["max_num_batched_tokens"] = SERVING_MAX_NUM_BATCHED_TOKENS
+    expected_run["engine"]["enable_chunked_prefill"] = True
+    expected_run["engine"]["gpu_memory_utilization"] = SERVING_GPU_MEMORY_UTILIZATION
+    expected_run["environment"][V1_MULTIPROCESSING_ENV] = V1_MULTIPROCESSING_VALUE
+    expected_run["environment"].pop(DEVICE_PIN_ENV, None)
+    expected_run["invocation"] = _v13_invocation()
+    _require(
+        authorization.get("run_contract") == expected_run,
+        "V13 model, engine, cohort, action, or matrix contract drifted",
+    )
+    _require(
+        authorization.get("resource_gates") == base["resource_gates"],
+        "V13 resource gates drifted",
+    )
+    _require(
+        authorization.get("next_artifact") == _v12_next_artifact(),
+        "V13 post-run boundary drifted",
+    )
+    _require(
+        _reviewed_output_path(_repository_path(V13_AUTHORIZATION_PATH))
+        == _repository_path(V13_OUTPUT_PATH),
+        "V13 launch dispatcher does not resolve the reviewed path pair",
     )
 
 
@@ -5073,6 +5466,9 @@ def validate_execution_authority(
     authorization: Mapping[str, Any],
 ) -> None:
     """Require a future source-bound approval before any GPU child starts."""
+    if authorization.get("package_id") == V13_PACKAGE_ID:
+        _validate_v13_execution_authority(authorization)
+        return
     if authorization.get("package_id") == V12_PACKAGE_ID:
         _validate_v12_execution_authority(authorization)
         return
@@ -5464,8 +5860,12 @@ def build_boot_specs(
         V10_PACKAGE_ID,
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
+        V13_PACKAGE_ID,
     }
-    lane_parallel = authorization.get("package_id") == V12_PACKAGE_ID
+    lane_parallel = authorization.get("package_id") in {
+        V12_PACKAGE_ID,
+        V13_PACKAGE_ID,
+    }
     if bounded_chunked_prefill:
         budget_key = "chunked_prefill_budget"
         budget_evidence = chunked_prefill_budget_evidence(
@@ -6159,6 +6559,7 @@ def _reviewed_output_path(authorization_path: Path) -> Path:
     """Resolve an exact reviewed authorization path to its paired output."""
     resolved_authorization_path = authorization_path.resolve()
     reviewed_pairs = (
+        (V13_AUTHORIZATION_PATH, V13_OUTPUT_PATH),
         (V12_AUTHORIZATION_PATH, V12_OUTPUT_PATH),
         (V11_AUTHORIZATION_PATH, V11_OUTPUT_PATH),
         (V10_AUTHORIZATION_PATH, V10_OUTPUT_PATH),
