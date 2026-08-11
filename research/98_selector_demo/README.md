@@ -169,7 +169,7 @@ every static alternative on a declared workload mix.
 | gate | content | cost |
 | --- | --- | --- |
 | G98-0 | CPU harness: accounting closure, u-binned counter tests, factored-model and knapsack unit tests, manifest freeze | CPU only |
-| G98-A | smoke: every required boot class initializes and passes shared-KV/alias/sampler preflights — **including the quantized-draft + shared-KV assumption, which is unverified on the current stack** | ~5 non-scored boots |
+| G98-A | **PASSED 5/5** (2026-08-11): every boot class initializes, one target-owned KV group, PIECEWISE chain, generates. Quantized draft + shared KV **verified**; lattice stays at 30. Required a new `w98-lattice` boot scope and scope-aware weight proofs. See `results_g98_a.md` | ~5 non-scored boots |
 | G98-B | Round-1 profiles + factored fit; frozen held-out predictions committed before reveal | scored boots per matrix |
 | G98-C | Round-2 singles, screen, confirmations, knapsack + controls | scored boots per matrix |
 | G98-D | end-to-end comparison (D3) | scored boots per matrix |
