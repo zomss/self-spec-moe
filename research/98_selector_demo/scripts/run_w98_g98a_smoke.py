@@ -425,7 +425,16 @@ def run_boot(boot_id: str, output_dir: Path) -> int:
             with contextlib.suppress(Exception):
                 engine.engine_core.shutdown()
     performed = {k: v for k, v in checks.items() if v is not None}
-    record["status"] = "pass" if all(performed.values()) else "fail"
+    # An exception forces a fail. The first version computed status from the
+    # checks alone, so a boot that threw after its early checks passed was
+    # recorded as "pass" with an exception attached -- which is how A4/A5 were
+    # briefly reported as verifying the quant assumption while generating no
+    # tokens at all.
+    record["status"] = (
+        "pass"
+        if performed and all(performed.values()) and "exception" not in record
+        else "fail"
+    )
     (output_dir / f"{boot_id}.json").write_text(
         json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

@@ -1778,8 +1778,15 @@ def build_live_step_record(
     committed_lengths: Mapping[str, int],
     invalid_spec_tokens: int,
     elapsed_s: float,
+    boot_scope: str = BOOT_SCOPE_MINIMAL_B0,
 ) -> dict[str, Any]:
-    """Close one passive engine-step record or mark it replay-ineligible."""
+    """Close one passive engine-step record or mark it replay-ineligible.
+
+    Args:
+        boot_scope: The registered scope. Under ``w98-lattice`` a distinct
+            draft realization legitimately carries its own weight version, so
+            the step records both instead of asserting they are equal.
+    """
     if evidence.verified_action_id != metadata.verified_action_id:
         raise KOffRuntimeError("scheduler/runner verified-action mismatch")
     if evidence.next_action_id != metadata.next_action_id:
@@ -1796,7 +1803,10 @@ def build_live_step_record(
     )
     if abort_evidence != abort_metadata:
         raise KOffRuntimeError("scheduler/runner draft-abort mismatch")
-    if evidence.target_weight_version_id != evidence.draft_weight_version_id:
+    weight_versions_match = (
+        evidence.target_weight_version_id == evidence.draft_weight_version_id
+    )
+    if not weight_versions_match and boot_scope != BOOT_SCOPE_W98_LATTICE:
         raise KOffRuntimeError("target-matching draft weight version diverged")
     if elapsed_s <= 0:
         raise KOffRuntimeError(f"non-positive engine-step time {elapsed_s}")
@@ -1851,6 +1861,13 @@ def build_live_step_record(
         "schema_version": 1,
         "record_type": "koff_engine_step",
         "scored": False,
+        "boot_scope": boot_scope,
+        # Recorded, not assumed. Under w98-lattice a distinct draft carries its
+        # own weight version, so the step states both rather than asserting
+        # they are equal.
+        "target_matching_weights": weight_versions_match,
+        "target_weight_version_id": evidence.target_weight_version_id,
+        "draft_weight_version_id": evidence.draft_weight_version_id,
         "engine_step_index": metadata.engine_step_index,
         "target_step_boundary": True,
         "verified_action_id": metadata.verified_action_id,

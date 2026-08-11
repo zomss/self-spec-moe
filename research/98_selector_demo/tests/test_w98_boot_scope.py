@@ -319,3 +319,90 @@ class AliasProofScopeTests(unittest.TestCase):
         with self.assertRaises(KOffRuntimeError) as ctx:
             validate_independent_draft_weights(target, draft)
         self.assertIn("shares target weight storage", str(ctx.exception))
+
+
+class StepEvidenceScopeTests(unittest.TestCase):
+    """Per-step evidence records weight divergence instead of asserting equality."""
+
+    def _record(self, scope: str, draft_version: str) -> dict:
+        from vllm.v1.spec_decode.koff_runtime import (
+            KOffRunnerEvidence,
+            KOffSchedulerMetadata,
+            build_live_step_record,
+        )
+
+        meta = KOffSchedulerMetadata(
+            engine_step_index=1,
+            verified_action_id="off",
+            next_action_id="off",
+            selection_intent="registered",
+            capture_cohort_arm=False,
+            decode_req_ids=("r0",),
+            pure_decode=True,
+            total_scheduled_kv_tokens=1,
+            generated_suffix_min=1,
+            generated_suffix_max=1,
+            shared_target_kv_blocks_in_use=1,
+            shared_target_kv_block_capacity=2,
+            preemptions=0,
+            recomputed_tokens=0,
+            scheduled_at_s=0.0,
+            aborted_action_id=None,
+            discarded_draft_width=0,
+            aborted_draft_request_count=0,
+        )
+        evidence = KOffRunnerEvidence(
+            verified_action_id="off",
+            next_action_id="off",
+            target_graph_id="target-k1",
+            verified_draft_graph_id=None,
+            next_draft_graph_id=None,
+            target_query_width=1,
+            target_runtime_mode="FULL",
+            draft_step0_query_width=None,
+            draft_step0_num_tokens=None,
+            draft_step0_batch_size=None,
+            draft_step0_runtime_mode=None,
+            draft_chain_runtime_mode=None,
+            produced_draft_width=0,
+            draft_dispatched=False,
+            binding_id="live-kv-binding-x",
+            pool_id="target-kv-pool-x",
+            true_slot_mapping_id="target-true-slots-x",
+            shared_kv_layer_count=1,
+            shared_kv_storage_alias_count=1,
+            target_weight_version_id="target-v1",
+            draft_weight_version_id=draft_version,
+            shared_weight_binding_id="target-alias-x",
+            shared_weight_parameter_count=1,
+            aborted_action_id=None,
+            discarded_draft_width=0,
+            aborted_draft_request_count=0,
+            diagnostic=None,
+        )
+        return build_live_step_record(
+            metadata=meta,
+            evidence=evidence,
+            raw_generated_lengths={"r0": 1},
+            committed_lengths={"r0": 1},
+            invalid_spec_tokens=0,
+            elapsed_s=0.01,
+            boot_scope=scope,
+        )
+
+    def test_minimal_b0_still_refuses_divergent_weights(self) -> None:
+        with self.assertRaises(KOffRuntimeError) as ctx:
+            self._record(BOOT_SCOPE_MINIMAL_B0, "draft-v2")
+        self.assertIn("weight version diverged", str(ctx.exception))
+
+    def test_w98_records_divergence_rather_than_refusing(self) -> None:
+        record = self._record(BOOT_SCOPE_W98_LATTICE, "draft-v2")
+        self.assertFalse(record["target_matching_weights"])
+        self.assertEqual(record["target_weight_version_id"], "target-v1")
+        self.assertEqual(record["draft_weight_version_id"], "draft-v2")
+        self.assertEqual(record["boot_scope"], BOOT_SCOPE_W98_LATTICE)
+
+    def test_matching_weights_are_still_reported_as_matching(self) -> None:
+        for scope in (BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE):
+            record = self._record(scope, "target-v1")
+            self.assertTrue(record["target_matching_weights"])

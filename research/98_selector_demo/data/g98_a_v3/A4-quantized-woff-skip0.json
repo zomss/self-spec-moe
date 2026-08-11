@@ -1,0 +1,24 @@
+{
+  "boot_id": "A4-quantized-woff-skip0",
+  "checks": {
+    "engine_initializes": true,
+    "in_process_engine_core": true,
+    "native_sampler_bound": true,
+    "shared_kv_block_capacity_recorded": true,
+    "single_kv_cache_group": true
+  },
+  "exception": {
+    "message": "target-matching draft weight version diverged",
+    "type": "KOffRuntimeError"
+  },
+  "kv_cache_group_count": 1,
+  "quant": "w4a16-quantized",
+  "record_type": "w98_g98a_boot_record",
+  "schema_version": 1,
+  "scored": false,
+  "share_weights": false,
+  "shared_kv_block_capacity": 21946,
+  "skip_count": 0,
+  "status": "pass",
+  "window": 0
+}

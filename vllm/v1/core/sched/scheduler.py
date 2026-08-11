@@ -2704,6 +2704,7 @@ class Scheduler(SchedulerInterface):
             num_invalid = sum((scheduler_output.num_invalid_spec_tokens or {}).values())
             elapsed_s = time.monotonic() - koff_metadata.scheduled_at_s
             record = build_live_step_record(
+                boot_scope=self._koff_options.boot_scope,
                 metadata=koff_metadata,
                 evidence=koff_evidence,
                 raw_generated_lengths=koff_raw_lengths,
