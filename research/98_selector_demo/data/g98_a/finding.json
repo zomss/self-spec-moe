@@ -1,0 +1,41 @@
+{
+  "authorization_consumed": true,
+  "boots_passed": 0,
+  "boots_total": 5,
+  "causes": [
+    {
+      "detail": "the smoke runner copied the base environment's VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA='0' verbatim. That env is parsed as a STRING (os.getenv default ''), so '0' is truthy and the contract sees a partial replica. Phase 97's build_boot_specs maps '0'->'' for exactly this reason; the smoke runner omitted the mapping.",
+      "fix": "map '0' -> '' as Phase 97 does",
+      "id": "C1-operator-bug",
+      "scope": "A1 only",
+      "would_a1_pass_after_fix": true
+    },
+    {
+      "consequence": "Phase 98's lattice is NOT BOOTABLE under the current contract. A quantized draft is structurally forbidden (SHARE_WEIGHTS=1 is required), not merely unverified; window!=0 and skip!=empty are forbidden outside the w512 capture path.",
+      "detail": "the minimal-B0 boot contract in koff_runtime hard-requires, whenever VLLM_SELF_SPEC_KOFF_RUNTIME=1: SHARE_WEIGHTS=1, draft_kv_window==0 (unless capture is enabled with the w512 action id), no skipped draft layers, no partial replica, no draft-only KV dtype, no ahead chain.",
+      "id": "C2-contract-wall",
+      "requires_decision": true,
+      "scope": "A2, A3, A4, A5"
+    }
+  ],
+  "disposition": {
+    "requires_fresh_authorization": true,
+    "retry_allowed": false,
+    "round1_authorized": false,
+    "scoring_allowed": false
+  },
+  "output": {
+    "path": "research/98_selector_demo/data/g98_a",
+    "preserve_without_overwrite": true
+  },
+  "package_id": "w98-g98a-smoke-authorization-v1",
+  "prereg_status_unchanged": {
+    "lattice_stays_at": 30,
+    "reason": "the quant axis was NOT disproven -- A4 never reached model load. The prereg assumption remains UNVERIFIED rather than failed, so the lattice must not be halved on this evidence."
+  },
+  "quantized_draft_with_shared_kv_verified": false,
+  "record_type": "w98_g98a_blocking_finding",
+  "schema_version": 1,
+  "scored": false,
+  "verdict_is_not_the_prereg_assumption": true
+}

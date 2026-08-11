@@ -1,0 +1,18 @@
+{
+  "boot_id": "A5-quantized-w512-skip4",
+  "checks": {
+    "engine_initializes": false
+  },
+  "exception": {
+    "message": "minimal-B0 boot contract violation: VLLM_SELF_SPEC_SHARE_WEIGHTS=1; no draft KV window; no skipped draft layers; no partial draft replica",
+    "type": "KOffRuntimeError"
+  },
+  "quant": "w4a16-quantized",
+  "record_type": "w98_g98a_boot_record",
+  "schema_version": 1,
+  "scored": false,
+  "share_weights": false,
+  "skip_count": 4,
+  "status": "fail",
+  "window": 512
+}

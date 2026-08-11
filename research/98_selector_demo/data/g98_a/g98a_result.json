@@ -1,0 +1,119 @@
+{
+  "boots": [
+    {
+      "boot_id": "A1-target-matching-woff-skip0",
+      "checks": {
+        "engine_initializes": false
+      },
+      "exception": {
+        "message": "minimal-B0 boot contract violation: no partial draft replica",
+        "type": "KOffRuntimeError"
+      },
+      "quant": "target-matching",
+      "record_type": "w98_g98a_boot_record",
+      "schema_version": 1,
+      "scored": false,
+      "share_weights": true,
+      "skip_count": 0,
+      "status": "fail",
+      "window": 0
+    },
+    {
+      "boot_id": "A2-target-matching-w512-skip0",
+      "checks": {
+        "engine_initializes": false
+      },
+      "exception": {
+        "message": "minimal-B0 boot contract violation: no draft KV window; no partial draft replica",
+        "type": "KOffRuntimeError"
+      },
+      "quant": "target-matching",
+      "record_type": "w98_g98a_boot_record",
+      "schema_version": 1,
+      "scored": false,
+      "share_weights": true,
+      "skip_count": 0,
+      "status": "fail",
+      "window": 512
+    },
+    {
+      "boot_id": "A3-target-matching-woff-skip4",
+      "checks": {
+        "engine_initializes": false
+      },
+      "exception": {
+        "message": "minimal-B0 boot contract violation: no skipped draft layers; no partial draft replica",
+        "type": "KOffRuntimeError"
+      },
+      "quant": "target-matching",
+      "record_type": "w98_g98a_boot_record",
+      "schema_version": 1,
+      "scored": false,
+      "share_weights": true,
+      "skip_count": 4,
+      "status": "fail",
+      "window": 0
+    },
+    {
+      "boot_id": "A4-quantized-woff-skip0",
+      "checks": {
+        "engine_initializes": false
+      },
+      "exception": {
+        "message": "minimal-B0 boot contract violation: VLLM_SELF_SPEC_SHARE_WEIGHTS=1; no partial draft replica",
+        "type": "KOffRuntimeError"
+      },
+      "quant": "w4a16-quantized",
+      "record_type": "w98_g98a_boot_record",
+      "schema_version": 1,
+      "scored": false,
+      "share_weights": false,
+      "skip_count": 0,
+      "status": "fail",
+      "window": 0
+    },
+    {
+      "boot_id": "A5-quantized-w512-skip4",
+      "checks": {
+        "engine_initializes": false
+      },
+      "exception": {
+        "message": "minimal-B0 boot contract violation: VLLM_SELF_SPEC_SHARE_WEIGHTS=1; no draft KV window; no skipped draft layers; no partial draft replica",
+        "type": "KOffRuntimeError"
+      },
+      "quant": "w4a16-quantized",
+      "record_type": "w98_g98a_boot_record",
+      "schema_version": 1,
+      "scored": false,
+      "share_weights": false,
+      "skip_count": 4,
+      "status": "fail",
+      "window": 512
+    }
+  ],
+  "gpu_identity": {
+    "active_compute_processes": 0,
+    "gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703",
+    "physical_gpu_index": 0
+  },
+  "lane": {
+    "block_ids": [
+      1,
+      3
+    ],
+    "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
+    "cpu_affinity": "0-15",
+    "lane_id": "lane-a",
+    "physical_gpu_index": 0,
+    "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+  },
+  "lattice_consequence": "quant axis FAILS: lattice halves to 15 and the D1 held-out split must be re-frozen before any Round-1 measurement",
+  "may_authorize_round1": false,
+  "package_id": "w98-g98a-smoke-authorization-v1",
+  "passed": 0,
+  "quantized_draft_with_shared_kv_verified": false,
+  "record_type": "w98_g98a_smoke_result",
+  "schema_version": 1,
+  "scored": false,
+  "total": 5
+}

@@ -1,0 +1,18 @@
+{
+  "boot_id": "A2-target-matching-w512-skip0",
+  "checks": {
+    "engine_initializes": false
+  },
+  "exception": {
+    "message": "minimal-B0 boot contract violation: no draft KV window; no partial draft replica",
+    "type": "KOffRuntimeError"
+  },
+  "quant": "target-matching",
+  "record_type": "w98_g98a_boot_record",
+  "schema_version": 1,
+  "scored": false,
+  "share_weights": true,
+  "skip_count": 0,
+  "status": "fail",
+  "window": 512
+}
