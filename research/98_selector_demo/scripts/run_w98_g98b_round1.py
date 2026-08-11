@@ -24,8 +24,13 @@ would refuse a quantized boot; that is Round 2's problem, not this gate's.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import gzip
 import hashlib
 import json
+import os
+import statistics
+import subprocess
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -54,6 +59,22 @@ EPSILON_ARM = 0.015
 # quantized figure rather than the comfortable one.
 QUANTIZED_KV_BLOCKS = 22190
 PHASE_97_KV_FLOOR = 21682
+QUANT_CKPT = {
+    "target-matching": (
+        "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/"
+        "b968826d9c46dd6066d109eabc6255188de91218"
+    ),
+    "w4a16-quantized": "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+}
+# Draft weight bytes per step, from the checkpoints G98-A actually booted.
+WEIGHT_BYTES = {"target-matching": 16.4e9, "w4a16-quantized": 6.1e9}
+DRAFT_LAYERS = 36
+# Qwen3-8B GQA: 8 kv heads x 128 head dim x 2 (K and V) x 2 bytes, per layer.
+KV_BYTES_PER_TOKEN = DRAFT_LAYERS * 8 * 128 * 2 * 2
+WINDOW_SINKS = 16
+SKIP_SETS = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
+MEASURE_PROMPTS = 4
+MEASURE_TOKENS = 64
 
 
 class G98BError(RuntimeError):
@@ -325,17 +346,402 @@ def _triple_key(triple: Mapping[str, Any]) -> str:
     return f"{triple['quant']}/w{triple['window']}/skip{triple['skip_count']}"
 
 
+def _config_key(cfg: Mapping[str, Any]) -> str:
+    return f"{cfg['quant']}/w{cfg['window']}/skip{cfg['skip_count']}"
+
+
+def lever_geometry(cfg: Mapping[str, Any], context_tokens: int) -> dict[str, float]:
+    """Return the model's inputs for one configuration at one state.
+
+    Args:
+        cfg: A lattice configuration.
+        context_tokens: The state's context length, which sets the KV read when
+            the window is off.
+
+    Returns:
+        ``weight_bytes``, ``kv_bytes`` and ``keep_frac`` for the factored model.
+    """
+    window = cfg["window"]
+    kv_tokens = (
+        context_tokens
+        if window == "off"
+        else min(context_tokens, int(window) + WINDOW_SINKS)
+    )
+    return {
+        "weight_bytes": WEIGHT_BYTES[cfg["quant"]],
+        "kv_bytes": float(kv_tokens * KV_BYTES_PER_TOKEN),
+        "keep_frac": 1.0 - cfg["skip_count"] / DRAFT_LAYERS,
+    }
+
+
+def boot_environment(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, str]:
+    """Build the lane-pinned, trace-enabled environment for one boot."""
+    base = _load_json(matrix._repository_path(matrix.BASE_AUTHORIZATION_PATH))[
+        "run_contract"
+    ]["environment"]
+    lane = matrix.lane_for_block(1)
+    env = {k: str(v) for k, v in base.items()}
+    env.pop(matrix.DEVICE_PIN_ENV, None)
+    if env.get("VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA") == "0":
+        env["VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA"] = ""
+    env.update(
+        {
+            matrix.DEVICE_PIN_ENV: str(lane["physical_gpu_index"]),
+            matrix.CACHE_ROOT_ENV: lane["cache_root"],
+            matrix.V1_MULTIPROCESSING_ENV: matrix.V1_MULTIPROCESSING_VALUE,
+            matrix.NATIVE_SAMPLER_ENV: matrix.NATIVE_SAMPLER_VALUE,
+            "VLLM_SELF_SPEC_BOOT_SCOPE": "w98-lattice",
+            "VLLM_SELF_SPEC_SHARED_KV": "1",
+            "VLLM_SELF_SPEC_SHARE_WEIGHTS": (
+                "1" if cfg["quant"] == "target-matching" else "0"
+            ),
+            "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": (
+                "0" if cfg["window"] == "off" else str(cfg["window"])
+            ),
+            "VLLM_SELF_SPEC_DRAFT_KV_SINKS": (
+                "0" if cfg["window"] == "off" else str(WINDOW_SINKS)
+            ),
+            "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": SKIP_SETS[cfg["skip_count"]],
+            "VLLM_SELF_SPEC_KOFF_TRACE": str(trace_path),
+        }
+    )
+    return env
+
+
+def _prompts_for(regime_id: str, limit: int) -> list[list[int]]:
+    bundle = matrix._repository_path(
+        "research/98_selector_demo/data/prereg/w98_prompt_tokens.jsonl.gz"
+    )
+    rows = []
+    with gzip.open(bundle, "rt", encoding="utf-8") as handle:
+        for line in handle:
+            row = json.loads(line)
+            if row["regime_id"] == regime_id:
+                rows.append(row["token_ids"])
+            if len(rows) >= limit:
+                break
+    _require(bool(rows), f"no prompts for regime {regime_id}")
+    return rows
+
+
+def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
+    """Boot one configuration and record its armed step costs per regime.
+
+    ``d_measured`` is the mean armed engine-step time. The target verify cost
+    is identical across configurations, so its constant offset is absorbed by
+    the model's ``c0`` term and differences across configurations reflect draft
+    cost. Any consistent unit satisfies the model; this one is consistent by
+    construction because every configuration runs the same prompts.
+
+    Args:
+        cfg: The configuration to boot.
+        trace_path: Where the passive koff step trace is written.
+
+    Returns:
+        Per-regime mean armed step time and context length.
+    """
+    from vllm import LLMEngine, SamplingParams
+
+    manifest = _load_json(matrix._repository_path(PROMPT_MANIFEST))
+    regimes = {r["regime_id"]: r for r in manifest["prompt_plan"]["regimes"]}
+    engine = LLMEngine.from_engine_args(_engine_args(cfg))
+    observations: dict[str, Any] = {}
+    try:
+        for regime_id, spec in regimes.items():
+            prompts = _prompts_for(regime_id, MEASURE_PROMPTS)
+            before = _trace_len(trace_path)
+            for index, tokens in enumerate(prompts):
+                engine.add_request(
+                    f"{regime_id}-{index}",
+                    {"prompt_token_ids": tokens},
+                    SamplingParams(
+                        temperature=0.0, max_tokens=MEASURE_TOKENS, ignore_eos=True
+                    ),
+                )
+            while engine.has_unfinished_requests():
+                engine.step()
+            steps = _armed_steps(trace_path, before)
+            observations[regime_id] = {
+                "armed_step_count": len(steps),
+                "mean_armed_step_s": statistics.mean(steps) if steps else None,
+                "context_tokens": int(statistics.mean(len(t) for t in prompts)),
+                "batch": spec["batch"],
+            }
+    finally:
+        with contextlib.suppress(Exception):
+            engine.engine_core.shutdown()
+    return observations
+
+
+def _trace_len(trace_path: Path) -> int:
+    if not trace_path.is_file():
+        return 0
+    with trace_path.open(encoding="utf-8") as handle:
+        return sum(1 for _ in handle)
+
+
+def _armed_steps(trace_path: Path, skip: int) -> list[float]:
+    """Return elapsed times for armed pure-decode steps written after ``skip``."""
+    if not trace_path.is_file():
+        return []
+    out = []
+    with trace_path.open(encoding="utf-8") as handle:
+        for index, line in enumerate(handle):
+            if index < skip:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("record_type") != "koff_engine_step":
+                continue
+            if row.get("exclusions"):
+                continue
+            elapsed = row.get("elapsed_s")
+            if isinstance(elapsed, (int, float)) and elapsed > 0:
+                out.append(float(elapsed))
+    return out
+
+
+def _engine_args(cfg: Mapping[str, Any]):
+    from vllm import EngineArgs
+
+    base = _load_json(matrix._repository_path(matrix.BASE_AUTHORIZATION_PATH))[
+        "run_contract"
+    ]["engine"]
+    return EngineArgs(
+        model=QUANT_CKPT["target-matching"],
+        speculative_config={
+            "method": "draft_model",
+            "model": QUANT_CKPT[cfg["quant"]],
+            "num_speculative_tokens": 4,
+            "draft_tensor_parallel_size": 1,
+        },
+        tensor_parallel_size=1,
+        pipeline_parallel_size=1,
+        max_model_len=base["max_model_len"],
+        max_num_batched_tokens=matrix.SERVING_MAX_NUM_BATCHED_TOKENS,
+        max_num_seqs=base["max_num_seqs"],
+        enable_chunked_prefill=True,
+        gpu_memory_utilization=matrix.SERVING_GPU_MEMORY_UTILIZATION,
+        enable_prefix_caching=False,
+        async_scheduling=False,
+        enforce_eager=False,
+        enable_flashinfer_autotune=False,
+        seed=0,
+        disable_log_stats=True,
+        generation_config="vllm",
+    )
+
+
+def fit_and_predict(output_dir: Path) -> dict[str, Any]:
+    """Fit the factored model per regime from singles and predict the held-out.
+
+    The fit consumes ONLY single-lever measurements. Predictions carry the
+    inflated symmetric log envelope the harness defines for composed use.
+    """
+    from w98_cost_model import FactoredCostModel, LeverPoint
+
+    singles = {
+        p.stem: _load_json(p) for p in sorted((output_dir / SINGLES_DIR).glob("*.json"))
+    }
+    _require(
+        len(singles) == len(single_lever_profiles()),
+        f"expected {len(single_lever_profiles())} single profiles, got {len(singles)}",
+    )
+    heldout = _load_json(matrix._repository_path(PREREG_HELDOUT))["heldout"]
+    predictions: dict[str, Any] = {}
+    fits: dict[str, Any] = {}
+    regimes = sorted({r for row in singles.values() for r in row["observations"]})
+    for regime in regimes:
+        points, context = [], None
+        for row in singles.values():
+            obs = row["observations"].get(regime)
+            if not obs or not obs["mean_armed_step_s"]:
+                continue
+            context = obs["context_tokens"]
+            geom = lever_geometry(row["config"], obs["context_tokens"])
+            points.append(
+                LeverPoint(
+                    weight_bytes=geom["weight_bytes"],
+                    kv_bytes=geom["kv_bytes"],
+                    keep_frac=geom["keep_frac"],
+                    d_measured=obs["mean_armed_step_s"],
+                )
+            )
+        if len(points) < 3 or context is None:
+            fits[regime] = {"fitted": False, "reason": "fewer than three points"}
+            continue
+        model = FactoredCostModel.fit(points)
+        fits[regime] = {
+            "fitted": True,
+            "kappa_w": model.kappa_w,
+            "kappa_kv": model.kappa_kv,
+            "c0": model.c0,
+            "log_envelope": model.log_envelope,
+            "points": len(points),
+        }
+        for triple in heldout:
+            geom = lever_geometry(triple, context)
+            lo, hi = model.predict_interval(
+                geom["weight_bytes"], geom["kv_bytes"], geom["keep_frac"]
+            )
+            predictions.setdefault(_triple_key(triple), {})[regime] = {
+                "lo": lo,
+                "hi": hi,
+                "point": model.predict(
+                    geom["weight_bytes"], geom["kv_bytes"], geom["keep_frac"]
+                ),
+            }
+    return {"fits": fits, "predictions": predictions}
+
+
+def score_reveal(output_dir: Path) -> dict[str, Any]:
+    """Compare the committed predictions against the revealed measurements."""
+    committed = require_committed_predictions(output_dir)
+    revealed = {
+        p.stem: _load_json(p) for p in sorted((output_dir / HELDOUT_DIR).glob("*.json"))
+    }
+    covered = total = 0
+    rows = []
+    for row in revealed.values():
+        key = _config_key(row["config"])
+        predicted = committed["predictions"].get(key, {})
+        for regime, obs in row["observations"].items():
+            band = predicted.get(regime)
+            if not band or not obs["mean_armed_step_s"]:
+                continue
+            total += 1
+            inside = band["lo"] <= obs["mean_armed_step_s"] <= band["hi"]
+            covered += inside
+            rows.append(
+                {
+                    "cell": f"{key}/{regime}",
+                    "measured": obs["mean_armed_step_s"],
+                    "lo": band["lo"],
+                    "hi": band["hi"],
+                    "covered": inside,
+                }
+            )
+    return {
+        "schema_version": 1,
+        "record_type": "w98_round1_result",
+        "package_id": PACKAGE_ID,
+        "scored": True,
+        "predictions_committed_before_reveal": True,
+        "coverage": {"covered": covered, "total": total},
+        "cells": rows,
+        "d1_exercised": False,
+        "d1_note": (
+            "W14/D has no scored surface, so per the preregistration D1 is "
+            "reported as NOT EXERCISED; this run reports coverage only"
+        ),
+        "may_authorize_round2": False,
+    }
+
+
 def parse_args() -> argparse.Namespace:
     """Parse the Round-1 interface."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--authorization", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument("--measure-config", help=argparse.SUPPRESS)
+    parser.add_argument("--stage-dir", help=argparse.SUPPRESS)
+    parser.add_argument("--trace", help=argparse.SUPPRESS)
     return parser.parse_args()
 
 
+def _run_stage_boots(
+    stage_dir: Path, configs, trace_root: Path, authorization_path: Path
+) -> None:
+    """Boot each configuration in its own child, pinned to the reserved lane."""
+    stage_dir.mkdir(parents=True, exist_ok=True)
+    lane = matrix.lane_for_block(1)
+    lo, hi = lane["cpu_affinity"].split("-")
+    affinity = sorted(range(int(lo), int(hi) + 1))
+    Path(lane["cache_root"]).mkdir(parents=True, exist_ok=True)
+    for cfg in configs:
+        key = _config_key(cfg).replace("/", "_")
+        target = stage_dir / f"{key}.json"
+        if target.exists():
+            continue
+        trace = trace_root / f"{key}.jsonl"
+        env = matrix._boot_child_environment(boot_environment(cfg, trace))
+        log = stage_dir / f"{key}.log"
+        with log.open("w", encoding="utf-8") as handle:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--authorization",
+                    str(authorization_path),
+                    "--output-dir",
+                    str(stage_dir.parent),
+                    "--measure-config",
+                    json.dumps(cfg),
+                    "--stage-dir",
+                    str(stage_dir),
+                    "--trace",
+                    str(trace),
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                stdout=handle,
+                stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.sched_setaffinity(0, affinity),
+            )
+        _require(
+            completed.returncode == 0 and target.exists(),
+            f"boot {key} failed; output preserved at {log}",
+        )
+
+
+def execute(authorization_path: Path, output_dir: Path) -> int:
+    """Run B1, commit at B2, reveal at B3 and score at B4, in that order."""
+    output_dir = output_dir.resolve()
+    authorization_path = authorization_path.resolve()
+    validate_authorization(_load_json(authorization_path))
+    base_env = matrix._boot_child_environment({})
+    matrix._preflight_native_sampler(base_env)
+    matrix._preflight_inprocess_engine_core(base_env)
+    lane = matrix.lane_for_block(1)
+    matrix._preflight_gpu_identity_and_idle(
+        lane["physical_gpu_index"], lane["physical_gpu_uuid"]
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    traces = output_dir / "traces"
+    traces.mkdir(exist_ok=True)
+
+    # B1 -- singles only. The held-out set must not be touched before B2.
+    _run_stage_boots(
+        output_dir / SINGLES_DIR, single_lever_profiles(), traces, authorization_path
+    )
+
+    # B2 -- fit and COMMIT before any held-out boot exists. commit_predictions
+    # refuses if the reveal directory already holds measurements.
+    fitted = fit_and_predict(output_dir)
+    (output_dir / "d1_fits.json").write_text(
+        json.dumps(fitted["fits"], indent=2, sort_keys=True) + "\n"
+    )
+    commit_predictions(output_dir, fitted["predictions"])
+
+    # B3 -- reveal, gated on the commitment.
+    require_committed_predictions(output_dir)
+    heldout = _load_json(matrix._repository_path(PREREG_HELDOUT))["heldout"]
+    _run_stage_boots(output_dir / HELDOUT_DIR, heldout, traces, authorization_path)
+
+    # B4 -- score against the committed predictions.
+    result = score_reveal(output_dir)
+    (output_dir / "round1_result.json").write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n"
+    )
+    print(json.dumps(result["coverage"], indent=2, sort_keys=True))
+    return 0
+
+
 def main() -> int:
-    """Validate the gate; the measurement stages are wired separately."""
+    """Validate the gate, then run its four stages in order."""
     args = parse_args()
     validate_authorization(_load_json(args.authorization.resolve()))
     if args.validate_only:
@@ -355,11 +761,20 @@ def main() -> int:
             )
         )
         return 0
-    raise G98BError(
-        "Round-1 measurement stages are not wired in this package; the "
-        "authorization and its commitment barrier are validated and the "
-        "B1/B3 measurement loops are the next implementation step"
-    )
+    if args.measure_config is not None:
+        cfg = json.loads(args.measure_config)
+        record = {
+            "schema_version": 1,
+            "record_type": "w98_round1_measurement",
+            "config": cfg,
+            "observations": measure_config(cfg, Path(args.trace)),
+        }
+        key = _config_key(cfg).replace("/", "_")
+        Path(args.stage_dir).joinpath(f"{key}.json").write_text(
+            json.dumps(record, indent=2, sort_keys=True) + "\n"
+        )
+        return 0
+    return execute(args.authorization, args.output_dir)
 
 
 if __name__ == "__main__":

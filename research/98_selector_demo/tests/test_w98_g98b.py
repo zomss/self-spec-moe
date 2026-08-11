@@ -225,3 +225,79 @@ class FailClosedTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MeasurementWiringTests(unittest.TestCase):
+    """The loops must express the model's inputs and the barrier's ordering."""
+
+    def test_geometry_follows_the_factored_model(self) -> None:
+        target = gate.lever_geometry(
+            {"quant": "target-matching", "window": "off", "skip_count": 0}, 8000
+        )
+        quant = gate.lever_geometry(
+            {"quant": "w4a16-quantized", "window": "off", "skip_count": 0}, 8000
+        )
+        self.assertLess(quant["weight_bytes"], target["weight_bytes"])
+        self.assertEqual(quant["kv_bytes"], target["kv_bytes"])
+        self.assertEqual(target["keep_frac"], 1.0)
+
+    def test_a_window_bounds_the_kv_read(self) -> None:
+        off = gate.lever_geometry(
+            {"quant": "target-matching", "window": "off", "skip_count": 0}, 8000
+        )
+        win = gate.lever_geometry(
+            {"quant": "target-matching", "window": 512, "skip_count": 0}, 8000
+        )
+        self.assertLess(win["kv_bytes"], off["kv_bytes"])
+
+    def test_skip_reduces_keep_frac(self) -> None:
+        for count in (0, 4, 8):
+            geom = gate.lever_geometry(
+                {"quant": "target-matching", "window": "off", "skip_count": count}, 8000
+            )
+            self.assertAlmostEqual(geom["keep_frac"], 1.0 - count / gate.DRAFT_LAYERS)
+
+    def test_boot_environment_carries_the_scope_and_trace(self) -> None:
+        env = gate.boot_environment(
+            {"quant": "w4a16-quantized", "window": 512, "skip_count": 4},
+            Path("/tmp/w98-trace.jsonl"),
+        )
+        self.assertEqual(env["VLLM_SELF_SPEC_BOOT_SCOPE"], "w98-lattice")
+        self.assertEqual(env["VLLM_SELF_SPEC_SHARE_WEIGHTS"], "0")
+        self.assertEqual(env["VLLM_SELF_SPEC_SHARED_KV"], "1")
+        self.assertEqual(env["VLLM_SELF_SPEC_DRAFT_KV_WINDOW"], "512")
+        self.assertEqual(env["VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS"], "2,4,7,16")
+        self.assertTrue(env["VLLM_SELF_SPEC_KOFF_TRACE"])
+        self.assertEqual(env["VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA"], "")
+
+    def test_target_matching_boots_keep_weight_sharing(self) -> None:
+        env = gate.boot_environment(
+            {"quant": "target-matching", "window": "off", "skip_count": 0},
+            Path("/tmp/w98-trace.jsonl"),
+        )
+        self.assertEqual(env["VLLM_SELF_SPEC_SHARE_WEIGHTS"], "1")
+
+    def test_fit_refuses_an_incomplete_single_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / gate.SINGLES_DIR).mkdir()
+            with self.assertRaises(gate.G98BError) as ctx:
+                gate.fit_and_predict(out)
+            self.assertIn("single profiles", str(ctx.exception))
+
+    def test_scoring_requires_the_committed_predictions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / gate.HELDOUT_DIR).mkdir()
+            with self.assertRaises(gate.G98BError):
+                gate.score_reveal(out)
+
+    def test_result_reports_d1_as_not_exercised_under_the_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / gate.HELDOUT_DIR).mkdir()
+            gate.commit_predictions(out, _predictions())
+            result = gate.score_reveal(out)
+            self.assertFalse(result["d1_exercised"])
+            self.assertFalse(result["may_authorize_round2"])
+            self.assertTrue(result["predictions_committed_before_reveal"])
