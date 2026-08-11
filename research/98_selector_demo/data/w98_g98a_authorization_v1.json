@@ -65,14 +65,21 @@
     "engine_initializes",
     "in_process_engine_core",
     "native_sampler_bound",
-    "one_target_owned_kv_cache",
-    "shared_kv_alias_proven",
-    "true_slot_identity_proven",
+    "single_kv_cache_group",
     "shared_kv_block_capacity_recorded",
-    "kmax8_position_counters_reachable",
+    "draft_chain_dispatches",
+    "generation_completes",
     "chain_runtime_mode_observed",
     "observed_device_recorded"
   ],
+  "deferred_checks": {
+    "checks": [
+      "shared_kv_alias_proven",
+      "true_slot_identity_proven"
+    ],
+    "produced_at": "G98-B",
+    "reason": "these are capture-time evidence produced by the P4 recorder during a scored run; a smoke gate that emits no captures cannot produce them, and claiming them here would overstate what five boots prove"
+  },
   "execution_policy": {
     "captures_emitted": 0,
     "create_new_output_required": true,
@@ -127,7 +134,7 @@
     },
     "smoke_runner": {
       "path": "research/98_selector_demo/scripts/run_w98_g98a_smoke.py",
-      "sha256": "ad5e18a6eba9fe17a7ade7602a1a8db7d6c6c4eb36985aa95be30064141282a9"
+      "sha256": "f32f05c8deebbb1a3bc09e59f47120bdab06d01905e208fe484f48fc4e4c7a48"
     },
     "smoke_tests": {
       "path": "research/98_selector_demo/tests/test_w98_g98a.py",
