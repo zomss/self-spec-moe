@@ -8,7 +8,7 @@ solo block is not faster, and the two blocks that disagree most sit on the same
 GPU. The cause is episode noise concentrated in block 1 (6/144 rounds below the
 95% floor, versus 1 and 0). The current authority is the V14 block-1 restart,
 which reuses blocks 2 and 3 unmodified and binds its result before it exists;
-see `results_p4_b0_block_restart_v14.md`. The screen remains unscored. The
+see `results_p4_b0_block_restart_v14.md`. V14 was then stopped for the CPU-pinning repair and is consumed. The cause is now confirmed: a non-scored probe under reserved cores improved all four failing cells by 9x to 251x (24.64%->0.161%, 18.07%->0.205%, 13.00%->1.371%, 6.87%->0.027%) and cut rounds below the 95% floor from 6 to 1, with the Lean server deliberately left running; one new cell (`w512/R5/s0`, 9.8%) means the noise is reduced, not eliminated. See `results_p4_b0_pinning_probe.md`. The screen remains unscored and a re-screen needs a fresh authorization. The
 two-lane V13 package that produced the complete capture set is documented in
 `results_p4_b0_run_authorization_v13.md`; its output
 `run_b0_value_screen_v12` is preserved, complete, and reusable. V12 established the two-lane design

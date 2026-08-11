@@ -1,0 +1,25 @@
+{
+  "affected_cells": [
+    "target-matching-k4/R8/s1"
+  ],
+  "contention_magnitude": "one core of the sixteen reserved for the lane",
+  "interpretation_rule": {
+    "if_cell_is_clean": "informative and arguably stronger: the cell stayed clean despite an additional CPU hog on its reserved cores",
+    "if_cell_is_noisy": "confounded; cause cannot be attributed between the co-tenant and the operator parse, and the cell needs a rerun before it counts"
+  },
+  "note": "operator-induced CPU contention during one target cell",
+  "observed_round_gaps_s": [
+    52.9,
+    53.1,
+    52.9
+  ],
+  "record_type": "p4_b0_pinning_probe_operator_note",
+  "schema_version": 1,
+  "scored": false,
+  "unaffected_target_cells": [
+    "target-matching-k4/R6/s0",
+    "target-matching-w512-masked-k4/R1/s0",
+    "target-matching-w512-masked-k4/R5cot/s1"
+  ],
+  "what_happened": "An unpinned single-threaded JSON parse (affinity 0-191, overlapping the probe's reserved cores 0-15) ran for ~400s while the probe captured k4/R8/s1 rounds r1-r4. This is the same class of disturbance the probe is testing for, introduced by the operator, not by the co-tenant."
+}
