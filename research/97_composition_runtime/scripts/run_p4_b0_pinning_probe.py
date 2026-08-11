@@ -10,9 +10,11 @@ dispatch contention instead: the PIECEWISE draft chain is host-launch-bound
 (~98 launches and ~16 ms host per step against ~5.3 ms GPU), the lanes claimed
 all 192 cores, and the unpinned Lean server floated across every one of them.
 
-This probe reruns only the four cells that exceeded 5% within-cell spread,
-under the reserved-core assignment, with the Lean server deliberately left
-running so the mitigation is tested against the real disturbance.
+This probe reruns block 1's two draft boots under the reserved-core
+assignment, with the Lean server deliberately left running so the mitigation
+is tested against the real disturbance. Both boots run their full frozen
+48-cell plan; the four cells that exceeded 5% within-cell spread are the
+focus of the comparison.
 
 It is non-scored. It grants no value-screen, scoring, or admission authority.
 """
@@ -32,11 +34,11 @@ import run_p4_b0_value_screen as matrix
 
 PHASE_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = PHASE_DIR.parents[1]
-PROBE_PACKAGE_ID = "p4-b0-pinning-probe-authorization-v1"
+PROBE_PACKAGE_ID = "p4-b0-pinning-probe-authorization-v2"
 PROBE_AUTHORIZATION_PATH = (
-    "research/97_composition_runtime/data/p4/p4_b0_pinning_probe_authorization_v1.json"
+    "research/97_composition_runtime/data/p4/p4_b0_pinning_probe_authorization_v2.json"
 )
-PROBE_OUTPUT_PATH = "research/97_composition_runtime/data/p4/run_b0_pinning_probe_v1"
+PROBE_OUTPUT_PATH = "research/97_composition_runtime/data/p4/run_b0_pinning_probe_v2"
 SOURCE_RUN_PATH = "research/97_composition_runtime/data/p4/run_b0_value_screen_v12"
 REFUSAL_PATH = f"{SOURCE_RUN_PATH}/certification_refusal.json"
 PROBE_BLOCK_ID = 1
@@ -127,7 +129,7 @@ def expected_authorization() -> dict[str, Any]:
             "lane": lane,
             "block_id": PROBE_BLOCK_ID,
             "physical_boot_count": 2,
-            "capture_count": 16,
+            "capture_count": 96,
             "rounds_per_cell": len(matrix.ROUNDS),
             "create_new_output_required": True,
             "retry_allowed": False,
@@ -177,46 +179,46 @@ def validate_authorization(package: Mapping[str, Any]) -> None:
 
 
 def build_probe_specs(output_dir: Path) -> list[dict[str, Any]]:
-    """Build the two boot specs, each carrying only its target cells.
+    """Build block 1's two draft boots, each with its full frozen plan.
 
     Args:
         output_dir: The create-only probe output directory.
 
     Returns:
-        The filtered boot specs, in registered action order.
+        The two boot specs, in registered action order.
     """
-    v13 = _load_json(matrix._repository_path(matrix.V13_AUTHORIZATION_PATH))
-    authorization = matrix.resolve_authorization_package(
-        v13, require_output_absent=False
-    )
+    # The probe takes the frozen plan GEOMETRY from the base V2 contract, not
+    # execution authority from V13. Resolving V13 would (correctly) refuse on
+    # its source hashes, which moved with the pinning repair; the probe carries
+    # its own authorization and claims nothing V13 claimed.
+    base = _load_json(matrix._repository_path(matrix.BASE_AUTHORIZATION_PATH))
+    authorization = matrix.apply_chunked_prefill_engine_contract(base)
+    environment = authorization["run_contract"]["environment"]
+    environment[matrix.V1_MULTIPROCESSING_ENV] = matrix.V1_MULTIPROCESSING_VALUE
+    environment.pop(matrix.DEVICE_PIN_ENV, None)
+    authorization["package_id"] = matrix.V13_PACKAGE_ID
     specs = matrix.build_boot_specs(authorization, output_dir)
-    wanted = {(c["action_id"], c["regime_id"], c["content_seed"]) for c in TARGET_CELLS}
-    probe_specs = []
-    for spec in specs:
-        if spec["boot_block_id"] != PROBE_BLOCK_ID:
-            continue
-        cells = [
-            cell
-            for cell in spec["plan"]["cells"]
-            if (
-                spec["action_id"],
-                cell["matrix"]["regime_id"],
-                cell["matrix"]["content_seed"],
-            )
-            in wanted
-        ]
-        if not cells:
-            continue
-        spec["plan"]["cells"] = cells
-        spec["expected_capture_count"] = len(cells)
-        probe_specs.append(spec)
+    # The P4 recorder requires exactly 48 cells per same-boot plan, a frozen
+    # contract. Rather than bend it for a probe, both boots run their full
+    # registered plan; the four failing cells are the focus of the COMPARISON,
+    # not a subset of what executes. This also shows whether the reservation
+    # helps the 20 cells that already passed, which a subset could not.
+    wanted_actions = {c["action_id"] for c in TARGET_CELLS}
+    probe_specs = [
+        spec
+        for spec in specs
+        if spec["boot_block_id"] == PROBE_BLOCK_ID
+        and spec["action_id"] in wanted_actions
+    ]
+    for spec in probe_specs:
+        spec["expected_capture_count"] = len(spec["plan"]["cells"])
     _require(
         len(probe_specs) == 2,
         f"probe did not resolve two boots (got {len(probe_specs)})",
     )
     _require(
-        sum(s["expected_capture_count"] for s in probe_specs) == 16,
-        "probe cells do not close to 16 captures",
+        all(s["expected_capture_count"] == 48 for s in probe_specs),
+        "probe boots do not carry the frozen 48-cell plan",
     )
     return probe_specs
 
@@ -293,6 +295,9 @@ def summarize(output_dir: Path) -> dict[str, Any]:
         cells.setdefault(key, []).append(row["estimands"]["decode_rate_req"])
     comparison = []
     rejected = 0
+    targets = {
+        (c["action_id"], c["regime_id"], c["content_seed"]) for c in TARGET_CELLS
+    }
     for key, rates in sorted(cells.items()):
         spread = (max(rates) - min(rates)) / statistics.median(rates)
         reference = sorted(rates)[-2] if len(rates) > 1 else rates[0]
@@ -301,11 +306,17 @@ def summarize(output_dir: Path) -> dict[str, Any]:
         comparison.append(
             {
                 "cell": f"{key[0]}/{key[1]}/s{key[2]}",
+                "was_over_five_percent_in_v13": key in targets,
                 "rounds": len(rates),
                 "v13_spread_fraction": V13_WITHIN_CELL_SPREAD.get(key),
                 "probe_spread_fraction": round(spread, 6),
                 "probe_rounds_below_95pct_floor": below,
-                "improved": spread < V13_WITHIN_CELL_SPREAD.get(key, 1.0),
+                "improved": (
+                    spread < V13_WITHIN_CELL_SPREAD[key]
+                    if key in V13_WITHIN_CELL_SPREAD
+                    else None
+                ),
+                "over_five_percent_now": spread > 0.05,
             }
         )
     return {
@@ -319,7 +330,11 @@ def summarize(output_dir: Path) -> dict[str, Any]:
         "cells": comparison,
         "probe_rejected_rounds": rejected,
         "v13_block1_rejected_rounds": V13_BLOCK1_REJECTED_ROUNDS,
-        "cells_improved": sum(1 for c in comparison if c["improved"]),
+        "target_cells_improved": sum(1 for c in comparison if c["improved"]),
+        "target_cells_total": len(V13_WITHIN_CELL_SPREAD),
+        "cells_over_five_percent_now": sum(
+            1 for c in comparison if c["over_five_percent_now"]
+        ),
         "cells_total": len(comparison),
     }
 

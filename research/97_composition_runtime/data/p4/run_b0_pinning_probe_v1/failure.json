@@ -1,0 +1,29 @@
+{
+  "attempt": {
+    "boots_completed": 0,
+    "complete_captures_emitted": 0,
+    "gpu_model_executed": false,
+    "model_loaded": false
+  },
+  "diagnostic": {
+    "classification": "subset_plan_rejected_by_frozen_recorder",
+    "frozen_contract_respected": true,
+    "gpu_fault_observed": false,
+    "reason": "the probe built an 8-cell plan; the P4 recorder requires exactly 48 cells per same-boot plan",
+    "runtime_fault_observed": false
+  },
+  "disposition": {
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v1_consumed": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_pinning_probe_v1",
+    "preserve_without_overwrite_or_resume": true
+  },
+  "package_id": "p4-b0-pinning-probe-authorization-v1",
+  "record_type": "p4_b0_pinning_probe_failure",
+  "schema_version": 1,
+  "scored": false
+}

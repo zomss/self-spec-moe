@@ -21,7 +21,7 @@
   },
   "execution_policy": {
     "block_id": 1,
-    "capture_count": 16,
+    "capture_count": 96,
     "create_new_output_required": true,
     "lane": {
       "block_ids": [
@@ -51,7 +51,7 @@
     "may_authorize_rescreen": false,
     "scored": false
   },
-  "package_id": "p4-b0-pinning-probe-authorization-v1",
+  "package_id": "p4-b0-pinning-probe-authorization-v2",
   "schema_version": 1,
   "source_artifacts": {
     "adapter": {
@@ -72,11 +72,11 @@
     },
     "probe_runner": {
       "path": "research/97_composition_runtime/scripts/run_p4_b0_pinning_probe.py",
-      "sha256": "9997363546425030c422ebf5d08fbb8f39ff07a5e2d8885ee840aea951d154c0"
+      "sha256": "cdb001c8d040fd7d451395ea5c0bf39117dab1b7692f3269148a2e01253ad6d0"
     },
     "probe_tests": {
       "path": "research/97_composition_runtime/tests/test_p4_b0_pinning_probe.py",
-      "sha256": "63a0feb534048d146c2a82c98b7ec103f42a906729dc15ab3279c4615822a39f"
+      "sha256": "51e1354ad5e157a49836661cd157220818411390719461fec6816ffb491c44a6"
     },
     "source_run_refusal": {
       "path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/certification_refusal.json",

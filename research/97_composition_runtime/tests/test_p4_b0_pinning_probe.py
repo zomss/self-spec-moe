@@ -58,6 +58,12 @@ class ProbeScopeTests(unittest.TestCase):
     def test_source_run_is_not_remeasured(self) -> None:
         self.assertFalse(_package()["comparison"]["source_run_remeasured"])
 
+    def test_both_boots_run_the_frozen_48_cell_plan(self) -> None:
+        """The recorder requires 48 cells; the probe does not bend it."""
+        policy = _package()["execution_policy"]
+        self.assertEqual(policy["physical_boot_count"], 2)
+        self.assertEqual(policy["capture_count"], 96)
+
     def test_probe_runs_on_the_reserved_lane(self) -> None:
         lane = _package()["execution_policy"]["lane"]
         self.assertEqual(lane, matrix.lane_for_block(probe.PROBE_BLOCK_ID))
