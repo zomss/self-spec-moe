@@ -38,10 +38,11 @@ sys.path.insert(0, str(REPO_ROOT / "research/97_composition_runtime/scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98a-smoke-authorization-v2"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v2.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_a_v2"
+PACKAGE_ID = "w98-g98a-smoke-authorization-v3"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v3.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_a_v3"
 V1_FINDING_PATH = "research/98_selector_demo/data/g98_a/finding.json"
+V2_RESULT_PATH = "research/98_selector_demo/data/g98_a_v2/g98a_result.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PROMPT_MANIFEST = "research/98_selector_demo/data/prereg/w98_prompt_manifest.json"
 TARGET_MODEL = (
@@ -141,6 +142,15 @@ def expected_authorization() -> dict[str, Any]:
             "target": TARGET_MODEL,
             "quantized_draft": QUANT_DRAFT_CKPT,
             "quantized_draft_present": Path(QUANT_DRAFT_CKPT).is_dir(),
+        },
+        "consumed_v2": {
+            "result": matrix._file_reference(V2_RESULT_PATH),
+            "boots_passed": 2,
+            "passing_boots": ["A1", "A2 (a window minimal-b0 forbade)"],
+            "shared_kv_blocks_observed": 24529,
+            "quantized_draft_loaded": True,
+            "quant_assumption_disproven": False,
+            "blocked_by": "target-matching alias proof, now scope-aware",
         },
         "consumed_v1": {
             "finding": matrix._file_reference(V1_FINDING_PATH),
