@@ -1,0 +1,180 @@
+{
+  "artifact_id": "p4-b0-value-screen-v12-lane-launcher",
+  "package_id": "p4-b0-value-screen-run-authorization-v12",
+  "record_type": "p4_b0_value_screen_source_snapshot",
+  "schema_version": 1,
+  "source_count": 34,
+  "sources": {
+    "adapter": {
+      "path": "research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py",
+      "sha256": "32b1ad037d4bc7cfc288bfb50e3a8d50a8c3246f14544e33c04a587f6f70e789",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/adapt_p4_b0_same_event.py"
+    },
+    "atomic_ingress_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py",
+      "sha256": "30e07ca92a9fc2fc5ee63f46dbc04659a490d5e82f952e6040a263d4f6528b1e",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/run_p4_b0_atomic_ingress_proof.py"
+    },
+    "atomic_ingress_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py",
+      "sha256": "a9e2097144938fae5a3ccb2c28aec0f2c4ea3bc3fac29b90548669ab1f2122d0",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_atomic_ingress_proof.py"
+    },
+    "authorization_schema": {
+      "path": "research/97_composition_runtime/schemas/p4_b0_run_authorization_v13.schema.json",
+      "sha256": "5a0d5d74f0b6f2216e4930e5c5a900829874a211c503288041eb93d826e86103",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/schemas/p4_b0_run_authorization_v13.schema.json"
+    },
+    "authorization_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_run_authorization_v13.py",
+      "sha256": "4cfffd401175b3f99b63a2a7d26a4707bb812807320d5695a1d4384e036ad49e",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_run_authorization_v13.py"
+    },
+    "authorization_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v13.py",
+      "sha256": "f13a6a11e898db9632de7ed73b3b218fb489243059b3ab6094ab29108e513232",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/validate_p4_b0_run_authorization_v13.py"
+    },
+    "cohort_barrier_proof": {
+      "path": "research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof.json",
+      "sha256": "cb24ac0061322518cce8b165662860d505953b6bba0bdcd072dfac382e9e2ca8",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/data/p4/p4_b0_chunked_prefill_cohort_barrier_design_and_cpu_proof.json"
+    },
+    "cohort_barrier_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "528a3c1a716e0e46aed5c92f3a4f7ba74c57adb37c53cf1323410eb0e2a524a5",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_chunked_prefill_cohort_barrier.py"
+    },
+    "cohort_barrier_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_cohort_barrier.py",
+      "sha256": "6ba60f85b09c4c254b6df8f67c92ac0527c144986d32f7e2e5a4fe4853b382ed",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/validate_p4_b0_chunked_prefill_cohort_barrier.py"
+    },
+    "conformance_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py",
+      "sha256": "3c5021a39286cfbc2bf6209fdd05597f1175bd73b9616a7926340cd6d5999d37",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_capture_runner_conformance.py"
+    },
+    "conformance_validator": {
+      "path": "research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py",
+      "sha256": "ab22966b5b36decd28e3670bf5aa5d82a8dffaa60f8de5a95836e721cb4a25b7",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/validate_p4_b0_capture_runner_conformance.py"
+    },
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/spec_decode/draft_model.py"
+    },
+    "draft_proposer": {
+      "path": "vllm/v1/spec_decode/llm_base_proposer.py",
+      "sha256": "0ab43a92a72d490e302ed326d162059fd6a4688c47a3bd68c67ed835f118521e",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/spec_decode/llm_base_proposer.py"
+    },
+    "engine_args": {
+      "path": "vllm/engine/arg_utils.py",
+      "sha256": "f1a32e2207e9ed2f0d954e3e6457effca17ca907cb0cf17bba2ca8bde855a719",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/engine/arg_utils.py"
+    },
+    "engine_core_client": {
+      "path": "vllm/v1/engine/core_client.py",
+      "sha256": "8348c1bac859c6a82b631d4518b1875b0364ed42818bc1f3c2e2f556682bc549",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/engine/core_client.py"
+    },
+    "environment": {
+      "path": "vllm/envs.py",
+      "sha256": "c8dcc3df94ee613dc97de37cef060b8e156d1787daf8776487376f0f1ca0da20",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/envs.py"
+    },
+    "input_processor": {
+      "path": "vllm/v1/engine/input_processor.py",
+      "sha256": "c5673988c0f7cfec268220e3f044e718702c015a4f236c020937cfd40a793f15",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/engine/input_processor.py"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "55211c6502f766198bad966adb1a4b440015f6c5a62cfc6faad16586934771ac",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/spec_decode/koff_runtime.py"
+    },
+    "lane_launcher": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py",
+      "sha256": "65ad47953246ff89f9ad4623b8dacc432a994f482c9891b2b24055c77c9b2b3d",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/run_p4_b0_value_screen_v12.py"
+    },
+    "lane_launcher_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_value_screen_v12.py",
+      "sha256": "384a116dec18fad3205d7202a387f6263b02bcd6ee59d5eb8abd3a9fd14f0369",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_value_screen_v12.py"
+    },
+    "llm_engine": {
+      "path": "vllm/v1/engine/llm_engine.py",
+      "sha256": "17e5edfc625c77e9663368c7d69136e5e5935ee81608a65be3996411d502225e",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/engine/llm_engine.py"
+    },
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "42d1c3b774a3ddecf1fdd71f3e510742a156781658f50720209defcfccc9f1cf",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/run_p4_b0_value_screen.py"
+    },
+    "model_runner": {
+      "path": "vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "126d87fc8eca5a67cb39e961635ac6cbf95c213a1d48f96b6178f04a83c86612",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/worker/gpu_model_runner.py"
+    },
+    "recorder_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_live_recorder.py",
+      "sha256": "e57b95b481f07a661d3af3de08accaa9173b18dbb80ee64683dab987b83e2716",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_live_recorder.py"
+    },
+    "repair_preservation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation_preservation.py",
+      "sha256": "46cb0ce88a66042e0e8a3d4568a9c376709972407c56d5e8415189fb31b2f1b7",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation_preservation.py"
+    },
+    "repair_validation_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "f17b302de9a14c590a9a321a8952585278000a189b66ea38c704eb16b03620e4",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/run_p4_b0_variable_prefill_repair_validation.py"
+    },
+    "repair_validation_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation.py",
+      "sha256": "cc49cbaf35f29f845073eb10c25127699a23b9318946ec8acbd40518846c1449",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_variable_prefill_repair_validation.py"
+    },
+    "runner_tests": {
+      "path": "research/97_composition_runtime/tests/test_p4_b0_capture_runner.py",
+      "sha256": "265e1d67d7f9dbe2161f2921a9e76840ec3375e049ebddce7275d45a8ea63989",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/tests/test_p4_b0_capture_runner.py"
+    },
+    "runtime_tests": {
+      "path": "tests/v1/spec_decode/test_koff_runtime.py",
+      "sha256": "ae19a5ad02396cc30d653a2d9f6e57b576582f9d832fc19ff2394734046b9c7d",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/tests/v1/spec_decode/test_koff_runtime.py"
+    },
+    "sampler_backend": {
+      "path": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "sha256": "35b9a1ffeb1e50b73b0ddd1ffc0f968910ee21cf9cc5455dd879fde547b6ddc1",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/sample/ops/topk_topp_sampler.py"
+    },
+    "scheduler": {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "sha256": "94757145a6aae33832857f21a11344f090c56c6c12bafbe74470b8c031948328",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/core/sched/scheduler.py"
+    },
+    "scheduler_tests": {
+      "path": "tests/v1/core/test_scheduler.py",
+      "sha256": "c28ca07d8bb48004b74d3c3f1c14a0ef866cc579fd3eed28170f537ae40d34a7",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/tests/v1/core/test_scheduler.py"
+    },
+    "scorer": {
+      "path": "research/97_composition_runtime/scripts/score_p4_b0.py",
+      "sha256": "092a689aa9c60619e51dac6531aca58991644e6f5fdffad4ae880876b4a76fb4",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/research/97_composition_runtime/scripts/score_p4_b0.py"
+    },
+    "uniproc_executor": {
+      "path": "vllm/v1/executor/uniproc_executor.py",
+      "sha256": "4625c8e59aef1482600b02204701d348d7f716427581d3cf23b06bff9b056abe",
+      "snapshot_path": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12/source_snapshot/vllm/v1/executor/uniproc_executor.py"
+    }
+  },
+  "verified_against_worktree": true
+}

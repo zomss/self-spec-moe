@@ -1,10 +1,17 @@
 # Phase 97 — workload-aware composition runtime
 
-Status: **active shared-KV-only design; the matched B0 value screen remains
-preregistered but unscored. The current authority is the block-parallel
-two-lane V13 package, which passes CPU validation and registers the fresh
-create-only `run_b0_value_screen_v12` output; see
-`results_p4_b0_run_authorization_v13.md`. V12 established the two-lane design
+Status: **active shared-KV-only design; the matched B0 value screen ran to
+completion under V13 (432/432 captures, 3/3 blocks) but the frozen scorer
+refused at the 2% cross-boot certification in 3 of 36 cells. The lane decision
+is not the cause: median per-block offsets are +0.099%/+0.208%/-0.133%, the
+solo block is not faster, and the two blocks that disagree most sit on the same
+GPU. The cause is episode noise concentrated in block 1 (6/144 rounds below the
+95% floor, versus 1 and 0). The current authority is the V14 block-1 restart,
+which reuses blocks 2 and 3 unmodified and binds its result before it exists;
+see `results_p4_b0_block_restart_v14.md`. The screen remains unscored. The
+two-lane V13 package that produced the complete capture set is documented in
+`results_p4_b0_run_authorization_v13.md`; its output
+`run_b0_value_screen_v12` is preserved, complete, and reusable. V12 established the two-lane design
 (`results_p4_b0_run_authorization_v12.md`) and was consumed by one pre-GPU
 refusal: a relative `--output-dir` was not normalized inside the source
 snapshot, so it emitted zero captures and loaded no model. V13 is V12 plus

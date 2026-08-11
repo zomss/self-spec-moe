@@ -121,6 +121,19 @@ V13_FAILED_ATTEMPT_PATH = (
     "research/97_composition_runtime/data/p4/run_b0_value_screen_v11/failure.json"
 )
 V13_STATUS = "authorized_block_parallel_two_lane_value_screen_repaired_paths_only"
+V14_PACKAGE_ID = "p4-b0-value-screen-block-restart-authorization-v14"
+V14_AUTHORIZATION_PATH = (
+    "research/97_composition_runtime/data/p4/p4_b0_block_restart_authorization_v14.json"
+)
+V14_OUTPUT_PATH = "research/97_composition_runtime/data/p4/run_b0_block1_restart_v1"
+V14_STATUS = "authorized_block1_restart_only"
+V14_SOURCE_RUN_PATH = "research/97_composition_runtime/data/p4/run_b0_value_screen_v12"
+V14_REFUSAL_PATH = (
+    "research/97_composition_runtime/data/p4/"
+    "run_b0_value_screen_v12/certification_refusal.json"
+)
+V14_RESTART_BLOCK_ID = 1
+V14_REUSED_BLOCK_IDS = (2, 3)
 LANE_PRECEDENT_PATH = "research/96_selector_foundations/data/w14/w14d_prereg.json"
 CONTENTION_V1_AUTHORIZATION_PATH = (
     "research/97_composition_runtime/data/p4/"
@@ -3219,6 +3232,78 @@ def _validate_v9_package(
     return base
 
 
+def _v14_block_selection() -> dict[str, Any]:
+    """The block choice, declared before the rerun and independent of it.
+
+    Block 1 is selected on its episode-rejection count, a pre-registered noise
+    indicator computed from the frozen 95% rule. That count does not depend on
+    which cells failed cross-boot certification, so selecting on it is not
+    selection on the outcome under test.
+    """
+    return {
+        "rule": "highest_episode_rejection_count",
+        "declared_before_rerun": True,
+        "independent_of_certification_outcome": True,
+        "selected_block_id": V14_RESTART_BLOCK_ID,
+        "rounds_below_95pct_floor_by_block": {"1": 6, "2": 1, "3": 0},
+        "rounds_by_block": {"1": 144, "2": 144, "3": 144},
+        "reused_block_ids": list(V14_REUSED_BLOCK_IDS),
+    }
+
+
+def _v14_outcome_commitment() -> dict[str, Any]:
+    """Bind the result before it exists, so a rerun cannot become a search."""
+    return {
+        "result_used_regardless_of_certification": True,
+        "rerun_until_pass_forbidden": True,
+        "maximum_restarts_of_this_block": 1,
+        "further_restart_requires_new_declared_rule": True,
+        "certification_bar_unchanged_fraction": 0.02,
+        "episode_rule_unchanged_fraction": 0.95,
+        "prompts_seeds_and_cells_identical_to_source_run": True,
+    }
+
+
+def _validate_v14_block_selection(evidence: Mapping[str, Any]) -> None:
+    """Require the declared rule to match the preserved refusal record."""
+    _require(
+        evidence == _v14_block_selection(),
+        "V14 block-selection rule drifted",
+    )
+    refusal = _load_json(_repository_path(V14_REFUSAL_PATH))
+    counts = refusal.get("episode_noise", {}).get(
+        "rounds_below_95pct_floor_by_block", {}
+    )
+    _require(
+        counts == evidence["rounds_below_95pct_floor_by_block"],
+        "V14 rejection counts differ from the preserved refusal record",
+    )
+    selected = str(evidence["selected_block_id"])
+    _require(
+        all(
+            int(counts[selected]) >= int(value)
+            for key, value in counts.items()
+            if key != selected
+        ),
+        "V14 did not select the block with the highest rejection count",
+    )
+    _require(
+        refusal.get("record_type") == "p4_b0_value_screen_certification_refusal"
+        and refusal.get("attempt", {}).get("complete_capture_count") == 432
+        and refusal.get("attempt", {}).get("complete_block_count") == 3
+        and refusal.get("attempt", {}).get("score_emitted") is False
+        and refusal.get("disposition", {}).get(
+            "captures_reusable_under_block_authorization"
+        )
+        is True,
+        "V14 source run is not a complete, unscored, reusable screen",
+    )
+    _require(
+        refusal.get("lane_diagnosis", {}).get("verdict") == "not_a_lane_effect",
+        "V14 source refusal no longer records the lane diagnosis",
+    )
+
+
 def _v13_source_paths() -> dict[str, str]:
     paths = _v12_source_paths()
     paths["authorization_schema"] = (
@@ -3524,6 +3609,281 @@ def _v13_expected_run_contract() -> dict[str, Any]:
     }
 
 
+def _v14_source_paths() -> dict[str, str]:
+    paths = _v13_source_paths()
+    paths["authorization_schema"] = (
+        "research/97_composition_runtime/schemas/"
+        "p4_b0_block_restart_authorization_v14.schema.json"
+    )
+    paths["authorization_validator"] = (
+        "research/97_composition_runtime/scripts/"
+        "validate_p4_b0_block_restart_authorization_v14.py"
+    )
+    paths["authorization_tests"] = (
+        "research/97_composition_runtime/tests/test_p4_b0_block_restart_v14.py"
+    )
+    paths["source_run_refusal"] = V14_REFUSAL_PATH
+    paths["source_run_adapted_rounds"] = (
+        "research/97_composition_runtime/data/p4/"
+        "run_b0_value_screen_v12/adapted_rounds.jsonl"
+    )
+    return paths
+
+
+def _v14_execution_policy() -> dict[str, Any]:
+    lane = lane_for_block(V14_RESTART_BLOCK_ID)
+    return {
+        "restart_block_id": V14_RESTART_BLOCK_ID,
+        "lane": lane,
+        "reused_block_ids": list(V14_REUSED_BLOCK_IDS),
+        "source_run_dir": V14_SOURCE_RUN_PATH,
+        "lane_parallel": False,
+        "fallback_gpu_authorized": False,
+        "engine_core_mode": "in_process",
+        "engine_core_class": INPROCESS_ENGINE_CORE_CLASS,
+        "v1_multiprocessing": False,
+        "physical_boot_count": 3,
+        "rerun_capture_count": 144,
+        "reused_capture_count": 288,
+        "scored_capture_count": 432,
+        "max_num_batched_tokens": SERVING_MAX_NUM_BATCHED_TOKENS,
+        "effective_max_num_scheduled_tokens": (
+            SERVING_EFFECTIVE_MAX_NUM_SCHEDULED_TOKENS
+        ),
+        "gpu_memory_utilization": SERVING_GPU_MEMORY_UTILIZATION,
+        "capture_cohort_barrier_required": True,
+        "create_new_output_required": True,
+        "source_snapshot_required": True,
+        "source_run_overwrite_allowed": False,
+        "partial_resume_within_block_allowed": False,
+        "retry_allowed": False,
+        "score_grants_authority": False,
+        "on_any_failure": "preserve_and_require_fresh_authorization",
+    }
+
+
+def _v14_invocation() -> dict[str, Any]:
+    source_paths = _v14_source_paths()
+    return {
+        "runner_path": source_paths["lane_launcher"],
+        "argv": [
+            ".venv/bin/python",
+            source_paths["lane_launcher"],
+            "--authorization",
+            V14_AUTHORIZATION_PATH,
+            "--output-dir",
+            V14_OUTPUT_PATH,
+            "--restart-block",
+            str(V14_RESTART_BLOCK_ID),
+        ],
+        "output_dir": V14_OUTPUT_PATH,
+        "overwrite_allowed": False,
+        "runner_exists": True,
+        "launchable_now": True,
+    }
+
+
+def _v14_decision() -> dict[str, Any]:
+    return {
+        "state": "approve",
+        "scope": "block1_restart_v14_only",
+        "basis": [
+            "v13_screen_completed_all_432_captures_and_3_blocks",
+            "v13_score_refused_by_frozen_cross_boot_certification",
+            "v13_captures_preserved_complete_and_unscored",
+            "block_selected_on_declared_episode_rejection_rule",
+            "selection_rule_independent_of_certification_outcome",
+            "result_bound_before_it_exists",
+            "rerun_until_pass_forbidden",
+            "lane_effect_refuted_by_median_block_offsets",
+            "blocks_2_and_3_reused_without_remeasurement",
+            "current_execution_sources_hash_bound",
+            "fresh_output_path_registered",
+        ],
+        "invalidated_by": [
+            "approved_source_hash_drift",
+            "source_snapshot_mismatch",
+            "fresh_output_directory_exists",
+            "source_run_mutation",
+            "block_selection_rule_drift",
+            "outcome_commitment_drift",
+            "certification_bar_change",
+            "episode_rule_change",
+            "prompt_seed_or_cell_change",
+            "gpu_identity_drift",
+            "gpu_not_idle",
+            "resource_floor_failure",
+            "cohort_abort_or_incomplete_release",
+        ],
+    }
+
+
+def _v14_claims() -> dict[str, Any]:
+    return {
+        "source_screen_capture_count": 432,
+        "source_screen_block_count": 3,
+        "source_screen_score_emitted": False,
+        "source_screen_certification_failed": True,
+        "failing_cell_count": 3,
+        "total_cell_count": 36,
+        "lane_effect_refuted": True,
+        "max_median_block_offset_fraction": 0.00208,
+        "phase96_precedent_spread_fraction": 0.0049,
+        "episode_noise_concentrated_in_selected_block": True,
+        "block_selection_declared_before_rerun": True,
+        "result_used_regardless_of_certification": True,
+        "rerun_until_pass_forbidden": True,
+        "reused_blocks_remeasured": False,
+        "executable_run_ready": True,
+        "action_admitted": False,
+        "performance_claim_allowed": False,
+    }
+
+
+def _v14_authorizations() -> dict[str, Any]:
+    return {
+        "capture_runner_conformance_engineering": True,
+        "gpu_measurement": True,
+        "block1_restart_execution": True,
+        "combined_value_screen_scoring": True,
+        "additional_block_restart": False,
+        "p4a_engineering": False,
+        "action_admission": False,
+        "production_value_claim": False,
+    }
+
+
+def _v14_next_artifact() -> dict[str, Any]:
+    return {
+        "kind": "p4_b0_value_screen_result",
+        "requires_complete_capture_count": 432,
+        "requires_rerun_capture_count": 144,
+        "requires_reused_capture_count": 288,
+        "may_authorize_p4a": False,
+        "may_admit_action": False,
+    }
+
+
+def _v14_expected_run_contract() -> dict[str, Any]:
+    return {
+        "base_authorization": _file_reference(BASE_AUTHORIZATION_PATH),
+        "invocation": _v14_invocation(),
+    }
+
+
+def _validate_v14_package(
+    package: Mapping[str, Any], *, require_output_absent: bool = True
+) -> dict[str, Any]:
+    """Validate the V14 single-block restart package."""
+    expected_keys = {
+        "schema_version",
+        "package_id",
+        "date",
+        "status",
+        "source_authorization",
+        "source_run",
+        "block_selection",
+        "outcome_commitment",
+        "contention_probe_disposition",
+        "lane_precedent",
+        "chunked_prefill_contract",
+        "source_artifacts",
+        "run_contract",
+        "decision",
+        "claims",
+        "authorizations",
+        "execution_policy",
+        "next_artifact",
+    }
+    _require(set(package) == expected_keys, "V14 authorization fields drifted")
+    _require(
+        package.get("schema_version") == 14
+        and package.get("package_id") == V14_PACKAGE_ID
+        and package.get("status") == V14_STATUS,
+        "runner accepts only the reviewed V14 block-restart authority",
+    )
+    _require(
+        package["source_authorization"]
+        == {
+            **_file_reference(V13_AUTHORIZATION_PATH),
+            "disposition": "consumed_certification_refusal",
+        },
+        "V14 does not bind the consumed V13 authorization",
+    )
+    _require(
+        package["source_run"]
+        == {
+            "path": V14_SOURCE_RUN_PATH,
+            "refusal": _file_reference(V14_REFUSAL_PATH),
+            "adapted_rounds": _file_reference(
+                _v14_source_paths()["source_run_adapted_rounds"]
+            ),
+            "complete_capture_count": 432,
+            "complete_block_count": 3,
+            "score_emitted": False,
+            "preserve_without_overwrite": True,
+        },
+        "V14 source-run binding drifted",
+    )
+    _validate_v14_block_selection(package["block_selection"])
+    _require(
+        package["outcome_commitment"] == _v14_outcome_commitment(),
+        "V14 outcome commitment drifted",
+    )
+    _validate_v12_contention_disposition(package["contention_probe_disposition"])
+    _validate_v12_lane_precedent(package["lane_precedent"])
+    _require(
+        package["chunked_prefill_contract"] == _v10_chunked_prefill_contract(),
+        "V14 bounded chunked-prefill contract drifted",
+    )
+    base = _load_json(_repository_path(BASE_AUTHORIZATION_PATH))
+    _require(
+        base.get("package_id") == BASE_PACKAGE_ID and base.get("schema_version") == 2,
+        "V14 base is not the immutable full V2 authorization",
+    )
+    source_paths = _v14_source_paths()
+    references = package["source_artifacts"]
+    _require(
+        set(references) == set(source_paths),
+        "V14 source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V14 source hash drifted for {role}",
+        )
+    _require(
+        package["run_contract"] == _v14_expected_run_contract(),
+        "V14 invocation differs from the create-new restart contract",
+    )
+    _require(package["decision"] == _v14_decision(), "V14 decision boundary drifted")
+    _require(
+        package["claims"] == _v14_claims(), "V14 claims drifted or overstate evidence"
+    )
+    _require(
+        package["authorizations"] == _v14_authorizations(),
+        "V14 authority exceeds one block restart",
+    )
+    _require(
+        package["execution_policy"] == _v14_execution_policy(),
+        "V14 execution policy drifted",
+    )
+    _require(
+        package["next_artifact"] == _v14_next_artifact(),
+        "V14 post-run boundary drifted",
+    )
+    if require_output_absent:
+        _require(
+            not _repository_path(V14_OUTPUT_PATH).exists(),
+            "V14 registered output directory already exists",
+        )
+    authorization = copy.deepcopy(base)
+    authorization["run_contract"]["invocation"] = copy.deepcopy(
+        package["run_contract"]["invocation"]
+    )
+    return authorization
+
+
 def _validate_v13_package(
     package: Mapping[str, Any], *, require_output_absent: bool = True
 ) -> dict[str, Any]:
@@ -3755,6 +4115,43 @@ def resolve_authorization_package(
     package: Mapping[str, Any], *, require_output_absent: bool = True
 ) -> dict[str, Any]:
     """Materialize the frozen V2 contract under an additive retry review."""
+    if package.get("package_id") == V14_PACKAGE_ID:
+        authorization = copy.deepcopy(
+            _validate_v14_package(
+                package,
+                require_output_absent=require_output_absent,
+            )
+        )
+        authorization = apply_chunked_prefill_engine_contract(authorization)
+        environment = authorization["run_contract"]["environment"]
+        environment[V1_MULTIPROCESSING_ENV] = V1_MULTIPROCESSING_VALUE
+        environment.pop(DEVICE_PIN_ENV, None)
+        authorization["schema_version"] = 14
+        authorization["package_id"] = V14_PACKAGE_ID
+        authorization["status"] = V14_STATUS
+        authorization["run_contract"]["invocation"] = copy.deepcopy(
+            package["run_contract"]["invocation"]
+        )
+        retained_contract = _load_json(_repository_path(V8_AUTHORIZATION_PATH))
+        for field in ("request_id_repair", "decode_work_repair", "frozen_inputs"):
+            authorization[field] = copy.deepcopy(retained_contract[field])
+        for field in (
+            "source_authorization",
+            "source_run",
+            "block_selection",
+            "outcome_commitment",
+            "contention_probe_disposition",
+            "lane_precedent",
+            "chunked_prefill_contract",
+            "source_artifacts",
+            "decision",
+            "claims",
+            "authorizations",
+            "execution_policy",
+            "next_artifact",
+        ):
+            authorization[field] = copy.deepcopy(package[field])
+        return authorization
     if package.get("package_id") == V13_PACKAGE_ID:
         authorization = copy.deepcopy(
             _validate_v13_package(
@@ -4338,6 +4735,7 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
         V13_PACKAGE_ID,
+        V14_PACKAGE_ID,
     }:
         _require(
             engine.get("max_num_batched_tokens") == SERVING_MAX_NUM_BATCHED_TOKENS
@@ -4360,6 +4758,7 @@ def validate_preparation_contract(authorization: Mapping[str, Any]) -> None:
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
         V13_PACKAGE_ID,
+        V14_PACKAGE_ID,
     }:
         _require(
             run.get("environment", {}).get(V1_MULTIPROCESSING_ENV)
@@ -4492,6 +4891,57 @@ def _validate_v6_execution_authority(authorization: Mapping[str, Any]) -> None:
             "may_admit_action": False,
         },
         "V6 post-run boundary drifted",
+    )
+
+
+def _validate_v14_execution_authority(authorization: Mapping[str, Any]) -> None:
+    _require(
+        authorization.get("schema_version") == 14
+        and authorization.get("package_id") == V14_PACKAGE_ID
+        and authorization.get("status") == V14_STATUS,
+        "runner accepts only the reviewed V14 block-restart authority",
+    )
+    validate_preparation_contract(authorization)
+    _validate_v14_block_selection(authorization.get("block_selection", {}))
+    _require(
+        authorization.get("outcome_commitment") == _v14_outcome_commitment(),
+        "V14 outcome commitment drifted",
+    )
+    _require(
+        authorization.get("authorizations") == _v14_authorizations(),
+        "V14 authorities drifted beyond one block restart",
+    )
+    _require(
+        authorization.get("claims") == _v14_claims(),
+        "V14 claims drifted or overstate evidence",
+    )
+    _require(
+        authorization.get("decision") == _v14_decision(),
+        "V14 decision does not approve the narrow block restart",
+    )
+    _require(
+        authorization.get("execution_policy") == _v14_execution_policy(),
+        "V14 execution policy drifted",
+    )
+    references = authorization.get("source_artifacts", {})
+    source_paths = _v14_source_paths()
+    _require(
+        set(references) == set(source_paths),
+        "V14 execution source closure is incomplete or inflated",
+    )
+    for role, path in source_paths.items():
+        _require(
+            references[role] == _file_reference(path),
+            f"V14 execution source hash drifted for {role}",
+        )
+    _require(
+        authorization.get("next_artifact") == _v14_next_artifact(),
+        "V14 post-run boundary drifted",
+    )
+    _require(
+        _reviewed_output_path(_repository_path(V14_AUTHORIZATION_PATH))
+        == _repository_path(V14_OUTPUT_PATH),
+        "V14 launch dispatcher does not resolve the reviewed path pair",
     )
 
 
@@ -5466,6 +5916,9 @@ def validate_execution_authority(
     authorization: Mapping[str, Any],
 ) -> None:
     """Require a future source-bound approval before any GPU child starts."""
+    if authorization.get("package_id") == V14_PACKAGE_ID:
+        _validate_v14_execution_authority(authorization)
+        return
     if authorization.get("package_id") == V13_PACKAGE_ID:
         _validate_v13_execution_authority(authorization)
         return
@@ -5861,10 +6314,12 @@ def build_boot_specs(
         V11_PACKAGE_ID,
         V12_PACKAGE_ID,
         V13_PACKAGE_ID,
+        V14_PACKAGE_ID,
     }
     lane_parallel = authorization.get("package_id") in {
         V12_PACKAGE_ID,
         V13_PACKAGE_ID,
+        V14_PACKAGE_ID,
     }
     if bounded_chunked_prefill:
         budget_key = "chunked_prefill_budget"
@@ -6559,6 +7014,7 @@ def _reviewed_output_path(authorization_path: Path) -> Path:
     """Resolve an exact reviewed authorization path to its paired output."""
     resolved_authorization_path = authorization_path.resolve()
     reviewed_pairs = (
+        (V14_AUTHORIZATION_PATH, V14_OUTPUT_PATH),
         (V13_AUTHORIZATION_PATH, V13_OUTPUT_PATH),
         (V12_AUTHORIZATION_PATH, V12_OUTPUT_PATH),
         (V11_AUTHORIZATION_PATH, V11_OUTPUT_PATH),

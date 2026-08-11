@@ -1,0 +1,641 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://self-spec.local/phase97/p4_b0_block_restart_authorization_v14.schema.json",
+  "title": "Phase 97 B0 single-block restart authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "date",
+    "status",
+    "source_authorization",
+    "source_run",
+    "block_selection",
+    "outcome_commitment",
+    "contention_probe_disposition",
+    "lane_precedent",
+    "chunked_prefill_contract",
+    "source_artifacts",
+    "run_contract",
+    "decision",
+    "claims",
+    "authorizations",
+    "execution_policy",
+    "next_artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 14
+    },
+    "package_id": {
+      "const": "p4-b0-value-screen-block-restart-authorization-v14"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "authorized_block1_restart_only"
+    },
+    "source_authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "disposition"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "disposition": {
+          "const": "consumed_certification_refusal"
+        }
+      }
+    },
+    "source_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "refusal",
+        "adapted_rounds",
+        "complete_capture_count",
+        "complete_block_count",
+        "score_emitted",
+        "preserve_without_overwrite"
+      ],
+      "properties": {
+        "path": {
+          "const": "research/97_composition_runtime/data/p4/run_b0_value_screen_v12"
+        },
+        "refusal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "adapted_rounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "complete_capture_count": {
+          "const": 432
+        },
+        "complete_block_count": {
+          "const": 3
+        },
+        "score_emitted": {
+          "const": false
+        },
+        "preserve_without_overwrite": {
+          "const": true
+        }
+      }
+    },
+    "block_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "declared_before_rerun",
+        "independent_of_certification_outcome",
+        "selected_block_id",
+        "rounds_below_95pct_floor_by_block",
+        "rounds_by_block",
+        "reused_block_ids"
+      ],
+      "properties": {
+        "rule": {
+          "const": "highest_episode_rejection_count"
+        },
+        "declared_before_rerun": {
+          "const": true
+        },
+        "independent_of_certification_outcome": {
+          "const": true
+        },
+        "selected_block_id": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        },
+        "rounds_below_95pct_floor_by_block": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "rounds_by_block": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "reused_block_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "outcome_commitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result_used_regardless_of_certification",
+        "rerun_until_pass_forbidden",
+        "maximum_restarts_of_this_block",
+        "further_restart_requires_new_declared_rule",
+        "certification_bar_unchanged_fraction",
+        "episode_rule_unchanged_fraction",
+        "prompts_seeds_and_cells_identical_to_source_run"
+      ],
+      "properties": {
+        "result_used_regardless_of_certification": {
+          "const": true
+        },
+        "rerun_until_pass_forbidden": {
+          "const": true
+        },
+        "maximum_restarts_of_this_block": {
+          "const": 1
+        },
+        "further_restart_requires_new_declared_rule": {
+          "const": true
+        },
+        "certification_bar_unchanged_fraction": {
+          "const": 0.02
+        },
+        "episode_rule_unchanged_fraction": {
+          "const": 0.95
+        },
+        "prompts_seeds_and_cells_identical_to_source_run": {
+          "const": true
+        }
+      }
+    },
+    "contention_probe_disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v1",
+        "v2",
+        "decision",
+        "measured_contention_bound_available",
+        "dual_gpu_authority_from_probe"
+      ],
+      "properties": {
+        "v1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorization",
+            "failure",
+            "classification"
+          ],
+          "properties": {
+            "authorization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "failure": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "classification": {
+              "const": "launcher_ephemeral_port_collision"
+            }
+          }
+        },
+        "v2": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authorization",
+            "failure",
+            "classification"
+          ],
+          "properties": {
+            "authorization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "failure": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "classification": {
+              "const": "concurrent_worktree_write_during_run"
+            }
+          }
+        },
+        "decision": {
+          "const": "removed_from_the_value_screen_critical_path"
+        },
+        "measured_contention_bound_available": {
+          "const": false
+        },
+        "dual_gpu_authority_from_probe": {
+          "const": false
+        }
+      }
+    },
+    "lane_precedent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "artifact",
+        "policy",
+        "measured_spread_fraction",
+        "cross_boot_agreement_fraction",
+        "reused_as_calibration",
+        "phase_97_basis"
+      ],
+      "properties": {
+        "phase": {
+          "const": 96
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "policy": {
+          "type": "string"
+        },
+        "measured_spread_fraction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "b1",
+            "b8"
+          ],
+          "properties": {
+            "b1": {
+              "type": "number"
+            },
+            "b8": {
+              "type": "number"
+            }
+          }
+        },
+        "cross_boot_agreement_fraction": {
+          "const": 0.02
+        },
+        "reused_as_calibration": {
+          "const": false
+        },
+        "phase_97_basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "chunked_prefill_contract": {
+      "const": {
+        "state": "pass",
+        "max_num_batched_tokens": 8192,
+        "effective_max_num_scheduled_tokens": 8160,
+        "max_num_seqs": 32,
+        "gpu_memory_utilization": 0.9,
+        "enable_chunked_prefill": true,
+        "full_microbatch_prefill_allowed": false,
+        "capture_cohort_contract_id": "p4-capture-cohort-barrier-v1",
+        "queue_all_exact_members_before_first_step": true,
+        "hold_early_prefill_completers": true,
+        "atomic_first_measured_decode": true,
+        "require_every_action_and_prompt_slice": true,
+        "ordinary_serving_without_marker_unchanged": true
+      }
+    },
+    "source_artifacts": {
+      "type": "object",
+      "minProperties": 36,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_authorization",
+        "invocation"
+      ],
+      "properties": {
+        "base_authorization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "invocation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runner_path",
+            "argv",
+            "output_dir",
+            "overwrite_allowed",
+            "runner_exists",
+            "launchable_now"
+          ],
+          "properties": {
+            "runner_path": {
+              "type": "string"
+            },
+            "argv": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output_dir": {
+              "const": "research/97_composition_runtime/data/p4/run_b0_block1_restart_v1"
+            },
+            "overwrite_allowed": {
+              "const": false
+            },
+            "runner_exists": {
+              "const": true
+            },
+            "launchable_now": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "scope",
+        "basis",
+        "invalidated_by"
+      ],
+      "properties": {
+        "state": {
+          "const": "approve"
+        },
+        "scope": {
+          "const": "block1_restart_v14_only"
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "invalidated_by": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "minProperties": 17,
+      "additionalProperties": {
+        "type": [
+          "boolean",
+          "integer",
+          "number"
+        ]
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_runner_conformance_engineering",
+        "gpu_measurement",
+        "block1_restart_execution",
+        "combined_value_screen_scoring",
+        "additional_block_restart",
+        "p4a_engineering",
+        "action_admission",
+        "production_value_claim"
+      ],
+      "properties": {
+        "gpu_measurement": {
+          "const": true
+        },
+        "block1_restart_execution": {
+          "const": true
+        },
+        "combined_value_screen_scoring": {
+          "const": true
+        },
+        "additional_block_restart": {
+          "const": false
+        },
+        "p4a_engineering": {
+          "const": false
+        },
+        "action_admission": {
+          "const": false
+        },
+        "production_value_claim": {
+          "const": false
+        },
+        "capture_runner_conformance_engineering": {
+          "const": true
+        }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "minProperties": 22,
+      "additionalProperties": true
+    },
+    "next_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "requires_complete_capture_count",
+        "requires_rerun_capture_count",
+        "requires_reused_capture_count",
+        "may_authorize_p4a",
+        "may_admit_action"
+      ],
+      "properties": {
+        "kind": {
+          "const": "p4_b0_value_screen_result"
+        },
+        "requires_complete_capture_count": {
+          "const": 432
+        },
+        "requires_rerun_capture_count": {
+          "const": 144
+        },
+        "requires_reused_capture_count": {
+          "const": 288
+        },
+        "may_authorize_p4a": {
+          "const": false
+        },
+        "may_admit_action": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

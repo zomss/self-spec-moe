@@ -39,7 +39,9 @@ REPO_ROOT = PHASE_DIR.parents[1]
 LAUNCHER_ARTIFACT_ID = "p4-b0-value-screen-v12-lane-launcher"
 SNAPSHOT_DIRNAME = "source_snapshot"
 SNAPSHOT_RECORD = "source_snapshot.json"
-LANE_PACKAGE_IDS = frozenset({matrix.V12_PACKAGE_ID, matrix.V13_PACKAGE_ID})
+LANE_PACKAGE_IDS = frozenset(
+    {matrix.V12_PACKAGE_ID, matrix.V13_PACKAGE_ID, matrix.V14_PACKAGE_ID}
+)
 
 
 class LaneLauncherError(RuntimeError):
@@ -457,12 +459,194 @@ def execute_run(
     return 0
 
 
+def _adapt_captures(paths: Sequence[Path]) -> list[dict[str, Any]]:
+    from adapt_p4_b0_same_event import adapt_capture
+
+    return [adapt_capture(_load_json(path)) for path in paths]
+
+
+def score_block_restart(
+    output_dir: Path, authorization: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Score the rerun block together with the untouched preserved blocks.
+
+    The rerun supplies its block's 144 captures; the other two blocks come
+    from the source run unmodified. Both sets pass through the same frozen
+    adapter, and the frozen score is emitted whether or not it certifies.
+
+    Args:
+        output_dir: The create-only restart run directory.
+        authorization: The resolved V14 authorization.
+
+    Returns:
+        The combination record written beside the score.
+
+    Raises:
+        LaneLauncherError: If either capture set is not exactly complete.
+    """
+    from score_p4_b0 import score_rounds
+
+    policy = authorization["execution_policy"]
+    restart_block = policy["restart_block_id"]
+    source_run = REPO_ROOT / policy["source_run_dir"]
+    fresh = sorted((output_dir / "captures").glob("*/*.json"))
+    _require(
+        len(fresh) == policy["rerun_capture_count"],
+        f"restart produced {len(fresh)} captures, "
+        f"expected {policy['rerun_capture_count']}",
+    )
+    reused = sorted(
+        path
+        for path in (source_run / "captures").glob("*/*.json")
+        if f"-b{restart_block}-" not in path.parent.name
+    )
+    _require(
+        len(reused) == policy["reused_capture_count"],
+        f"source run supplied {len(reused)} reusable captures, "
+        f"expected {policy['reused_capture_count']}",
+    )
+    rounds = _adapt_captures(fresh) + _adapt_captures(reused)
+    _require(
+        len(rounds) == policy["scored_capture_count"],
+        "combined round count does not close to the scored capture count",
+    )
+    observed_blocks = {row["matrix"]["boot_block_id"] for row in rounds}
+    _require(
+        observed_blocks == set(matrix.ACTION_ORDERS),
+        f"combined rounds cover blocks {sorted(observed_blocks)}",
+    )
+    (output_dir / "adapted_rounds.jsonl").write_text(
+        "".join(
+            json.dumps(row, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+            + "\n"
+            for row in rounds
+        ),
+        encoding="utf-8",
+    )
+    combination = {
+        "schema_version": 1,
+        "record_type": "p4_b0_block_restart_combination",
+        "package_id": matrix.V14_PACKAGE_ID,
+        "restart_block_id": restart_block,
+        "rerun_capture_count": len(fresh),
+        "reused_block_ids": policy["reused_block_ids"],
+        "reused_capture_count": len(reused),
+        "reused_from": policy["source_run_dir"],
+        "reused_blocks_remeasured": False,
+        "scored_capture_count": len(rounds),
+        "result_used_regardless_of_certification": True,
+    }
+    try:
+        result = score_rounds(matrix._load_json(matrix.SCORER_CONTRACT_PATH), rounds)
+    except Exception as exc:  # noqa: BLE001 - the refusal itself is the result
+        combination["certified"] = False
+        combination["refusal"] = f"{type(exc).__name__}: {exc}"
+        _write_json(output_dir / "combination.json", combination)
+        return combination
+    _require(
+        result.get("decision", {}).get("authority_granted") is False,
+        "the frozen score attempted to grant authority",
+    )
+    _write_json(output_dir / "score.json", result)
+    combination["certified"] = True
+    _write_json(output_dir / "combination.json", combination)
+    return combination
+
+
+def execute_block_restart(
+    authorization_path: Path,
+    authorization: Mapping[str, Any],
+    output_dir: Path,
+) -> int:
+    """Rerun exactly one declared block, then score it with the reused blocks.
+
+    Args:
+        authorization_path: The reviewed V14 authorization path.
+        authorization: The resolved V14 authorization.
+        output_dir: The registered create-only output directory.
+
+    Returns:
+        Zero once the block completes and the frozen score or its refusal is
+        recorded. The result is kept either way.
+    """
+    output_dir = output_dir.resolve()
+    authorization_path = authorization_path.resolve()
+    _require(
+        output_dir == matrix._reviewed_output_path(authorization_path),
+        "execution output differs from the reviewed create-new path",
+    )
+    matrix.validate_execution_authority(authorization)
+    policy = authorization["execution_policy"]
+    restart_block = policy["restart_block_id"]
+    lane = policy["lane"]
+    _require(
+        restart_block in lane["block_ids"],
+        "the restart block is not owned by its registered lane",
+    )
+    base_child_env = matrix._boot_child_environment({})
+    matrix._preflight_native_sampler(base_child_env)
+    matrix._preflight_inprocess_engine_core(base_child_env)
+    worktree = preflight_worktree_quiescent(authorization)
+    identity = matrix._preflight_gpu_identity_and_idle(
+        lane["physical_gpu_index"], lane["physical_gpu_uuid"]
+    )
+    source_run = REPO_ROOT / policy["source_run_dir"]
+    _require(source_run.is_dir(), "the source run is missing")
+    _require(
+        not (source_run / "score.json").exists(),
+        "the source run already carries a score",
+    )
+
+    specs = matrix.prepare_run(authorization, output_dir)
+    snapshot_dir = snapshot_sources(output_dir, authorization)
+    verify_against_snapshot(output_dir)
+    block_specs = {
+        restart_block: [
+            spec for spec in specs if spec["boot_block_id"] == restart_block
+        ]
+    }
+    _require(
+        len(block_specs[restart_block]) == policy["physical_boot_count"],
+        "restart block does not carry its registered boot count",
+    )
+    record = run_lane(
+        {**lane, "block_ids": [restart_block]},
+        authorization_path,
+        output_dir,
+        block_specs,
+        snapshot_dir,
+    )
+    _write_json(
+        output_dir / "restart_result.json",
+        {
+            "schema_version": 1,
+            "record_type": "p4_b0_block_restart_result",
+            "package_id": matrix.V14_PACKAGE_ID,
+            "authorization_consumed": True,
+            "worktree_preflight": worktree,
+            "gpu_identity": identity,
+            "restart_block_id": restart_block,
+            "lane": record,
+            "status": record["status"],
+        },
+    )
+    _require(
+        record["status"] == "complete",
+        f"block {restart_block} did not complete; preserved without scoring",
+    )
+    combination = score_block_restart(output_dir, authorization)
+    log = "certified" if combination["certified"] else "REFUSED"
+    print(json.dumps({"status": "complete", "certification": log}, sort_keys=True))
+    return 0
+
+
 def parse_args() -> argparse.Namespace:
     """Parse the launcher interface and its CPU-only preparation option."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--authorization", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument("--restart-block", type=int)
     return parser.parse_args()
 
 
@@ -496,6 +680,20 @@ def main() -> int:
             )
         )
         return 0
+    if args.restart_block is not None:
+        _require(
+            package["package_id"] == matrix.V14_PACKAGE_ID,
+            "only the block-restart authorization may restart a block",
+        )
+        _require(
+            args.restart_block == authorization["execution_policy"]["restart_block_id"],
+            "requested restart block differs from the authorized block",
+        )
+        return execute_block_restart(authorization_path, authorization, output_dir)
+    _require(
+        package["package_id"] != matrix.V14_PACKAGE_ID,
+        "the block-restart authorization requires --restart-block",
+    )
     return execute_run(authorization_path, authorization, output_dir)
 
 

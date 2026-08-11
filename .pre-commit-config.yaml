@@ -4,7 +4,10 @@ default_install_hook_types:
 default_stages:
   - pre-commit # Run locally
   - manual # Run in CI
-exclude: 'vllm/third_party/.*'
+# research/**/source_snapshot/** holds byte-exact copies of registered sources,
+# captured so an authorized run can prove which bytes it executed. Formatting or
+# fixing them would destroy the hashes they exist to preserve.
+exclude: 'vllm/third_party/.*|research/.*/source_snapshot/.*'
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.14.0
