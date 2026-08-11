@@ -150,7 +150,11 @@ def expected_authorization() -> dict[str, Any]:
                 "DraftModel._weight_sharing_enabled raises when the draft "
                 "checkpoint or quantization differs from the target"
             ),
-            "quantized_boots_use": {"SHARED_KV": 1, "SHARE_WEIGHTS": 0},
+            "quantized_boots_use": {
+                "SHARED_KV": 1,
+                "SHARE_WEIGHTS": 0,
+                "BOOT_SCOPE": "w98-lattice",
+            },
             "on_failure": (
                 "the quant axis drops, the lattice halves from 30 to 15, and "
                 "the D1 held-out split must be re-frozen before any Round-1 "
@@ -243,12 +247,19 @@ def boot_environment(spec: Mapping[str, Any]) -> dict[str, str]:
     ]["environment"]
     env = {k: str(v) for k, v in base.items()}
     env.pop(matrix.DEVICE_PIN_ENV, None)
+    # PARTIAL_REPLICA parses as a STRING, so the base "0" is truthy and the
+    # boot contract reads it as a declared replica. Phase 97's build_boot_specs
+    # maps it to "" for the same reason; omitting this is what failed all five
+    # boots on the first G98-A attempt.
+    if env.get("VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA") == "0":
+        env["VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA"] = ""
     env.update(
         {
             matrix.DEVICE_PIN_ENV: str(LANE["physical_gpu_index"]),
             matrix.CACHE_ROOT_ENV: LANE["cache_root"],
             matrix.V1_MULTIPROCESSING_ENV: matrix.V1_MULTIPROCESSING_VALUE,
             matrix.NATIVE_SAMPLER_ENV: matrix.NATIVE_SAMPLER_VALUE,
+            "VLLM_SELF_SPEC_BOOT_SCOPE": "w98-lattice",
             "VLLM_SELF_SPEC_SHARED_KV": "1",
             "VLLM_SELF_SPEC_SHARE_WEIGHTS": "1" if spec["share_weights"] else "0",
             "VLLM_SELF_SPEC_DRAFT_KV_WINDOW": str(spec["window"]),

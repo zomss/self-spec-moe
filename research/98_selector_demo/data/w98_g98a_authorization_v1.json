@@ -4,6 +4,7 @@
     "on_failure": "the quant axis drops, the lattice halves from 30 to 15, and the D1 held-out split must be re-frozen before any Round-1 measurement",
     "prereg_status": "unverified",
     "quantized_boots_use": {
+      "BOOT_SCOPE": "w98-lattice",
       "SHARED_KV": 1,
       "SHARE_WEIGHTS": 0
     },
@@ -118,7 +119,7 @@
     },
     "koff_runtime": {
       "path": "vllm/v1/spec_decode/koff_runtime.py",
-      "sha256": "442516e0827fcdfc682541e83618a0fd3fcd585e5161406aa0f9f71701ce6376"
+      "sha256": "9ce687b6f71c16d1a3783cb3cf79856c6fbb0c6f82b8a36e798e8e68fa668649"
     },
     "matrix_runner": {
       "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
@@ -134,7 +135,7 @@
     },
     "smoke_runner": {
       "path": "research/98_selector_demo/scripts/run_w98_g98a_smoke.py",
-      "sha256": "f32f05c8deebbb1a3bc09e59f47120bdab06d01905e208fe484f48fc4e4c7a48"
+      "sha256": "855c074d15f671d2fde63109cdca6a0786d70176ab8b8afe81a0ba45c12f10fc"
     },
     "smoke_tests": {
       "path": "research/98_selector_demo/tests/test_w98_g98a.py",

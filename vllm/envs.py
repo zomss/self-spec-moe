@@ -255,6 +255,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS: str = ""
     VLLM_SELF_SPEC_BANDIT: bool = False
     VLLM_SELF_SPEC_BANDIT_RESAMPLE: int = 16
+    VLLM_SELF_SPEC_BOOT_SCOPE: str = "minimal-b0"
     VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA: str = ""
     VLLM_SELF_SPEC_DRAFT_TOPC: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
@@ -1909,6 +1910,12 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # expert sets ({layer_idx: LongTensor} file) into the draft's replica
     # (requires VLLM_SELF_SPEC_DRAFT_FULL_REPLICA=1). bf16, comm-free,
     # ~frac of expert bytes; routing masks via the layer's own expert_map.
+    # Self-spec: which registered boot scope the koff contract enforces.
+    # "minimal-b0" (default) is Phase 97's B0 screen; "w98-lattice" is Phase
+    # 98's quant x window x skip selector lattice. Unknown values fail closed.
+    "VLLM_SELF_SPEC_BOOT_SCOPE": lambda: os.getenv(
+        "VLLM_SELF_SPEC_BOOT_SCOPE", "minimal-b0"
+    ),
     "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA": lambda: os.getenv(
         "VLLM_SELF_SPEC_DRAFT_PARTIAL_REPLICA", ""
     ),

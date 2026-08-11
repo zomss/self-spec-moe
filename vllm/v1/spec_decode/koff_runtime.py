@@ -45,6 +45,21 @@ class KOffRuntimeError(RuntimeError):
     """Raised when the live K4/OFF contract cannot be proven."""
 
 
+# Registered boot scopes. minimal-b0 is Phase 97's B0 screen and stays the
+# default, so an unset environment behaves exactly as before. w98-lattice is
+# Phase 98's selector demonstration, whose quant x window x skip lattice
+# minimal-b0 forbids by construction. Adding a scope is deliberate: the
+# contract stays fail-closed and an unknown scope is refused.
+BOOT_SCOPE_MINIMAL_B0 = "minimal-b0"
+BOOT_SCOPE_W98_LATTICE = "w98-lattice"
+BOOT_SCOPES = frozenset({BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE})
+# The w98 scope relaxes exactly three axes, each bounded to the frozen lattice
+# in research/98_selector_demo/data/prereg/w98_prereg_matrix.json.
+W98_WINDOWS = frozenset({0, 128, 256, 512, 1024})
+W98_SKIP_COUNTS = frozenset({0, 4, 8})
+W98_WINDOW_SINKS = 16
+
+
 _RUNTIME_OBSERVATION: dict[str, str] = {}
 
 
@@ -738,6 +753,8 @@ class KOffBootOptions:
     draft_partial_replica: str
     ahead_chain: bool
     consume_ahead: bool
+    # Defaulted so every existing caller keeps Phase 97 semantics untouched.
+    boot_scope: str = BOOT_SCOPE_MINIMAL_B0
 
 
 @dataclass(frozen=True)
@@ -837,6 +854,7 @@ def options_from_env() -> KOffBootOptions:
 
     return KOffBootOptions(
         enabled=envs.VLLM_SELF_SPEC_KOFF_RUNTIME,
+        boot_scope=envs.VLLM_SELF_SPEC_BOOT_SCOPE,
         trace_path=envs.VLLM_SELF_SPEC_KOFF_TRACE,
         p4_capture_config_path=envs.VLLM_SELF_SPEC_P4_CAPTURE_CONFIG,
         p4_capture_output_path=envs.VLLM_SELF_SPEC_P4_CAPTURE_OUTPUT,
@@ -965,40 +983,96 @@ def validate_boot_config(
     if getattr(spec_config, "disable_padded_drafter_batch", False):
         raise KOffRuntimeError("minimal-B0 requires the padded draft-model batch")
 
-    window_valid = options.draft_kv_window == 0
-    window_description = "no draft KV window"
-    if capture_enabled and options.p4_boot_action_id == W512_ACTION_ID:
-        window_valid = options.draft_kv_window == 512 and options.draft_kv_sinks == 16
-        window_description = "w512 capture requires window=512 and sinks=16"
+    if options.boot_scope not in BOOT_SCOPES:
+        raise KOffRuntimeError(
+            f"unknown boot scope {options.boot_scope!r}; "
+            f"expected one of {sorted(BOOT_SCOPES)}"
+        )
 
-    requirements = (
+    # Invariants both scopes share. Shared target KV is the Phase 97 invariant
+    # that Phase 98 explicitly inherits, so it is never relaxed.
+    shared = (
         (options.shared_kv, "VLLM_SELF_SPEC_SHARED_KV=1"),
         (
             options.shared_kv_step0_decode,
             "VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1",
         ),
-        (options.share_weights, "VLLM_SELF_SPEC_SHARE_WEIGHTS=1"),
         (not options.draft_kv_dtype, "no draft-only KV dtype"),
-        (window_valid, window_description),
-        (not options.draft_skip_layers.strip(), "no skipped draft layers"),
         (not options.draft_partial_replica, "no partial draft replica"),
         (not options.ahead_chain, "no ahead draft chain"),
         (not options.consume_ahead, "no consumed ahead draft chain"),
     )
+
+    if options.boot_scope == BOOT_SCOPE_W98_LATTICE:
+        skip_layers = [
+            token for token in options.draft_skip_layers.split(",") if token.strip()
+        ]
+        skip_parses = all(token.strip().isdigit() for token in skip_layers)
+        window = options.draft_kv_window
+        expected_sinks = W98_WINDOW_SINKS if window else 0
+        requirements = shared + (
+            (
+                window in W98_WINDOWS,
+                f"w98 draft KV window must be one of {sorted(W98_WINDOWS)}",
+            ),
+            (
+                options.draft_kv_sinks == expected_sinks,
+                f"w98 window={window} requires sinks={expected_sinks}",
+            ),
+            (skip_parses, "w98 skip layers must be a comma list of integers"),
+            (
+                len(skip_layers) in W98_SKIP_COUNTS,
+                f"w98 skip count must be one of {sorted(W98_SKIP_COUNTS)}",
+            ),
+        )
+    else:
+        window_valid = options.draft_kv_window == 0
+        window_description = "no draft KV window"
+        if capture_enabled and options.p4_boot_action_id == W512_ACTION_ID:
+            window_valid = (
+                options.draft_kv_window == 512 and options.draft_kv_sinks == 16
+            )
+            window_description = "w512 capture requires window=512 and sinks=16"
+        requirements = shared + (
+            (options.share_weights, "VLLM_SELF_SPEC_SHARE_WEIGHTS=1"),
+            (window_valid, window_description),
+            (not options.draft_skip_layers.strip(), "no skipped draft layers"),
+        )
     missing = [description for valid, description in requirements if not valid]
     if missing:
         raise KOffRuntimeError(
-            "minimal-B0 boot contract violation: " + "; ".join(missing)
+            f"{options.boot_scope} boot contract violation: " + "; ".join(missing)
         )
 
     target = getattr(vllm_config, "model_config", None)
     draft = getattr(spec_config, "draft_model_config", None)
     if target is None or draft is None:
-        raise KOffRuntimeError("minimal-B0 requires target and draft model configs")
-    if getattr(draft, "model", None) != getattr(target, "model", None):
-        raise KOffRuntimeError("minimal-B0 draft checkpoint must match the target")
-    if getattr(draft, "quantization", None) != getattr(target, "quantization", None):
-        raise KOffRuntimeError("minimal-B0 draft quantization must match the target")
+        raise KOffRuntimeError(
+            f"{options.boot_scope} requires target and draft model configs"
+        )
+    same_checkpoint = getattr(draft, "model", None) == getattr(target, "model", None)
+    same_quantization = getattr(draft, "quantization", None) == getattr(
+        target, "quantization", None
+    )
+    if options.boot_scope == BOOT_SCOPE_W98_LATTICE:
+        # The quant axis is the point of this scope, so a differing draft is
+        # admitted -- but only as a declared quantized realization. A bare
+        # unrelated checkpoint is still refused, and a self-draft must still
+        # match on both fields.
+        if same_checkpoint and not same_quantization:
+            raise KOffRuntimeError("w98 self-draft must match the target quantization")
+        if not same_checkpoint and not getattr(draft, "quantization", None):
+            raise KOffRuntimeError(
+                "w98 draft checkpoint differs from the target but declares no "
+                "quantization; only a quantized realization may differ"
+            )
+    else:
+        if not same_checkpoint:
+            raise KOffRuntimeError("minimal-B0 draft checkpoint must match the target")
+        if not same_quantization:
+            raise KOffRuntimeError(
+                "minimal-B0 draft quantization must match the target"
+            )
 
     validate_k_values(dynamic_k_values, "dynamic speculative schedule")
     validate_policy_k_values(policy)
