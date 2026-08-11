@@ -38,9 +38,9 @@ sys.path.insert(0, str(REPO_ROOT / "research/97_composition_runtime/scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98a-smoke-authorization-v3"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v3.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_a_v3"
+PACKAGE_ID = "w98-g98a-smoke-authorization-v4"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v4.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_a_v4"
 V1_FINDING_PATH = "research/98_selector_demo/data/g98_a/finding.json"
 V2_RESULT_PATH = "research/98_selector_demo/data/g98_a_v2/g98a_result.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
@@ -145,9 +145,19 @@ def expected_authorization() -> dict[str, Any]:
         },
         "consumed_v2": {
             "result": matrix._file_reference(V2_RESULT_PATH),
-            "boots_passed": 2,
-            "passing_boots": ["A1", "A2 (a window minimal-b0 forbade)"],
-            "shared_kv_blocks_observed": 24529,
+            "boots_passed": 3,
+            "passing_boots": [
+                "A1",
+                "A2 (a window minimal-b0 forbade)",
+                "A3 (skip-4, the subset alias proof)",
+            ],
+            "shared_kv_blocks_observed": {
+                "target_matching": 24772,
+                "skip4": 24497,
+                "quantized": [21946, 22084],
+                "phase_97_floor": 21682,
+            },
+            "reported_5_of_5_by_a_status_bug": True,
             "quantized_draft_loaded": True,
             "quant_assumption_disproven": False,
             "blocked_by": "target-matching alias proof, now scope-aware",

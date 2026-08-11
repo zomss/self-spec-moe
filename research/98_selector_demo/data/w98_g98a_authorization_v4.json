@@ -1,0 +1,184 @@
+{
+  "assumption_under_test": {
+    "claim": "a quantized draft can boot with shared target KV",
+    "on_failure": "the quant axis drops, the lattice halves from 30 to 15, and the D1 held-out split must be re-frozen before any Round-1 measurement",
+    "prereg_status": "unverified",
+    "quantized_boots_use": {
+      "BOOT_SCOPE": "w98-lattice",
+      "SHARED_KV": 1,
+      "SHARE_WEIGHTS": 0
+    },
+    "reason": "DraftModel._weight_sharing_enabled raises when the draft checkpoint or quantization differs from the target",
+    "weight_aliasing_impossible_for_quantized_draft": true
+  },
+  "authorizations": {
+    "acceptance_claim": false,
+    "g98a_smoke_execution": true,
+    "gpu_measurement": true,
+    "production_value_claim": false,
+    "round1_execution": false,
+    "round2_execution": false,
+    "scoring": false
+  },
+  "boot_classes": [
+    {
+      "boot_id": "A1-target-matching-woff-skip0",
+      "purpose": "baseline; the path the Phase 97 screen ran",
+      "quant": "target-matching",
+      "share_weights": true,
+      "skip_count": 0,
+      "window": 0
+    },
+    {
+      "boot_id": "A2-target-matching-w512-skip0",
+      "purpose": "window axis",
+      "quant": "target-matching",
+      "share_weights": true,
+      "skip_count": 0,
+      "window": 512
+    },
+    {
+      "boot_id": "A3-target-matching-woff-skip4",
+      "purpose": "skip axis",
+      "quant": "target-matching",
+      "share_weights": true,
+      "skip_count": 4,
+      "window": 0
+    },
+    {
+      "boot_id": "A4-quantized-woff-skip0",
+      "purpose": "THE unverified assumption: quantized draft + shared KV",
+      "quant": "w4a16-quantized",
+      "share_weights": false,
+      "skip_count": 0,
+      "window": 0
+    },
+    {
+      "boot_id": "A5-quantized-w512-skip4",
+      "purpose": "riskiest composition: quant x window x skip together",
+      "quant": "w4a16-quantized",
+      "share_weights": false,
+      "skip_count": 4,
+      "window": 512
+    }
+  ],
+  "checks_per_boot": [
+    "engine_initializes",
+    "in_process_engine_core",
+    "native_sampler_bound",
+    "single_kv_cache_group",
+    "shared_kv_block_capacity_recorded",
+    "draft_chain_dispatches",
+    "generation_completes",
+    "chain_runtime_mode_observed",
+    "observed_device_recorded"
+  ],
+  "consumed_v1": {
+    "boots_passed": 0,
+    "causes_repaired": [
+      "C1 operator bug: PARTIAL_REPLICA '0' now mapped to ''",
+      "C2 contract wall: w98-lattice boot scope registered"
+    ],
+    "finding": {
+      "path": "research/98_selector_demo/data/g98_a/finding.json",
+      "sha256": "7e91d63aaa126255a3b165fe94c83e55b0052369143b6d77adb2c030204199e0"
+    },
+    "lattice_unchanged_at": 30,
+    "quant_assumption_disproven": false
+  },
+  "consumed_v2": {
+    "blocked_by": "target-matching alias proof, now scope-aware",
+    "boots_passed": 3,
+    "passing_boots": [
+      "A1",
+      "A2 (a window minimal-b0 forbade)",
+      "A3 (skip-4, the subset alias proof)"
+    ],
+    "quant_assumption_disproven": false,
+    "quantized_draft_loaded": true,
+    "reported_5_of_5_by_a_status_bug": true,
+    "result": {
+      "path": "research/98_selector_demo/data/g98_a_v2/g98a_result.json",
+      "sha256": "d1f47658a4b64e54119d89714b42b68f97189028eda2f9706c149da65991e2fc"
+    },
+    "shared_kv_blocks_observed": {
+      "phase_97_floor": 21682,
+      "quantized": [
+        21946,
+        22084
+      ],
+      "skip4": 24497,
+      "target_matching": 24772
+    }
+  },
+  "deferred_checks": {
+    "checks": [
+      "shared_kv_alias_proven",
+      "true_slot_identity_proven"
+    ],
+    "produced_at": "G98-B",
+    "reason": "these are capture-time evidence produced by the P4 recorder during a scored run; a smoke gate that emits no captures cannot produce them, and claiming them here would overstate what five boots prove"
+  },
+  "execution_policy": {
+    "captures_emitted": 0,
+    "create_new_output_required": true,
+    "lane": {
+      "block_ids": [
+        1,
+        3
+      ],
+      "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
+      "cpu_affinity": "0-15",
+      "lane_id": "lane-a",
+      "physical_gpu_index": 0,
+      "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+    },
+    "on_any_failure": "preserve_and_require_fresh_authorization",
+    "physical_boot_count": 5,
+    "retry_allowed": false
+  },
+  "gate": "G98-A",
+  "models": {
+    "quantized_draft": "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+    "quantized_draft_present": true,
+    "target": "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218"
+  },
+  "next_artifact": {
+    "kind": "w98_g98a_smoke_result",
+    "may_authorize_round1": false,
+    "scored": false
+  },
+  "package_id": "w98-g98a-smoke-authorization-v4",
+  "schema_version": 1,
+  "source_artifacts": {
+    "draft_model": {
+      "path": "vllm/v1/spec_decode/draft_model.py",
+      "sha256": "297db1337cae6490c4212441221960d1f1751ea3e87f30da750382089fc3f4f0"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "78077e689f57fd627c3dcef5e8837bb15a8348f84abf608b7b439e045ff59dc2"
+    },
+    "matrix_runner": {
+      "path": "research/97_composition_runtime/scripts/run_p4_b0_value_screen.py",
+      "sha256": "a16dc6948c1aecc88fd79e57b28fd1602347420f0138ab5dd72dceea114b7f55"
+    },
+    "prereg_matrix": {
+      "path": "research/98_selector_demo/data/prereg/w98_prereg_matrix.json",
+      "sha256": "b54689fa2adb9b8f05ecaa4e289b36261588f7147719ae1485ee5f2b4451f503"
+    },
+    "prompt_manifest": {
+      "path": "research/98_selector_demo/data/prereg/w98_prompt_manifest.json",
+      "sha256": "ad109a34fc7a174f4609047a7663a78f0fa30b59e88aeb9d3ebbd6f9434fff98"
+    },
+    "smoke_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98a_smoke.py",
+      "sha256": "bd3795c1bd1101c3141f87bd69ba32fb27663828a457c89ca1666da5e9261b08"
+    },
+    "smoke_tests": {
+      "path": "research/98_selector_demo/tests/test_w98_g98a.py",
+      "sha256": "987a8636516c980db73ac7ea51090ba9b696c3d2bd87005df6004f67718d20d0"
+    }
+  },
+  "status": "authorized_non_scored_smoke_only"
+}
