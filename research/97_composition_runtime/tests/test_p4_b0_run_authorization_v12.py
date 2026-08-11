@@ -85,11 +85,27 @@ class RegisteredPackageTests(unittest.TestCase):
         )
         self.assertNotEqual(matrix.V12_OUTPUT_PATH, matrix.V11_OUTPUT_PATH)
 
-    def test_lane_assignment_matches_the_runner(self) -> None:
+    def test_lane_assignment_records_the_superseded_affinity(self) -> None:
+        """The block->GPU map is unchanged; only the CPU affinity moved on.
+
+        Lanes originally split all 192 cores, which guaranteed collision with
+        the unpinned Lean server. The consumed package keeps what it ran with.
+        """
         package = _package()
-        self.assertEqual(
-            package["execution_policy"]["lane_assignment"], matrix.lane_assignment()
+        for lane, current in zip(
+            package["execution_policy"]["lane_assignment"],
+            matrix.lane_assignment(),
+            strict=True,
+        ):
+            self.assertEqual(lane["block_ids"], current["block_ids"])
+            self.assertEqual(lane["physical_gpu_uuid"], current["physical_gpu_uuid"])
+        claimed = sum(
+            int(lane["cpu_affinity"].split("-")[1])
+            - int(lane["cpu_affinity"].split("-")[0])
+            + 1
+            for lane in package["execution_policy"]["lane_assignment"]
         )
+        self.assertEqual(claimed, 192)
 
 
 class FailClosedTests(unittest.TestCase):

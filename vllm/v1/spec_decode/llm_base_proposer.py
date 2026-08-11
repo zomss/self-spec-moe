@@ -72,6 +72,23 @@ from vllm.v1.worker.utils import AttentionGroup
 logger = init_logger(__name__)
 
 
+def _observe_chain_runtime_mode(mode: str) -> None:
+    """Report the chain's dispatched cudagraph mode to the P4 recorder.
+
+    Imported lazily: koff_runtime is a sibling module and the proposer is
+    constructed on paths that must not depend on the capture recorder.
+
+    Args:
+        mode: The dispatched ``CUDAGraphMode``, stringified.
+    """
+    try:
+        from vllm.v1.spec_decode.koff_runtime import observe_chain_runtime_mode
+
+        observe_chain_runtime_mode(mode)
+    except Exception:  # noqa: BLE001 - observation must never break a forward
+        pass
+
+
 class _DraftDecodeForwardSample(nn.Module):
     """W7 sampling-in-graph runnable for the draft FULL cudagraph.
 
@@ -89,16 +106,22 @@ class _DraftDecodeForwardSample(nn.Module):
     the plain-forward FULL graph), so the captured graph replays correctly.
     """
 
-    def __init__(self, model: nn.Module, use_local_argmax_reduction: bool,
-                 vres_map: torch.Tensor | None = None):
+    def __init__(
+        self,
+        model: nn.Module,
+        use_local_argmax_reduction: bool,
+        vres_map: torch.Tensor | None = None,
+    ):
         super().__init__()
         self.model = model
         self.use_local_argmax_reduction = use_local_argmax_reduction
         # Phase 85: sliced-vocab draft -- remap argmax local->global INSIDE
         # the captured graph (a gather; pointer-stable buffer).
         self.vres_map = vres_map
-        logger.info("[vres] _DraftDecodeForwardSample built: vres_map=%s",
-                    "None" if vres_map is None else tuple(vres_map.shape))
+        logger.info(
+            "[vres] _DraftDecodeForwardSample built: vres_map=%s",
+            "None" if vres_map is None else tuple(vres_map.shape),
+        )
 
     def forward(self, **model_kwargs: Any):
         ret = self.model(**model_kwargs)
@@ -168,15 +191,9 @@ class SpecDecodeBaseProposer:
         # collectives, unlike the comm-free device-local path.
         self._draft_forward_additional_kwargs: dict[str, Any] | None = (
             {SELF_SPEC_LOCAL_ROUTE_KEY: True}
-            if (
-                self.method == "draft_model"
-                and envs.VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE
-            )
+            if (self.method == "draft_model" and envs.VLLM_SELF_SPEC_DRAFT_LOCAL_ROUTE)
             else {SELF_SPEC_NODE_LOCAL_KEY: True}
-            if (
-                self.method == "draft_model"
-                and envs.VLLM_SELF_SPEC_DRAFT_NODE_LOCAL
-            )
+            if (self.method == "draft_model" and envs.VLLM_SELF_SPEC_DRAFT_NODE_LOCAL)
             else None
         )
 
@@ -313,7 +330,9 @@ class SpecDecodeBaseProposer:
         # MoE body replays a captured graph (fast). Opt-in; default off keeps the
         # NONE chain. See VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE.
         self._draft_chain_piecewise = envs.VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE
-        self._logged_chain_pw = False
+        # W7[97]: set of (runtime_mode, batch_size, input_batch_size) already
+        # logged, so each distinct chain dispatch is reported exactly once.
+        self._logged_chain_pw: set[tuple[str, int, int]] = set()
         # Phase 62: window-KV drafting (StreamingLLM-style). When > 0, draft
         # forward steps attend only over sink + trailing-window KV pages: each
         # request's block-table row is compacted into proposer-owned buffers
@@ -341,9 +360,7 @@ class SpecDecodeBaseProposer:
         # must not clobber target-exact KV); chain steps keep their writes
         # (provisional, overwritten by the next verify pass over the same
         # slots). draft_model (self-spec) method only.
-        self._shared_kv = (
-            envs.VLLM_SELF_SPEC_SHARED_KV and self.method == "draft_model"
-        )
+        self._shared_kv = envs.VLLM_SELF_SPEC_SHARED_KV and self.method == "draft_model"
         if envs.VLLM_SELF_SPEC_SHARED_KV and self.method != "draft_model":
             raise ValueError(
                 "VLLM_SELF_SPEC_SHARED_KV requires the draft_model "
@@ -480,9 +497,7 @@ class SpecDecodeBaseProposer:
         #                               needs no per-row rewind state)
         #   _ahead_dispatch / _ahead_cad  persistent dispatch keys + private
         #                               metadata object (bootstrapped by propose)
-        self._consume_mode = (
-            self._ahead_chain and envs.VLLM_SELF_SPEC_CONSUME_AHEAD
-        )
+        self._consume_mode = self._ahead_chain and envs.VLLM_SELF_SPEC_CONSUME_AHEAD
         self._ahead_out: torch.Tensor | None = None
         self._ahead_outs_full: torch.Tensor | None = None
         self._ahead_anchor_committed: torch.Tensor | None = None
@@ -579,9 +594,7 @@ class SpecDecodeBaseProposer:
         # values are the constant [0, 1, ..., batch_size]; a view is stored so
         # it must NOT be mutated by callers (the drafting chain never does).
         self._cpu_orch = bool(envs.VLLM_SELF_SPEC_CPU_ORCH)
-        self._chain_qsl_cpu = torch.arange(
-            max_num_slots_for_arange, dtype=torch.int32
-        )
+        self._chain_qsl_cpu = torch.arange(max_num_slots_for_arange, dtype=torch.int32)
 
         if self.needs_extra_input_slots:
             self._raise_if_padded_drafter_batch_disabled()
@@ -881,9 +894,7 @@ class SpecDecodeBaseProposer:
             and eagle_cudagraph_mode == CUDAGraphMode.FULL_AND_PIECEWISE
             and _qlen == 1
         ):
-            self._augment_draft_capture_sizes_for_num_reqs(
-                eagle_cudagraph_mode, _qlen
-            )
+            self._augment_draft_capture_sizes_for_num_reqs(eagle_cudagraph_mode, _qlen)
         else:
             self.cudagraph_dispatcher.initialize_cudagraph_keys(
                 eagle_cudagraph_mode, uniform_decode_query_len=_qlen
@@ -940,8 +951,7 @@ class SpecDecodeBaseProposer:
         """Greedy-sample draft tokens from hidden states."""
         if self.use_local_argmax_reduction:
             return self.model.get_top_tokens(hidden_states)
-        return self._vres_remap(
-            self.model.compute_logits(hidden_states).argmax(dim=-1))
+        return self._vres_remap(self.model.compute_logits(hidden_states).argmax(dim=-1))
 
     def _sample_from_logits(
         self,
@@ -1132,8 +1142,7 @@ class SpecDecodeBaseProposer:
                 # dispatch it exactly like a chain step (PIECEWISE body + eager
                 # windowed attention under the window; FULL only when captured).
                 chain_piecewise = (
-                    self._draft_chain_force_eager_attn
-                    and self._draft_chain_piecewise
+                    self._draft_chain_force_eager_attn and self._draft_chain_piecewise
                 )
                 chain_use_cudagraphs = (
                     not self._draft_chain_force_eager_attn or chain_piecewise
@@ -1171,9 +1180,7 @@ class SpecDecodeBaseProposer:
                 # naturally. The max_query_len check excludes mixed batches that
                 # only sum to batch*q.
                 _q = (
-                    self.num_speculative_tokens
-                    + 1
-                    + self.net_num_new_slots_per_request
+                    self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request
                 )
                 _step0_uniform = (
                     self._step0_full_cg
@@ -1220,10 +1227,7 @@ class SpecDecodeBaseProposer:
                         use_cudagraphs=not _step0_bootstrap,
                     )
                 )
-                if (
-                    _step0_uniform
-                    and cudagraph_runtime_mode == CUDAGraphMode.FULL
-                ):
+                if _step0_uniform and cudagraph_runtime_mode == CUDAGraphMode.FULL:
                     # The captured step-0 graph reads seq_lens through the
                     # proposer-owned buffer (the live extended seq_lens is a
                     # fresh tensor each cycle); refresh it. Padded-request rows
@@ -1237,14 +1241,18 @@ class SpecDecodeBaseProposer:
                 if envs.VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG and _k not in getattr(
                     self, "_step0_cg_logged", set()
                 ):
-                    self._step0_cg_logged = getattr(
-                        self, "_step0_cg_logged", set()
-                    ) | {_k}
+                    self._step0_cg_logged = getattr(self, "_step0_cg_logged", set()) | {
+                        _k
+                    }
                     logger.info(
                         "[step0-cg] num_tokens=%d batch=%d K=%d uniform=%s -> "
                         "mode=%s padded=%d",
-                        num_tokens, batch_size, self.num_speculative_tokens,
-                        _step0_uniform, cudagraph_runtime_mode, num_input_tokens,
+                        num_tokens,
+                        batch_size,
+                        self.num_speculative_tokens,
+                        _step0_uniform,
+                        cudagraph_runtime_mode,
+                        num_input_tokens,
                     )
 
             self._record_step0_work_evidence(
@@ -1424,15 +1432,29 @@ class SpecDecodeBaseProposer:
                 )
             )
             self._last_chain_runtime_mode = str(cudagraph_runtime_mode)
-            if chain_piecewise and not self._logged_chain_pw:
-                self._logged_chain_pw = True
-                logger.info(
-                    "Draft chain PIECEWISE: runtime_mode=%s batch_size=%d "
-                    "input_batch_size=%d (attention eager, body cudagraph).",
-                    cudagraph_runtime_mode,
+            # Report the mode the chain actually dispatched so every P4 capture
+            # records it. Without this a silent PIECEWISE -> NONE fallback would
+            # leave no trace in the evidence, only in the runner's *declared*
+            # graph_grade.
+            _observe_chain_runtime_mode(str(cudagraph_runtime_mode))
+            # Per-descriptor (not one-shot): a sweep over batches 1/8/16/32 must
+            # show the dispatch and padding each one actually got, otherwise only
+            # the first is ever visible.
+            if chain_piecewise:
+                _pw_key = (
+                    str(cudagraph_runtime_mode),
                     batch_size,
                     input_batch_size,
                 )
+                if _pw_key not in self._logged_chain_pw:
+                    self._logged_chain_pw.add(_pw_key)
+                    logger.info(
+                        "Draft chain PIECEWISE: runtime_mode=%s batch_size=%d "
+                        "input_batch_size=%d (attention eager, body cudagraph).",
+                        cudagraph_runtime_mode,
+                        batch_size,
+                        input_batch_size,
+                    )
             # W7[70] fullcg-coverage debug: one-time dump of the chain dispatch
             # descriptor vs the drafter.model FULL wrapper's captured keys and
             # the _full_captured num_tokens set. Gated by W7_FULLCG_DBG.
@@ -1478,10 +1500,7 @@ class SpecDecodeBaseProposer:
             # to remove the "padding" (i.e. rejected tokens).
             # Only apply this adjustment when we have rejected tokens
             # (i.e., not the first proposal).
-            if (
-                self.num_speculative_tokens > 1
-                and num_rejected_tokens_gpu is not None
-            ):
+            if self.num_speculative_tokens > 1 and num_rejected_tokens_gpu is not None:
                 common_attn_metadata.seq_lens -= num_rejected_tokens_gpu
                 # Invalidate the CPU-side shadows to avoid H<>D sync.
                 common_attn_metadata._seq_lens_cpu = None
@@ -1510,10 +1529,14 @@ class SpecDecodeBaseProposer:
             logger.info(
                 "[wc-dbg] armed=%s K=%d greedy=%s failed=%s dp=%s ahead=%s "
                 "shadow=%d rej=%s",
-                _wc_armed, self.num_speculative_tokens,
-                sampling_metadata.all_greedy, batch_size in self._wc_failed,
-                batch_size_across_dp is None, self._ahead_chain,
-                self._shadow_chain_steps, num_rejected_tokens_gpu is not None,
+                _wc_armed,
+                self.num_speculative_tokens,
+                sampling_metadata.all_greedy,
+                batch_size in self._wc_failed,
+                batch_size_across_dp is None,
+                self._ahead_chain,
+                self._shadow_chain_steps,
+                num_rejected_tokens_gpu is not None,
             )
         _wc_ncols = common_attn_metadata.block_table_tensor.shape[1]
         # K is baked into the captured loop (dynamic-SD switches it per
@@ -1529,9 +1552,7 @@ class SpecDecodeBaseProposer:
                     dtype=draft_token_ids_list[-1].dtype,
                     device=self.device,
                 )
-            self._wc_seed[:batch_size].copy_(
-                draft_token_ids_list[-1][:batch_size]
-            )
+            self._wc_seed[:batch_size].copy_(draft_token_ids_list[-1][:batch_size])
             draft_token_ids_list[-1] = self._wc_seed[:batch_size]
             # Persistent MIRRORS for per-propose tensors the captured
             # kernels read (the padded prepare path allocates seq_lens /
@@ -1557,9 +1578,7 @@ class SpecDecodeBaseProposer:
             _wc_mir["bt"][:batch_size].copy_(
                 common_attn_metadata.block_table_tensor[:batch_size]
             )
-            _wc_mir["sl"][:batch_size].copy_(
-                common_attn_metadata.seq_lens[:batch_size]
-            )
+            _wc_mir["sl"][:batch_size].copy_(common_attn_metadata.seq_lens[:batch_size])
             common_attn_metadata.block_table_tensor = _wc_mir["bt"][:batch_size]
             common_attn_metadata.seq_lens = _wc_mir["sl"][:batch_size]
             common_attn_metadata._seq_lens_cpu = None
@@ -1592,9 +1611,7 @@ class SpecDecodeBaseProposer:
             _wc_prof.enabled = False
             _wc_stack.enter_context(torch.cuda.graph(_wc_graph_obj))
         for token_index in (
-            range(self.num_speculative_tokens - 1)
-            if _wc is None
-            else range(0)
+            range(self.num_speculative_tokens - 1) if _wc is None else range(0)
         ):
             # Update the inputs.
             # cast to int32 is crucial when eagle model is compiled.
@@ -1641,11 +1658,7 @@ class SpecDecodeBaseProposer:
                 # attention reads _win_block_table / _win_seq_lens -- refresh
                 # those buffers IN PLACE each step (data-only, graph-safe) so the
                 # captured gather sees the newest sinks+window+drafted pages.
-                if (
-                    self._draft_fullcg
-                    and self._kv_window > 0
-                    and skip_rebuild_full_cg
-                ):
+                if self._draft_fullcg and self._kv_window > 0 and skip_rebuild_full_cg:
                     self._apply_draft_kv_window(
                         common_attn_metadata, tokens_drafted=token_index + 1
                     )
@@ -1796,8 +1809,7 @@ class SpecDecodeBaseProposer:
             self._tag_a2a("")
             if self._step0_debug:
                 logger.info(
-                    "[draft-replay] rank=%d src=chain step=%d mode=%s "
-                    "graph=%s ntok=%d",
+                    "[draft-replay] rank=%d src=chain step=%d mode=%s graph=%s ntok=%d",
                     self.dp_rank,
                     token_index,
                     cudagraph_runtime_mode,
@@ -1996,10 +2008,7 @@ class SpecDecodeBaseProposer:
                             "b": int(next_token_ids[0].item()),
                             "rej": int(rejected[0].item()),
                             "committed": int(
-                                (
-                                    common_attn_metadata.seq_lens[0]
-                                    - rejected[0]
-                                ).item()
+                                (common_attn_metadata.seq_lens[0] - rejected[0]).item()
                             ),
                             "served": (
                                 self._ahead_outs_full[0].tolist()
@@ -2036,9 +2045,9 @@ class SpecDecodeBaseProposer:
             .clamp(1, k + 1)
             .unsqueeze(1)
         )
-        idx = delta + torch.arange(
-            k, device=self.device, dtype=torch.int64
-        ).unsqueeze(0)
+        idx = delta + torch.arange(k, device=self.device, dtype=torch.int64).unsqueeze(
+            0
+        )
         served = torch.gather(self._ahead_outs_full, 1, idx)
         self._ahead_outs_full = None
         # Record AFTER the gather: the next side run waits on this event, so
@@ -2123,9 +2132,7 @@ class SpecDecodeBaseProposer:
             return
         mem_pool_ctx = self._side_stream_and_pool()
         n_ahead = int(
-            os.environ.get(
-                "W7_AHEAD_STEPS", str(self.num_speculative_tokens + 1)
-            )
+            os.environ.get("W7_AHEAD_STEPS", str(self.num_speculative_tokens + 1))
         )
         # Bisect knob: suppress the ahead chain's KV writes (fill the slot
         # buffer with PADDING after each position update). Isolates the
@@ -2163,6 +2170,7 @@ class SpecDecodeBaseProposer:
                     label,
                 )
                 raise
+
         if disp is not None:
             # PER-ROW mode (OV1(b2)). Test what the in-flight verify was
             # EXPECTED to do (recorded by the previous run): normal rows
@@ -2195,15 +2203,11 @@ class SpecDecodeBaseProposer:
                 self._dbg_n = getattr(self, "_dbg_n", 0) + 1
                 if self._dbg_n % 50 == 1:
                     logger.info(
-                        "OV1(b2) dbg cycle %d: hit=%.2f rej0=%.2f "
-                        "tok_match=%.2f",
+                        "OV1(b2) dbg cycle %d: hit=%.2f rej0=%.2f tok_match=%.2f",
                         self._dbg_n,
                         valid.float().mean().item(),
                         (ra["rejected"] == 0).float().mean().item(),
-                        (ra["b"] == self._ahead_pending_tok[:bs])
-                        .float()
-                        .mean()
-                        .item(),
+                        (ra["b"] == self._ahead_pending_tok[:bs]).float().mean().item(),
                     )
                     # Value-level view of the first mismatching row: is the
                     # expectation a repeat of the anchor, shifted by one, etc.
@@ -2289,9 +2293,7 @@ class SpecDecodeBaseProposer:
                 self._ahead_pending_pos = boot_p1 + n_ahead
         # Allocated OUTSIDE the private pool: read by the next propose (main
         # stream, after the done-event wait) for the hit-rate check.
-        tokens_out = torch.empty(
-            (bs, n_ahead), dtype=torch.int64, device=self.device
-        )
+        tokens_out = torch.empty((bs, n_ahead), dtype=torch.int64, device=self.device)
         assert self._shadow_stream is not None
         assert self._propose_done_event is not None
         # Debug knob (W7_SHADOW_MAIN_STREAM=1): run the ahead loop serialized
@@ -2385,9 +2387,7 @@ class SpecDecodeBaseProposer:
                             int(self.input_ids[0].item()),
                             int(self.positions[0].item()),
                             int(self._slot_mapping_buffer[0].item()),
-                            int(cad.seq_lens[0].item())
-                            if cad is not None
-                            else -1,
+                            int(cad.seq_lens[0].item()) if cad is not None else -1,
                             int(tokens_out[0, j].item()),
                         )
             assert self._shadow_done_event is not None
@@ -2474,11 +2474,7 @@ class SpecDecodeBaseProposer:
         replaying draft and verify graphs (accept_len collapse => aliased).
         """
         ctx = self._shadow_ctx
-        if (
-            ctx is None
-            or self._shadow_chain_steps <= 0
-            or self.supports_mm_inputs
-        ):
+        if ctx is None or self._shadow_chain_steps <= 0 or self.supports_mm_inputs:
             return
         if self._shadow_stream is None:
             self._shadow_stream = torch.cuda.Stream()
@@ -2543,10 +2539,8 @@ class SpecDecodeBaseProposer:
             if gemm_only:
                 if not hasattr(self, "_shadow_gemm_ab"):
                     self._shadow_gemm_ab = (
-                        torch.randn(4096, 4096, dtype=self.dtype,
-                                    device=self.device),
-                        torch.randn(4096, 4096, dtype=self.dtype,
-                                    device=self.device),
+                        torch.randn(4096, 4096, dtype=self.dtype, device=self.device),
+                        torch.randn(4096, 4096, dtype=self.dtype, device=self.device),
                     )
                 a, b = self._shadow_gemm_ab
                 # ~one K=2 chain's worth of side-stream compute (~30 ms).
@@ -2764,9 +2758,7 @@ class SpecDecodeBaseProposer:
                 # slots; those are not yet verified and the next verify pass
                 # overwrites them (the existing provisional-KV discipline).
                 keep = new_slot_mapping[token_indices_to_sample]
-                new_slot_mapping = torch.full_like(
-                    new_slot_mapping, PADDING_SLOT_ID
-                )
+                new_slot_mapping = torch.full_like(new_slot_mapping, PADDING_SLOT_ID)
                 new_slot_mapping[token_indices_to_sample] = keep
 
             # 3. Update the common attention metadata with the new (meta)data
@@ -2870,9 +2862,13 @@ class SpecDecodeBaseProposer:
                 logger.info(
                     "[step0-gate] active=%s max_query_len=%s limit=%s(K=%s+1+net=%s) "
                     "rej_gpu=%s",
-                    active, cad.max_query_len,
-                    self.num_speculative_tokens + 1 + self.net_num_new_slots_per_request,
-                    self.num_speculative_tokens, self.net_num_new_slots_per_request,
+                    active,
+                    cad.max_query_len,
+                    self.num_speculative_tokens
+                    + 1
+                    + self.net_num_new_slots_per_request,
+                    self.num_speculative_tokens,
+                    self.net_num_new_slots_per_request,
                     num_rejected_tokens_gpu is not None,
                 )
         return active
@@ -2959,9 +2955,7 @@ class SpecDecodeBaseProposer:
         n_kept = self._scratchpad_n_kept_blocks()
         cap = n_kept * self.block_size
         if self._sp_col_arange is None or self._sp_col_arange.shape[1] != cap:
-            self._sp_col_arange = torch.arange(
-                cap, device=self.device
-            ).unsqueeze(0)
+            self._sp_col_arange = torch.arange(cap, device=self.device).unsqueeze(0)
         self._sp_ctx = DraftScratchpadCtx(
             block_table=self._win_block_table,
             seq_lens=self._win_seq_lens,
@@ -3011,9 +3005,9 @@ class SpecDecodeBaseProposer:
             self._win_seq_lens = torch.zeros(
                 rows, dtype=runner.seq_lens.dtype, device=self.device
             )
-            self._win_col_arange = torch.arange(
-                max_cols, device=self.device
-            ).unsqueeze(0)
+            self._win_col_arange = torch.arange(max_cols, device=self.device).unsqueeze(
+                0
+            )
             self._win_src_cols = torch.zeros(
                 (rows, max_cols), dtype=torch.long, device=self.device
             )
@@ -3066,17 +3060,15 @@ class SpecDecodeBaseProposer:
             self._win_seq_lens = torch.zeros(
                 rows, dtype=cad.seq_lens.dtype, device=self.device
             )
-            self._win_col_arange = torch.arange(
-                max_cols, device=self.device
-            ).unsqueeze(0)
+            self._win_col_arange = torch.arange(max_cols, device=self.device).unsqueeze(
+                0
+            )
             # Phase 65: persistent gather-index buffer + (col >= n_sink) mask
             # (n_sink is constant for the proposer's lifetime).
             self._win_src_cols = torch.zeros(
                 (rows, max_cols), dtype=torch.long, device=self.device
             )
-            self._win_col_ge_sink = (
-                self._win_col_arange >= n_sink
-            ).to(torch.long)
+            self._win_col_ge_sink = (self._win_col_arange >= n_sink).to(torch.long)
         assert self._win_seq_lens is not None
         assert self._win_col_arange is not None
         assert self._win_src_cols is not None
@@ -3085,9 +3077,7 @@ class SpecDecodeBaseProposer:
         n_total = (seq_lens + block_size - 1) // block_size
         # First kept trailing block; rows with dropped == 0 stay uncompacted
         # (short rows where sinks + window already cover every block).
-        start_last = torch.minimum(
-            torch.clamp(n_total - n_last, min=n_sink), n_total
-        )
+        start_last = torch.minimum(torch.clamp(n_total - n_last, min=n_sink), n_total)
         dropped = torch.clamp(start_last - n_sink, min=0)
         # left-slices of the fixed max-width buffers (see alloc note above)
         src_cols = self._win_src_cols[:bs, :n_cols]
@@ -3099,7 +3089,9 @@ class SpecDecodeBaseProposer:
         src_cols += self._win_col_arange[:, :n_cols]
         src_cols.clamp_(max=n_cols - 1)
         torch.gather(
-            src_bt[:bs], 1, src_cols,
+            src_bt[:bs],
+            1,
+            src_cols,
             out=self._win_block_table[:bs, :n_cols],
         )
         self._win_seq_lens[:bs] = (seq_lens - dropped * block_size).to(
@@ -3573,9 +3565,7 @@ class SpecDecodeBaseProposer:
         config carries shared registries that must not be forked)."""
         cc = vllm_config.compilation_config
         sched = vllm_config.scheduler_config
-        decode_bound = sched.max_num_seqs * (
-            spec_cfg.num_speculative_tokens + 2
-        )
+        decode_bound = sched.max_num_seqs * (spec_cfg.num_speculative_tokens + 2)
         old = cc.compile_ranges_endpoints
         existing = old or [sched.max_num_batched_tokens]
         if decode_bound >= min(existing):
@@ -3584,7 +3574,8 @@ class SpecDecodeBaseProposer:
         cc.compile_ranges_endpoints = sorted({decode_bound, *existing})
         logger.info(
             "Draft compile ranges split at decode bound %d (endpoints %s).",
-            decode_bound, cc.compile_ranges_endpoints,
+            decode_bound,
+            cc.compile_ranges_endpoints,
         )
         try:
             yield
@@ -3652,9 +3643,7 @@ class SpecDecodeBaseProposer:
                     f"attention layer {draft_name!r} (expected "
                     f"{target_name!r} among the target layers)"
                 )
-            draft_spec = all_attn_layers[draft_name].get_kv_cache_spec(
-                self.vllm_config
-            )
+            draft_spec = all_attn_layers[draft_name].get_kv_cache_spec(self.vllm_config)
             target_spec = all_attn_layers[target_name].get_kv_cache_spec(
                 self.vllm_config
             )
@@ -3851,14 +3840,15 @@ class SpecDecodeBaseProposer:
             return
         lm_head = getattr(self.model, "lm_head", None)
         assert lm_head is not None and hasattr(lm_head, "weight"), (
-            "VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP: draft has no lm_head")
+            "VLLM_SELF_SPEC_DRAFT_VOCAB_KEEP: draft has no lm_head"
+        )
         assert not self._enable_probabilistic_draft_probs, (
-            "vres slice supports greedy drafts only")
-        keep = torch.load(path, weights_only=False).to(
-            lm_head.weight.device).long()
+            "vres slice supports greedy drafts only"
+        )
+        keep = torch.load(path, weights_only=False).to(lm_head.weight.device).long()
         new_w = nn.Parameter(
-            lm_head.weight.data.index_select(0, keep).clone(),
-            requires_grad=False)
+            lm_head.weight.data.index_select(0, keep).clone(), requires_grad=False
+        )
         # The draft's lm_head may BE the target's module
         # (_maybe_share_lm_head fires when the checkpoints' heads are
         # byte-identical -- true for the W4 recipe, which skips lm_head).
@@ -3870,28 +3860,31 @@ class SpecDecodeBaseProposer:
         new_head._parameters = dict(lm_head._parameters)
         new_head._buffers = dict(lm_head._buffers)
         new_head.weight = new_w
-        for attr in ("num_embeddings", "num_embeddings_padded",
-                     "org_vocab_size"):
+        for attr in ("num_embeddings", "num_embeddings_padded", "org_vocab_size"):
             if hasattr(new_head, attr):
                 setattr(new_head, attr, keep.numel())
         self.model.lm_head = new_head
         self._vres_map = keep.to(torch.int64)
         logger.info(
             "[vres] draft lm_head sliced to %d rows (detached copy; "
-            "target head untouched)", keep.numel(),
+            "target head untouched)",
+            keep.numel(),
         )
 
     def _vres_remap(self, token_ids: torch.Tensor) -> torch.Tensor:
         """Map sliced-vocab argmax indices back to global token ids."""
         if self._vres_map is None:
             return token_ids
-        if getattr(self, "_vres_dbg_n", 0) < 8 and os.environ.get(
-                "W7_VRES_DEBUG"):
+        if getattr(self, "_vres_dbg_n", 0) < 8 and os.environ.get("W7_VRES_DEBUG"):
             self._vres_dbg_n = getattr(self, "_vres_dbg_n", 0) + 1
             loc = token_ids.flatten()[:8].tolist()
             glob = self._vres_map[token_ids].flatten()[:8].tolist()
-            logger.info("[vres-dbg] shape=%s local=%s -> global=%s",
-                        tuple(token_ids.shape), loc, glob)
+            logger.info(
+                "[vres-dbg] shape=%s local=%s -> global=%s",
+                tuple(token_ids.shape),
+                loc,
+                glob,
+            )
         return self._vres_map[token_ids]
 
     def _maybe_share_lm_head(self, target_language_model: nn.Module) -> None:
@@ -4160,14 +4153,8 @@ class SpecDecodeBaseProposer:
             # Phase 55: keep idle-rank dummy REPLAYS of the step-0 FULL graph
             # inert -- PAD slots (no KV writes) and zero seq_lens (no reads).
             # Real propose() refreshes both buffers before its replay.
-            if (
-                self._step0_full_cg
-                and capture_full_attn
-                and not is_graph_capturing
-            ):
-                self._slot_mapping_buffer[:num_input_tokens].fill_(
-                    PADDING_SLOT_ID
-                )
+            if self._step0_full_cg and capture_full_attn and not is_graph_capturing:
+                self._slot_mapping_buffer[:num_input_tokens].fill_(PADDING_SLOT_ID)
                 assert self._step0_seq_lens is not None
                 self._step0_seq_lens.zero_()
 
@@ -4177,11 +4164,7 @@ class SpecDecodeBaseProposer:
             # in-range + all-valid (no OOB / NaN); the real propose refreshes
             # them before its replay.
             dummy_add_kwargs = self._draft_forward_additional_kwargs
-            if (
-                self._draft_fullcg
-                and self._kv_window > 0
-                and capture_full_attn
-            ):
+            if self._draft_fullcg and self._kv_window > 0 and capture_full_attn:
                 self._populate_dummy_scratchpad(num_input_tokens)
                 dummy_add_kwargs = dict(self._draft_forward_additional_kwargs or {})
                 dummy_add_kwargs[SELF_SPEC_DRAFT_SCRATCHPAD_KEY] = (
@@ -4506,12 +4489,10 @@ class SpecDecodeBaseProposer:
                     uniform_decode,
                 )
             if _memo_key is not None and _memo_key in self._dp_coord_memo:
-                should_ubatch, _ntad, synced_cudagraph_mode = (
-                    self._dp_coord_memo[_memo_key]
-                )
-                num_tokens_across_dp = (
-                    _ntad.clone() if _ntad is not None else None
-                )
+                should_ubatch, _ntad, synced_cudagraph_mode = self._dp_coord_memo[
+                    _memo_key
+                ]
+                num_tokens_across_dp = _ntad.clone() if _ntad is not None else None
             else:
                 should_ubatch, num_tokens_across_dp, synced_cudagraph_mode = (
                     coordinate_batch_across_dp(
@@ -4524,9 +4505,7 @@ class SpecDecodeBaseProposer:
                         # below never sync the GPU stream (the NCCL path's
                         # chain coordination drains the whole step-0 draft
                         # forward). Same result, no stream drain.
-                        force_cpu_group=(
-                            envs.VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU
-                        ),
+                        force_cpu_group=(envs.VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU),
                     )
                 )
                 if _memo_key is not None:
@@ -4550,8 +4529,7 @@ class SpecDecodeBaseProposer:
                 # uniform, sizes multiples of q) so the dispatcher's uniform
                 # bump cannot alter the agreed size and trip the assert.
                 _sync_uniform = (
-                    uniform_decode
-                    and synced_cudagraph_mode == CUDAGraphMode.FULL.value
+                    uniform_decode and synced_cudagraph_mode == CUDAGraphMode.FULL.value
                 )
                 cudagraph_mode, batch_desc = self.cudagraph_dispatcher.dispatch(
                     num_tokens_padded,
@@ -4579,8 +4557,11 @@ class SpecDecodeBaseProposer:
                 "uniform=%s desc=%s",
                 self.dp_rank,
                 "propose" if self._in_propose else "dummy",
-                num_tokens, num_tokens_padded, cudagraph_mode,
-                uniform_decode, batch_desc,
+                num_tokens,
+                num_tokens_padded,
+                cudagraph_mode,
+                uniform_decode,
+                batch_desc,
             )
         return cudagraph_mode, num_tokens_padded, num_tokens_across_dp
 

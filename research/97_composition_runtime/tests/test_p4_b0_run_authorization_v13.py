@@ -31,13 +31,15 @@ def _package() -> dict:
 class RegisteredPackageTests(unittest.TestCase):
     """The checked-in V13 package must validate against every frozen source."""
 
-    def test_package_validates(self) -> None:
-        result = validate_authorization_v13(_package())
-        self.assertEqual(result["status"], "pass")
-        self.assertFalse(result["gpu_executed"])
-        self.assertEqual(result["physical_boot_count"], 9)
-        self.assertEqual(result["capture_count"], 432)
-        self.assertEqual(result["lane_count"], 2)
+    def test_package_is_consumed_and_refuses_relaunch(self) -> None:
+        """V13 was consumed by the screen that completed but failed certification.
+
+        Its registered output exists and the sources it hash-binds moved on
+        with the CPU-pinning and runtime-observation repairs, so the package
+        must refuse. The attempt records stay immutable.
+        """
+        with self.assertRaises(B0RunAuthorizationV13Error):
+            validate_authorization_v13(_package())
 
     def test_package_grants_no_downstream_authority(self) -> None:
         package = _package()
@@ -70,11 +72,27 @@ class RegisteredPackageTests(unittest.TestCase):
         )
         self.assertNotEqual(matrix.V13_OUTPUT_PATH, matrix.V12_OUTPUT_PATH)
 
-    def test_lane_assignment_matches_the_runner(self) -> None:
+    def test_lane_assignment_records_the_superseded_affinity(self) -> None:
+        """The block->GPU map is unchanged; only the CPU affinity moved on.
+
+        Lanes originally split all 192 cores, which guaranteed collision with
+        the unpinned Lean server. The consumed package keeps what it ran with.
+        """
         package = _package()
-        self.assertEqual(
-            package["execution_policy"]["lane_assignment"], matrix.lane_assignment()
+        for lane, current in zip(
+            package["execution_policy"]["lane_assignment"],
+            matrix.lane_assignment(),
+            strict=True,
+        ):
+            self.assertEqual(lane["block_ids"], current["block_ids"])
+            self.assertEqual(lane["physical_gpu_uuid"], current["physical_gpu_uuid"])
+        claimed = sum(
+            int(lane["cpu_affinity"].split("-")[1])
+            - int(lane["cpu_affinity"].split("-")[0])
+            + 1
+            for lane in package["execution_policy"]["lane_assignment"]
         )
+        self.assertEqual(claimed, 192)
 
 
 class FailClosedTests(unittest.TestCase):

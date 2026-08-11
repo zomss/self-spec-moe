@@ -45,6 +45,44 @@ class KOffRuntimeError(RuntimeError):
     """Raised when the live K4/OFF contract cannot be proven."""
 
 
+_RUNTIME_OBSERVATION: dict[str, str] = {}
+
+
+def observe_chain_runtime_mode(mode: str) -> None:
+    """Record the cudagraph mode the draft chain actually dispatched.
+
+    The proposer decides the chain's mode per forward. Captures previously
+    carried only the runner's *declared* ``graph_grade``, so a silent fallback
+    (PIECEWISE -> NONE on a dispatch miss) left no trace in the evidence.
+
+    Args:
+        mode: The dispatched ``CUDAGraphMode``, stringified.
+    """
+    _RUNTIME_OBSERVATION["chain_runtime_mode"] = str(mode)
+
+
+def observed_hardware_id() -> str:
+    """Return the UUID of the CUDA device this process is actually using.
+
+    Returns:
+        The live device UUID, or ``"unavailable"`` when CUDA cannot report it.
+    """
+    cached = _RUNTIME_OBSERVATION.get("observed_hardware_id")
+    if cached is not None:
+        return cached
+    observed = "unavailable"
+    try:
+        from vllm.platforms import current_platform
+
+        raw = current_platform.get_device_uuid(0)
+        text = str(raw)
+        observed = text if text.startswith("GPU-") else f"GPU-{text}"
+    except Exception:  # noqa: BLE001 - observation must never break a capture
+        observed = "unavailable"
+    _RUNTIME_OBSERVATION["observed_hardware_id"] = observed
+    return observed
+
+
 def canonicalize_p4_request_ids(
     request_ids: Sequence[object],
     frozen_request_ids: Sequence[str],
@@ -1521,8 +1559,7 @@ def make_runner_evidence(
                 f"{next_action.draft_query_width}"
             )
         if not metadata.pure_decode and (
-            not metadata.capture_cohort_arm
-            or metadata.decode_req_ids
+            not metadata.capture_cohort_arm or metadata.decode_req_ids
         ):
             raise KOffRuntimeError(
                 f"{next_action.action_id} non-decode dispatch requires "

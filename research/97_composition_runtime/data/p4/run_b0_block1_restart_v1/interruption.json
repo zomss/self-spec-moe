@@ -1,0 +1,58 @@
+{
+  "artifact_id": "p4-b0-block1-restart-v14-interruption",
+  "attempt": {
+    "adapted_rounds_emitted": false,
+    "captures_by_boot": {
+      "p4-b0-b1-p1-off": 48,
+      "p4-b0-b1-p2-k4": 38
+    },
+    "combination_emitted": false,
+    "complete_captures_emitted": 86,
+    "completed_physical_boots": 1,
+    "expected_physical_boots": 3,
+    "gpu_model_executed": true,
+    "restart_block_id": 1,
+    "score_emitted": false
+  },
+  "authorization": {
+    "package_id": "p4-b0-value-screen-block-restart-authorization-v14",
+    "path": "research/97_composition_runtime/data/p4/p4_b0_block_restart_authorization_v14.json",
+    "sha256": "b984149a4762743e73658e6653000353c74abfc084faae85e9b63df534f17d58"
+  },
+  "diagnostic": {
+    "certification_outcome_unknown": true,
+    "classification": "operator_stop_for_engine_change",
+    "gpu_fault_observed": false,
+    "note": "stopped deliberately before any combined score existed, so no result was seen and discarded; the outcome commitment was never exercised",
+    "reason": "draft_chain_replay_safety_work_authorized_by_user",
+    "runtime_fault_observed": false,
+    "terminal_transcript": "research/97_composition_runtime/logs/p4_b0_block1_restart_v14_terminal.log",
+    "termination": {
+      "requested_by_user": true,
+      "signal": "SIGINT"
+    }
+  },
+  "disposition": {
+    "partial_resume_attempted": false,
+    "post_stop_gpu_compute_processes": 0,
+    "post_stop_runner_processes": 0,
+    "requires_fresh_authorization": true,
+    "retry_attempted": false,
+    "scoring_allowed": false,
+    "v14_consumed": true
+  },
+  "invalidation": {
+    "combining_across_engine_change_forbidden": true,
+    "reason": "draft_chain_execution_path_will_change",
+    "requires_full_rescreen_after_change": true,
+    "source_run_blocks_2_and_3_measured_with_eager_draft_chain": true
+  },
+  "output": {
+    "path": "research/97_composition_runtime/data/p4/run_b0_block1_restart_v1",
+    "preserve_without_overwrite_or_resume": true,
+    "score_present": false
+  },
+  "record_type": "p4_b0_block_restart_interruption",
+  "schema_version": 1,
+  "scored": false
+}

@@ -231,12 +231,23 @@ GPU1_UUID = "GPU-ba39f4f0-61fe-34ca-c1af-ffe565b70923"
 DEVICE_PIN_ENV = "CUDA_VISIBLE_DEVICES"
 CACHE_ROOT_ENV = "VLLM_CACHE_ROOT"
 SOURCE_SNAPSHOT_ENV = "VLLM_SELF_SPEC_P4_SOURCE_SNAPSHOT"
+# CPU affinity: the PIECEWISE draft chain is host-launch-bound (~98 launches
+# and ~16 ms host per step against ~5.3 ms GPU), so a preempted dispatch thread
+# stalls the decode loop directly. The V13 screen split all 192 cores between
+# the two lanes, leaving nothing for the unpinned Lean server (~99% CPU across
+# 8 repls) and clangd -- so every burst landed on a lane's cores. Each engine
+# needs ~2 cores of real work, so the lanes take a small dedicated set and the
+# rest stays free. Pinning ourselves does not exclude others; the co-resident
+# Lean server must be pinned to LEAN_SERVER_CPUS as well.
+LANE_A_CPUS = "0-15"
+LANE_B_CPUS = "96-111"
+LEAN_SERVER_CPUS = "32-79"
 V12_LANE_ASSIGNMENT = (
     {
         "lane_id": "lane-a",
         "physical_gpu_index": 0,
         "physical_gpu_uuid": GPU0_UUID,
-        "cpu_affinity": "0-95",
+        "cpu_affinity": LANE_A_CPUS,
         "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
         "block_ids": [1, 3],
     },
@@ -244,7 +255,7 @@ V12_LANE_ASSIGNMENT = (
         "lane_id": "lane-b",
         "physical_gpu_index": 1,
         "physical_gpu_uuid": GPU1_UUID,
-        "cpu_affinity": "96-191",
+        "cpu_affinity": LANE_B_CPUS,
         "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-b",
         "block_ids": [2],
     },
@@ -6226,6 +6237,32 @@ def _prompt_group(
     return [row["record_id"] for row in rows]
 
 
+def _declared_hardware_id(
+    authorization: Mapping[str, Any], block_id: int, gpu: Mapping[str, Any]
+) -> str:
+    """Return the GPU this cell will actually run on.
+
+    Lane-parallel packages place each block on its own GPU, so the frozen
+    single-GPU ``gpu_assignment`` no longer describes where a cell executes.
+    The recorder cross-checks this against the live device and fails closed.
+
+    Args:
+        authorization: The resolved authorization package.
+        block_id: The capture block owning this cell.
+        gpu: The base authorization's frozen GPU assignment.
+
+    Returns:
+        The lane's physical GPU UUID, or the frozen assignment's UUID.
+    """
+    if authorization.get("package_id") in {
+        V12_PACKAGE_ID,
+        V13_PACKAGE_ID,
+        V14_PACKAGE_ID,
+    }:
+        return lane_for_block(block_id)["physical_gpu_uuid"]
+    return gpu["uuid"]
+
+
 def _capture_template(
     authorization: Mapping[str, Any],
     manifest: Mapping[str, Any],
@@ -6909,6 +6946,46 @@ def _verify_executing_code_against_snapshot() -> None:
     )
 
 
+def _write_boot_observation(spec: Mapping[str, Any]) -> None:
+    """Record what this boot actually ran on, beside its captures.
+
+    The V13 screen declared ``hardware_id`` from the frozen single-GPU
+    assignment while running on GPUs 0 and 1, and carried only a declared
+    ``graph_grade``. The capture is schema-locked and its schema is hash-bound
+    into the frozen runner/scorer contract, so the observation is recorded per
+    boot instead: a boot has exactly one device and one chain mode.
+
+    Args:
+        spec: The boot spec whose engine has just finished its cells.
+    """
+    from vllm.v1.spec_decode.koff_runtime import (
+        _RUNTIME_OBSERVATION,
+        observed_hardware_id,
+    )
+
+    declared_lane = spec.get("lane") or {}
+    record = {
+        "schema_version": 1,
+        "record_type": "p4_b0_boot_observation",
+        "boot_id": spec["boot_id"],
+        "boot_block_id": spec["boot_block_id"],
+        "action_id": spec["action_id"],
+        "observed_hardware_id": observed_hardware_id(),
+        "declared_lane_gpu_uuid": declared_lane.get("physical_gpu_uuid"),
+        "declared_lane_id": declared_lane.get("lane_id"),
+        "chain_runtime_mode": _RUNTIME_OBSERVATION.get(
+            "chain_runtime_mode", "unobserved"
+        ),
+        "declared_graph_grade": "fullcg-piecewise",
+        "cpu_affinity": sorted(os.sched_getaffinity(0)),
+    }
+    path = Path(spec["capture_dir"]).parent.parent / "observations"
+    path.mkdir(parents=True, exist_ok=True)
+    (path / f"{spec['boot_id']}.json").write_text(
+        json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+
 def run_boot_child(spec_path: Path) -> None:
     """Run all 48 cells in one engine process after parent authorization."""
     _verify_executing_code_against_snapshot()
@@ -6975,6 +7052,7 @@ def run_boot_child(spec_path: Path) -> None:
                 )
     finally:
         engine.engine_core.shutdown()
+    _write_boot_observation(spec)
     captures = sorted(Path(spec["capture_dir"]).glob("*.json"))
     _require(len(captures) == 48, "physical boot did not emit 48 captures")
     _require(

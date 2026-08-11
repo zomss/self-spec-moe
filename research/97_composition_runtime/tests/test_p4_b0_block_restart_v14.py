@@ -31,14 +31,15 @@ def _package() -> dict:
 class SelectionIntegrityTests(unittest.TestCase):
     """The block choice must be declared, and not a choice about the outcome."""
 
-    def test_package_validates(self) -> None:
-        result = validate_authorization_v14(_package())
-        self.assertEqual(result["status"], "pass")
-        self.assertFalse(result["gpu_executed"])
-        self.assertEqual(result["restart_block_id"], 1)
-        self.assertEqual(result["rerun_capture_count"], 144)
-        self.assertEqual(result["reused_capture_count"], 288)
-        self.assertEqual(result["scored_capture_count"], 432)
+    def test_package_is_consumed_and_refuses_relaunch(self) -> None:
+        """V14 was consumed by the restart stopped for the CPU-pinning repair.
+
+        Its registered output exists and the sources it hash-binds moved on
+        with the CPU-pinning and runtime-observation repairs, so the package
+        must refuse. The attempt records stay immutable.
+        """
+        with self.assertRaises(B0RunAuthorizationV14Error):
+            validate_authorization_v14(_package())
 
     def test_selection_is_declared_before_the_rerun(self) -> None:
         selection = _package()["block_selection"]
