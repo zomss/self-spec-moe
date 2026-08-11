@@ -1,0 +1,18 @@
+{
+  "claim_b": "knapsack beats random and worst on confirmed tau, per regime, outside tie-set noise",
+  "consolidation_question": "one robust identity across regimes, or regime-split sets",
+  "controls": [
+    "knapsack",
+    "count_matched_random",
+    "count_matched_worst"
+  ],
+  "escalation": "greedy forward selection only where the product bound fails badly",
+  "frozen_before_measurement": true,
+  "random_set_control_seeds": [
+    98001,
+    98002,
+    98003
+  ],
+  "record_type": "w98_d2_controls",
+  "schema_version": 1
+}

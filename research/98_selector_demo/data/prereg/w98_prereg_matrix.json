@@ -1,0 +1,87 @@
+{
+  "content_seeds": [
+    0,
+    1
+  ],
+  "gate_order": [
+    "G98-0",
+    "G98-A",
+    "G98-B",
+    "G98-C",
+    "G98-D"
+  ],
+  "gate_state": {
+    "G98-0": "passed",
+    "G98-A": "not_run",
+    "G98-B": "not_run",
+    "G98-C": "not_run",
+    "G98-D": "not_run"
+  },
+  "gpu_authorized": false,
+  "lattice": {
+    "composed_count": 30,
+    "k_depths": [
+      2,
+      4
+    ],
+    "kmax_stream": 8,
+    "quant": [
+      "target-matching",
+      "w4a16-quantized"
+    ],
+    "single_lever_count": 8,
+    "skip_counts": [
+      0,
+      4,
+      8
+    ],
+    "window": [
+      128,
+      256,
+      512,
+      1024,
+      "off"
+    ]
+  },
+  "phase": 98,
+  "record_type": "w98_preregistration_matrix",
+  "regimes": [
+    "R4",
+    "R5",
+    "R5cot",
+    "R8",
+    "R1",
+    "R6"
+  ],
+  "round2": {
+    "armed_steps_target_per_cell": [
+      2000,
+      4000
+    ],
+    "paired_prompts_across_compositions": true,
+    "product_bound": "f_set >= prod f_i (admit-only)",
+    "replication_axis": "content_seeds_not_boots",
+    "screen_then_confirm": true,
+    "uncertainty": "request_level_bootstrap"
+  },
+  "schema_version": 1,
+  "status": "frozen_before_any_scored_data",
+  "tolerances": {
+    "d3_omniscient_fraction": 0.9,
+    "epsilon_arm": 0.015,
+    "non_regression_tolerance": 0.01,
+    "positive_claim_rule": "+2% LCB",
+    "screen_tolerance_note": "declared with the product bound at G98-C"
+  },
+  "u_buckets": {
+    "edges": [
+      0,
+      256,
+      1024,
+      3072
+    ],
+    "final_boundaries_are_a_scored_output_of_the_first_round2_run": true,
+    "provisional": true,
+    "right_open": true
+  }
+}

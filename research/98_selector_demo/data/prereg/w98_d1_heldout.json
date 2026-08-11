@@ -1,0 +1,100 @@
+{
+  "coverage_claim": "95% intervals for q_a(x) cover held-out composed values",
+  "false_elimination_budget": 0,
+  "fit_set_count": 22,
+  "fit_uses_single_lever_profiles_only": true,
+  "frozen_before_measurement": true,
+  "heldout": [
+    {
+      "quant": "target-matching",
+      "skip_count": 4,
+      "window": 128
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 8,
+      "window": 128
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 8,
+      "window": 256
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 4,
+      "window": 256
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 4,
+      "window": 1024
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 8,
+      "window": 1024
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 8,
+      "window": "off"
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 4,
+      "window": "off"
+    }
+  ],
+  "heldout_count": 8,
+  "on_coverage_failure": "local non-pruning mask (W14 semantics), not global failure",
+  "record_type": "w98_d1_heldout_split",
+  "schema_version": 1,
+  "selection_rule": "deterministic balanced fraction, no sampling: each quant path appears 4x, each skip count 4x, each held-out window 2x, quant x skip balanced within each corner",
+  "spans": {
+    "kv_dominated": [
+      {
+        "quant": "target-matching",
+        "skip_count": 4,
+        "window": 1024
+      },
+      {
+        "quant": "w4a16-quantized",
+        "skip_count": 8,
+        "window": 1024
+      },
+      {
+        "quant": "target-matching",
+        "skip_count": 8,
+        "window": "off"
+      },
+      {
+        "quant": "w4a16-quantized",
+        "skip_count": 4,
+        "window": "off"
+      }
+    ],
+    "weight_dominated": [
+      {
+        "quant": "target-matching",
+        "skip_count": 4,
+        "window": 128
+      },
+      {
+        "quant": "w4a16-quantized",
+        "skip_count": 8,
+        "window": 128
+      },
+      {
+        "quant": "target-matching",
+        "skip_count": 8,
+        "window": 256
+      },
+      {
+        "quant": "w4a16-quantized",
+        "skip_count": 4,
+        "window": 256
+      }
+    ]
+  }
+}
