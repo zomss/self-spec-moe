@@ -38,9 +38,10 @@ sys.path.insert(0, str(REPO_ROOT / "research/97_composition_runtime/scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98a-smoke-authorization-v1"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v1.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_a"
+PACKAGE_ID = "w98-g98a-smoke-authorization-v2"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98a_authorization_v2.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_a_v2"
+V1_FINDING_PATH = "research/98_selector_demo/data/g98_a/finding.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PROMPT_MANIFEST = "research/98_selector_demo/data/prereg/w98_prompt_manifest.json"
 TARGET_MODEL = (
@@ -140,6 +141,16 @@ def expected_authorization() -> dict[str, Any]:
             "target": TARGET_MODEL,
             "quantized_draft": QUANT_DRAFT_CKPT,
             "quantized_draft_present": Path(QUANT_DRAFT_CKPT).is_dir(),
+        },
+        "consumed_v1": {
+            "finding": matrix._file_reference(V1_FINDING_PATH),
+            "boots_passed": 0,
+            "quant_assumption_disproven": False,
+            "causes_repaired": [
+                "C1 operator bug: PARTIAL_REPLICA '0' now mapped to ''",
+                "C2 contract wall: w98-lattice boot scope registered",
+            ],
+            "lattice_unchanged_at": 30,
         },
         "boot_classes": list(BOOT_CLASSES),
         "assumption_under_test": {

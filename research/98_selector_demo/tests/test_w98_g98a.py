@@ -97,6 +97,14 @@ class GateBoundaryTests(unittest.TestCase):
             self.assertFalse(auth[denied], denied)
         self.assertFalse(_package()["next_artifact"]["may_authorize_round1"])
 
+    def test_v1_is_bound_without_disproving_the_quant_axis(self) -> None:
+        """v1 failed on an operator bug and a contract wall, not on quant."""
+        v1 = _package()["consumed_v1"]
+        self.assertEqual(v1["boots_passed"], 0)
+        self.assertFalse(v1["quant_assumption_disproven"])
+        self.assertEqual(v1["lattice_unchanged_at"], 30)
+        self.assertEqual(len(v1["causes_repaired"]), 2)
+
     def test_records_the_lattice_consequence_of_failure(self) -> None:
         a = _package()["assumption_under_test"]
         self.assertEqual(a["prereg_status"], "unverified")
