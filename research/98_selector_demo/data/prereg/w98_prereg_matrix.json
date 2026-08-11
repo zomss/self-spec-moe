@@ -1,7 +1,24 @@
 {
+  "amendments": [
+    {
+      "before_any_scored_data": true,
+      "date": "2026-08-11",
+      "field": "content_seeds",
+      "from": [
+        0,
+        1
+      ],
+      "reason": "load_regime draws at offset seed*n, so seeds 0 and 1 reproduce Phase 97's exact prompts (offsets 0 and 32 at n=32). Phase 98 requires fresh phase-local prompts; seeds 2 and 3 draw at offsets 64 and 96.",
+      "to": [
+        2,
+        3
+      ],
+      "verified": "zero token-sequence overlap with the Phase 97 bundle"
+    }
+  ],
   "content_seeds": [
-    0,
-    1
+    2,
+    3
   ],
   "gate_order": [
     "G98-0",
@@ -44,6 +61,24 @@
     ]
   },
   "phase": 98,
+  "prompt_manifest": {
+    "bundle_path": "research/98_selector_demo/data/prereg/w98_prompt_tokens.jsonl.gz",
+    "bundle_sha256": "1610786757f4c613b6358cb95c735b04461b4d070d2bb0bdcb8bbf6b5a5c8c22",
+    "disjoint_from_phase_97": true,
+    "known_cross_regime_sharing": {
+      "matches_phase_97": true,
+      "note": "R1 and R8 both draw unfiltered (context_target None); the same structure holds in the Phase 97 bundle, so this is an inherited property of the regime family, not a phase-98 defect. Recorded because D2(c)'s u-axis curves for R1 and R8 are therefore not fully content-independent.",
+      "pairs": [
+        "R1/R8 share 16 prompts per seed"
+      ]
+    },
+    "manifest_id": "w98-six-regime-prompts-v1",
+    "manifest_path": "research/98_selector_demo/data/prereg/w98_prompt_manifest.json",
+    "manifest_sha256": "ad109a34fc7a174f4609047a7663a78f0fa30b59e88aeb9d3ebbd6f9434fff98",
+    "per_regime_seed_disjointness": true,
+    "prompt_records": 384,
+    "unique_token_sequences": 352
+  },
   "record_type": "w98_preregistration_matrix",
   "regimes": [
     "R4",
@@ -65,7 +100,7 @@
     "uncertainty": "request_level_bootstrap"
   },
   "schema_version": 1,
-  "status": "frozen_before_any_scored_data",
+  "status": "frozen_before_any_scored_data_manifest_committed",
   "tolerances": {
     "d3_omniscient_fraction": 0.9,
     "epsilon_arm": 0.015,
