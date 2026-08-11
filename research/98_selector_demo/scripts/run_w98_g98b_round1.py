@@ -73,8 +73,13 @@ DRAFT_LAYERS = 36
 KV_BYTES_PER_TOKEN = DRAFT_LAYERS * 8 * 128 * 2 * 2
 WINDOW_SINKS = 16
 SKIP_SETS = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
-MEASURE_PROMPTS = 4
-MEASURE_TOKENS = 64
+# Sampling depth. The factored model is STATE-INDEXED, so each regime is
+# measured at its own registered batch rather than a fixed prompt count --
+# otherwise R1 (batch 1) and R6 (batch 32) would both be fit at the wrong
+# state. Token depth sets the stability of the mean armed step time, which
+# sets the fitted envelope width and therefore D1's coverage.
+MEASURE_TOKENS = 256
+MIN_ARMED_STEPS = 64
 
 
 class G98BError(RuntimeError):
@@ -201,6 +206,17 @@ def expected_authorization() -> dict[str, Any]:
                 "the P4 capture path still asserts target/draft weight equality "
                 "at koff_runtime.py:1927 and :2503 and would refuse a quantized "
                 "boot; Round 2 must resolve that, Round 1 does not touch it"
+            ),
+        },
+        "sampling": {
+            "prompts_per_regime": "the regime's registered batch",
+            "state_indexed": True,
+            "measure_tokens": MEASURE_TOKENS,
+            "min_armed_steps_for_a_usable_mean": MIN_ARMED_STEPS,
+            "rationale": (
+                "the factored model is state-indexed, so each regime is "
+                "measured at its own batch; token depth sets the stability of "
+                "the mean, which sets the envelope width and hence coverage"
             ),
         },
         "resource_note": {
@@ -448,7 +464,7 @@ def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
     observations: dict[str, Any] = {}
     try:
         for regime_id, spec in regimes.items():
-            prompts = _prompts_for(regime_id, MEASURE_PROMPTS)
+            prompts = _prompts_for(regime_id, spec["batch"])
             before = _trace_len(trace_path)
             for index, tokens in enumerate(prompts):
                 engine.add_request(
@@ -461,9 +477,14 @@ def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
             while engine.has_unfinished_requests():
                 engine.step()
             steps = _armed_steps(trace_path, before)
+            usable = len(steps) >= MIN_ARMED_STEPS
             observations[regime_id] = {
                 "armed_step_count": len(steps),
-                "mean_armed_step_s": statistics.mean(steps) if steps else None,
+                "usable": usable,
+                "mean_armed_step_s": statistics.mean(steps) if usable else None,
+                "stdev_armed_step_s": (
+                    statistics.stdev(steps) if len(steps) > 1 else None
+                ),
                 "context_tokens": int(statistics.mean(len(t) for t in prompts)),
                 "batch": spec["batch"],
             }

@@ -57,6 +57,13 @@
     "quantized_shared_kv_blocks": 22190,
     "shapes_sized_against": "quantized"
   },
+  "sampling": {
+    "measure_tokens": 256,
+    "min_armed_steps_for_a_usable_mean": 64,
+    "prompts_per_regime": "the regime's registered batch",
+    "rationale": "the factored model is state-indexed, so each regime is measured at its own batch; token depth sets the stability of the mean, which sets the envelope width and hence coverage",
+    "state_indexed": true
+  },
   "schema_version": 1,
   "source_artifacts": {
     "cost_model": {
@@ -85,11 +92,11 @@
     },
     "round1_runner": {
       "path": "research/98_selector_demo/scripts/run_w98_g98b_round1.py",
-      "sha256": "86d6203ee4c846c722206e0c6713882f9ade5c2e48ddbdf37d154017ec99857d"
+      "sha256": "86afa6be7ab3dc912a4ce24347ed2f1b9137fe05d9f08b458218502308006177"
     },
     "round1_tests": {
       "path": "research/98_selector_demo/tests/test_w98_g98b.py",
-      "sha256": "4efc6f87463f1e068b457604d665134ec65453285b600fcf4d4413d4f646834e"
+      "sha256": "1836af23ba769e8cf2754b68b9d6b814818e3a15cc623219f28a99886da851e3"
     }
   },
   "stages": [

@@ -301,3 +301,22 @@ class MeasurementWiringTests(unittest.TestCase):
             self.assertFalse(result["d1_exercised"])
             self.assertFalse(result["may_authorize_round2"])
             self.assertTrue(result["predictions_committed_before_reveal"])
+
+
+class SamplingDepthTests(unittest.TestCase):
+    """The fit must be taken at each regime's registered state."""
+
+    def test_sampling_is_state_indexed(self) -> None:
+        sampling = _package()["sampling"]
+        self.assertTrue(sampling["state_indexed"])
+        self.assertEqual(
+            sampling["prompts_per_regime"], "the regime's registered batch"
+        )
+
+    def test_token_depth_is_registered(self) -> None:
+        self.assertEqual(_package()["sampling"]["measure_tokens"], gate.MEASURE_TOKENS)
+        self.assertGreaterEqual(gate.MEASURE_TOKENS, 256)
+
+    def test_a_thin_sample_yields_no_mean(self) -> None:
+        """An unusable sample must not silently become a fitted point."""
+        self.assertGreaterEqual(gate.MIN_ARMED_STEPS, 64)
