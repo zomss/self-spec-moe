@@ -218,3 +218,104 @@ class W98InvariantTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class _Model:
+    def __init__(self, params: dict) -> None:
+        self._params = params
+
+    def named_parameters(self):  # noqa: ANN201 - duck-typed for the proof
+        return list(self._params.items())
+
+
+def _param():
+    """A real storage-backed parameter; the proof inspects storage identity."""
+    import torch
+
+    return torch.nn.Parameter(torch.zeros(4), requires_grad=False)
+
+
+def _target_model(layers=(0, 1, 2)) -> _Model:
+    return _Model({f"model.layers.{i}.mlp.down_proj.weight": _param() for i in layers})
+
+
+class AliasProofScopeTests(unittest.TestCase):
+    """The alias proof weakens per scope, and never silently disappears."""
+
+    def test_minimal_b0_still_demands_set_equality(self) -> None:
+        from vllm.v1.spec_decode.koff_runtime import validate_shared_weight_aliases
+
+        target = _target_model()
+        draft = _Model(dict(list(target.named_parameters())[:2]))
+        with self.assertRaises(KOffRuntimeError) as ctx:
+            validate_shared_weight_aliases(target, draft)
+        self.assertIn("parameter sets differ", str(ctx.exception))
+
+    def test_w98_admits_exactly_the_declared_skip_set(self) -> None:
+        from vllm.v1.spec_decode.koff_runtime import validate_shared_weight_aliases
+
+        target = _target_model()
+        draft = _Model(
+            {
+                k: v
+                for k, v in target.named_parameters()
+                if not k.startswith("model.layers.2.")
+            }
+        )
+        validate_shared_weight_aliases(
+            target,
+            draft,
+            boot_scope=BOOT_SCOPE_W98_LATTICE,
+            skip_layers="2",
+        )
+
+    def test_w98_refuses_absences_outside_the_skip_set(self) -> None:
+        from vllm.v1.spec_decode.koff_runtime import validate_shared_weight_aliases
+
+        target = _target_model()
+        draft = _Model(
+            {
+                k: v
+                for k, v in target.named_parameters()
+                if not k.startswith("model.layers.1.")
+            }
+        )
+        with self.assertRaises(KOffRuntimeError) as ctx:
+            validate_shared_weight_aliases(
+                target, draft, boot_scope=BOOT_SCOPE_W98_LATTICE, skip_layers="2"
+            )
+        self.assertIn("outside its declared skip set", str(ctx.exception))
+
+    def test_extra_draft_parameters_are_refused_in_every_scope(self) -> None:
+        from vllm.v1.spec_decode.koff_runtime import validate_shared_weight_aliases
+
+        target = _target_model()
+        draft = _Model({**dict(target.named_parameters()), "rogue.weight": _param()})
+        for scope in (BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE):
+            with self.assertRaises(KOffRuntimeError) as ctx:
+                validate_shared_weight_aliases(target, draft, boot_scope=scope)
+            self.assertIn("adds parameters", str(ctx.exception))
+
+    def test_independent_draft_proof_accepts_disjoint_weights(self) -> None:
+        from vllm.v1.spec_decode.koff_runtime import (
+            validate_independent_draft_weights,
+        )
+
+        target = _target_model()
+        draft = _Model({"model.layers.0.mlp.down_proj.weight_packed": _param()})
+        identity = validate_independent_draft_weights(target, draft)
+        self.assertEqual(identity.parameter_alias_count, 0)
+        self.assertTrue(identity.draft_version_id.startswith("w98-independent-draft-"))
+
+    def test_independent_draft_proof_refuses_a_half_aliased_draft(self) -> None:
+        """A partly-shared draft must not pass as 'independent'."""
+        from vllm.v1.spec_decode.koff_runtime import (
+            validate_independent_draft_weights,
+        )
+
+        target = _target_model()
+        shared = dict(target.named_parameters())["model.layers.0.mlp.down_proj.weight"]
+        draft = _Model({"model.layers.0.mlp.down_proj.weight_packed": shared})
+        with self.assertRaises(KOffRuntimeError) as ctx:
+            validate_independent_draft_weights(target, draft)
+        self.assertIn("shares target weight storage", str(ctx.exception))

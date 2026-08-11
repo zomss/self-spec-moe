@@ -193,6 +193,7 @@ from vllm.v1.spec_decode.koff_runtime import (
     slot_mapping_identity,
     validate_action_transport,
     validate_boot_config,
+    validate_independent_draft_weights,
     validate_shared_kv_aliases,
     validate_shared_weight_aliases,
 )
@@ -863,12 +864,11 @@ class GPUModelRunner(
         _sc = self.speculative_config
         if _sc is not None and _sc.num_speculative_tokens_per_batch_size:
             _uniform_lens = {1} | {
-                1 + k
-                for _, _, k in _sc.num_speculative_tokens_per_batch_size
-                if k > 0
+                1 + k for _, _, k in _sc.num_speculative_tokens_per_batch_size if k > 0
             }
         if _sc is not None and envs.VLLM_SELF_SPEC_POLICY_FILE:
             import json as _json
+
             with open(envs.VLLM_SELF_SPEC_POLICY_FILE) as _f:
                 _cells = _json.load(_f)["cells"]
             _uniform_lens |= {1} | {
@@ -3734,12 +3734,8 @@ class GPUModelRunner(
                 # Includes spec decode tokens.
                 with _self_spec_profiler().cpu_region("cpu_reject_parse"):
                     if (
-                        (
-                            envs.VLLM_SELF_SPEC_FAST_PARSE
-                            or envs.VLLM_SELF_SPEC_CPU_ORCH
-                        )
-                        and logprobs_tensors is None
-                    ):
+                        envs.VLLM_SELF_SPEC_FAST_PARSE or envs.VLLM_SELF_SPEC_CPU_ORCH
+                    ) and logprobs_tensors is None:
                         valid_sampled_token_ids = self._parse_spec_output_fast(
                             sampled_token_ids,
                             self.input_batch.vocab_size,
@@ -3800,9 +3796,7 @@ class GPUModelRunner(
                     f"{self.max_model_len}"
                 )
 
-                self.input_batch.token_ids_cpu[req_idx, start_idx:end_idx] = (
-                    sampled_ids
-                )
+                self.input_batch.token_ids_cpu[req_idx, start_idx:end_idx] = sampled_ids
                 self.input_batch.is_token_ids[req_idx, start_idx:end_idx] = True
                 self.input_batch.num_tokens_no_spec[req_idx] = end_idx
 
@@ -4007,8 +4001,11 @@ class GPUModelRunner(
         if os.environ.get("W7_STEP0_DEBUG"):
             logger.info(
                 "[main-dbg] rank=%d ntok=%d padded=%d mode=%s uniform=%s",
-                self.parallel_config.data_parallel_rank, num_tokens,
-                batch_descriptor.num_tokens, cudagraph_mode, uniform_decode,
+                self.parallel_config.data_parallel_rank,
+                num_tokens,
+                batch_descriptor.num_tokens,
+                cudagraph_mode,
+                uniform_decode,
             )
 
         return (
@@ -4169,9 +4166,7 @@ class GPUModelRunner(
             "num_computed_tokens": self.input_batch.num_computed_tokens_cpu[
                 :num_reqs
             ].tolist(),
-            "num_prompt_tokens": self.input_batch.num_prompt_tokens[
-                :num_reqs
-            ].tolist(),
+            "num_prompt_tokens": self.input_batch.num_prompt_tokens[:num_reqs].tolist(),
             "query_start_loc": self.query_start_loc.np[: num_reqs + 1].tolist(),
             "input_token_ids": self.input_ids.cpu[:num_tokens].tolist(),
             "positions": self.positions[:num_tokens].cpu().tolist(),
@@ -4902,14 +4897,10 @@ class GPUModelRunner(
                 else None
             )
             step0_num_tokens = (
-                getattr(self.drafter, "_last_step0_num_tokens", None)
-                if is_k4
-                else None
+                getattr(self.drafter, "_last_step0_num_tokens", None) if is_k4 else None
             )
             step0_batch_size = (
-                getattr(self.drafter, "_last_step0_batch_size", None)
-                if is_k4
-                else None
+                getattr(self.drafter, "_last_step0_batch_size", None) if is_k4 else None
             )
             step0_runtime_mode = (
                 getattr(self.drafter, "_last_step0_runtime_mode", None)
@@ -5415,9 +5406,7 @@ class GPUModelRunner(
                     else:
                         target_hidden_states = hidden_states[token_indices]
                 else:
-                    with _self_spec_profiler().cpu_region(
-                        "cpu_prepare_inputs_padded"
-                    ):
+                    with _self_spec_profiler().cpu_region("cpu_prepare_inputs_padded"):
                         (
                             common_attn_metadata,
                             token_indices_to_sample,
@@ -5542,13 +5531,26 @@ class GPUModelRunner(
                     if self._koff_runtime_enabled:
                         if not isinstance(self.drafter, DraftModelProposer):
                             raise RuntimeError("minimal-B0 requires DraftModelProposer")
-                        self._koff_shared_weight_identity = (
-                            validate_shared_weight_aliases(
-                                self.model,
-                                self.drafter.model,
-                                self._koff_options.p4_logical_weight_version or None,
+                        # A distinct draft realization cannot alias the target,
+                        # so the target-matching proof is replaced by the
+                        # independence proof rather than skipped.
+                        if not self._koff_options.share_weights:
+                            self._koff_shared_weight_identity = (
+                                validate_independent_draft_weights(
+                                    self.model, self.drafter.model
+                                )
                             )
-                        )
+                        else:
+                            self._koff_shared_weight_identity = (
+                                validate_shared_weight_aliases(
+                                    self.model,
+                                    self.drafter.model,
+                                    self._koff_options.p4_logical_weight_version
+                                    or None,
+                                    boot_scope=self._koff_options.boot_scope,
+                                    skip_layers=(self._koff_options.draft_skip_layers),
+                                )
+                            )
                     if (
                         hasattr(self.drafter, "model")
                         and is_mixture_of_experts(self.drafter.model)
@@ -6405,9 +6407,7 @@ class GPUModelRunner(
                 # (VLLM_SELF_SPEC_DRAFT_FULL_CG), also capture its FULL graph on
                 # the FULL (uniform-decode) capture pass.
                 # NOTE(lucas): this is a hack, need to clean up.
-                drafter_full_cg = getattr(
-                    self.drafter, "use_full_cudagraphs", False
-                )
+                drafter_full_cg = getattr(self.drafter, "use_full_cudagraphs", False)
                 capture_draft_full = (
                     drafter_full_cg
                     and cudagraph_runtime_mode == CUDAGraphMode.FULL
@@ -6450,9 +6450,7 @@ class GPUModelRunner(
                         # q=_step0_q (K+1 verify tokens + appended slots).
                         # Drive its capture at that shape so the captured
                         # keys match the runtime step-0 batches.
-                        drafter_num_tokens = (
-                            num_reqs_padded * self.drafter._step0_q
-                        )
+                        drafter_num_tokens = num_reqs_padded * self.drafter._step0_q
                     else:
                         drafter_num_tokens = num_reqs_padded
                 self.drafter.dummy_run(
@@ -7142,9 +7140,7 @@ class GPUModelRunner(
         # Phase 82: the descriptor implies its uniform width; fabricate the
         # dummy batch at that width (multi-width dynamic-SD capture).
         desc_qlen = (
-            desc.num_tokens // desc.num_reqs
-            if desc.uniform and desc.num_reqs
-            else None
+            desc.num_tokens // desc.num_reqs if desc.uniform and desc.num_reqs else None
         )
         for _ in range(num_warmups):
             self._dummy_run(

@@ -1504,12 +1504,94 @@ def validate_shared_kv_aliases(
     )
 
 
+def _skipped_layer_prefixes(skip_layers: str) -> tuple[str, ...]:
+    """Return the parameter-name prefixes a skip set legitimately removes."""
+    return tuple(
+        f"model.layers.{token.strip()}."
+        for token in skip_layers.split(",")
+        if token.strip()
+    )
+
+
+def validate_independent_draft_weights(
+    target_model: Any,
+    draft_model: Any,
+) -> SharedWeightIdentity:
+    """Prove a distinct draft realization shares NO weight storage.
+
+    A quantized draft cannot alias the target, so the target-matching proof is
+    false by design. The property that remains true and worth proving is the
+    opposite one: the two parameter sets are genuinely independent, so a
+    half-aliased state cannot pass unnoticed. Shared target KV is proven
+    separately by ``validate_shared_kv_aliases`` and is unaffected.
+
+    Args:
+        target_model: The target module.
+        draft_model: The distinct draft realization.
+
+    Returns:
+        An identity recording zero aliases.
+
+    Raises:
+        KOffRuntimeError: If any draft parameter shares target storage.
+    """
+    target_params = dict(target_model.named_parameters())
+    draft_params = dict(draft_model.named_parameters())
+    if not draft_params:
+        raise KOffRuntimeError("w98 draft model has no parameters")
+    target_storage = {_storage_description(param) for param in target_params.values()}
+    shared = sorted(
+        name
+        for name, param in draft_params.items()
+        if _storage_description(param) in target_storage
+    )
+    if shared:
+        raise KOffRuntimeError(
+            "w98 distinct draft realization unexpectedly shares target weight "
+            f"storage: {shared[:8]}"
+        )
+    parts = [
+        f"{name}:{_storage_description(param)}"
+        for name, param in sorted(draft_params.items())
+    ]
+    binding_id = f"w98-independent-draft-{_short_digest(parts)}"
+    return SharedWeightIdentity(
+        target_version_id=f"target-{_short_digest(sorted(target_storage))}",
+        draft_version_id=binding_id,
+        parameter_alias_count=0,
+        alias_binding_id=binding_id,
+    )
+
+
 def validate_shared_weight_aliases(
     target_model: Any,
     draft_model: Any,
     logical_version_id: str | None = None,
+    *,
+    boot_scope: str = BOOT_SCOPE_MINIMAL_B0,
+    skip_layers: str = "",
 ) -> SharedWeightIdentity:
-    """Prove every target-matching draft parameter aliases its target twin."""
+    """Prove every target-matching draft parameter aliases its target twin.
+
+    Under ``w98-lattice`` a skip set legitimately removes whole layers, so the
+    proof weakens from set EQUALITY to a SUBSET: every parameter the draft
+    still has must alias its target twin, the draft may add nothing, and the
+    only permitted absences are the declared skipped layers. That is strictly
+    weaker than minimal-b0 and still a real proof.
+
+    Args:
+        target_model: The target module.
+        draft_model: The draft module.
+        logical_version_id: The registered logical weight version, if any.
+        boot_scope: The registered boot scope being enforced.
+        skip_layers: The declared skip set, for the subset allowance.
+
+    Returns:
+        The alias identity.
+
+    Raises:
+        KOffRuntimeError: If the alias property fails for the active scope.
+    """
     if logical_version_id is not None and not _P4_LOGICAL_WEIGHT_VERSION.fullmatch(
         logical_version_id
     ):
@@ -1523,7 +1605,21 @@ def validate_shared_weight_aliases(
         raise KOffRuntimeError("minimal-B0 draft model has no parameters")
     missing = sorted(target_params.keys() - draft_params.keys())
     extra = sorted(draft_params.keys() - target_params.keys())
-    if missing or extra:
+    if extra:
+        raise KOffRuntimeError(
+            f"draft adds parameters the target lacks: extra_in_draft={extra}"
+        )
+    if missing and boot_scope == BOOT_SCOPE_W98_LATTICE:
+        allowed = _skipped_layer_prefixes(skip_layers)
+        unexplained = sorted(
+            name for name in missing if not (allowed and name.startswith(allowed))
+        )
+        if unexplained:
+            raise KOffRuntimeError(
+                "w98 draft is missing parameters outside its declared skip "
+                f"set: {unexplained[:8]}"
+            )
+    elif missing:
         raise KOffRuntimeError(
             "target/draft parameter sets differ: "
             f"missing_from_draft={missing}, extra_in_draft={extra}"

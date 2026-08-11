@@ -1,0 +1,18 @@
+{
+  "boot_id": "A3-target-matching-woff-skip4",
+  "checks": {
+    "engine_initializes": false
+  },
+  "exception": {
+    "message": "target/draft parameter sets differ: missing_from_draft=['model.layers.16.input_layernorm.weight', 'model.layers.16.mlp.down_proj.weight', 'model.layers.16.mlp.gate_up_proj.weight', 'model.layers.16.post_attention_layernorm.weight', 'model.layers.16.self_attn.k_norm.weight', 'model.layers.16.self_attn.o_proj.weight', 'model.layers.16.self_attn.q_norm.weight', 'model.layers.16.self_attn.qkv_proj.weight', 'model.layers.2.input_layernorm.weight', 'model.layers.2.mlp.down_proj.weight', 'model.layers.2.mlp.gate_up_proj.weight', 'model.layers.2.post_attention_layernorm.weight', 'model.layers.2.self_attn.k_norm.weight', 'model.layers.2.self_attn.o_proj.weight', 'model.layers.2.self_attn.q_norm.weight', 'model.layers.2.self_attn.qkv_proj.weight', 'model.layers.4.input_layernorm.weight', 'model.layers.4.mlp.down_proj.weight', 'model.layers.4.mlp.gate_up_proj.weight', 'model.layers.4.post_attention_layernorm.weight', 'model.layers.4.self_attn.k_norm.weight', 'model.layers.4.self_attn.o_proj.weight', 'model.layers.4.self_attn.q_norm.weight', 'model.layers.4.self_attn.qkv_proj.weight', 'model.layers.7.input_layernorm.weight', 'model.layers.7.mlp.down_proj.weight', 'model.layers.7.mlp.gate_up_proj.weight', 'model.layers.7.post_attention_layernorm.weight', 'model.layers.7.self_attn.k_norm.weight', 'model.layers.7.self_attn.o_proj.weight', 'model.layers.7.self_attn.q_norm.weight', 'model.layers.7.self_attn.qkv_proj.weight'], extra_in_draft=[]",
+    "type": "KOffRuntimeError"
+  },
+  "quant": "target-matching",
+  "record_type": "w98_g98a_boot_record",
+  "schema_version": 1,
+  "scored": false,
+  "share_weights": true,
+  "skip_count": 4,
+  "status": "fail",
+  "window": 0
+}
