@@ -1,0 +1,84 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "kernel_resolved": null,
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.03034689842024818,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04027173130634765,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 9.741846050821181e-05,
+      "usable": true,
+      "verify_s": 0.0061756214449732475
+    },
+    "R4": {
+      "armed_step_count": 131,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.043731224177983155,
+      "draft_chain_samples": 112,
+      "mean_armed_step_s": 0.05769827824089505,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0027970492840949154,
+      "usable": true,
+      "verify_s": 0.009684679095059911
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.051821580973164354,
+      "draft_chain_samples": 111,
+      "mean_armed_step_s": 0.06766641836640282,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.0023706529062817315,
+      "usable": true,
+      "verify_s": 0.011732205327600241
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.052004787779878825,
+      "draft_chain_samples": 110,
+      "mean_armed_step_s": 0.06787339539191317,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.002220658003226905,
+      "usable": true,
+      "verify_s": 0.011782032032985421
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.033944102688777955,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04633512349982993,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0014018448064519657,
+      "usable": true,
+      "verify_s": 0.007607465037356384
+    },
+    "R8": {
+      "armed_step_count": 128,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.03173494894365105,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04283993050694335,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0009025563892569143,
+      "usable": true,
+      "verify_s": 0.006751611109145663
+    }
+  },
+  "record_type": "w98_sigma_repro",
+  "schema_version": 1
+}
