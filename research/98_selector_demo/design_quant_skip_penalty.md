@@ -1,10 +1,12 @@
 # Why does quantization × layer-skip cost more? — investigation design
 
 Date: 2026-08-12
-Status: **mechanism identified, not yet root-caused.** X1–X3 complete. The cost
-is GPU idle while the host runs framework code between piecewise cudagraph
-replays; the inter-replay host cost roughly triples at skip8. What has not been
-identified is *which* host operation grows. X4 (CPU profile) is the next step.
+Status: **RESOLVED.** The penalty was host starvation across ~116 piecewise
+cudagraph round-trips per step, not any cost of composing the levers. Enabling
+`VLLM_SELF_SPEC_DRAFT_FULLCG=1` + `VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1` captures
+the whole K-step draft chain as ONE graph and removes it: skip8 goes 38.4 ->
+25.2 ms/step (1.52x), and the skip8-vs-skip4 sign flip inverts from +9.2 ms to
+-1.7 ms -- skipping more layers is faster again, as it must be. See section 7.
 
 ## 1. The defect, stated precisely
 
@@ -317,3 +319,61 @@ the sign flip but not the bf16 coincidence, is not the mechanism.
 Nothing here is scored and none of it touches the frozen Round-1 record. The
 Round-1 finding stands as written: levers compose additively within ±7% on 13 of
 15 configurations, and this one interaction is the exception.
+
+## 7. Resolution
+
+`_wholechain` (Phase 82) captures the entire K-step draft chain as a single CUDA
+graph. It requires **two** flags, and Round 1 and every probe set neither:
+
+```text
+VLLM_SELF_SPEC_DRAFT_FULLCG=1      # masked SDPA instead of paged FA3 decode,
+                                   # so attention stops being a graph split op
+VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1  # capture the K-step chain as one graph
+```
+
+`wc_replay` never firing in any arm (F4) was the standing evidence it was off.
+
+### X6 — measured, interleaved, no profiler, 60 timed steps per boot
+
+| arm | whole-chain off | whole-chain on | gain |
+| --- | --- | --- | --- |
+| quant skip4 | 29.33 / 28.99 ms | 26.87 / 26.85 | −2.5 / −2.1 (1.08–1.09x) |
+| **quant skip8** | 37.99 / 38.80 ms | **25.15 / 25.20** | **−12.8 / −13.6 (1.51–1.54x)** |
+
+| skip8 − skip4 | repeat 0 | repeat 1 |
+| --- | --- | --- |
+| whole-chain off | +8.65 ms (1.295x) | +9.81 ms (1.338x) |
+| **whole-chain on** | **−1.72 ms (0.936x)** | **−1.65 ms (0.939x)** |
+
+The defect inverts: with the chain captured, skipping 8 layers is *faster* than
+skipping 4. This matches the prediction registered before the run — whole chain
+recovers most of the skip8 penalty and helps skip4 far less, because skip4 was
+not starving (its bubble was a third the size).
+
+Variance collapses with it: skip8 stdev 0.48–0.60 ms → **0.06–0.09 ms**. The
+arm was unstable *because* it was host-bound.
+
+**A first attempt was inert and is recorded rather than discarded.** Setting
+only `WHOLECHAIN` left `_wholechain` False, because it is `WHOLECHAIN and
+FULLCG and method == "draft_model"`. All eight boots ran unfixed and drifted
+±1 ms, which is exactly what "the fix does not work" looks like. Only the
+per-boot arming check (grepping the capture marker from the log) caught it. Any
+future fix test must verify the mechanism engaged, not that the flag was set.
+
+### What this changes
+
+1. **The composition story is intact and stronger.** No lever interacts badly
+   with another. The factored model already held within ±7% on 13 of 15 cells;
+   the exception was a runtime configuration gap, and the composed configuration
+   is now the *fastest* arm measured.
+2. **Round 1's numbers are superseded for windowed cells.** Every G98-B boot ran
+   without the whole-chain graph. The lattice needs re-measuring with it before
+   Round 2 fits anything.
+3. **`window: off` now costs more than a lever setting.** FULLCG requires
+   `KV_WINDOW > 0`, so unwindowed configurations structurally cannot take the
+   whole-chain path. The cost model needs a term for whether the chain is
+   captured, and "window off" forfeits it.
+4. **Whole-chain keys on `(batch, table_width, K)` and requires `all_greedy`.**
+   Both interact with the selector's dynamic-K schedule and with sampled
+   decoding. Coverage across the schedule is unverified and must be measured,
+   not assumed, before the selector relies on these numbers.

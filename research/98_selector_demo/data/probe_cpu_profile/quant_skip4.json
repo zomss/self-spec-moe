@@ -1,0 +1,3746 @@
+{
+  "functions": {
+    "<frozen _collections_abc>:804(get)": {
+      "calls": 3575,
+      "cumtime_s": 0.013545414,
+      "tottime_s": 0.003399168,
+      "tottime_us_per_step": 135.96672
+    },
+    "<frozen abc>:117(__instancecheck__)": {
+      "calls": 3625,
+      "cumtime_s": 0.001694474,
+      "tottime_s": 0.0008226380000000001,
+      "tottime_us_per_step": 32.90552
+    },
+    "<frozen codecs>:186(__init__)": {
+      "calls": 25,
+      "cumtime_s": 7.366e-06,
+      "tottime_s": 7.366e-06,
+      "tottime_us_per_step": 0.29464
+    },
+    "<frozen codecs>:214(setstate)": {
+      "calls": 25,
+      "cumtime_s": 3.4890000000000004e-06,
+      "tottime_s": 3.4890000000000004e-06,
+      "tottime_us_per_step": 0.13956000000000002
+    },
+    "<frozen importlib._bootstrap>:1390(_handle_fromlist)": {
+      "calls": 225,
+      "cumtime_s": 0.000431727,
+      "tottime_s": 0.000302157,
+      "tottime_us_per_step": 12.086279999999999
+    },
+    "<frozen os>:680(__getitem__)": {
+      "calls": 3575,
+      "cumtime_s": 0.010146246000000001,
+      "tottime_s": 0.005151829,
+      "tottime_us_per_step": 206.07316
+    },
+    "<frozen os>:762(encode)": {
+      "calls": 3575,
+      "cumtime_s": 0.004928027000000001,
+      "tottime_s": 0.00293741,
+      "tottime_us_per_step": 117.49640000000001
+    },
+    "<frozen os>:766(decode)": {
+      "calls": 75,
+      "cumtime_s": 6.639e-05,
+      "tottime_s": 3.5824e-05,
+      "tottime_us_per_step": 1.43296
+    },
+    "<frozen os>:779(getenv)": {
+      "calls": 75,
+      "cumtime_s": 0.00033337300000000004,
+      "tottime_s": 3.3864e-05,
+      "tottime_us_per_step": 1.35456
+    },
+    "<string>:1(<lambda>)": {
+      "calls": 25,
+      "cumtime_s": 3.7357e-05,
+      "tottime_s": 2.1502000000000002e-05,
+      "tottime_us_per_step": 0.8600800000000001
+    },
+    "<string>:104(__vllm_inlined_submods__41)": {
+      "calls": 100,
+      "cumtime_s": 0.012423166000000001,
+      "tottime_s": 0.00027457100000000004,
+      "tottime_us_per_step": 10.982840000000001
+    },
+    "<string>:109(__vllm_inlined_submods__43)": {
+      "calls": 100,
+      "cumtime_s": 0.012586764,
+      "tottime_s": 0.000286426,
+      "tottime_us_per_step": 11.45704
+    },
+    "<string>:114(__vllm_inlined_submods__45)": {
+      "calls": 100,
+      "cumtime_s": 0.012566278,
+      "tottime_s": 0.000270913,
+      "tottime_us_per_step": 10.83652
+    },
+    "<string>:119(__vllm_inlined_submods__47)": {
+      "calls": 100,
+      "cumtime_s": 0.012311197000000001,
+      "tottime_s": 0.000266534,
+      "tottime_us_per_step": 10.66136
+    },
+    "<string>:124(__vllm_inlined_submods__49)": {
+      "calls": 100,
+      "cumtime_s": 0.012504556,
+      "tottime_s": 0.000275551,
+      "tottime_us_per_step": 11.022040000000002
+    },
+    "<string>:129(__vllm_inlined_submods__51)": {
+      "calls": 100,
+      "cumtime_s": 0.012383426000000001,
+      "tottime_s": 0.000274879,
+      "tottime_us_per_step": 10.99516
+    },
+    "<string>:134(__vllm_inlined_submods__53)": {
+      "calls": 100,
+      "cumtime_s": 0.012387828,
+      "tottime_s": 0.00026595700000000004,
+      "tottime_us_per_step": 10.638280000000002
+    },
+    "<string>:139(__vllm_inlined_submods__55)": {
+      "calls": 100,
+      "cumtime_s": 0.012268246,
+      "tottime_s": 0.000267214,
+      "tottime_us_per_step": 10.68856
+    },
+    "<string>:14(__vllm_inlined_submods__5)": {
+      "calls": 100,
+      "cumtime_s": 0.014147345,
+      "tottime_s": 0.00033359700000000004,
+      "tottime_us_per_step": 13.343880000000002
+    },
+    "<string>:144(__vllm_inlined_submods__57)": {
+      "calls": 100,
+      "cumtime_s": 0.012412474000000001,
+      "tottime_s": 0.000275791,
+      "tottime_us_per_step": 11.03164
+    },
+    "<string>:149(__vllm_inlined_submods__59)": {
+      "calls": 100,
+      "cumtime_s": 0.012343405,
+      "tottime_s": 0.000269879,
+      "tottime_us_per_step": 10.795160000000001
+    },
+    "<string>:154(__vllm_inlined_submods__61)": {
+      "calls": 100,
+      "cumtime_s": 0.012251029,
+      "tottime_s": 0.000267932,
+      "tottime_us_per_step": 10.71728
+    },
+    "<string>:159(__vllm_inlined_submods__63)": {
+      "calls": 100,
+      "cumtime_s": 0.012485560000000001,
+      "tottime_s": 0.000275255,
+      "tottime_us_per_step": 11.0102
+    },
+    "<string>:19(__vllm_inlined_submods__7)": {
+      "calls": 100,
+      "cumtime_s": 0.01343415,
+      "tottime_s": 0.000308531,
+      "tottime_us_per_step": 12.34124
+    },
+    "<string>:2(__eq__)": {
+      "calls": 6725,
+      "cumtime_s": 0.003550582,
+      "tottime_s": 0.003550582,
+      "tottime_us_per_step": 142.02328
+    },
+    "<string>:2(__hash__)": {
+      "calls": 6725,
+      "cumtime_s": 0.004946825,
+      "tottime_s": 0.0033514710000000004,
+      "tottime_us_per_step": 134.05884000000003
+    },
+    "<string>:2(__init__)": {
+      "calls": 25,
+      "cumtime_s": 6.237000000000001e-06,
+      "tottime_s": 6.237000000000001e-06,
+      "tottime_us_per_step": 0.24948000000000004
+    },
+    "<string>:2(dynamic_func)": {
+      "calls": 25,
+      "cumtime_s": 0.000119511,
+      "tottime_s": 5.1120000000000005e-05,
+      "tottime_us_per_step": 2.0448000000000004
+    },
+    "<string>:24(__vllm_inlined_submods__9)": {
+      "calls": 100,
+      "cumtime_s": 0.013319417,
+      "tottime_s": 0.00029070100000000003,
+      "tottime_us_per_step": 11.62804
+    },
+    "<string>:29(__vllm_inlined_submods__11)": {
+      "calls": 100,
+      "cumtime_s": 0.012798492000000002,
+      "tottime_s": 0.00028869400000000004,
+      "tottime_us_per_step": 11.54776
+    },
+    "<string>:34(__vllm_inlined_submods__13)": {
+      "calls": 100,
+      "cumtime_s": 0.012764320000000001,
+      "tottime_s": 0.000284864,
+      "tottime_us_per_step": 11.394560000000002
+    },
+    "<string>:39(__vllm_inlined_submods__15)": {
+      "calls": 100,
+      "cumtime_s": 0.012812428,
+      "tottime_s": 0.000297561,
+      "tottime_us_per_step": 11.902439999999999
+    },
+    "<string>:4(__vllm_inlined_submods__1)": {
+      "calls": 100,
+      "cumtime_s": 0.026070165000000003,
+      "tottime_s": 0.000709656,
+      "tottime_us_per_step": 28.38624
+    },
+    "<string>:44(__vllm_inlined_submods__17)": {
+      "calls": 100,
+      "cumtime_s": 0.012829676000000002,
+      "tottime_s": 0.00030313000000000003,
+      "tottime_us_per_step": 12.125200000000001
+    },
+    "<string>:49(__vllm_inlined_submods__19)": {
+      "calls": 100,
+      "cumtime_s": 0.012611213000000001,
+      "tottime_s": 0.00027350300000000003,
+      "tottime_us_per_step": 10.940120000000002
+    },
+    "<string>:54(__vllm_inlined_submods__21)": {
+      "calls": 100,
+      "cumtime_s": 0.012592656,
+      "tottime_s": 0.000270937,
+      "tottime_us_per_step": 10.837480000000001
+    },
+    "<string>:59(__vllm_inlined_submods__23)": {
+      "calls": 100,
+      "cumtime_s": 0.012672884,
+      "tottime_s": 0.00029756600000000003,
+      "tottime_us_per_step": 11.902640000000002
+    },
+    "<string>:64(__vllm_inlined_submods__25)": {
+      "calls": 100,
+      "cumtime_s": 0.012655651,
+      "tottime_s": 0.00028455500000000003,
+      "tottime_us_per_step": 11.382200000000001
+    },
+    "<string>:69(__vllm_inlined_submods__27)": {
+      "calls": 100,
+      "cumtime_s": 0.012634815,
+      "tottime_s": 0.000274305,
+      "tottime_us_per_step": 10.9722
+    },
+    "<string>:74(__vllm_inlined_submods__29)": {
+      "calls": 100,
+      "cumtime_s": 0.012360026000000001,
+      "tottime_s": 0.000272914,
+      "tottime_us_per_step": 10.916560000000002
+    },
+    "<string>:79(__vllm_inlined_submods__31)": {
+      "calls": 100,
+      "cumtime_s": 0.012541564000000002,
+      "tottime_s": 0.00026936,
+      "tottime_us_per_step": 10.7744
+    },
+    "<string>:84(__vllm_inlined_submods__33)": {
+      "calls": 100,
+      "cumtime_s": 0.01247456,
+      "tottime_s": 0.000280277,
+      "tottime_us_per_step": 11.211079999999999
+    },
+    "<string>:89(__vllm_inlined_submods__35)": {
+      "calls": 100,
+      "cumtime_s": 0.012453291,
+      "tottime_s": 0.00027151400000000004,
+      "tottime_us_per_step": 10.860560000000003
+    },
+    "<string>:9(__vllm_inlined_submods__3)": {
+      "calls": 100,
+      "cumtime_s": 0.015541203000000002,
+      "tottime_s": 0.00034660400000000003,
+      "tottime_us_per_step": 13.864160000000002
+    },
+    "<string>:94(__vllm_inlined_submods__37)": {
+      "calls": 100,
+      "cumtime_s": 0.012303922,
+      "tottime_s": 0.000271859,
+      "tottime_us_per_step": 10.87436
+    },
+    "<string>:99(__vllm_inlined_submods__39)": {
+      "calls": 100,
+      "cumtime_s": 0.012195593000000001,
+      "tottime_s": 0.00027851300000000004,
+      "tottime_us_per_step": 11.140520000000002
+    },
+    "__init__.py:1099(device_count)": {
+      "calls": 75,
+      "cumtime_s": 7.0955e-05,
+      "tottime_s": 3.1236000000000004e-05,
+      "tottime_us_per_step": 1.24944
+    },
+    "__init__.py:1146(current_device)": {
+      "calls": 275,
+      "cumtime_s": 0.001032542,
+      "tottime_s": 0.00038095800000000003,
+      "tottime_us_per_step": 15.238320000000002
+    },
+    "__init__.py:1152(is_tensor)": {
+      "calls": 50,
+      "cumtime_s": 3.2486e-05,
+      "tottime_s": 2.5628000000000003e-05,
+      "tottime_us_per_step": 1.0251200000000003
+    },
+    "__init__.py:1178(current_stream)": {
+      "calls": 50,
+      "cumtime_s": 0.001713473,
+      "tottime_s": 0.000214899,
+      "tottime_us_per_step": 8.59596
+    },
+    "__init__.py:1517(debug)": {
+      "calls": 50,
+      "cumtime_s": 6.5023e-05,
+      "tottime_s": 4.3875e-05,
+      "tottime_us_per_step": 1.755
+    },
+    "__init__.py:152(_is_compiled)": {
+      "calls": 150,
+      "cumtime_s": 0.000111886,
+      "tottime_s": 5.6939000000000005e-05,
+      "tottime_us_per_step": 2.2775600000000003
+    },
+    "__init__.py:157(_nvml_based_avail)": {
+      "calls": 75,
+      "cumtime_s": 0.000386548,
+      "tottime_s": 5.3175000000000005e-05,
+      "tottime_us_per_step": 2.1270000000000002
+    },
+    "__init__.py:161(is_available)": {
+      "calls": 75,
+      "cumtime_s": 0.000622633,
+      "tottime_s": 9.296300000000001e-05,
+      "tottime_us_per_step": 3.7185200000000003
+    },
+    "__init__.py:1790(isEnabledFor)": {
+      "calls": 50,
+      "cumtime_s": 2.1148e-05,
+      "tottime_s": 2.1148e-05,
+      "tottime_us_per_step": 0.8459200000000001
+    },
+    "__init__.py:183(dumps)": {
+      "calls": 25,
+      "cumtime_s": 0.0019716340000000003,
+      "tottime_s": 0.00010040500000000001,
+      "tottime_us_per_step": 4.0162
+    },
+    "__init__.py:246(__post_init__)": {
+      "calls": 25,
+      "cumtime_s": 6.0311000000000006e-05,
+      "tottime_s": 5.2283e-05,
+      "tottime_us_per_step": 2.09132
+    },
+    "__init__.py:325(should_advance)": {
+      "calls": 50,
+      "cumtime_s": 3.7338e-05,
+      "tottime_s": 2.7210000000000002e-05,
+      "tottime_us_per_step": 1.0884
+    },
+    "__init__.py:39(is_built)": {
+      "calls": 50,
+      "cumtime_s": 1.5879e-05,
+      "tottime_s": 1.5879e-05,
+      "tottime_us_per_step": 0.6351600000000001
+    },
+    "__init__.py:401(is_initialized)": {
+      "calls": 325,
+      "cumtime_s": 0.00036554000000000003,
+      "tottime_s": 0.000194019,
+      "tottime_us_per_step": 7.76076
+    },
+    "__init__.py:442(is_compiling)": {
+      "calls": 100,
+      "cumtime_s": 0.00020907300000000002,
+      "tottime_s": 0.000192164,
+      "tottime_us_per_step": 7.686560000000001
+    },
+    "__init__.py:450(_lazy_init)": {
+      "calls": 325,
+      "cumtime_s": 0.000542775,
+      "tottime_s": 0.000177235,
+      "tottime_us_per_step": 7.0894
+    },
+    "__init__.py:482(is_exporting)": {
+      "calls": 400,
+      "cumtime_s": 6.230000000000001e-05,
+      "tottime_s": 6.230000000000001e-05,
+      "tottime_us_per_step": 2.4920000000000004
+    },
+    "__init__.py:719(__init__)": {
+      "calls": 25,
+      "cumtime_s": 0.000450026,
+      "tottime_s": 4.8359e-05,
+      "tottime_us_per_step": 1.93436
+    },
+    "__init__.py:734(__enter__)": {
+      "calls": 25,
+      "cumtime_s": 0.000796031,
+      "tottime_s": 8.2797e-05,
+      "tottime_us_per_step": 3.31188
+    },
+    "__init__.py:749(__exit__)": {
+      "calls": 25,
+      "cumtime_s": 0.00011777700000000001,
+      "tottime_s": 3.3613000000000005e-05,
+      "tottime_us_per_step": 1.3445200000000002
+    },
+    "__init__.py:763(stream)": {
+      "calls": 25,
+      "cumtime_s": 0.00048487400000000005,
+      "tottime_s": 3.4848e-05,
+      "tottime_us_per_step": 1.39392
+    },
+    "__init__.py:776(_set_stream_by_id)": {
+      "calls": 50,
+      "cumtime_s": 0.000100933,
+      "tottime_s": 4.0809e-05,
+      "tottime_us_per_step": 1.6323600000000003
+    },
+    "__init__.py:791(set_stream)": {
+      "calls": 50,
+      "cumtime_s": 0.00014811000000000002,
+      "tottime_s": 4.7177000000000006e-05,
+      "tottime_us_per_step": 1.8870800000000003
+    },
+    "_base.py:328(__init__)": {
+      "calls": 25,
+      "cumtime_s": 0.000232844,
+      "tottime_s": 6.3396e-05,
+      "tottime_us_per_step": 2.53584
+    },
+    "_base.py:337(_invoke_callbacks)": {
+      "calls": 25,
+      "cumtime_s": 6.505e-06,
+      "tottime_s": 6.505e-06,
+      "tottime_us_per_step": 0.26020000000000004
+    },
+    "_base.py:393(done)": {
+      "calls": 25,
+      "cumtime_s": 6.621200000000001e-05,
+      "tottime_s": 3.7956e-05,
+      "tottime_us_per_step": 1.51824
+    },
+    "_base.py:398(__get_result)": {
+      "calls": 50,
+      "cumtime_s": 1.0824e-05,
+      "tottime_s": 1.0824e-05,
+      "tottime_us_per_step": 0.43296
+    },
+    "_base.py:428(result)": {
+      "calls": 50,
+      "cumtime_s": 0.000144759,
+      "tottime_s": 7.8482e-05,
+      "tottime_us_per_step": 3.13928
+    },
+    "_base.py:537(set_result)": {
+      "calls": 25,
+      "cumtime_s": 0.000261726,
+      "tottime_s": 0.000121577,
+      "tottime_us_per_step": 4.86308
+    },
+    "_compile.py:42(inner)": {
+      "calls": 400,
+      "cumtime_s": 0.0035033810000000003,
+      "tottime_s": 0.00048469900000000006,
+      "tottime_us_per_step": 19.387960000000003
+    },
+    "_contextlib.py:120(decorate_context)": {
+      "calls": 1,
+      "cumtime_s": 0.008995938,
+      "tottime_s": 0.00030041400000000004,
+      "tottime_us_per_step": 12.016560000000002
+    },
+    "_custom_ops.py:2531(reshape_and_cache_flash)": {
+      "calls": 3200,
+      "cumtime_s": 0.045575388,
+      "tottime_s": 0.00474923,
+      "tottime_us_per_step": 189.96920000000003
+    },
+    "_jit_internal.py:103(is_scripting)": {
+      "calls": 425,
+      "cumtime_s": 6.029e-05,
+      "tottime_s": 6.029e-05,
+      "tottime_us_per_step": 2.4116
+    },
+    "_methods.py:41(_amax)": {
+      "calls": 50,
+      "cumtime_s": 0.000585381,
+      "tottime_s": 5.1342000000000004e-05,
+      "tottime_us_per_step": 2.0536800000000004
+    },
+    "_methods.py:49(_sum)": {
+      "calls": 25,
+      "cumtime_s": 0.00039024700000000003,
+      "tottime_s": 1.9652e-05,
+      "tottime_us_per_step": 0.78608
+    },
+    "_ops.py:1257(__call__)": {
+      "calls": 6425,
+      "cumtime_s": 0.411805472,
+      "tottime_s": 0.008517044000000001,
+      "tottime_us_per_step": 340.68176000000005
+    },
+    "_tensor.py:1157(__floordiv__)": {
+      "calls": 125,
+      "cumtime_s": 0.00189342,
+      "tottime_s": 0.00013606300000000002,
+      "tottime_us_per_step": 5.442520000000001
+    },
+    "_tensor.py:1187(__len__)": {
+      "calls": 75,
+      "cumtime_s": 0.000321962,
+      "tottime_s": 0.00016790000000000002,
+      "tottime_us_per_step": 6.716
+    },
+    "_tensor.py:40(wrapped)": {
+      "calls": 125,
+      "cumtime_s": 0.0022858920000000003,
+      "tottime_s": 0.000323852,
+      "tottime_us_per_step": 12.954080000000001
+    },
+    "_utils.py:517(_get_device_index)": {
+      "calls": 75,
+      "cumtime_s": 0.001495639,
+      "tottime_s": 0.00020516500000000002,
+      "tottime_us_per_step": 8.206600000000002
+    },
+    "_utils.py:788(_get_available_device_type)": {
+      "calls": 75,
+      "cumtime_s": 0.0006719380000000001,
+      "tottime_s": 4.9305e-05,
+      "tottime_us_per_step": 1.9722
+    },
+    "_utils.py:805(_get_device_attr)": {
+      "calls": 75,
+      "cumtime_s": 0.001000704,
+      "tottime_s": 0.00010626900000000001,
+      "tottime_us_per_step": 4.2507600000000005
+    },
+    "_utils.py:821(_get_current_device_index)": {
+      "calls": 75,
+      "cumtime_s": 0.00107084,
+      "tottime_s": 7.013600000000001e-05,
+      "tottime_us_per_step": 2.8054400000000004
+    },
+    "_utils.py:823(<lambda>)": {
+      "calls": 75,
+      "cumtime_s": 0.000201539,
+      "tottime_s": 3.3312e-05,
+      "tottime_us_per_step": 1.33248
+    },
+    "_utils.py:847(_get_device_index)": {
+      "calls": 75,
+      "cumtime_s": 0.001235818,
+      "tottime_s": 0.000128247,
+      "tottime_us_per_step": 5.129880000000001
+    },
+    "aot_compile.py:180(prepare_f_locals)": {
+      "calls": 100,
+      "cumtime_s": 0.003495788,
+      "tottime_s": 0.00029713200000000003,
+      "tottime_us_per_step": 11.88528
+    },
+    "aot_compile.py:194(guard_check)": {
+      "calls": 100,
+      "cumtime_s": 0.00434773,
+      "tottime_s": 0.00020845800000000002,
+      "tottime_us_per_step": 8.338320000000001
+    },
+    "aot_compile.py:35(bind_locals)": {
+      "calls": 100,
+      "cumtime_s": 0.003137037,
+      "tottime_s": 0.000247961,
+      "tottime_us_per_step": 9.918439999999999
+    },
+    "attention.py:667(get_attention_context)": {
+      "calls": 6400,
+      "cumtime_s": 0.013984380000000001,
+      "tottime_s": 0.009949383000000001,
+      "tottime_us_per_step": 397.97532000000007
+    },
+    "attention.py:710(unified_kv_cache_update)": {
+      "calls": 3200,
+      "cumtime_s": 0.10342711900000001,
+      "tottime_s": 0.010836834,
+      "tottime_us_per_step": 433.47336
+    },
+    "attention.py:752(unified_attention_with_output)": {
+      "calls": 3200,
+      "cumtime_s": 0.25723053700000004,
+      "tottime_s": 0.011081956,
+      "tottime_us_per_step": 443.27824
+    },
+    "backend.py:464(batch_size)": {
+      "calls": 75,
+      "cumtime_s": 5.0538e-05,
+      "tottime_s": 5.0538e-05,
+      "tottime_us_per_step": 2.02152
+    },
+    "backend.py:467(naive_query_lens)": {
+      "calls": 25,
+      "cumtime_s": 0.00038267600000000003,
+      "tottime_s": 0.00038267600000000003,
+      "tottime_us_per_step": 15.307040000000002
+    },
+    "backend.py:471(replace)": {
+      "calls": 150,
+      "cumtime_s": 0.003104934,
+      "tottime_s": 0.000340587,
+      "tottime_us_per_step": 13.623479999999999
+    },
+    "backend.py:678(build_for_drafting)": {
+      "calls": 50,
+      "cumtime_s": 0.00110467,
+      "tottime_s": 0.00010319900000000001,
+      "tottime_us_per_step": 4.127960000000001
+    },
+    "base.py:111(get_offloader)": {
+      "calls": 3325,
+      "cumtime_s": 0.0005752260000000001,
+      "tottime_s": 0.0005752260000000001,
+      "tottime_us_per_step": 23.009040000000006
+    },
+    "base.py:79(sync_prev_onload)": {
+      "calls": 3325,
+      "cumtime_s": 0.000429509,
+      "tottime_s": 0.000429509,
+      "tottime_us_per_step": 17.18036
+    },
+    "block_pool.py:333(get_new_blocks)": {
+      "calls": 7,
+      "cumtime_s": 3.1966000000000005e-05,
+      "tottime_s": 1.1541e-05,
+      "tottime_us_per_step": 0.46164
+    },
+    "block_pool.py:496(get_num_free_blocks)": {
+      "calls": 57,
+      "cumtime_s": 1.1852000000000001e-05,
+      "tottime_s": 1.1852000000000001e-05,
+      "tottime_us_per_step": 0.47408
+    },
+    "block_pool.py:517(take_events)": {
+      "calls": 25,
+      "cumtime_s": 8.199e-06,
+      "tottime_s": 8.199e-06,
+      "tottime_us_per_step": 0.32796
+    },
+    "block_table.py:102(append_row)": {
+      "calls": 7,
+      "cumtime_s": 5.4681e-05,
+      "tottime_s": 5.3751e-05,
+      "tottime_us_per_step": 2.1500399999999997
+    },
+    "block_table.py:141(compute_slot_mapping)": {
+      "calls": 25,
+      "cumtime_s": 0.002308221,
+      "tottime_s": 0.00016075,
+      "tottime_us_per_step": 6.43
+    },
+    "block_table.py:166(commit_block_table)": {
+      "calls": 25,
+      "cumtime_s": 0.0013982900000000002,
+      "tottime_s": 3.3821e-05,
+      "tottime_us_per_step": 1.3528399999999998
+    },
+    "block_table.py:203(get_device_tensor)": {
+      "calls": 25,
+      "cumtime_s": 9.799e-05,
+      "tottime_s": 9.799e-05,
+      "tottime_us_per_step": 3.9196000000000004
+    },
+    "block_table.py:283(append_row)": {
+      "calls": 7,
+      "cumtime_s": 6.845500000000001e-05,
+      "tottime_s": 1.3774e-05,
+      "tottime_us_per_step": 0.55096
+    },
+    "block_table.py:303(compute_slot_mapping)": {
+      "calls": 25,
+      "cumtime_s": 0.0023450990000000002,
+      "tottime_s": 3.6878e-05,
+      "tottime_us_per_step": 1.47512
+    },
+    "block_table.py:312(commit_block_table)": {
+      "calls": 25,
+      "cumtime_s": 0.0014265990000000002,
+      "tottime_s": 2.8309000000000003e-05,
+      "tottime_us_per_step": 1.1323600000000003
+    },
+    "block_table.py:320(__getitem__)": {
+      "calls": 50,
+      "cumtime_s": 1.4759e-05,
+      "tottime_s": 1.4759e-05,
+      "tottime_us_per_step": 0.59036
+    },
+    "builtin.py:197(update_state)": {
+      "calls": 25,
+      "cumtime_s": 3.7957e-05,
+      "tottime_s": 3.2590000000000005e-05,
+      "tottime_us_per_step": 1.3036
+    },
+    "builtin.py:229(apply)": {
+      "calls": 25,
+      "cumtime_s": 6.864000000000001e-06,
+      "tottime_s": 6.864000000000001e-06,
+      "tottime_us_per_step": 0.27456
+    },
+    "builtin.py:235(apply_with_spec_decode)": {
+      "calls": 25,
+      "cumtime_s": 5.636000000000001e-06,
+      "tottime_s": 5.636000000000001e-06,
+      "tottime_us_per_step": 0.22544000000000003
+    },
+    "builtin.py:289(process_dict_updates)": {
+      "calls": 25,
+      "cumtime_s": 5.3670000000000005e-06,
+      "tottime_s": 5.3670000000000005e-06,
+      "tottime_us_per_step": 0.21468000000000004
+    },
+    "communication_op.py:17(tensor_model_parallel_all_gather)": {
+      "calls": 125,
+      "cumtime_s": 0.00040253800000000003,
+      "tottime_s": 0.000259349,
+      "tottime_us_per_step": 10.373960000000002
+    },
+    "compilation.py:71(has_mode)": {
+      "calls": 250,
+      "cumtime_s": 0.001492293,
+      "tottime_s": 0.000378198,
+      "tottime_us_per_step": 15.12792
+    },
+    "compilation.py:77(requires_piecewise_compilation)": {
+      "calls": 200,
+      "cumtime_s": 0.0014647680000000002,
+      "tottime_s": 0.000188602,
+      "tottime_us_per_step": 7.54408
+    },
+    "compilation.py:86(has_piecewise_cudagraphs)": {
+      "calls": 200,
+      "cumtime_s": 0.0015789900000000002,
+      "tottime_s": 0.000114222,
+      "tottime_us_per_step": 4.56888
+    },
+    "compilation.py:89(separate_routine)": {
+      "calls": 525,
+      "cumtime_s": 0.0009749030000000001,
+      "tottime_s": 0.00047034100000000004,
+      "tottime_us_per_step": 18.813640000000003
+    },
+    "compilation.py:92(valid_runtime_modes)": {
+      "calls": 150,
+      "cumtime_s": 0.000599528,
+      "tottime_s": 0.000364255,
+      "tottime_us_per_step": 14.5702
+    },
+    "compilation.py:96(is_valid_runtime_mode)": {
+      "calls": 125,
+      "cumtime_s": 0.0007577790000000001,
+      "tottime_s": 0.00024108200000000002,
+      "tottime_us_per_step": 9.64328
+    },
+    "compilation.py:99(__str__)": {
+      "calls": 125,
+      "cumtime_s": 0.000194878,
+      "tottime_s": 9.984e-05,
+      "tottime_us_per_step": 3.9936000000000003
+    },
+    "compiler.py:373(__init__)": {
+      "calls": 200,
+      "cumtime_s": 4.7102000000000004e-05,
+      "tottime_s": 4.7102000000000004e-05,
+      "tottime_us_per_step": 1.8840800000000002
+    },
+    "compiler.py:436(_init_handles)": {
+      "calls": 200,
+      "cumtime_s": 5.1307e-05,
+      "tottime_s": 5.1307e-05,
+      "tottime_us_per_step": 2.05228
+    },
+    "compiler.py:473(run)": {
+      "calls": 200,
+      "cumtime_s": 3.6734000000000004e-05,
+      "tottime_s": 3.6734000000000004e-05,
+      "tottime_us_per_step": 1.46936
+    },
+    "compiler.py:479(launch_metadata)": {
+      "calls": 200,
+      "cumtime_s": 0.000754918,
+      "tottime_s": 0.000615152,
+      "tottime_us_per_step": 24.606080000000002
+    },
+    "contextlib.py:104(__init__)": {
+      "calls": 1150,
+      "cumtime_s": 0.0017473780000000002,
+      "tottime_s": 0.0013847310000000002,
+      "tottime_us_per_step": 55.38924000000001
+    },
+    "contextlib.py:132(__enter__)": {
+      "calls": 1025,
+      "cumtime_s": 0.005752335000000001,
+      "tottime_s": 0.0008641720000000001,
+      "tottime_us_per_step": 34.56688
+    },
+    "contextlib.py:141(__exit__)": {
+      "calls": 1025,
+      "cumtime_s": 0.0036766990000000003,
+      "tottime_s": 0.001036072,
+      "tottime_us_per_step": 41.44288
+    },
+    "contextlib.py:299(helper)": {
+      "calls": 1150,
+      "cumtime_s": 0.002741303,
+      "tottime_s": 0.000993925,
+      "tottime_us_per_step": 39.757000000000005
+    },
+    "contextlib.py:481(__init__)": {
+      "calls": 25,
+      "cumtime_s": 2.5183000000000003e-05,
+      "tottime_s": 2.5183000000000003e-05,
+      "tottime_us_per_step": 1.0073200000000002
+    },
+    "contextlib.py:772(__init__)": {
+      "calls": 550,
+      "cumtime_s": 8.336e-05,
+      "tottime_s": 8.336e-05,
+      "tottime_us_per_step": 3.3344
+    },
+    "contextlib.py:775(__enter__)": {
+      "calls": 550,
+      "cumtime_s": 9.4517e-05,
+      "tottime_s": 9.4517e-05,
+      "tottime_us_per_step": 3.7806800000000003
+    },
+    "contextlib.py:778(__exit__)": {
+      "calls": 550,
+      "cumtime_s": 7.0899e-05,
+      "tottime_s": 7.0899e-05,
+      "tottime_us_per_step": 2.83596
+    },
+    "copy.py:247(_reconstruct)": {
+      "calls": 25,
+      "cumtime_s": 0.000152053,
+      "tottime_s": 6.8216e-05,
+      "tottime_us_per_step": 2.72864
+    },
+    "copy.py:61(copy)": {
+      "calls": 25,
+      "cumtime_s": 0.00046689500000000005,
+      "tottime_s": 0.00015329200000000002,
+      "tottime_us_per_step": 6.131680000000001
+    },
+    "copyreg.py:98(__newobj__)": {
+      "calls": 25,
+      "cumtime_s": 3.1865e-05,
+      "tottime_s": 1.9964e-05,
+      "tottime_us_per_step": 0.79856
+    },
+    "core.py:417(log_error_detail)": {
+      "calls": 50,
+      "cumtime_s": 1.0747e-05,
+      "tottime_s": 1.0747e-05,
+      "tottime_us_per_step": 0.42988
+    },
+    "core.py:433(log_iteration_details)": {
+      "calls": 50,
+      "cumtime_s": 4.5843e-05,
+      "tottime_s": 4.5843e-05,
+      "tottime_us_per_step": 1.8337200000000002
+    },
+    "core.py:474(_should_throttle_prefills)": {
+      "calls": 25,
+      "cumtime_s": 3.614e-06,
+      "tottime_s": 3.614e-06,
+      "tottime_us_per_step": 0.14456
+    },
+    "core.py:510(post_step)": {
+      "calls": 25,
+      "cumtime_s": 0.0016665430000000001,
+      "tottime_s": 5.4562000000000004e-05,
+      "tottime_us_per_step": 2.18248
+    },
+    "core.py:634(_process_aborts_queue)": {
+      "calls": 25,
+      "cumtime_s": 0.000154267,
+      "tottime_s": 3.0761e-05,
+      "tottime_us_per_step": 1.23044
+    },
+    "core_client.py:301(abort_requests)": {
+      "calls": 25,
+      "cumtime_s": 1.9015e-05,
+      "tottime_s": 1.4020000000000001e-05,
+      "tottime_us_per_step": 0.5608000000000001
+    },
+    "cuda_graph.py:256(__getattr__)": {
+      "calls": 125,
+      "cumtime_s": 0.000250462,
+      "tottime_s": 0.00010940300000000001,
+      "tottime_us_per_step": 4.37612
+    },
+    "cuda_graph.py:267(unwrap)": {
+      "calls": 25,
+      "cumtime_s": 9.988e-06,
+      "tottime_s": 9.988e-06,
+      "tottime_us_per_step": 0.39952
+    },
+    "cuda_graph.py:278(__call__)": {
+      "calls": 1,
+      "cumtime_s": 4.7194e-05,
+      "tottime_s": 0.022631293,
+      "tottime_us_per_step": 905.2517200000001
+    },
+    "cudagraph_dispatcher.py:139(_create_padded_batch_descriptor)": {
+      "calls": 75,
+      "cumtime_s": 0.000896064,
+      "tottime_s": 0.00041628000000000005,
+      "tottime_us_per_step": 16.651200000000003
+    },
+    "cudagraph_dispatcher.py:285(dispatch)": {
+      "calls": 75,
+      "cumtime_s": 0.0025931450000000003,
+      "tottime_s": 0.0006627250000000001,
+      "tottime_us_per_step": 26.509
+    },
+    "dataclasses.py:1271(fields)": {
+      "calls": 25,
+      "cumtime_s": 0.000254131,
+      "tottime_s": 0.000147207,
+      "tottime_us_per_step": 5.88828
+    },
+    "dataclasses.py:1286(<genexpr>)": {
+      "calls": 700,
+      "cumtime_s": 9.223e-05,
+      "tottime_s": 9.223e-05,
+      "tottime_us_per_step": 3.6892
+    },
+    "dataclasses.py:1289(_is_dataclass_instance)": {
+      "calls": 1000,
+      "cumtime_s": 0.0006540080000000001,
+      "tottime_s": 0.000412724,
+      "tottime_us_per_step": 16.50896
+    },
+    "dataclasses.py:1301(asdict)": {
+      "calls": 25,
+      "cumtime_s": 0.005187303000000001,
+      "tottime_s": 4.1689e-05,
+      "tottime_us_per_step": 1.66756
+    },
+    "dataclasses.py:1325(_asdict_inner)": {
+      "calls": 25,
+      "cumtime_s": 0.0051170650000000005,
+      "tottime_s": 0.002804786,
+      "tottime_us_per_step": 112.19144
+    },
+    "dataclasses.py:1366(<genexpr>)": {
+      "calls": 1725,
+      "cumtime_s": 0.002254884,
+      "tottime_s": 0.001066911,
+      "tottime_us_per_step": 42.67644
+    },
+    "dataclasses.py:1375(<genexpr>)": {
+      "calls": 450,
+      "cumtime_s": 0.003919837000000001,
+      "tottime_s": 0.000309315,
+      "tottime_us_per_step": 12.3726
+    },
+    "dataclasses.py:1533(replace)": {
+      "calls": 225,
+      "cumtime_s": 0.0037709970000000003,
+      "tottime_s": 0.002485691,
+      "tottime_us_per_step": 99.42764
+    },
+    "decorators.py:724(maybe_use_cudagraph_partition_wrapper)": {
+      "calls": 200,
+      "cumtime_s": 0.002449686,
+      "tottime_s": 0.0006913840000000001,
+      "tottime_us_per_step": 27.655360000000005
+    },
+    "detokenizer.py:148(get_next_output_text)": {
+      "calls": 25,
+      "cumtime_s": 7.396000000000001e-06,
+      "tottime_s": 7.396000000000001e-06,
+      "tottime_us_per_step": 0.29584000000000005
+    },
+    "detokenizer.py:210(decode_next)": {
+      "calls": 105,
+      "cumtime_s": 0.000627569,
+      "tottime_s": 5.8677e-05,
+      "tottime_us_per_step": 2.34708
+    },
+    "detokenizer.py:223(_protected_step)": {
+      "calls": 105,
+      "cumtime_s": 0.000568892,
+      "tottime_s": 6.4238e-05,
+      "tottime_us_per_step": 2.56952
+    },
+    "detokenizer.py:34(output_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 3.6220000000000002e-06,
+      "tottime_s": 3.6220000000000002e-06,
+      "tottime_us_per_step": 0.14488
+    },
+    "detokenizer.py:95(update)": {
+      "calls": 25,
+      "cumtime_s": 0.000806422,
+      "tottime_s": 0.00015311800000000002,
+      "tottime_us_per_step": 6.124720000000001
+    },
+    "driver.py:25(active)": {
+      "calls": 400,
+      "cumtime_s": 0.000104338,
+      "tottime_s": 0.000104338,
+      "tottime_us_per_step": 4.17352
+    },
+    "driver.py:700(__call__)": {
+      "calls": 200,
+      "cumtime_s": 0.0038346920000000002,
+      "tottime_s": 0.000686979,
+      "tottime_us_per_step": 27.47916
+    },
+    "driver.py:702(allocate_scratch)": {
+      "calls": 400,
+      "cumtime_s": 6.2177e-05,
+      "tottime_s": 6.2177e-05,
+      "tottime_us_per_step": 2.48708
+    },
+    "ec_transfer_state.py:22(has_ec_transfer)": {
+      "calls": 25,
+      "cumtime_s": 1.1642000000000001e-05,
+      "tottime_s": 1.1642000000000001e-05,
+      "tottime_us_per_step": 0.46568000000000004
+    },
+    "encoder.py:105(__init__)": {
+      "calls": 25,
+      "cumtime_s": 9.280000000000001e-06,
+      "tottime_s": 9.280000000000001e-06,
+      "tottime_us_per_step": 0.37120000000000003
+    },
+    "encoder.py:183(encode)": {
+      "calls": 25,
+      "cumtime_s": 0.0018619490000000001,
+      "tottime_s": 7.5976e-05,
+      "tottime_us_per_step": 3.03904
+    },
+    "encoder.py:205(iterencode)": {
+      "calls": 25,
+      "cumtime_s": 0.001762225,
+      "tottime_s": 0.001762225,
+      "tottime_us_per_step": 70.489
+    },
+    "encoder_cache_manager.py:255(get_freed_mm_hashes)": {
+      "calls": 25,
+      "cumtime_s": 7.442e-06,
+      "tottime_s": 7.442e-06,
+      "tottime_us_per_step": 0.29768
+    },
+    "enum.py:1267(__hash__)": {
+      "calls": 950,
+      "cumtime_s": 0.00045997100000000005,
+      "tottime_s": 0.000298175,
+      "tottime_us_per_step": 11.927
+    },
+    "enum.py:1287(name)": {
+      "calls": 125,
+      "cumtime_s": 1.8693000000000002e-05,
+      "tottime_s": 1.8693000000000002e-05,
+      "tottime_us_per_step": 0.74772
+    },
+    "enum.py:1292(value)": {
+      "calls": 1025,
+      "cumtime_s": 0.00016857300000000001,
+      "tottime_s": 0.00016857300000000001,
+      "tottime_us_per_step": 6.742920000000001
+    },
+    "enum.py:202(__get__)": {
+      "calls": 1150,
+      "cumtime_s": 0.0007041580000000001,
+      "tottime_s": 0.000516892,
+      "tottime_us_per_step": 20.675680000000003
+    },
+    "eval_frame.py:1240(_fn)": {
+      "calls": 400,
+      "cumtime_s": 0.002832031,
+      "tottime_s": 0.0013411500000000002,
+      "tottime_us_per_step": 53.646
+    },
+    "eval_frame.py:233(_callback_from_stance)": {
+      "calls": 400,
+      "cumtime_s": 0.00019279,
+      "tottime_s": 0.00019279,
+      "tottime_us_per_step": 7.7116
+    },
+    "flash_attn.py:406(build)": {
+      "calls": 75,
+      "cumtime_s": 0.004079738,
+      "tottime_s": 0.001961366,
+      "tottime_us_per_step": 78.45464
+    },
+    "flash_attn.py:463(schedule)": {
+      "calls": 75,
+      "cumtime_s": 0.0019673110000000002,
+      "tottime_s": 0.00034682200000000005,
+      "tottime_us_per_step": 13.872880000000002
+    },
+    "flash_attn.py:711(forward)": {
+      "calls": 3200,
+      "cumtime_s": 0.23636773000000003,
+      "tottime_s": 0.045940602000000004,
+      "tottime_us_per_step": 1837.6240800000003
+    },
+    "flash_attn.py:937(do_kv_cache_update)": {
+      "calls": 3200,
+      "cumtime_s": 0.06992050100000001,
+      "tottime_s": 0.00651304,
+      "tottime_us_per_step": 260.5216
+    },
+    "flash_attn_interface.py:117(maybe_contiguous)": {
+      "calls": 9625,
+      "cumtime_s": 0.008454458,
+      "tottime_s": 0.0037744220000000004,
+      "tottime_us_per_step": 150.97688000000002
+    },
+    "flash_attn_interface.py:122(get_scheduler_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.001376939,
+      "tottime_s": 0.000164057,
+      "tottime_us_per_step": 6.56228
+    },
+    "flash_attn_interface.py:176(flash_attn_varlen_func)": {
+      "calls": 3200,
+      "cumtime_s": 0.145577555,
+      "tottime_s": 0.017915008,
+      "tottime_us_per_step": 716.6003199999999
+    },
+    "forward_context.py:182(__post_init__)": {
+      "calls": 125,
+      "cumtime_s": 0.0008578720000000001,
+      "tottime_s": 0.000100093,
+      "tottime_us_per_step": 4.00372
+    },
+    "forward_context.py:191(get_forward_context)": {
+      "calls": 9925,
+      "cumtime_s": 0.001492718,
+      "tottime_s": 0.001492718,
+      "tottime_us_per_step": 59.70872
+    },
+    "forward_context.py:200(is_forward_context_available)": {
+      "calls": 3525,
+      "cumtime_s": 0.000706211,
+      "tottime_s": 0.000706211,
+      "tottime_us_per_step": 28.248440000000002
+    },
+    "forward_context.py:256(self_spec_draft_scratchpad_ctx)": {
+      "calls": 3200,
+      "cumtime_s": 0.0019385090000000002,
+      "tottime_s": 0.0013528720000000002,
+      "tottime_us_per_step": 54.114880000000014
+    },
+    "forward_context.py:269(create_forward_context)": {
+      "calls": 125,
+      "cumtime_s": 0.00164312,
+      "tottime_s": 0.0005733810000000001,
+      "tottime_us_per_step": 22.935240000000004
+    },
+    "forward_context.py:299(override_forward_context)": {
+      "calls": 250,
+      "cumtime_s": 0.000124215,
+      "tottime_s": 0.000124215,
+      "tottime_us_per_step": 4.9686
+    },
+    "forward_context.py:314(set_forward_context)": {
+      "calls": 250,
+      "cumtime_s": 0.0032562700000000003,
+      "tottime_s": 0.0009284370000000001,
+      "tottime_us_per_step": 37.137480000000004
+    },
+    "fromnumeric.py:2014(_nonzero_dispatcher)": {
+      "calls": 25,
+      "cumtime_s": 4.822000000000001e-06,
+      "tottime_s": 4.822000000000001e-06,
+      "tottime_us_per_step": 0.19288000000000005
+    },
+    "fromnumeric.py:2018(nonzero)": {
+      "calls": 25,
+      "cumtime_s": 0.00018014000000000002,
+      "tottime_s": 3.8044000000000004e-05,
+      "tottime_us_per_step": 1.5217600000000002
+    },
+    "fromnumeric.py:2875(_cumsum_dispatcher)": {
+      "calls": 75,
+      "cumtime_s": 1.4554000000000002e-05,
+      "tottime_s": 1.4554000000000002e-05,
+      "tottime_us_per_step": 0.5821600000000001
+    },
+    "fromnumeric.py:2879(cumsum)": {
+      "calls": 75,
+      "cumtime_s": 0.000673923,
+      "tottime_s": 7.760400000000001e-05,
+      "tottime_us_per_step": 3.1041600000000007
+    },
+    "fromnumeric.py:458(_repeat_dispatcher)": {
+      "calls": 150,
+      "cumtime_s": 2.3599000000000002e-05,
+      "tottime_s": 2.3599000000000002e-05,
+      "tottime_us_per_step": 0.9439600000000001
+    },
+    "fromnumeric.py:462(repeat)": {
+      "calls": 150,
+      "cumtime_s": 0.00063137,
+      "tottime_s": 0.000146412,
+      "tottime_us_per_step": 5.85648
+    },
+    "fromnumeric.py:51(_wrapfunc)": {
+      "calls": 250,
+      "cumtime_s": 0.001223373,
+      "tottime_s": 0.000241735,
+      "tottime_us_per_step": 9.669400000000001
+    },
+    "gpu_input_batch.py:1019(update_async_output_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 1.0928000000000001e-05,
+      "tottime_s": 1.0928000000000001e-05,
+      "tottime_us_per_step": 0.43712
+    },
+    "gpu_input_batch.py:1086(num_reqs)": {
+      "calls": 150,
+      "cumtime_s": 8.8171e-05,
+      "tottime_s": 5.9527e-05,
+      "tottime_us_per_step": 2.38108
+    },
+    "gpu_input_batch.py:304(req_ids)": {
+      "calls": 150,
+      "cumtime_s": 0.00026646300000000004,
+      "tottime_s": 0.000245105,
+      "tottime_us_per_step": 9.804200000000002
+    },
+    "gpu_input_batch.py:484(update_req_spec_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.000322468,
+      "tottime_s": 0.00029114,
+      "tottime_us_per_step": 11.6456
+    },
+    "gpu_input_batch.py:684(condense)": {
+      "calls": 25,
+      "cumtime_s": 0.000100303,
+      "tottime_s": 3.167e-05,
+      "tottime_us_per_step": 1.2668000000000001
+    },
+    "gpu_input_batch.py:75(num_tokens)": {
+      "calls": 25,
+      "cumtime_s": 1.7488000000000003e-05,
+      "tottime_s": 1.2494000000000001e-05,
+      "tottime_us_per_step": 0.49976000000000004
+    },
+    "gpu_input_batch.py:79(get_token_id)": {
+      "calls": 25,
+      "cumtime_s": 7.531000000000001e-05,
+      "tottime_s": 6.9817e-05,
+      "tottime_us_per_step": 2.79268
+    },
+    "gpu_input_batch.py:812(refresh_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.000175154,
+      "tottime_s": 8.349400000000001e-05,
+      "tottime_us_per_step": 3.3397600000000005
+    },
+    "gpu_model_runner.py:1052(_get_positions)": {
+      "calls": 25,
+      "cumtime_s": 6.1976e-05,
+      "tottime_s": 5.7275e-05,
+      "tottime_us_per_step": 2.2910000000000004
+    },
+    "gpu_model_runner.py:1094(_init_model_kwargs)": {
+      "calls": 25,
+      "cumtime_s": 7.265300000000001e-05,
+      "tottime_s": 7.265300000000001e-05,
+      "tottime_us_per_step": 2.90612
+    },
+    "gpu_model_runner.py:1135(_may_reorder_batch)": {
+      "calls": 25,
+      "cumtime_s": 2.4257000000000002e-05,
+      "tottime_s": 2.0871e-05,
+      "tottime_us_per_step": 0.8348400000000001
+    },
+    "gpu_model_runner.py:1197(_update_states)": {
+      "calls": 25,
+      "cumtime_s": 0.001231894,
+      "tottime_s": 0.00046719400000000004,
+      "tottime_us_per_step": 18.68776
+    },
+    "gpu_model_runner.py:1567(_update_states_after_model_execute)": {
+      "calls": 25,
+      "cumtime_s": 6.091100000000001e-05,
+      "tottime_s": 2.9699e-05,
+      "tottime_us_per_step": 1.1879600000000001
+    },
+    "gpu_model_runner.py:1742(_get_cumsum_and_arange)": {
+      "calls": 75,
+      "cumtime_s": 0.0016190450000000002,
+      "tottime_s": 0.000624472,
+      "tottime_us_per_step": 24.978880000000004
+    },
+    "gpu_model_runner.py:1768(_compute_prev_positions)": {
+      "calls": 25,
+      "cumtime_s": 7.850000000000001e-05,
+      "tottime_s": 5.0695e-05,
+      "tottime_us_per_step": 2.0278
+    },
+    "gpu_model_runner.py:1783(_prepare_input_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.00040101000000000004,
+      "tottime_s": 2.7147000000000003e-05,
+      "tottime_us_per_step": 1.0858800000000002
+    },
+    "gpu_model_runner.py:1914(_get_encoder_seq_lens)": {
+      "calls": 25,
+      "cumtime_s": 1.7764e-05,
+      "tottime_s": 1.1719e-05,
+      "tottime_us_per_step": 0.46876000000000007
+    },
+    "gpu_model_runner.py:1959(_prepare_inputs)": {
+      "calls": 25,
+      "cumtime_s": 0.022015671,
+      "tottime_s": 0.004956656,
+      "tottime_us_per_step": 198.26624
+    },
+    "gpu_model_runner.py:2278(_build_attention_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.006261839000000001,
+      "tottime_s": 0.0012018410000000002,
+      "tottime_us_per_step": 48.073640000000005
+    },
+    "gpu_model_runner.py:2319(_get_block_table)": {
+      "calls": 25,
+      "cumtime_s": 0.000295546,
+      "tottime_s": 0.00011038000000000001,
+      "tottime_us_per_step": 4.4152000000000005
+    },
+    "gpu_model_runner.py:2449(_build_attn_group_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.0036497910000000003,
+      "tottime_s": 0.000319286,
+      "tottime_us_per_step": 12.77144
+    },
+    "gpu_model_runner.py:2812(_calc_spec_decode_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.007191746000000001,
+      "tottime_s": 0.0027198500000000002,
+      "tottime_us_per_step": 108.79400000000001
+    },
+    "gpu_model_runner.py:3264(get_model)": {
+      "calls": 25,
+      "cumtime_s": 7.263e-05,
+      "tottime_s": 4.2890000000000004e-05,
+      "tottime_us_per_step": 1.7156000000000002
+    },
+    "gpu_model_runner.py:3377(eplb_step)": {
+      "calls": 25,
+      "cumtime_s": 2.7271e-05,
+      "tottime_s": 2.7271e-05,
+      "tottime_us_per_step": 1.09084
+    },
+    "gpu_model_runner.py:3473(_pad_for_sequence_parallelism)": {
+      "calls": 25,
+      "cumtime_s": 4.8771000000000005e-05,
+      "tottime_s": 4.8771000000000005e-05,
+      "tottime_us_per_step": 1.9508400000000004
+    },
+    "gpu_model_runner.py:3492(_preprocess)": {
+      "calls": 25,
+      "cumtime_s": 0.000322274,
+      "tottime_s": 0.00019261000000000001,
+      "tottime_us_per_step": 7.704400000000001
+    },
+    "gpu_model_runner.py:3635(_sample)": {
+      "calls": 25,
+      "cumtime_s": 0.010312561000000001,
+      "tottime_s": 0.000187517,
+      "tottime_us_per_step": 7.50068
+    },
+    "gpu_model_runner.py:3667(_bookkeeping_sync)": {
+      "calls": 25,
+      "cumtime_s": 0.004872099,
+      "tottime_s": 0.001159705,
+      "tottime_us_per_step": 46.3882
+    },
+    "gpu_model_runner.py:3823(synchronize_input_prep)": {
+      "calls": 50,
+      "cumtime_s": 1.0292e-05,
+      "tottime_s": 1.0292e-05,
+      "tottime_us_per_step": 0.41168000000000005
+    },
+    "gpu_model_runner.py:3838(_model_forward)": {
+      "calls": 25,
+      "cumtime_s": 0.036991827000000005,
+      "tottime_s": 0.0015229,
+      "tottime_us_per_step": 60.916000000000004
+    },
+    "gpu_model_runner.py:3870(_is_uniform_decode)": {
+      "calls": 25,
+      "cumtime_s": 3.6196000000000004e-05,
+      "tottime_s": 3.1845000000000004e-05,
+      "tottime_us_per_step": 1.2738000000000003
+    },
+    "gpu_model_runner.py:3894(_determine_batch_execution_and_padding)": {
+      "calls": 25,
+      "cumtime_s": 0.001562905,
+      "tottime_s": 0.000248306,
+      "tottime_us_per_step": 9.93224
+    },
+    "gpu_model_runner.py:3940(dispatch_cudagraph)": {
+      "calls": 25,
+      "cumtime_s": 0.001037105,
+      "tottime_s": 5.6155e-05,
+      "tottime_us_per_step": 2.2462
+    },
+    "gpu_model_runner.py:4055(_get_slot_mappings)": {
+      "calls": 25,
+      "cumtime_s": 0.000798844,
+      "tottime_s": 0.00032198100000000005,
+      "tottime_us_per_step": 12.879240000000003
+    },
+    "gpu_model_runner.py:4086(_get_slot_mapping)": {
+      "calls": 25,
+      "cumtime_s": 0.00045069200000000004,
+      "tottime_s": 0.00030242400000000003,
+      "tottime_us_per_step": 12.096960000000001
+    },
+    "gpu_model_runner.py:4129(_capture_koff_diagnostic)": {
+      "calls": 25,
+      "cumtime_s": 0.167529631,
+      "tottime_s": 0.001362242,
+      "tottime_us_per_step": 54.48968
+    },
+    "gpu_model_runner.py:4196(execute_model)": {
+      "calls": 25,
+      "cumtime_s": 0.209822226,
+      "tottime_s": 0.0014766520000000002,
+      "tottime_us_per_step": 59.066080000000014
+    },
+    "gpu_model_runner.py:4386(<genexpr>)": {
+      "calls": 25,
+      "cumtime_s": 0.00012704800000000002,
+      "tottime_s": 6.0027000000000007e-05,
+      "tottime_us_per_step": 2.4010800000000003
+    },
+    "gpu_model_runner.py:4387(<genexpr>)": {
+      "calls": 25,
+      "cumtime_s": 3.9014e-05,
+      "tottime_s": 3.9014e-05,
+      "tottime_us_per_step": 1.5605600000000002
+    },
+    "gpu_model_runner.py:4662(_input_fits_in_drafter)": {
+      "calls": 25,
+      "cumtime_s": 5.8580000000000005e-05,
+      "tottime_s": 4.5401e-05,
+      "tottime_us_per_step": 1.81604
+    },
+    "gpu_model_runner.py:5054(take_draft_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.001077934,
+      "tottime_s": 0.00010211700000000001,
+      "tottime_us_per_step": 4.0846800000000005
+    },
+    "gpu_model_runner.py:5064(_copy_draft_token_ids_to_cpu)": {
+      "calls": 25,
+      "cumtime_s": 0.004566523,
+      "tottime_s": 0.000611682,
+      "tottime_us_per_step": 24.467280000000002
+    },
+    "gpu_model_runner.py:5101(_get_draft_token_ids_cpu)": {
+      "calls": 25,
+      "cumtime_s": 0.000965832,
+      "tottime_s": 0.000597719,
+      "tottime_us_per_step": 23.90876
+    },
+    "gpu_model_runner.py:5116(_copy_valid_sampled_token_count)": {
+      "calls": 25,
+      "cumtime_s": 6.621000000000001e-06,
+      "tottime_s": 6.621000000000001e-06,
+      "tottime_us_per_step": 0.26484
+    },
+    "gpu_model_runner.py:5150(_get_spec_decode_draft_probs)": {
+      "calls": 25,
+      "cumtime_s": 6.4390000000000005e-06,
+      "tottime_s": 6.4390000000000005e-06,
+      "tottime_us_per_step": 0.25756
+    },
+    "gpu_model_runner.py:5373(<lambda>)": {
+      "calls": 25,
+      "cumtime_s": 4.168000000000001e-06,
+      "tottime_s": 4.168000000000001e-06,
+      "tottime_us_per_step": 0.16672
+    },
+    "gpu_model_runner.py:5876(_get_prompt_logprobs_dict)": {
+      "calls": 25,
+      "cumtime_s": 1.1409e-05,
+      "tottime_s": 1.1409e-05,
+      "tottime_us_per_step": 0.45636000000000004
+    },
+    "gpu_worker.py:805(annotate_profile)": {
+      "calls": 25,
+      "cumtime_s": 2.9137000000000002e-05,
+      "tottime_s": 2.5287e-05,
+      "tottime_us_per_step": 1.01148
+    },
+    "gpu_worker.py:837(execute_model)": {
+      "calls": 25,
+      "cumtime_s": 0.210986462,
+      "tottime_s": 0.00013854,
+      "tottime_us_per_step": 5.541600000000001
+    },
+    "gpu_worker.py:928(take_draft_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.00110523,
+      "tottime_s": 2.7296e-05,
+      "tottime_us_per_step": 1.09184
+    },
+    "grad_mode.py:279(__init__)": {
+      "calls": 100,
+      "cumtime_s": 0.00019662100000000001,
+      "tottime_s": 0.00018153,
+      "tottime_us_per_step": 7.2612
+    },
+    "grad_mode.py:284(__new__)": {
+      "calls": 100,
+      "cumtime_s": 0.000183465,
+      "tottime_s": 0.00013170800000000002,
+      "tottime_us_per_step": 5.268320000000001
+    },
+    "grad_mode.py:289(__enter__)": {
+      "calls": 100,
+      "cumtime_s": 0.001034701,
+      "tottime_s": 0.000521173,
+      "tottime_us_per_step": 20.84692
+    },
+    "grad_mode.py:293(__exit__)": {
+      "calls": 2,
+      "cumtime_s": 0.017399110000000002,
+      "tottime_s": 0.00047802500000000003,
+      "tottime_us_per_step": 19.121000000000002
+    },
+    "grad_mode.py:296(clone)": {
+      "calls": 100,
+      "cumtime_s": 0.0005135280000000001,
+      "tottime_s": 0.000133442,
+      "tottime_us_per_step": 5.337680000000001
+    },
+    "graphs.py:137(replay)": {
+      "calls": 3325,
+      "cumtime_s": 0.077617726,
+      "tottime_s": 0.055040429,
+      "tottime_us_per_step": 2201.6171600000002
+    },
+    "guards.py:680(check)": {
+      "calls": 100,
+      "cumtime_s": 0.004139272,
+      "tottime_s": 0.000643484,
+      "tottime_us_per_step": 25.73936
+    },
+    "inspect.py:2765(name)": {
+      "calls": 1000,
+      "cumtime_s": 0.000105204,
+      "tottime_s": 0.000105204,
+      "tottime_us_per_step": 4.20816
+    },
+    "inspect.py:2777(kind)": {
+      "calls": 1000,
+      "cumtime_s": 0.00010691900000000001,
+      "tottime_s": 0.00010691900000000001,
+      "tottime_us_per_step": 4.27676
+    },
+    "inspect.py:2857(__init__)": {
+      "calls": 100,
+      "cumtime_s": 2.3258e-05,
+      "tottime_s": 2.3258e-05,
+      "tottime_us_per_step": 0.9303199999999999
+    },
+    "inspect.py:2918(apply_defaults)": {
+      "calls": 100,
+      "cumtime_s": 0.0006597630000000001,
+      "tottime_s": 0.0005006230000000001,
+      "tottime_us_per_step": 20.02492
+    },
+    "inspect.py:3058(parameters)": {
+      "calls": 200,
+      "cumtime_s": 3.2116e-05,
+      "tottime_s": 3.2116e-05,
+      "tottime_us_per_step": 1.28464
+    },
+    "inspect.py:3102(_bind)": {
+      "calls": 100,
+      "cumtime_s": 0.002095284,
+      "tottime_s": 0.001362617,
+      "tottime_us_per_step": 54.50468
+    },
+    "inspect.py:3237(bind)": {
+      "calls": 100,
+      "cumtime_s": 0.002229313,
+      "tottime_s": 0.000134029,
+      "tottime_us_per_step": 5.36116
+    },
+    "interface.py:1125(set_additional_forward_context)": {
+      "calls": 125,
+      "cumtime_s": 2.3174000000000002e-05,
+      "tottime_s": 2.3174000000000002e-05,
+      "tottime_us_per_step": 0.9269600000000001
+    },
+    "interface.py:171(has_unfinished_requests)": {
+      "calls": 25,
+      "cumtime_s": 0.00018542500000000002,
+      "tottime_s": 2.1112e-05,
+      "tottime_us_per_step": 0.8444800000000001
+    },
+    "interface.py:192(is_rocm)": {
+      "calls": 125,
+      "cumtime_s": 0.000128267,
+      "tottime_s": 0.000128267,
+      "tottime_us_per_step": 5.13068
+    },
+    "interface.py:201(is_cpu)": {
+      "calls": 125,
+      "cumtime_s": 0.000104049,
+      "tottime_s": 0.000104049,
+      "tottime_us_per_step": 4.1619600000000005
+    },
+    "interface.py:953(fp8_dtype)": {
+      "calls": 75,
+      "cumtime_s": 5.8355000000000006e-05,
+      "tottime_s": 5.8355000000000006e-05,
+      "tottime_us_per_step": 2.3342
+    },
+    "jit.py:364(__getitem__)": {
+      "calls": 200,
+      "cumtime_s": 0.000303735,
+      "tottime_s": 0.000303735,
+      "tottime_us_per_step": 12.1494
+    },
+    "jit.py:370(<lambda>)": {
+      "calls": 200,
+      "cumtime_s": 0.014172639,
+      "tottime_s": 0.000996666,
+      "tottime_us_per_step": 39.866640000000004
+    },
+    "jit.py:563(compute_cache_key)": {
+      "calls": 200,
+      "cumtime_s": 0.001102948,
+      "tottime_s": 0.000684998,
+      "tottime_us_per_step": 27.39992
+    },
+    "jit.py:695(run)": {
+      "calls": 200,
+      "cumtime_s": 0.013175973,
+      "tottime_s": 0.0036992220000000003,
+      "tottime_us_per_step": 147.96888
+    },
+    "knobs.py:422(__call__)": {
+      "calls": 400,
+      "cumtime_s": 0.000318614,
+      "tottime_s": 0.000318614,
+      "tottime_us_per_step": 12.74456
+    },
+    "koff_runtime.py:1096(abort_mixed_decode_drafts)": {
+      "calls": 25,
+      "cumtime_s": 0.000102873,
+      "tottime_s": 5.6117000000000005e-05,
+      "tottime_us_per_step": 2.2446800000000002
+    },
+    "koff_runtime.py:1152(infer_verified_action)": {
+      "calls": 25,
+      "cumtime_s": 0.00011199300000000001,
+      "tottime_s": 7.8254e-05,
+      "tottime_us_per_step": 3.13016
+    },
+    "koff_runtime.py:1187(make_scheduler_metadata)": {
+      "calls": 25,
+      "cumtime_s": 0.000569976,
+      "tottime_s": 0.00024162600000000002,
+      "tottime_us_per_step": 9.665040000000001
+    },
+    "koff_runtime.py:1279(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 1.1496000000000001e-05,
+      "tottime_s": 1.1496000000000001e-05,
+      "tottime_us_per_step": 0.4598400000000001
+    },
+    "koff_runtime.py:1295(validate_draft_token_batch)": {
+      "calls": 25,
+      "cumtime_s": 5.2458000000000005e-05,
+      "tottime_s": 3.1704e-05,
+      "tottime_us_per_step": 1.26816
+    },
+    "koff_runtime.py:1311(validate_action_transport)": {
+      "calls": 25,
+      "cumtime_s": 0.00011722100000000001,
+      "tottime_s": 8.2018e-05,
+      "tottime_us_per_step": 3.28072
+    },
+    "koff_runtime.py:1394(draft_output_width)": {
+      "calls": 25,
+      "cumtime_s": 7.2105e-05,
+      "tottime_s": 4.3693e-05,
+      "tottime_us_per_step": 1.7477200000000002
+    },
+    "koff_runtime.py:1410(draft_output_batch_size)": {
+      "calls": 25,
+      "cumtime_s": 4.2848e-05,
+      "tottime_s": 2.9100000000000003e-05,
+      "tottime_us_per_step": 1.1640000000000001
+    },
+    "koff_runtime.py:1423(validate_draft_dispatch)": {
+      "calls": 25,
+      "cumtime_s": 0.00011498000000000001,
+      "tottime_s": 3.9273e-05,
+      "tottime_us_per_step": 1.57092
+    },
+    "koff_runtime.py:1443(_short_digest)": {
+      "calls": 25,
+      "cumtime_s": 0.00026950300000000004,
+      "tottime_s": 7.571900000000001e-05,
+      "tottime_us_per_step": 3.02876
+    },
+    "koff_runtime.py:1464(_storage_root_description)": {
+      "calls": 1700,
+      "cumtime_s": 0.002305099,
+      "tottime_s": 0.0016161040000000002,
+      "tottime_us_per_step": 64.64416
+    },
+    "koff_runtime.py:1645(slot_mapping_identity)": {
+      "calls": 25,
+      "cumtime_s": 0.007402140000000001,
+      "tottime_s": 9.3737e-05,
+      "tottime_us_per_step": 3.7494799999999997
+    },
+    "koff_runtime.py:1649(visit)": {
+      "calls": 25,
+      "cumtime_s": 0.006998766,
+      "tottime_s": 0.001925402,
+      "tottime_us_per_step": 77.01608
+    },
+    "koff_runtime.py:1667(make_runner_evidence)": {
+      "calls": 25,
+      "cumtime_s": 0.000804523,
+      "tottime_s": 0.00034124700000000003,
+      "tottime_us_per_step": 13.649880000000001
+    },
+    "koff_runtime.py:1693(<genexpr>)": {
+      "calls": 75,
+      "cumtime_s": 3.9935e-05,
+      "tottime_s": 3.9935e-05,
+      "tottime_us_per_step": 1.5974000000000002
+    },
+    "koff_runtime.py:1773(build_live_step_record)": {
+      "calls": 25,
+      "cumtime_s": 0.005782817,
+      "tottime_s": 0.000379142,
+      "tottime_us_per_step": 15.16568
+    },
+    "koff_runtime.py:1817(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 1.9691000000000002e-05,
+      "tottime_s": 1.9691000000000002e-05,
+      "tottime_us_per_step": 0.7876400000000001
+    },
+    "koff_runtime.py:1827(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 3.3066000000000005e-05,
+      "tottime_s": 1.9312e-05,
+      "tottime_us_per_step": 0.77248
+    },
+    "koff_runtime.py:1829(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 1.1818000000000001e-05,
+      "tottime_s": 1.1818000000000001e-05,
+      "tottime_us_per_step": 0.47272000000000003
+    },
+    "koff_runtime.py:1843(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 9.498000000000001e-06,
+      "tottime_s": 9.498000000000001e-06,
+      "tottime_us_per_step": 0.37992000000000004
+    },
+    "koff_runtime.py:2644(write)": {
+      "calls": 25,
+      "cumtime_s": 0.004117108,
+      "tottime_s": 0.00030786,
+      "tottime_us_per_step": 12.314400000000001
+    },
+    "koff_runtime.py:66(observe_chain_runtime_mode)": {
+      "calls": 25,
+      "cumtime_s": 2.1716e-05,
+      "tottime_s": 2.1716e-05,
+      "tottime_us_per_step": 0.8686400000000001
+    },
+    "koff_runtime.py:792(token_count)": {
+      "calls": 25,
+      "cumtime_s": 5.71e-06,
+      "tottime_s": 5.71e-06,
+      "tottime_us_per_step": 0.2284
+    },
+    "koff_runtime.py:877(action_for_k)": {
+      "calls": 75,
+      "cumtime_s": 2.4926e-05,
+      "tottime_s": 2.4926e-05,
+      "tottime_us_per_step": 0.99704
+    },
+    "koff_runtime.py:887(action_for_id)": {
+      "calls": 150,
+      "cumtime_s": 3.726e-05,
+      "tottime_s": 3.726e-05,
+      "tottime_us_per_step": 1.4904
+    },
+    "kv_cache_coordinator.py:129(get_num_blocks_to_allocate)": {
+      "calls": 25,
+      "cumtime_s": 0.00036993000000000003,
+      "tottime_s": 6.3475e-05,
+      "tottime_us_per_step": 2.539
+    },
+    "kv_cache_coordinator.py:232(allocate_new_blocks)": {
+      "calls": 25,
+      "cumtime_s": 0.00022736000000000002,
+      "tottime_s": 5.5651000000000006e-05,
+      "tottime_us_per_step": 2.2260400000000002
+    },
+    "kv_cache_coordinator.py:256(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 0.000171709,
+      "tottime_s": 3.3237e-05,
+      "tottime_us_per_step": 1.32948
+    },
+    "kv_cache_coordinator.py:330(remove_skipped_blocks)": {
+      "calls": 25,
+      "cumtime_s": 4.5045e-05,
+      "tottime_s": 2.1740000000000002e-05,
+      "tottime_us_per_step": 0.8696
+    },
+    "kv_cache_coordinator.py:362(new_step_starts)": {
+      "calls": 25,
+      "cumtime_s": 2.8634e-05,
+      "tottime_s": 2.4787000000000002e-05,
+      "tottime_us_per_step": 0.9914800000000001
+    },
+    "kv_cache_coordinator.py:404(get_num_common_prefix_blocks)": {
+      "calls": 25,
+      "cumtime_s": 1.0099000000000001e-05,
+      "tottime_s": 1.0099000000000001e-05,
+      "tottime_us_per_step": 0.40396
+    },
+    "kv_cache_manager.py:244(allocate_slots)": {
+      "calls": 25,
+      "cumtime_s": 0.0008571500000000001,
+      "tottime_s": 0.000156092,
+      "tottime_us_per_step": 6.24368
+    },
+    "kv_cache_manager.py:520(get_num_common_prefix_blocks)": {
+      "calls": 25,
+      "cumtime_s": 2.4606e-05,
+      "tottime_s": 1.4507e-05,
+      "tottime_us_per_step": 0.58028
+    },
+    "kv_cache_manager.py:554(take_events)": {
+      "calls": 25,
+      "cumtime_s": 4.0256e-05,
+      "tottime_s": 3.2057e-05,
+      "tottime_us_per_step": 1.28228
+    },
+    "kv_cache_manager.py:599(create_kv_cache_blocks)": {
+      "calls": 25,
+      "cumtime_s": 3.2113e-05,
+      "tottime_s": 2.1510000000000002e-05,
+      "tottime_us_per_step": 0.8604
+    },
+    "kv_cache_manager.py:612(new_step_starts)": {
+      "calls": 25,
+      "cumtime_s": 4.9421e-05,
+      "tottime_s": 2.0787000000000003e-05,
+      "tottime_us_per_step": 0.8314800000000001
+    },
+    "kv_cache_manager.py:69(get_block_ids)": {
+      "calls": 25,
+      "cumtime_s": 9.0445e-05,
+      "tottime_s": 4.533e-05,
+      "tottime_us_per_step": 1.8132
+    },
+    "kv_cache_manager.py:82(<genexpr>)": {
+      "calls": 43,
+      "cumtime_s": 1.853e-05,
+      "tottime_s": 1.5128000000000002e-05,
+      "tottime_us_per_step": 0.6051200000000001
+    },
+    "kv_cache_manager.py:84(<genexpr>)": {
+      "calls": 14,
+      "cumtime_s": 4.527e-06,
+      "tottime_s": 4.527e-06,
+      "tottime_us_per_step": 0.18108000000000002
+    },
+    "kv_cache_utils.py:255(popleft_n)": {
+      "calls": 7,
+      "cumtime_s": 1.9068e-05,
+      "tottime_s": 1.7201e-05,
+      "tottime_us_per_step": 0.68804
+    },
+    "kv_connector_model_runner_mixin.py:50(maybe_get_kv_connector_output)": {
+      "calls": 25,
+      "cumtime_s": 5.1313e-05,
+      "tottime_s": 3.8055e-05,
+      "tottime_us_per_step": 1.5222
+    },
+    "kv_connector_model_runner_mixin.py:63(finalize_kv_connector)": {
+      "calls": 25,
+      "cumtime_s": 3.3726e-05,
+      "tottime_s": 2.4836e-05,
+      "tottime_us_per_step": 0.9934400000000001
+    },
+    "kv_transfer_state.py:26(has_kv_transfer_group)": {
+      "calls": 3275,
+      "cumtime_s": 0.0007354190000000001,
+      "tottime_s": 0.0007354190000000001,
+      "tottime_us_per_step": 29.416760000000004
+    },
+    "kv_transfer_utils.py:37(wrapper)": {
+      "calls": 3200,
+      "cumtime_s": 0.261280081,
+      "tottime_s": 0.0033394540000000004,
+      "tottime_us_per_step": 133.57816
+    },
+    "late_interaction_runner.py:41(on_requests_finished)": {
+      "calls": 25,
+      "cumtime_s": 7.564000000000001e-06,
+      "tottime_s": 7.564000000000001e-06,
+      "tottime_us_per_step": 0.30256000000000005
+    },
+    "llm_base_proposer.py:1712(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 2.4795000000000002e-05,
+      "tottime_s": 2.4795000000000002e-05,
+      "tottime_us_per_step": 0.9918
+    },
+    "llm_base_proposer.py:2575(_update_positions_dependent_metadata)": {
+      "calls": 75,
+      "cumtime_s": 0.009676468,
+      "tottime_s": 0.002841613,
+      "tottime_us_per_step": 113.66452000000001
+    },
+    "llm_base_proposer.py:2627(set_inputs_first_pass)": {
+      "calls": 25,
+      "cumtime_s": 0.014429416,
+      "tottime_s": 0.0026304870000000004,
+      "tottime_us_per_step": 105.21948000000002
+    },
+    "llm_base_proposer.py:2774(build_model_inputs_first_pass)": {
+      "calls": 25,
+      "cumtime_s": 0.00018583,
+      "tottime_s": 0.000140001,
+      "tottime_us_per_step": 5.60004
+    },
+    "llm_base_proposer.py:2805(_kv_window_step0_active)": {
+      "calls": 25,
+      "cumtime_s": 1.0683000000000001e-05,
+      "tottime_s": 1.0683000000000001e-05,
+      "tottime_us_per_step": 0.4273200000000001
+    },
+    "llm_base_proposer.py:2824(_step0_decode_active)": {
+      "calls": 25,
+      "cumtime_s": 0.000247539,
+      "tottime_s": 6.4292e-05,
+      "tottime_us_per_step": 2.57168
+    },
+    "llm_base_proposer.py:2876(_compact_step0_decode)": {
+      "calls": 25,
+      "cumtime_s": 0.0031804660000000003,
+      "tottime_s": 0.00234943,
+      "tottime_us_per_step": 93.9772
+    },
+    "llm_base_proposer.py:3019(_apply_draft_kv_window)": {
+      "calls": 100,
+      "cumtime_s": 0.027593282,
+      "tottime_s": 0.012834324000000001,
+      "tottime_us_per_step": 513.37296
+    },
+    "llm_base_proposer.py:3123(build_per_group_and_layer_attn_metadata)": {
+      "calls": 50,
+      "cumtime_s": 0.001558583,
+      "tottime_s": 0.000369144,
+      "tottime_us_per_step": 14.76576
+    },
+    "llm_base_proposer.py:3233(model_returns_tuple)": {
+      "calls": 100,
+      "cumtime_s": 7.5467e-05,
+      "tottime_s": 7.5467e-05,
+      "tottime_us_per_step": 3.01868
+    },
+    "llm_base_proposer.py:3276(prepare_next_token_ids_padded)": {
+      "calls": 25,
+      "cumtime_s": 0.0029765020000000002,
+      "tottime_s": 0.000392624,
+      "tottime_us_per_step": 15.704960000000002
+    },
+    "llm_base_proposer.py:3328(prepare_inputs_padded)": {
+      "calls": 25,
+      "cumtime_s": 0.002678241,
+      "tottime_s": 0.0009398230000000001,
+      "tottime_us_per_step": 37.59292000000001
+    },
+    "llm_base_proposer.py:3874(_vres_remap)": {
+      "calls": 100,
+      "cumtime_s": 4.3400000000000005e-05,
+      "tottime_s": 4.3400000000000005e-05,
+      "tottime_us_per_step": 1.7360000000000002
+    },
+    "llm_base_proposer.py:4415(_determine_batch_execution_and_padding)": {
+      "calls": 50,
+      "cumtime_s": 0.0020707150000000003,
+      "tottime_s": 0.00039514700000000004,
+      "tottime_us_per_step": 15.805880000000002
+    },
+    "llm_base_proposer.py:75(_observe_chain_runtime_mode)": {
+      "calls": 25,
+      "cumtime_s": 9.0612e-05,
+      "tottime_s": 6.8896e-05,
+      "tottime_us_per_step": 2.75584
+    },
+    "llm_base_proposer.py:752(_get_positions)": {
+      "calls": 100,
+      "cumtime_s": 0.000212329,
+      "tottime_s": 0.000212329,
+      "tottime_us_per_step": 8.49316
+    },
+    "llm_base_proposer.py:772(_get_slot_mapping)": {
+      "calls": 100,
+      "cumtime_s": 0.000924675,
+      "tottime_s": 0.000267557,
+      "tottime_us_per_step": 10.70228
+    },
+    "llm_base_proposer.py:824(_tag_a2a)": {
+      "calls": 200,
+      "cumtime_s": 5.0971000000000004e-05,
+      "tottime_s": 5.0971000000000004e-05,
+      "tottime_us_per_step": 2.03884
+    },
+    "llm_base_proposer.py:950(_greedy_sample)": {
+      "calls": 100,
+      "cumtime_s": 0.017405101000000003,
+      "tottime_s": 0.000546748,
+      "tottime_us_per_step": 21.86992
+    },
+    "llm_base_proposer.py:969(_sample_draft_tokens)": {
+      "calls": 100,
+      "cumtime_s": 0.017545423,
+      "tottime_s": 0.00014032200000000002,
+      "tottime_us_per_step": 5.6128800000000005
+    },
+    "llm_base_proposer.py:979(take_last_draft_probs)": {
+      "calls": 25,
+      "cumtime_s": 5.0190000000000006e-06,
+      "tottime_s": 5.0190000000000006e-06,
+      "tottime_us_per_step": 0.20076
+    },
+    "llm_base_proposer.py:982(_record_step0_work_evidence)": {
+      "calls": 25,
+      "cumtime_s": 1.4476000000000002e-05,
+      "tottime_s": 1.4476000000000002e-05,
+      "tottime_us_per_step": 0.57904
+    },
+    "llm_engine.py:191(has_unfinished_requests)": {
+      "calls": 25,
+      "cumtime_s": 3.8100000000000005e-05,
+      "tottime_s": 1.796e-05,
+      "tottime_us_per_step": 0.7184
+    },
+    "logits_processor.py:54(forward)": {
+      "calls": 125,
+      "cumtime_s": 0.014695058,
+      "tottime_s": 0.000875027,
+      "tottime_us_per_step": 35.00108
+    },
+    "logits_processor.py:84(_gather_logits)": {
+      "calls": 125,
+      "cumtime_s": 0.000608474,
+      "tottime_s": 0.00020593600000000002,
+      "tottime_us_per_step": 8.23744
+    },
+    "logits_processor.py:98(_get_logits)": {
+      "calls": 125,
+      "cumtime_s": 0.013207936,
+      "tottime_s": 0.0012265800000000001,
+      "tottime_us_per_step": 49.06320000000001
+    },
+    "logprobs.py:348(update_from_output)": {
+      "calls": 25,
+      "cumtime_s": 1.0603e-05,
+      "tottime_s": 1.0603e-05,
+      "tottime_us_per_step": 0.42412
+    },
+    "math_utils.py:10(cdiv)": {
+      "calls": 50,
+      "cumtime_s": 2.9427e-05,
+      "tottime_s": 2.9427e-05,
+      "tottime_us_per_step": 1.17708
+    },
+    "metadata.py:26(__post_init__)": {
+      "calls": 25,
+      "cumtime_s": 4.0841000000000004e-05,
+      "tottime_s": 1.7573000000000003e-05,
+      "tottime_us_per_step": 0.7029200000000002
+    },
+    "model.py:1603(is_hybrid)": {
+      "calls": 25,
+      "cumtime_s": 3.1212e-05,
+      "tottime_s": 3.1212e-05,
+      "tottime_us_per_step": 1.24848
+    },
+    "module.py:1775(_wrapped_call_impl)": {
+      "calls": 2,
+      "cumtime_s": 0.0005580730000000001,
+      "tottime_s": 0.000501486,
+      "tottime_us_per_step": 20.05944
+    },
+    "module.py:1783(_call_impl)": {
+      "calls": 2,
+      "cumtime_s": 0.000549483,
+      "tottime_s": 0.0009174490000000001,
+      "tottime_us_per_step": 36.69796
+    },
+    "module.py:1955(__getattr__)": {
+      "calls": 16525,
+      "cumtime_s": 0.005745798000000001,
+      "tottime_s": 0.005745798000000001,
+      "tottime_us_per_step": 229.83192000000003
+    },
+    "multiarray.py:1106(copyto)": {
+      "calls": 25,
+      "cumtime_s": 5.7970000000000006e-06,
+      "tottime_s": 5.7970000000000006e-06,
+      "tottime_us_per_step": 0.23188000000000003
+    },
+    "num_divergence_dump.py:104(record_logits)": {
+      "calls": 125,
+      "cumtime_s": 0.00035968,
+      "tottime_s": 8.635600000000001e-05,
+      "tottime_us_per_step": 3.4542400000000004
+    },
+    "num_divergence_dump.py:93(logits_dump_enabled)": {
+      "calls": 125,
+      "cumtime_s": 0.00027332400000000003,
+      "tottime_s": 0.00027332400000000003,
+      "tottime_us_per_step": 10.932960000000001
+    },
+    "numeric.py:324(full)": {
+      "calls": 25,
+      "cumtime_s": 0.000212284,
+      "tottime_s": 0.000170831,
+      "tottime_us_per_step": 6.833240000000001
+    },
+    "output_processor.py:272(make_request_output)": {
+      "calls": 25,
+      "cumtime_s": 0.00039559100000000004,
+      "tottime_s": 5.8629000000000004e-05,
+      "tottime_us_per_step": 2.3451600000000004
+    },
+    "output_processor.py:333(_new_request_output)": {
+      "calls": 25,
+      "cumtime_s": 0.000167992,
+      "tottime_s": 0.000146741,
+      "tottime_us_per_step": 5.86964
+    },
+    "output_processor.py:376(_new_completion_output)": {
+      "calls": 25,
+      "cumtime_s": 0.00016897,
+      "tottime_s": 0.000135317,
+      "tottime_us_per_step": 5.41268
+    },
+    "output_processor.py:440(has_unfinished_requests)": {
+      "calls": 25,
+      "cumtime_s": 2.014e-05,
+      "tottime_s": 1.4731e-05,
+      "tottime_us_per_step": 0.58924
+    },
+    "output_processor.py:576(process_outputs)": {
+      "calls": 25,
+      "cumtime_s": 0.001423849,
+      "tottime_s": 0.000182962,
+      "tottime_us_per_step": 7.318479999999999
+    },
+    "output_processor.py:709(update_scheduler_stats)": {
+      "calls": 25,
+      "cumtime_s": 2.9409000000000003e-05,
+      "tottime_s": 2.3771e-05,
+      "tottime_us_per_step": 0.95084
+    },
+    "output_processor.py:774(_update_stats_from_output)": {
+      "calls": 25,
+      "cumtime_s": 5.767e-06,
+      "tottime_s": 5.767e-06,
+      "tottime_us_per_step": 0.23068000000000002
+    },
+    "outputs.py:109(__init__)": {
+      "calls": 25,
+      "cumtime_s": 1.0247e-05,
+      "tottime_s": 1.0247e-05,
+      "tottime_us_per_step": 0.40988
+    },
+    "parallel.py:526(num_ubatches)": {
+      "calls": 25,
+      "cumtime_s": 1.6787e-05,
+      "tottime_s": 1.6787e-05,
+      "tottime_us_per_step": 0.67148
+    },
+    "parallel_state.py:1364(get_tp_group)": {
+      "calls": 125,
+      "cumtime_s": 5.843e-05,
+      "tottime_s": 5.843e-05,
+      "tottime_us_per_step": 2.3372
+    },
+    "parallel_state.py:1380(get_pp_group)": {
+      "calls": 100,
+      "cumtime_s": 3.6203000000000006e-05,
+      "tottime_s": 3.6203000000000006e-05,
+      "tottime_us_per_step": 1.44812
+    },
+    "parallel_state.py:544(first_rank)": {
+      "calls": 50,
+      "cumtime_s": 3.2972e-05,
+      "tottime_s": 3.2972e-05,
+      "tottime_us_per_step": 1.31888
+    },
+    "parallel_state.py:549(last_rank)": {
+      "calls": 50,
+      "cumtime_s": 1.9459e-05,
+      "tottime_s": 1.9459e-05,
+      "tottime_us_per_step": 0.7783599999999999
+    },
+    "parallel_state.py:554(is_first_rank)": {
+      "calls": 50,
+      "cumtime_s": 8.5834e-05,
+      "tottime_s": 5.2862e-05,
+      "tottime_us_per_step": 2.11448
+    },
+    "parallel_state.py:559(is_last_rank)": {
+      "calls": 50,
+      "cumtime_s": 4.8828e-05,
+      "tottime_s": 2.9369000000000003e-05,
+      "tottime_us_per_step": 1.17476
+    },
+    "parallel_state.py:651(all_gather)": {
+      "calls": 125,
+      "cumtime_s": 8.4759e-05,
+      "tottime_s": 8.4759e-05,
+      "tottime_us_per_step": 3.39036
+    },
+    "pathlib.py:1007(open)": {
+      "calls": 25,
+      "cumtime_s": 0.001073561,
+      "tottime_s": 4.5900000000000004e-05,
+      "tottime_us_per_step": 1.8360000000000003
+    },
+    "pathlib.py:437(__str__)": {
+      "calls": 25,
+      "cumtime_s": 8.5e-06,
+      "tottime_s": 8.5e-06,
+      "tottime_us_per_step": 0.34
+    },
+    "pathlib.py:447(__fspath__)": {
+      "calls": 25,
+      "cumtime_s": 3.9208e-05,
+      "tottime_s": 3.0708000000000005e-05,
+      "tottime_us_per_step": 1.2283200000000003
+    },
+    "probe_w98_cpu_profile.py:66(_require)": {
+      "calls": 25,
+      "cumtime_s": 4.288e-06,
+      "tottime_s": 4.288e-06,
+      "tottime_us_per_step": 0.17152
+    },
+    "queue.py:209(_qsize)": {
+      "calls": 25,
+      "cumtime_s": 3.0010000000000002e-05,
+      "tottime_s": 2.0949000000000002e-05,
+      "tottime_us_per_step": 0.83796
+    },
+    "queue.py:97(empty)": {
+      "calls": 25,
+      "cumtime_s": 0.000123506,
+      "tottime_s": 8.2345e-05,
+      "tottime_us_per_step": 3.2938
+    },
+    "qwen3.py:334(compute_logits)": {
+      "calls": 125,
+      "cumtime_s": 0.016514823,
+      "tottime_s": 0.000354883,
+      "tottime_us_per_step": 14.195320000000002
+    },
+    "rejection_sampler.py:248(parse_output)": {
+      "calls": 25,
+      "cumtime_s": 0.003094068,
+      "tottime_s": 0.000803656,
+      "tottime_us_per_step": 32.146240000000006
+    },
+    "rejection_sampler.py:285(apply_logits_processors)": {
+      "calls": 25,
+      "cumtime_s": 8.6736e-05,
+      "tottime_s": 7.4032e-05,
+      "tottime_us_per_step": 2.96128
+    },
+    "rejection_sampler.py:394(rejection_sample)": {
+      "calls": 25,
+      "cumtime_s": 0.0031784590000000002,
+      "tottime_s": 0.00025446,
+      "tottime_us_per_step": 10.178400000000002
+    },
+    "rejection_sampler.py:510(apply_sampling_constraints)": {
+      "calls": 25,
+      "cumtime_s": 2.3749000000000003e-05,
+      "tottime_s": 2.3749000000000003e-05,
+      "tottime_us_per_step": 0.9499600000000001
+    },
+    "rejection_sampler.py:88(forward)": {
+      "calls": 25,
+      "cumtime_s": 0.009585847,
+      "tottime_s": 0.002168567,
+      "tottime_us_per_step": 86.74268000000001
+    },
+    "request.py:224(append_output_token_ids)": {
+      "calls": 105,
+      "cumtime_s": 0.000203596,
+      "tottime_s": 0.000127911,
+      "tottime_us_per_step": 5.11644
+    },
+    "request.py:237(update_block_hashes)": {
+      "calls": 105,
+      "cumtime_s": 1.7396e-05,
+      "tottime_s": 1.7396e-05,
+      "tottime_us_per_step": 0.69584
+    },
+    "request.py:242(use_structured_output)": {
+      "calls": 75,
+      "cumtime_s": 1.4992000000000001e-05,
+      "tottime_s": 1.4992000000000001e-05,
+      "tottime_us_per_step": 0.59968
+    },
+    "request.py:246(num_tokens)": {
+      "calls": 155,
+      "cumtime_s": 6.495800000000001e-05,
+      "tottime_s": 4.3853e-05,
+      "tottime_us_per_step": 1.7541200000000001
+    },
+    "request.py:250(num_tokens_with_spec)": {
+      "calls": 25,
+      "cumtime_s": 2.3893000000000003e-05,
+      "tottime_s": 1.6697e-05,
+      "tottime_us_per_step": 0.6678799999999999
+    },
+    "request.py:254(num_output_tokens)": {
+      "calls": 260,
+      "cumtime_s": 9.9494e-05,
+      "tottime_s": 6.9385e-05,
+      "tottime_us_per_step": 2.7754000000000003
+    },
+    "request.py:258(num_encoder_inputs)": {
+      "calls": 50,
+      "cumtime_s": 2.93e-05,
+      "tottime_s": 2.2363000000000003e-05,
+      "tottime_us_per_step": 0.8945200000000001
+    },
+    "request.py:262(has_encoder_inputs)": {
+      "calls": 50,
+      "cumtime_s": 5.0948e-05,
+      "tottime_s": 2.1648e-05,
+      "tottime_us_per_step": 0.86592
+    },
+    "request.py:279(is_finished)": {
+      "calls": 50,
+      "cumtime_s": 8.8318e-05,
+      "tottime_s": 5.9501000000000005e-05,
+      "tottime_us_per_step": 2.38004
+    },
+    "request.py:296(take_events)": {
+      "calls": 25,
+      "cumtime_s": 7.625000000000001e-06,
+      "tottime_s": 7.625000000000001e-06,
+      "tottime_us_per_step": 0.30500000000000005
+    },
+    "request.py:302(take_prefill_stats)": {
+      "calls": 25,
+      "cumtime_s": 5.045e-06,
+      "tottime_s": 5.045e-06,
+      "tottime_us_per_step": 0.2018
+    },
+    "request.py:344(is_finished)": {
+      "calls": 50,
+      "cumtime_s": 2.8817000000000002e-05,
+      "tottime_s": 2.8817000000000002e-05,
+      "tottime_us_per_step": 1.1526800000000001
+    },
+    "request_queue.py:118(__bool__)": {
+      "calls": 100,
+      "cumtime_s": 0.00010917600000000001,
+      "tottime_s": 2.8189e-05,
+      "tottime_us_per_step": 1.12756
+    },
+    "request_queue.py:122(__len__)": {
+      "calls": 150,
+      "cumtime_s": 0.00011379300000000001,
+      "tottime_s": 0.00011379300000000001,
+      "tottime_us_per_step": 4.55172
+    },
+    "request_queue.py:201(create_request_queue)": {
+      "calls": 25,
+      "cumtime_s": 4.3686e-05,
+      "tottime_s": 4.3686e-05,
+      "tottime_us_per_step": 1.74744
+    },
+    "sampler.py:239(greedy_sample)": {
+      "calls": 25,
+      "cumtime_s": 0.00068722,
+      "tottime_s": 5.8785e-05,
+      "tottime_us_per_step": 2.3514
+    },
+    "sampler.py:243(sample)": {
+      "calls": 25,
+      "cumtime_s": 0.0007319410000000001,
+      "tottime_s": 4.4721e-05,
+      "tottime_us_per_step": 1.7888400000000002
+    },
+    "sampler.py:371(apply_logits_processors)": {
+      "calls": 25,
+      "cumtime_s": 0.000101822,
+      "tottime_s": 9.041600000000001e-05,
+      "tottime_us_per_step": 3.6166400000000003
+    },
+    "sampler.py:422(apply_penalties)": {
+      "calls": 25,
+      "cumtime_s": 4.542e-06,
+      "tottime_s": 4.542e-06,
+      "tottime_us_per_step": 0.18167999999999998
+    },
+    "sampler.py:72(forward)": {
+      "calls": 25,
+      "cumtime_s": 0.0025410650000000003,
+      "tottime_s": 0.000377262,
+      "tottime_us_per_step": 15.09048
+    },
+    "sampling_params.py:687(eos_token_id)": {
+      "calls": 105,
+      "cumtime_s": 1.4753000000000001e-05,
+      "tottime_s": 1.4753000000000001e-05,
+      "tottime_us_per_step": 0.59012
+    },
+    "sampling_params.py:700(num_logprobs)": {
+      "calls": 25,
+      "cumtime_s": 7.439e-06,
+      "tottime_s": 7.439e-06,
+      "tottime_us_per_step": 0.29756
+    },
+    "scheduler.py:1794(<genexpr>)": {
+      "calls": 50,
+      "cumtime_s": 1.6828000000000002e-05,
+      "tottime_s": 1.6828000000000002e-05,
+      "tottime_us_per_step": 0.6731200000000002
+    },
+    "scheduler.py:1833(<genexpr>)": {
+      "calls": 25,
+      "cumtime_s": 9.01e-06,
+      "tottime_s": 9.01e-06,
+      "tottime_us_per_step": 0.3604
+    },
+    "scheduler.py:1952(_update_after_schedule)": {
+      "calls": 25,
+      "cumtime_s": 0.000130381,
+      "tottime_s": 9.6008e-05,
+      "tottime_us_per_step": 3.84032
+    },
+    "scheduler.py:2043(_make_cached_request_data)": {
+      "calls": 25,
+      "cumtime_s": 0.00034623200000000003,
+      "tottime_s": 0.000212253,
+      "tottime_us_per_step": 8.490120000000001
+    },
+    "scheduler.py:2262(get_grammar_bitmask)": {
+      "calls": 25,
+      "cumtime_s": 2.3690000000000002e-05,
+      "tottime_s": 2.3690000000000002e-05,
+      "tottime_us_per_step": 0.9476
+    },
+    "scheduler.py:2286(_update_p4_capture_cohort_from_output)": {
+      "calls": 25,
+      "cumtime_s": 2.2625e-05,
+      "tottime_s": 1.4973e-05,
+      "tottime_us_per_step": 0.59892
+    },
+    "scheduler.py:2358(update_from_output)": {
+      "calls": 25,
+      "cumtime_s": 0.012215865000000001,
+      "tottime_s": 0.001191019,
+      "tottime_us_per_step": 47.64076
+    },
+    "scheduler.py:2873(_update_request_with_output)": {
+      "calls": 25,
+      "cumtime_s": 0.0007150710000000001,
+      "tottime_s": 0.000130655,
+      "tottime_us_per_step": 5.2262
+    },
+    "scheduler.py:2920(update_draft_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.000231303,
+      "tottime_s": 0.00012236000000000001,
+      "tottime_us_per_step": 4.894400000000001
+    },
+    "scheduler.py:3189(get_num_unfinished_requests)": {
+      "calls": 25,
+      "cumtime_s": 0.000164313,
+      "tottime_s": 5.2738e-05,
+      "tottime_us_per_step": 2.10952
+    },
+    "scheduler.py:3213(has_requests)": {
+      "calls": 25,
+      "cumtime_s": 0.00020655400000000001,
+      "tottime_s": 2.1129e-05,
+      "tottime_us_per_step": 0.84516
+    },
+    "scheduler.py:3306(make_stats)": {
+      "calls": 25,
+      "cumtime_s": 6.68e-06,
+      "tottime_s": 6.68e-06,
+      "tottime_us_per_step": 0.26720000000000005
+    },
+    "scheduler.py:3344(make_spec_decoding_stats)": {
+      "calls": 25,
+      "cumtime_s": 6.4950000000000005e-06,
+      "tottime_s": 6.4950000000000005e-06,
+      "tottime_us_per_step": 0.25980000000000003
+    },
+    "scheduler.py:667(_begin_p4_capture_cohort_step)": {
+      "calls": 25,
+      "cumtime_s": 1.4311e-05,
+      "tottime_s": 1.4311e-05,
+      "tottime_us_per_step": 0.57244
+    },
+    "scheduler.py:699(_validate_p4_capture_cohort_dispatch)": {
+      "calls": 25,
+      "cumtime_s": 3.3783000000000005e-05,
+      "tottime_s": 2.6725000000000002e-05,
+      "tottime_us_per_step": 1.069
+    },
+    "scheduler.py:757(_p4_capture_cohort_arm_k)": {
+      "calls": 25,
+      "cumtime_s": 6.378000000000001e-06,
+      "tottime_s": 6.378000000000001e-06,
+      "tottime_us_per_step": 0.25512
+    },
+    "scheduler.py:782(schedule)": {
+      "calls": 25,
+      "cumtime_s": 0.0041335040000000005,
+      "tottime_s": 0.001367586,
+      "tottime_us_per_step": 54.70344
+    },
+    "self_spec_profiler.py:115(cpu_region)": {
+      "calls": 300,
+      "cumtime_s": 6.3929e-05,
+      "tottime_s": 6.3929e-05,
+      "tottime_us_per_step": 2.55716
+    },
+    "self_spec_profiler.py:202(get_profiler)": {
+      "calls": 725,
+      "cumtime_s": 0.00020365200000000002,
+      "tottime_s": 0.00020365200000000002,
+      "tottime_us_per_step": 8.146080000000001
+    },
+    "self_spec_profiler.py:87(region)": {
+      "calls": 1150,
+      "cumtime_s": 0.000258796,
+      "tottime_s": 0.000258796,
+      "tottime_us_per_step": 10.35184
+    },
+    "serial_utils.py:486(run_method)": {
+      "calls": 1,
+      "cumtime_s": 0.009003598,
+      "tottime_s": 0.00011483700000000001,
+      "tottime_us_per_step": 4.5934800000000005
+    },
+    "single_type_kv_cache_manager.py:101(get_num_blocks_to_allocate)": {
+      "calls": 25,
+      "cumtime_s": 0.000266182,
+      "tottime_s": 0.00013058700000000002,
+      "tottime_us_per_step": 5.22348
+    },
+    "single_type_kv_cache_manager.py:278(allocate_new_blocks)": {
+      "calls": 25,
+      "cumtime_s": 0.000111384,
+      "tottime_s": 5.267200000000001e-05,
+      "tottime_us_per_step": 2.1068800000000003
+    },
+    "single_type_kv_cache_manager.py:309(<genexpr>)": {
+      "calls": 14,
+      "cumtime_s": 3.813e-06,
+      "tottime_s": 3.813e-06,
+      "tottime_us_per_step": 0.15252000000000002
+    },
+    "single_type_kv_cache_manager.py:479(remove_skipped_blocks)": {
+      "calls": 25,
+      "cumtime_s": 2.3305e-05,
+      "tottime_s": 1.9905e-05,
+      "tottime_us_per_step": 0.7962
+    },
+    "single_type_kv_cache_manager.py:522(get_num_skipped_tokens)": {
+      "calls": 50,
+      "cumtime_s": 6.7770000000000005e-06,
+      "tottime_s": 6.7770000000000005e-06,
+      "tottime_us_per_step": 0.27108
+    },
+    "single_type_kv_cache_manager.py:535(new_step_starts)": {
+      "calls": 25,
+      "cumtime_s": 3.847000000000001e-06,
+      "tottime_s": 3.847000000000001e-06,
+      "tottime_us_per_step": 0.15388000000000002
+    },
+    "single_type_kv_cache_manager.py:97(_get_num_evictable_blocks)": {
+      "calls": 25,
+      "cumtime_s": 5.7441e-05,
+      "tottime_s": 3.1872e-05,
+      "tottime_us_per_step": 1.2748800000000002
+    },
+    "single_type_kv_cache_manager.py:99(<genexpr>)": {
+      "calls": 25,
+      "cumtime_s": 4.471e-06,
+      "tottime_s": 4.471e-06,
+      "tottime_us_per_step": 0.17884
+    },
+    "speculative.py:1149(use_eagle)": {
+      "calls": 50,
+      "cumtime_s": 2.247e-05,
+      "tottime_s": 2.247e-05,
+      "tottime_us_per_step": 0.8987999999999999
+    },
+    "speculative.py:1152(use_dflash)": {
+      "calls": 50,
+      "cumtime_s": 1.7026000000000003e-05,
+      "tottime_s": 1.7026000000000003e-05,
+      "tottime_us_per_step": 0.6810400000000001
+    },
+    "speculative.py:1158(uses_draft_model)": {
+      "calls": 50,
+      "cumtime_s": 1.1781000000000001e-05,
+      "tottime_s": 1.1781000000000001e-05,
+      "tottime_us_per_step": 0.47124000000000005
+    },
+    "speculative.py:1161(uses_extract_hidden_states)": {
+      "calls": 25,
+      "cumtime_s": 4.8780000000000006e-06,
+      "tottime_s": 4.8780000000000006e-06,
+      "tottime_us_per_step": 0.19512000000000004
+    },
+    "speculative.py:1164(use_ngram_gpu)": {
+      "calls": 100,
+      "cumtime_s": 3.1818e-05,
+      "tottime_s": 3.1818e-05,
+      "tottime_us_per_step": 1.2727199999999999
+    },
+    "state.py:119(get_and_reset)": {
+      "calls": 25,
+      "cumtime_s": 2.7809e-05,
+      "tottime_s": 1.8518e-05,
+      "tottime_us_per_step": 0.74072
+    },
+    "state.py:162(all)": {
+      "calls": 25,
+      "cumtime_s": 1.5175000000000001e-05,
+      "tottime_s": 1.5175000000000001e-05,
+      "tottime_us_per_step": 0.607
+    },
+    "state.py:59(_ensure_removed_sorted)": {
+      "calls": 25,
+      "cumtime_s": 3.9745e-05,
+      "tottime_s": 2.1222e-05,
+      "tottime_us_per_step": 0.8488800000000001
+    },
+    "state.py:69(removed)": {
+      "calls": 25,
+      "cumtime_s": 5.5045000000000006e-05,
+      "tottime_s": 1.5300000000000003e-05,
+      "tottime_us_per_step": 0.6120000000000001
+    },
+    "stats.py:534(update_scheduler_stats)": {
+      "calls": 25,
+      "cumtime_s": 5.638e-06,
+      "tottime_s": 5.638e-06,
+      "tottime_us_per_step": 0.22552
+    },
+    "streams.py:183(__new__)": {
+      "calls": 25,
+      "cumtime_s": 6.5504e-05,
+      "tottime_s": 2.3346000000000003e-05,
+      "tottime_us_per_step": 0.9338400000000001
+    },
+    "streams.py:199(record)": {
+      "calls": 25,
+      "cumtime_s": 0.00021654900000000002,
+      "tottime_s": 2.7036e-05,
+      "tottime_us_per_step": 1.08144
+    },
+    "streams.py:211(wait)": {
+      "calls": 25,
+      "cumtime_s": 0.00010974900000000001,
+      "tottime_s": 1.83e-05,
+      "tottime_us_per_step": 0.732
+    },
+    "streams.py:37(__new__)": {
+      "calls": 50,
+      "cumtime_s": 0.00028549200000000004,
+      "tottime_s": 0.00017347100000000002,
+      "tottime_us_per_step": 6.938840000000002
+    },
+    "streams.py:48(wait_event)": {
+      "calls": 25,
+      "cumtime_s": 0.000126797,
+      "tottime_s": 1.7048e-05,
+      "tottime_us_per_step": 0.6819200000000001
+    },
+    "streams.py:65(wait_stream)": {
+      "calls": 25,
+      "cumtime_s": 0.000538121,
+      "tottime_s": 7.897500000000001e-05,
+      "tottime_us_per_step": 3.1590000000000003
+    },
+    "streams.py:79(record_event)": {
+      "calls": 25,
+      "cumtime_s": 0.000332349,
+      "tottime_s": 5.0296e-05,
+      "tottime_us_per_step": 2.01184
+    },
+    "threading.py:124(RLock)": {
+      "calls": 25,
+      "cumtime_s": 3.1302e-05,
+      "tottime_s": 3.1302e-05,
+      "tottime_us_per_step": 1.25208
+    },
+    "threading.py:277(__init__)": {
+      "calls": 25,
+      "cumtime_s": 0.00016944800000000002,
+      "tottime_s": 0.00010435900000000001,
+      "tottime_us_per_step": 4.17436
+    },
+    "threading.py:299(__enter__)": {
+      "calls": 100,
+      "cumtime_s": 9.108400000000001e-05,
+      "tottime_s": 4.4354e-05,
+      "tottime_us_per_step": 1.77416
+    },
+    "threading.py:302(__exit__)": {
+      "calls": 100,
+      "cumtime_s": 6.2026e-05,
+      "tottime_s": 4.3367e-05,
+      "tottime_us_per_step": 1.73468
+    },
+    "threading.py:394(notify)": {
+      "calls": 25,
+      "cumtime_s": 3.0649000000000004e-05,
+      "tottime_s": 2.2692000000000002e-05,
+      "tottime_us_per_step": 0.9076800000000002
+    },
+    "threading.py:424(notify_all)": {
+      "calls": 25,
+      "cumtime_s": 6.4243e-05,
+      "tottime_s": 2.538e-05,
+      "tottime_us_per_step": 1.0152
+    },
+    "torch_utils.py:117(canonicalize_singleton_dim_strides)": {
+      "calls": 6400,
+      "cumtime_s": 0.003131701,
+      "tottime_s": 0.003131701,
+      "tottime_us_per_step": 125.26804
+    },
+    "torch_utils.py:606(async_tensor_h2d)": {
+      "calls": 125,
+      "cumtime_s": 0.003375868,
+      "tottime_s": 0.00034787900000000005,
+      "tottime_us_per_step": 13.915160000000004
+    },
+    "torch_utils.py:682(_patched_set_stream)": {
+      "calls": 50,
+      "cumtime_s": 0.000245899,
+      "tottime_s": 9.778900000000001e-05,
+      "tottime_us_per_step": 3.91156
+    },
+    "torch_utils.py:74(is_quantized_kv_cache)": {
+      "calls": 3275,
+      "cumtime_s": 0.004637967000000001,
+      "tottime_s": 0.00269737,
+      "tottime_us_per_step": 107.89480000000002
+    },
+    "torch_utils.py:887(__init__)": {
+      "calls": 3200,
+      "cumtime_s": 0.00027594500000000004,
+      "tottime_s": 0.00027594500000000004,
+      "tottime_us_per_step": 11.037800000000002
+    },
+    "torch_utils.py:915(_resolve_layer_name)": {
+      "calls": 6400,
+      "cumtime_s": 0.003686387,
+      "tottime_s": 0.002765529,
+      "tottime_us_per_step": 110.62116
+    },
+    "typing.py:2154(cast)": {
+      "calls": 175,
+      "cumtime_s": 2.4899e-05,
+      "tottime_s": 2.4899e-05,
+      "tottime_us_per_step": 0.9959600000000001
+    },
+    "ubatch_utils.py:63(maybe_create_ubatch_slices)": {
+      "calls": 25,
+      "cumtime_s": 6.042000000000001e-06,
+      "tottime_s": 6.042000000000001e-06,
+      "tottime_us_per_step": 0.24168000000000003
+    },
+    "uniproc_executor.py:133(take_draft_token_ids)": {
+      "calls": 25,
+      "cumtime_s": 0.001380678,
+      "tottime_s": 3.6612e-05,
+      "tottime_us_per_step": 1.46448
+    },
+    "uniproc_executor.py:79(collective_rpc)": {
+      "calls": 0,
+      "cumtime_s": 0.0,
+      "tottime_s": 4.6206000000000005e-05,
+      "tottime_us_per_step": 1.84824
+    },
+    "utils.py:139(copy_to_gpu)": {
+      "calls": 250,
+      "cumtime_s": 0.004401146,
+      "tottime_s": 0.001420791,
+      "tottime_us_per_step": 56.83164
+    },
+    "utils.py:14(next_power_of_2)": {
+      "calls": 50,
+      "cumtime_s": 4.9428e-05,
+      "tottime_s": 4.9428e-05,
+      "tottime_us_per_step": 1.9771200000000002
+    },
+    "utils.py:241(compute_new_slot_mapping)": {
+      "calls": 25,
+      "cumtime_s": 0.0072837200000000005,
+      "tottime_s": 0.0030215610000000003,
+      "tottime_us_per_step": 120.86244
+    },
+    "utils.py:257(get_metadata_builder)": {
+      "calls": 75,
+      "cumtime_s": 9.784400000000001e-05,
+      "tottime_s": 6.511700000000001e-05,
+      "tottime_us_per_step": 2.60468
+    },
+    "utils.py:273(extend_all_queries_by_N)": {
+      "calls": 25,
+      "cumtime_s": 0.002286479,
+      "tottime_s": 0.00127603,
+      "tottime_us_per_step": 51.041199999999996
+    },
+    "utils.py:332(dispatch_unquantized_gemm)": {
+      "calls": 125,
+      "cumtime_s": 0.0005711280000000001,
+      "tottime_s": 0.000338812,
+      "tottime_us_per_step": 13.552480000000001
+    },
+    "utils.py:5031(call_size)": {
+      "calls": 200,
+      "cumtime_s": 0.00040697600000000003,
+      "tottime_s": 0.000126592,
+      "tottime_us_per_step": 5.06368
+    },
+    "utils.py:5202(record_pregraph_bytecode_enter)": {
+      "calls": 100,
+      "cumtime_s": 0.00034391,
+      "tottime_s": 0.00031314,
+      "tottime_us_per_step": 12.525599999999999
+    },
+    "utils.py:5213(record_pregraph_bytecode_exit)": {
+      "calls": 100,
+      "cumtime_s": 0.00010469400000000001,
+      "tottime_s": 9.0667e-05,
+      "tottime_us_per_step": 3.62668
+    },
+    "utils.py:734(record_function_or_nullcontext)": {
+      "calls": 400,
+      "cumtime_s": 0.000419855,
+      "tottime_s": 0.000360064,
+      "tottime_us_per_step": 14.402560000000001
+    },
+    "utils.py:79(__getitem__)": {
+      "calls": 105,
+      "cumtime_s": 2.4303e-05,
+      "tottime_s": 2.4303e-05,
+      "tottime_us_per_step": 0.97212
+    },
+    "utils.py:88(eagle_step_update_slot_mapping_and_metadata)": {
+      "calls": 75,
+      "cumtime_s": 0.006772197000000001,
+      "tottime_s": 0.000427847,
+      "tottime_us_per_step": 17.11388
+    },
+    "utils.py:92(default_unquantized_gemm)": {
+      "calls": 125,
+      "cumtime_s": 0.010063165,
+      "tottime_s": 0.00024391600000000003,
+      "tottime_us_per_step": 9.75664
+    },
+    "utils.py:94(check_stop)": {
+      "calls": 105,
+      "cumtime_s": 0.00038082000000000003,
+      "tottime_s": 0.000223424,
+      "tottime_us_per_step": 8.936960000000001
+    },
+    "vocab_parallel_embedding.py:67(apply)": {
+      "calls": 125,
+      "cumtime_s": 0.011372882,
+      "tottime_s": 0.000592776,
+      "tottime_us_per_step": 23.711040000000004
+    },
+    "worker_base.py:333(__getattr__)": {
+      "calls": 50,
+      "cumtime_s": 7.5086e-05,
+      "tottime_s": 2.7069e-05,
+      "tottime_us_per_step": 1.0827600000000002
+    },
+    "worker_base.py:336(_apply_mm_cache)": {
+      "calls": 25,
+      "cumtime_s": 5.803e-06,
+      "tottime_s": 5.803e-06,
+      "tottime_us_per_step": 0.23212
+    },
+    "worker_base.py:346(execute_model)": {
+      "calls": 25,
+      "cumtime_s": 0.21564616800000003,
+      "tottime_s": 3.4768e-05,
+      "tottime_us_per_step": 1.39072
+    },
+    "~:0(<built-in method __new__ of type object at 0xa43b40>)": {
+      "calls": 250,
+      "cumtime_s": 0.000224753,
+      "tottime_s": 0.000224753,
+      "tottime_us_per_step": 8.990120000000001
+    },
+    "~:0(<built-in method __triton_launcher.launch>)": {
+      "calls": 25,
+      "cumtime_s": 0.00036647400000000004,
+      "tottime_s": 0.00032012100000000003,
+      "tottime_us_per_step": 12.804840000000002
+    },
+    "~:0(<built-in method _abc._abc_instancecheck>)": {
+      "calls": 3625,
+      "cumtime_s": 0.0008718360000000001,
+      "tottime_s": 0.0008718360000000001,
+      "tottime_us_per_step": 34.87344
+    },
+    "~:0(<built-in method _hashlib.openssl_sha256>)": {
+      "calls": 25,
+      "cumtime_s": 0.00011379800000000001,
+      "tottime_s": 0.00011379800000000001,
+      "tottime_us_per_step": 4.551920000000001
+    },
+    "~:0(<built-in method _io.open>)": {
+      "calls": 25,
+      "cumtime_s": 0.001018976,
+      "tottime_s": 0.0009689130000000001,
+      "tottime_us_per_step": 38.75652
+    },
+    "~:0(<built-in method _io.text_encoding>)": {
+      "calls": 25,
+      "cumtime_s": 8.685e-06,
+      "tottime_s": 8.685e-06,
+      "tottime_us_per_step": 0.34740000000000004
+    },
+    "~:0(<built-in method builtins.all>)": {
+      "calls": 75,
+      "cumtime_s": 0.000241374,
+      "tottime_s": 8.596000000000001e-05,
+      "tottime_us_per_step": 3.4384
+    },
+    "~:0(<built-in method builtins.any>)": {
+      "calls": 150,
+      "cumtime_s": 0.000215433,
+      "tottime_s": 0.000129481,
+      "tottime_us_per_step": 5.17924
+    },
+    "~:0(<built-in method builtins.callable>)": {
+      "calls": 200,
+      "cumtime_s": 5.3178000000000005e-05,
+      "tottime_s": 5.3178000000000005e-05,
+      "tottime_us_per_step": 2.12712
+    },
+    "~:0(<built-in method builtins.getattr>)": {
+      "calls": 6825,
+      "cumtime_s": 0.001977099,
+      "tottime_s": 0.0018556900000000001,
+      "tottime_us_per_step": 74.2276
+    },
+    "~:0(<built-in method builtins.hasattr>)": {
+      "calls": 5225,
+      "cumtime_s": 0.0019208900000000002,
+      "tottime_s": 0.0019208900000000002,
+      "tottime_us_per_step": 76.8356
+    },
+    "~:0(<built-in method builtins.hash>)": {
+      "calls": 7725,
+      "cumtime_s": 0.001778382,
+      "tottime_s": 0.001778382,
+      "tottime_us_per_step": 71.13528000000001
+    },
+    "~:0(<built-in method builtins.isinstance>)": {
+      "calls": 37080,
+      "cumtime_s": 0.008064328,
+      "tottime_s": 0.006369854,
+      "tottime_us_per_step": 254.79416
+    },
+    "~:0(<built-in method builtins.issubclass>)": {
+      "calls": 25,
+      "cumtime_s": 5.266e-06,
+      "tottime_s": 5.266e-06,
+      "tottime_us_per_step": 0.21064
+    },
+    "~:0(<built-in method builtins.iter>)": {
+      "calls": 200,
+      "cumtime_s": 4.6479e-05,
+      "tottime_s": 4.6479e-05,
+      "tottime_us_per_step": 1.85916
+    },
+    "~:0(<built-in method builtins.len>)": {
+      "calls": 5972,
+      "cumtime_s": 0.001710909,
+      "tottime_s": 0.0012751540000000001,
+      "tottime_us_per_step": 51.00616000000001
+    },
+    "~:0(<built-in method builtins.max>)": {
+      "calls": 200,
+      "cumtime_s": 0.00011316700000000001,
+      "tottime_s": 0.00011316700000000001,
+      "tottime_us_per_step": 4.526680000000001
+    },
+    "~:0(<built-in method builtins.min>)": {
+      "calls": 425,
+      "cumtime_s": 0.0003039,
+      "tottime_s": 0.0003039,
+      "tottime_us_per_step": 12.156
+    },
+    "~:0(<built-in method builtins.next>)": {
+      "calls": 3250,
+      "cumtime_s": 0.007986999,
+      "tottime_s": 0.002035959,
+      "tottime_us_per_step": 81.43835999999999
+    },
+    "~:0(<built-in method builtins.sorted>)": {
+      "calls": 25,
+      "cumtime_s": 4.0134000000000006e-05,
+      "tottime_s": 4.0134000000000006e-05,
+      "tottime_us_per_step": 1.6053600000000003
+    },
+    "~:0(<built-in method builtins.sum>)": {
+      "calls": 200,
+      "cumtime_s": 0.000220654,
+      "tottime_s": 0.000150793,
+      "tottime_us_per_step": 6.03172
+    },
+    "~:0(<built-in method numpy.array>)": {
+      "calls": 50,
+      "cumtime_s": 0.000146211,
+      "tottime_s": 0.000146211,
+      "tottime_us_per_step": 5.84844
+    },
+    "~:0(<built-in method numpy.empty>)": {
+      "calls": 25,
+      "cumtime_s": 3.5656000000000006e-05,
+      "tottime_s": 3.5656000000000006e-05,
+      "tottime_us_per_step": 1.4262400000000002
+    },
+    "~:0(<built-in method numpy.zeros>)": {
+      "calls": 25,
+      "cumtime_s": 6.6962e-05,
+      "tottime_s": 6.6962e-05,
+      "tottime_us_per_step": 2.67848
+    },
+    "~:0(<built-in method time.monotonic>)": {
+      "calls": 75,
+      "cumtime_s": 2.8727e-05,
+      "tottime_s": 2.8727e-05,
+      "tottime_us_per_step": 1.14908
+    },
+    "~:0(<built-in method torch._C._cuda_getCurrentRawStream>)": {
+      "calls": 200,
+      "cumtime_s": 0.000145837,
+      "tottime_s": 0.000145837,
+      "tottime_us_per_step": 5.833480000000001
+    },
+    "~:0(<built-in method torch._C._cuda_getCurrentStream>)": {
+      "calls": 50,
+      "cumtime_s": 3.2844e-05,
+      "tottime_s": 3.2844e-05,
+      "tottime_us_per_step": 1.31376
+    },
+    "~:0(<built-in method torch._C._cuda_getDevice>)": {
+      "calls": 275,
+      "cumtime_s": 0.00018723,
+      "tottime_s": 0.00018723,
+      "tottime_us_per_step": 7.4892
+    },
+    "~:0(<built-in method torch._C._cuda_isInBadFork>)": {
+      "calls": 325,
+      "cumtime_s": 0.000171521,
+      "tottime_s": 0.000171521,
+      "tottime_us_per_step": 6.86084
+    },
+    "~:0(<built-in method torch._C._cuda_setStream>)": {
+      "calls": 50,
+      "cumtime_s": 6.0124e-05,
+      "tottime_s": 6.0124e-05,
+      "tottime_us_per_step": 2.40496
+    },
+    "~:0(<built-in method torch._C._dynamo.eval_frame.set_eval_frame>)": {
+      "calls": 1600,
+      "cumtime_s": 0.00029127900000000003,
+      "tottime_s": 0.00029127900000000003,
+      "tottime_us_per_step": 11.651160000000003
+    },
+    "~:0(<built-in method torch._C._get_tracing_state>)": {
+      "calls": 350,
+      "cumtime_s": 0.000696249,
+      "tottime_s": 0.000696249,
+      "tottime_us_per_step": 27.84996
+    },
+    "~:0(<built-in method torch._C._has_torch_function>)": {
+      "calls": 125,
+      "cumtime_s": 6.862e-05,
+      "tottime_s": 6.862e-05,
+      "tottime_us_per_step": 2.7448
+    },
+    "~:0(<built-in method torch._C._has_torch_function_unary>)": {
+      "calls": 75,
+      "cumtime_s": 1.9977000000000002e-05,
+      "tottime_s": 1.9977000000000002e-05,
+      "tottime_us_per_step": 0.79908
+    },
+    "~:0(<built-in method torch._C._nn.linear>)": {
+      "calls": 125,
+      "cumtime_s": 0.009819249,
+      "tottime_s": 0.009819249,
+      "tottime_us_per_step": 392.76995999999997
+    },
+    "~:0(<built-in method torch._ops._C_cache_ops.reshape_and_cache_flash>)": {
+      "calls": 3200,
+      "cumtime_s": 0.038886274000000005,
+      "tottime_s": 0.038886274000000005,
+      "tottime_us_per_step": 1555.4509600000001
+    },
+    "~:0(<built-in method torch._ops._vllm_fa3_C.fwd>)": {
+      "calls": 3200,
+      "cumtime_s": 0.10426579500000001,
+      "tottime_s": 0.10426579500000001,
+      "tottime_us_per_step": 4170.6318
+    },
+    "~:0(<built-in method torch._ops._vllm_fa3_C.get_scheduler_metadata>)": {
+      "calls": 25,
+      "cumtime_s": 0.00110472,
+      "tottime_s": 0.00110472,
+      "tottime_us_per_step": 44.1888
+    },
+    "~:0(<built-in method torch._ops.vllm.unified_attention_with_output>)": {
+      "calls": 3200,
+      "cumtime_s": 0.28266201900000004,
+      "tottime_s": 0.021381938,
+      "tottime_us_per_step": 855.27752
+    },
+    "~:0(<built-in method torch._ops.vllm.unified_kv_cache_update>)": {
+      "calls": 3200,
+      "cumtime_s": 0.123573422,
+      "tottime_s": 0.020146303,
+      "tottime_us_per_step": 805.85212
+    },
+    "~:0(<built-in method torch.add>)": {
+      "calls": 25,
+      "cumtime_s": 0.00024104900000000002,
+      "tottime_s": 0.00024104900000000002,
+      "tottime_us_per_step": 9.641960000000001
+    },
+    "~:0(<built-in method torch.arange>)": {
+      "calls": 50,
+      "cumtime_s": 0.0007743930000000001,
+      "tottime_s": 0.0007743930000000001,
+      "tottime_us_per_step": 30.975720000000003
+    },
+    "~:0(<built-in method torch.clamp>)": {
+      "calls": 225,
+      "cumtime_s": 0.002639053,
+      "tottime_s": 0.002639053,
+      "tottime_us_per_step": 105.56212000000001
+    },
+    "~:0(<built-in method torch.empty>)": {
+      "calls": 3375,
+      "cumtime_s": 0.012489599,
+      "tottime_s": 0.012489599,
+      "tottime_us_per_step": 499.58396
+    },
+    "~:0(<built-in method torch.empty_like>)": {
+      "calls": 3200,
+      "cumtime_s": 0.012262673,
+      "tottime_s": 0.012262673,
+      "tottime_us_per_step": 490.50692000000004
+    },
+    "~:0(<built-in method torch.floor_divide>)": {
+      "calls": 125,
+      "cumtime_s": 0.0017573570000000002,
+      "tottime_s": 0.0017573570000000002,
+      "tottime_us_per_step": 70.29428000000001
+    },
+    "~:0(<built-in method torch.from_numpy>)": {
+      "calls": 225,
+      "cumtime_s": 0.0006413990000000001,
+      "tottime_s": 0.0006413990000000001,
+      "tottime_us_per_step": 25.655960000000004
+    },
+    "~:0(<built-in method torch.full>)": {
+      "calls": 25,
+      "cumtime_s": 0.000484728,
+      "tottime_s": 0.000484728,
+      "tottime_us_per_step": 19.389120000000002
+    },
+    "~:0(<built-in method torch.full_like>)": {
+      "calls": 25,
+      "cumtime_s": 0.00032972000000000003,
+      "tottime_s": 0.00032972000000000003,
+      "tottime_us_per_step": 13.1888
+    },
+    "~:0(<built-in method torch.gather>)": {
+      "calls": 100,
+      "cumtime_s": 0.0016481120000000002,
+      "tottime_s": 0.0016481120000000002,
+      "tottime_us_per_step": 65.92448
+    },
+    "~:0(<built-in method torch.index_select>)": {
+      "calls": 25,
+      "cumtime_s": 0.000216524,
+      "tottime_s": 0.000216524,
+      "tottime_us_per_step": 8.66096
+    },
+    "~:0(<built-in method torch.minimum>)": {
+      "calls": 100,
+      "cumtime_s": 0.001204746,
+      "tottime_s": 0.001204746,
+      "tottime_us_per_step": 48.189840000000004
+    },
+    "~:0(<built-in method torch.mul>)": {
+      "calls": 100,
+      "cumtime_s": 0.0013173310000000001,
+      "tottime_s": 0.0013173310000000001,
+      "tottime_us_per_step": 52.69324
+    },
+    "~:0(<built-in method torch.repeat_interleave>)": {
+      "calls": 25,
+      "cumtime_s": 0.001754478,
+      "tottime_s": 0.001754478,
+      "tottime_us_per_step": 70.17912
+    },
+    "~:0(<built-in method torch.stack>)": {
+      "calls": 25,
+      "cumtime_s": 0.0006587990000000001,
+      "tottime_s": 0.0006587990000000001,
+      "tottime_us_per_step": 26.351960000000005
+    },
+    "~:0(<built-in method triton._C.libtriton.native_specialize_impl>)": {
+      "calls": 1725,
+      "cumtime_s": 0.001431758,
+      "tottime_s": 0.001431758,
+      "tottime_us_per_step": 57.27032
+    },
+    "~:0(<function Event.record at 0x7b9b0339ee80>)": {
+      "calls": 25,
+      "cumtime_s": 0.000189513,
+      "tottime_s": 0.000189513,
+      "tottime_us_per_step": 7.58052
+    },
+    "~:0(<function Event.wait at 0x7b9b0339ef20>)": {
+      "calls": 25,
+      "cumtime_s": 9.144900000000001e-05,
+      "tottime_s": 9.144900000000001e-05,
+      "tottime_us_per_step": 3.6579600000000005
+    },
+    "~:0(<method '__enter__' of '_thread.RLock' objects>)": {
+      "calls": 100,
+      "cumtime_s": 4.673e-05,
+      "tottime_s": 4.673e-05,
+      "tottime_us_per_step": 1.8692000000000002
+    },
+    "~:0(<method '__exit__' of '_io._IOBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.000753225,
+      "tottime_s": 0.000753225,
+      "tottime_us_per_step": 30.129
+    },
+    "~:0(<method '__exit__' of '_thread.RLock' objects>)": {
+      "calls": 100,
+      "cumtime_s": 1.8659000000000002e-05,
+      "tottime_s": 1.8659000000000002e-05,
+      "tottime_us_per_step": 0.7463600000000001
+    },
+    "~:0(<method '__exit__' of '_thread.lock' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.1151e-05,
+      "tottime_s": 1.1151e-05,
+      "tottime_us_per_step": 0.44604
+    },
+    "~:0(<method '__reduce_ex__' of 'object' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00010031200000000001,
+      "tottime_s": 0.00010031200000000001,
+      "tottime_us_per_step": 4.01248
+    },
+    "~:0(<method '_is_owned' of '_thread.RLock' objects>)": {
+      "calls": 25,
+      "cumtime_s": 7.957e-06,
+      "tottime_s": 7.957e-06,
+      "tottime_us_per_step": 0.31828
+    },
+    "~:0(<method 'add' of 'set' objects>)": {
+      "calls": 1700,
+      "cumtime_s": 0.000293947,
+      "tottime_s": 0.000293947,
+      "tottime_us_per_step": 11.75788
+    },
+    "~:0(<method 'append' of 'list' objects>)": {
+      "calls": 1122,
+      "cumtime_s": 0.00026067500000000003,
+      "tottime_s": 0.00026067500000000003,
+      "tottime_us_per_step": 10.427
+    },
+    "~:0(<method 'argmax' of 'torch._C.TensorBase' objects>)": {
+      "calls": 175,
+      "cumtime_s": 0.005017279,
+      "tottime_s": 0.005017279,
+      "tottime_us_per_step": 200.69116000000002
+    },
+    "~:0(<method 'clamp_' of 'torch._C.TensorBase' objects>)": {
+      "calls": 100,
+      "cumtime_s": 0.0010576580000000002,
+      "tottime_s": 0.0010576580000000002,
+      "tottime_us_per_step": 42.30632000000001
+    },
+    "~:0(<method 'clear' of 'dict' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.0575000000000001e-05,
+      "tottime_s": 1.0575000000000001e-05,
+      "tottime_us_per_step": 0.42300000000000004
+    },
+    "~:0(<method 'clear' of 'list' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.1807e-05,
+      "tottime_s": 1.1807e-05,
+      "tottime_us_per_step": 0.47228000000000003
+    },
+    "~:0(<method 'clear' of 'set' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.196e-05,
+      "tottime_s": 1.196e-05,
+      "tottime_us_per_step": 0.47840000000000005
+    },
+    "~:0(<method 'clone' of 'torch._C.TensorBase' objects>)": {
+      "calls": 75,
+      "cumtime_s": 0.000878672,
+      "tottime_s": 0.000878672,
+      "tottime_us_per_step": 35.14688
+    },
+    "~:0(<method 'copy' of 'dict' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.4935e-05,
+      "tottime_s": 1.4935e-05,
+      "tottime_us_per_step": 0.5974
+    },
+    "~:0(<method 'copy' of 'list' objects>)": {
+      "calls": 50,
+      "cumtime_s": 2.5953e-05,
+      "tottime_s": 2.5953e-05,
+      "tottime_us_per_step": 1.03812
+    },
+    "~:0(<method 'copy_' of 'torch._C.TensorBase' objects>)": {
+      "calls": 325,
+      "cumtime_s": 0.004091623,
+      "tottime_s": 0.004091623,
+      "tottime_us_per_step": 163.66492
+    },
+    "~:0(<method 'cpu' of 'torch._C.TensorBase' objects>)": {
+      "calls": 275,
+      "cumtime_s": 0.16250214400000002,
+      "tottime_s": 0.16250214400000002,
+      "tottime_us_per_step": 6500.085760000001
+    },
+    "~:0(<method 'cumsum' of 'numpy.ndarray' objects>)": {
+      "calls": 75,
+      "cumtime_s": 0.0005006160000000001,
+      "tottime_s": 0.0005006160000000001,
+      "tottime_us_per_step": 20.02464
+    },
+    "~:0(<method 'data_ptr' of 'torch._C.StorageBase' objects>)": {
+      "calls": 1700,
+      "cumtime_s": 0.000321421,
+      "tottime_s": 0.000321421,
+      "tottime_us_per_step": 12.85684
+    },
+    "~:0(<method 'decode' of 'bytes' objects>)": {
+      "calls": 75,
+      "cumtime_s": 3.0566000000000005e-05,
+      "tottime_s": 3.0566000000000005e-05,
+      "tottime_us_per_step": 1.2226400000000002
+    },
+    "~:0(<method 'dim' of 'torch._C.TensorBase' objects>)": {
+      "calls": 75,
+      "cumtime_s": 2.9496e-05,
+      "tottime_s": 2.9496e-05,
+      "tottime_us_per_step": 1.17984
+    },
+    "~:0(<method 'disable' of '_lsprof.Profiler' objects>)": {
+      "calls": 1,
+      "cumtime_s": 4.0860000000000005e-05,
+      "tottime_s": 4.0860000000000005e-05,
+      "tottime_us_per_step": 1.6344000000000003
+    },
+    "~:0(<method 'discard' of 'set' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.1014e-05,
+      "tottime_s": 1.1014e-05,
+      "tottime_us_per_step": 0.44055999999999995
+    },
+    "~:0(<method 'encode' of 'str' objects>)": {
+      "calls": 3600,
+      "cumtime_s": 0.001500992,
+      "tottime_s": 0.001500992,
+      "tottime_us_per_step": 60.03968
+    },
+    "~:0(<method 'endswith' of 'str' objects>)": {
+      "calls": 3275,
+      "cumtime_s": 0.00084121,
+      "tottime_s": 0.00084121,
+      "tottime_us_per_step": 33.6484
+    },
+    "~:0(<method 'expand' of 'torch._C.TensorBase' objects>)": {
+      "calls": 9600,
+      "cumtime_s": 0.021724837,
+      "tottime_s": 0.021724837,
+      "tottime_us_per_step": 868.99348
+    },
+    "~:0(<method 'extend' of 'list' objects>)": {
+      "calls": 71,
+      "cumtime_s": 4.4389000000000005e-05,
+      "tottime_s": 4.0576000000000006e-05,
+      "tottime_us_per_step": 1.6230400000000003
+    },
+    "~:0(<method 'fill' of 'numpy.ndarray' objects>)": {
+      "calls": 100,
+      "cumtime_s": 0.00010400200000000001,
+      "tottime_s": 0.00010400200000000001,
+      "tottime_us_per_step": 4.160080000000001
+    },
+    "~:0(<method 'fill_' of 'torch._C.TensorBase' objects>)": {
+      "calls": 125,
+      "cumtime_s": 0.000907724,
+      "tottime_s": 0.000907724,
+      "tottime_us_per_step": 36.30896
+    },
+    "~:0(<method 'flatten' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00021431500000000002,
+      "tottime_s": 0.00021431500000000002,
+      "tottime_us_per_step": 8.572600000000001
+    },
+    "~:0(<method 'float' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.0005819680000000001,
+      "tottime_s": 0.0005819680000000001,
+      "tottime_us_per_step": 23.278720000000003
+    },
+    "~:0(<method 'get' of 'dict' objects>)": {
+      "calls": 10800,
+      "cumtime_s": 0.0030920450000000003,
+      "tottime_s": 0.0030920450000000003,
+      "tottime_us_per_step": 123.68180000000001
+    },
+    "~:0(<method 'hexdigest' of '_hashlib.HASH' objects>)": {
+      "calls": 25,
+      "cumtime_s": 5.7518e-05,
+      "tottime_s": 5.7518e-05,
+      "tottime_us_per_step": 2.30072
+    },
+    "~:0(<method 'int' of 'torch._C.TensorBase' objects>)": {
+      "calls": 75,
+      "cumtime_s": 0.001306171,
+      "tottime_s": 0.001306171,
+      "tottime_us_per_step": 52.24684
+    },
+    "~:0(<method 'is_contiguous' of 'torch._C.TensorBase' objects>)": {
+      "calls": 50,
+      "cumtime_s": 2.5327e-05,
+      "tottime_s": 2.5327e-05,
+      "tottime_us_per_step": 1.01308
+    },
+    "~:0(<method 'item' of 'numpy.generic' objects>)": {
+      "calls": 25,
+      "cumtime_s": 7.4917e-05,
+      "tottime_s": 7.4917e-05,
+      "tottime_us_per_step": 2.99668
+    },
+    "~:0(<method 'item' of 'torch._C.TensorBase' objects>)": {
+      "calls": 50,
+      "cumtime_s": 0.000104327,
+      "tottime_s": 0.000104327,
+      "tottime_us_per_step": 4.173080000000001
+    },
+    "~:0(<method 'items' of 'dict' objects>)": {
+      "calls": 375,
+      "cumtime_s": 0.000122898,
+      "tottime_s": 0.000122898,
+      "tottime_us_per_step": 4.91592
+    },
+    "~:0(<method 'items' of 'mappingproxy' objects>)": {
+      "calls": 100,
+      "cumtime_s": 5.2786000000000006e-05,
+      "tottime_s": 5.2786000000000006e-05,
+      "tottime_us_per_step": 2.1114400000000004
+    },
+    "~:0(<method 'join' of 'str' objects>)": {
+      "calls": 50,
+      "cumtime_s": 2.0857e-05,
+      "tottime_s": 2.0857e-05,
+      "tottime_us_per_step": 0.83428
+    },
+    "~:0(<method 'keys' of 'dict' objects>)": {
+      "calls": 75,
+      "cumtime_s": 2.0470000000000002e-05,
+      "tottime_s": 2.0470000000000002e-05,
+      "tottime_us_per_step": 0.8188000000000001
+    },
+    "~:0(<method 'long' of 'torch._C.TensorBase' objects>)": {
+      "calls": 125,
+      "cumtime_s": 0.0012711080000000002,
+      "tottime_s": 0.0012711080000000002,
+      "tottime_us_per_step": 50.84432000000001
+    },
+    "~:0(<method 'lower' of 'str' objects>)": {
+      "calls": 75,
+      "cumtime_s": 2.0958e-05,
+      "tottime_s": 2.0958e-05,
+      "tottime_us_per_step": 0.8383200000000001
+    },
+    "~:0(<method 'masked_fill_' of 'torch._C.TensorBase' objects>)": {
+      "calls": 50,
+      "cumtime_s": 0.0005018690000000001,
+      "tottime_s": 0.0005018690000000001,
+      "tottime_us_per_step": 20.07476
+    },
+    "~:0(<method 'max' of 'numpy.ndarray' objects>)": {
+      "calls": 50,
+      "cumtime_s": 0.000661125,
+      "tottime_s": 7.5744e-05,
+      "tottime_us_per_step": 3.02976
+    },
+    "~:0(<method 'max' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00018832900000000002,
+      "tottime_s": 0.00018832900000000002,
+      "tottime_us_per_step": 7.5331600000000005
+    },
+    "~:0(<method 'new_empty' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00011189900000000001,
+      "tottime_s": 0.00011189900000000001,
+      "tottime_us_per_step": 4.47596
+    },
+    "~:0(<method 'nonzero' of 'numpy.ndarray' objects>)": {
+      "calls": 25,
+      "cumtime_s": 9.5968e-05,
+      "tottime_s": 9.5968e-05,
+      "tottime_us_per_step": 3.8387200000000004
+    },
+    "~:0(<method 'numpy' of 'torch._C.TensorBase' objects>)": {
+      "calls": 75,
+      "cumtime_s": 0.0005490730000000001,
+      "tottime_s": 0.0005490730000000001,
+      "tottime_us_per_step": 21.962920000000004
+    },
+    "~:0(<method 'pin_memory' of 'torch._C.TensorBase' objects>)": {
+      "calls": 125,
+      "cumtime_s": 0.001482578,
+      "tottime_s": 0.001482578,
+      "tottime_us_per_step": 59.30312
+    },
+    "~:0(<method 'pop' of 'dict' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.0581e-05,
+      "tottime_s": 1.0581e-05,
+      "tottime_us_per_step": 0.42324000000000006
+    },
+    "~:0(<method 'pop' of 'set' objects>)": {
+      "calls": 25,
+      "cumtime_s": 8.261000000000001e-06,
+      "tottime_s": 8.261000000000001e-06,
+      "tottime_us_per_step": 0.33044000000000007
+    },
+    "~:0(<method 'record' of 'torch.Event' objects>)": {
+      "calls": 25,
+      "cumtime_s": 7.601e-05,
+      "tottime_s": 7.601e-05,
+      "tottime_us_per_step": 3.0404
+    },
+    "~:0(<method 'reduce' of 'numpy.ufunc' objects>)": {
+      "calls": 75,
+      "cumtime_s": 0.0009046340000000001,
+      "tottime_s": 0.0009046340000000001,
+      "tottime_us_per_step": 36.18536
+    },
+    "~:0(<method 'repeat' of 'numpy.ndarray' objects>)": {
+      "calls": 150,
+      "cumtime_s": 0.000284171,
+      "tottime_s": 0.000284171,
+      "tottime_us_per_step": 11.36684
+    },
+    "~:0(<method 'size' of 'torch._C.TensorBase' objects>)": {
+      "calls": 200,
+      "cumtime_s": 0.000280384,
+      "tottime_s": 0.000280384,
+      "tottime_us_per_step": 11.21536
+    },
+    "~:0(<method 'sort' of 'list' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.8523000000000002e-05,
+      "tottime_s": 1.8523000000000002e-05,
+      "tottime_us_per_step": 0.7409200000000001
+    },
+    "~:0(<method 'startswith' of 'str' objects>)": {
+      "calls": 3275,
+      "cumtime_s": 0.001099387,
+      "tottime_s": 0.001099387,
+      "tottime_us_per_step": 43.975480000000005
+    },
+    "~:0(<method 'step' of 'tokenizers.decoders.DecodeStream' objects>)": {
+      "calls": 105,
+      "cumtime_s": 0.000504654,
+      "tottime_s": 0.000504654,
+      "tottime_us_per_step": 20.18616
+    },
+    "~:0(<method 'stride' of 'torch._C.TensorBase' objects>)": {
+      "calls": 9750,
+      "cumtime_s": 0.004852783,
+      "tottime_s": 0.004852783,
+      "tottime_us_per_step": 194.11132
+    },
+    "~:0(<method 'sub_' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00021818800000000002,
+      "tottime_s": 0.00021818800000000002,
+      "tottime_us_per_step": 8.72752
+    },
+    "~:0(<method 'sum' of 'numpy.ndarray' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.00044950000000000003,
+      "tottime_s": 5.9253000000000003e-05,
+      "tottime_us_per_step": 2.37012
+    },
+    "~:0(<method 'synchronize' of 'torch.Event' objects>)": {
+      "calls": 50,
+      "cumtime_s": 0.00026465500000000003,
+      "tottime_s": 0.00026465500000000003,
+      "tottime_us_per_step": 10.586200000000002
+    },
+    "~:0(<method 'to' of 'torch._C.TensorBase' objects>)": {
+      "calls": 350,
+      "cumtime_s": 0.004682945,
+      "tottime_s": 0.004682945,
+      "tottime_us_per_step": 187.31779999999998
+    },
+    "~:0(<method 'tolist' of 'numpy.ndarray' objects>)": {
+      "calls": 150,
+      "cumtime_s": 0.000116466,
+      "tottime_s": 0.000116466,
+      "tottime_us_per_step": 4.65864
+    },
+    "~:0(<method 'tolist' of 'torch._C.TensorBase' objects>)": {
+      "calls": 300,
+      "cumtime_s": 0.00047781300000000005,
+      "tottime_s": 0.00047781300000000005,
+      "tottime_us_per_step": 19.112520000000004
+    },
+    "~:0(<method 'topk' of 'torch._C.TensorBase' objects>)": {
+      "calls": 25,
+      "cumtime_s": 0.003506028,
+      "tottime_s": 0.003506028,
+      "tottime_us_per_step": 140.24112
+    },
+    "~:0(<method 'unbind' of 'torch._C.TensorBase' objects>)": {
+      "calls": 6400,
+      "cumtime_s": 0.026703774000000003,
+      "tottime_s": 0.026703774000000003,
+      "tottime_us_per_step": 1068.15096
+    },
+    "~:0(<method 'unsqueeze' of 'torch._C.TensorBase' objects>)": {
+      "calls": 125,
+      "cumtime_s": 0.00045292300000000004,
+      "tottime_s": 0.00045292300000000004,
+      "tottime_us_per_step": 18.116920000000004
+    },
+    "~:0(<method 'untyped_storage' of 'torch._C.TensorBase' objects>)": {
+      "calls": 1700,
+      "cumtime_s": 0.000367574,
+      "tottime_s": 0.000367574,
+      "tottime_us_per_step": 14.702960000000001
+    },
+    "~:0(<method 'update' of 'dict' objects>)": {
+      "calls": 125,
+      "cumtime_s": 9.5235e-05,
+      "tottime_s": 9.5235e-05,
+      "tottime_us_per_step": 3.8094
+    },
+    "~:0(<method 'update' of 'set' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.7511000000000002e-05,
+      "tottime_s": 1.7511000000000002e-05,
+      "tottime_us_per_step": 0.7004400000000001
+    },
+    "~:0(<method 'values' of 'dict' objects>)": {
+      "calls": 725,
+      "cumtime_s": 0.000200227,
+      "tottime_s": 0.000200227,
+      "tottime_us_per_step": 8.00908
+    },
+    "~:0(<method 'values' of 'mappingproxy' objects>)": {
+      "calls": 100,
+      "cumtime_s": 0.000139729,
+      "tottime_s": 0.000139729,
+      "tottime_us_per_step": 5.589160000000001
+    },
+    "~:0(<method 'view' of 'torch._C.TensorBase' objects>)": {
+      "calls": 50,
+      "cumtime_s": 0.00019838,
+      "tottime_s": 0.00019838,
+      "tottime_us_per_step": 7.9352
+    },
+    "~:0(<method 'write' of '_io.TextIOWrapper' objects>)": {
+      "calls": 25,
+      "cumtime_s": 1.0828e-05,
+      "tottime_s": 1.0828e-05,
+      "tottime_us_per_step": 0.43312000000000006
+    }
+  },
+  "profiled_steps": 25,
+  "quant": "w4a16-quantized",
+  "record_type": "w98_cpu_profile",
+  "regime": "R1",
+  "schema_version": 1,
+  "skip_count": 4,
+  "skip_layers": "2,4,7,16",
+  "total_tottime_s": 0.882407966,
+  "wall_ms_per_step_under_cprofile": 36.415555998682976,
+  "window": 256
+}
