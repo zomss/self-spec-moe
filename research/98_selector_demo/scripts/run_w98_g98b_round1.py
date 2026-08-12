@@ -43,9 +43,10 @@ sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98b-round1-authorization-v1"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v1.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_b"
+PACKAGE_ID = "w98-g98b-round1-authorization-v2"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v2.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v2"
+V1_FAILURE_PATH = "research/98_selector_demo/data/g98_b/failure.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PREREG_HELDOUT = "research/98_selector_demo/data/prereg/w98_d1_heldout.json"
 PROMPT_MANIFEST = "research/98_selector_demo/data/prereg/w98_prompt_manifest.json"
@@ -156,6 +157,17 @@ def expected_authorization() -> dict[str, Any]:
             "quantized_draft_with_shared_kv_verified": g98a[
                 "quantized_draft_with_shared_kv_verified"
             ],
+        },
+        "consumed_v1": {
+            "failure": matrix._file_reference(V1_FAILURE_PATH),
+            "stage_reached": "B2 fit; refused before commit",
+            "predictions_committed": False,
+            "heldout_measured": 0,
+            "cause": "trace reader read exclusions/elapsed_s, not "
+            "exclusion_reasons/counters.decode_time_s",
+            "barrier_held": True,
+            "retracted_second_cause": "the draft armed normally; 365/405 steps "
+            "were target-matching-k4",
         },
         "commitment_barrier": {
             "why": (
