@@ -43,9 +43,9 @@ sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98b-round1-authorization-v2"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v2.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v2"
+PACKAGE_ID = "w98-g98b-round1-authorization-v3"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v3.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v3"
 V1_FAILURE_PATH = "research/98_selector_demo/data/g98_b/failure.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PREREG_HELDOUT = "research/98_selector_demo/data/prereg/w98_d1_heldout.json"
@@ -79,8 +79,14 @@ SKIP_SETS = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
 # otherwise R1 (batch 1) and R6 (batch 32) would both be fit at the wrong
 # state. Token depth sets the stability of the mean armed step time, which
 # sets the fitted envelope width and therefore D1's coverage.
-MEASURE_TOKENS = 256
-MIN_ARMED_STEPS = 64
+# Token depth is DERIVED from the step target, not chosen alongside it. Under
+# K=4 an armed step commits up to K+1 tokens, so a token budget set
+# independently of the step threshold silently caps the achievable step count:
+# 256 tokens yields ~51 armed steps, which a 64-step floor then rejects.
+TARGET_ARMED_STEPS = 128
+COMMITTED_TOKENS_PER_ARMED_STEP = 5
+MEASURE_TOKENS = TARGET_ARMED_STEPS * COMMITTED_TOKENS_PER_ARMED_STEP
+MIN_ARMED_STEPS = TARGET_ARMED_STEPS // 2
 # batch 1..32 -> K=4, so the chain actually arms and a draft cost exists.
 DYNAMIC_K_SCHEDULE = [[1, 32, 4]]
 
@@ -225,7 +231,9 @@ def expected_authorization() -> dict[str, Any]:
         "sampling": {
             "prompts_per_regime": "the regime's registered batch",
             "state_indexed": True,
+            "target_armed_steps": TARGET_ARMED_STEPS,
             "measure_tokens": MEASURE_TOKENS,
+            "tokens_derived_from_step_target": True,
             "min_armed_steps_for_a_usable_mean": MIN_ARMED_STEPS,
             "rationale": (
                 "the factored model is state-indexed, so each regime is "

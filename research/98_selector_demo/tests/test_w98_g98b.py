@@ -320,3 +320,20 @@ class SamplingDepthTests(unittest.TestCase):
     def test_a_thin_sample_yields_no_mean(self) -> None:
         """An unusable sample must not silently become a fitted point."""
         self.assertGreaterEqual(gate.MIN_ARMED_STEPS, 64)
+
+
+class SamplingConsistencyTests(unittest.TestCase):
+    """Token depth and the step floor must be reconcilable, not independent."""
+
+    def test_tokens_are_derived_from_the_step_target(self) -> None:
+        self.assertEqual(
+            gate.MEASURE_TOKENS,
+            gate.TARGET_ARMED_STEPS * gate.COMMITTED_TOKENS_PER_ARMED_STEP,
+        )
+        self.assertTrue(_package()["sampling"]["tokens_derived_from_step_target"])
+
+    def test_the_token_budget_can_actually_reach_the_floor(self) -> None:
+        """256 tokens could never reach a 64-step floor under K=4."""
+        achievable = gate.MEASURE_TOKENS // gate.COMMITTED_TOKENS_PER_ARMED_STEP
+        self.assertGreaterEqual(achievable, gate.MIN_ARMED_STEPS)
+        self.assertGreaterEqual(achievable, gate.TARGET_ARMED_STEPS)
