@@ -1,0 +1,45 @@
+{
+  "batch": 4,
+  "by_family": {
+    "bf16_gemm": {
+      "calls_per_step": 190.0,
+      "us_per_step": 9330.031083333304
+    },
+    "fa3_paged": {
+      "calls_per_step": 226.0,
+      "us_per_step": 2107.2071666664965
+    },
+    "flash_other": {
+      "calls_per_step": 556.0,
+      "us_per_step": 2727.6109999998703
+    },
+    "other": {
+      "calls_per_step": 1316.1666666666667,
+      "us_per_step": 1680.8024166666862
+    },
+    "scratchpad": {
+      "calls_per_step": 269.0,
+      "us_per_step": 471.70250000031024
+    },
+    "w4a16_gemm": {
+      "calls_per_step": 784.0,
+      "us_per_step": 9775.951000000043
+    }
+  },
+  "device_us_per_step": 26093.305166666712,
+  "loadavg_1min": 8.74658203125,
+  "preempted": false,
+  "profiled_steps": 12,
+  "prompt_tokens_mean": 81,
+  "record_type": "w98_crossover_sweep",
+  "regime": "R1",
+  "schema_version": 1,
+  "timed_steps": 50,
+  "wall_mean_ms": 36.085646140854806,
+  "wall_median_ms": 36.06588998809457,
+  "wall_min_ms": 35.47244699439034,
+  "wall_stdev_ms": 0.26358177035574765,
+  "wholechain_captured": false,
+  "wholechain_requested": false,
+  "window": 256
+}

@@ -1,8 +1,12 @@
 # Unified design: paged FA3 in a full-chain graph, plus a quantized decode kernel
 
 Date: 2026-08-12
-Status: design proposal. The measurements it rests on are X6/X7 (recorded in
-`design_quant_skip_penalty.md`); nothing here is implemented or measured yet.
+Status: **revised by X8.** The original proposal here was to put paged FA3
+inside the full-chain graph. X8 measured the crossover and shows that is the
+wrong unification for this operating range: the draft's paged-FA3 path costs
+1.88x-3.35x MORE than the scratchpad+splitkv path it would replace, at every
+batch and both contexts. Section 2 is superseded by section 6; sections 1 and 3
+stand.
 
 ## 1. Why paged FA3 cannot be captured today
 
@@ -133,3 +137,78 @@ baseline this phase measured.
 * Whole-chain capture requires `all_greedy` and keys on batch. Coverage across
   the selector's dynamic-K schedule is unmeasured. If capture misses common
   shapes, the unified design's benefit is smaller than these numbers suggest.
+
+## 6. X8 — the crossover, and why the unification target changes
+
+16 cells: batch x context, fully crossed, both modes, wall with no profiler plus
+kernel mix from the same boot. Whole-chain capture verified per boot.
+
+### There is no crossover inside the K=4 operating range
+
+| batch | R1 (~80 tok) | R5 (~14k tok) |
+| --- | --- | --- |
+| 1 | 1.408x | 1.373x |
+| 4 | 1.379x | 1.277x |
+| 8 | — | 1.241x |
+| 16 | 1.240x | 1.196x |
+| 32 | **1.070x** | — |
+
+Whole-chain wins all 16. But the margin collapses with batch, and the dynamic-K
+schedule is `[[1, 32, 4]]` — above batch 32 the chain length itself changes, so
+the arms stop being comparable. **The margin runs out exactly where the K=4
+range does.**
+
+### Batch drives it; context does not
+
+| R1 | pw bubble | wc bubble | device gain | bubble gain |
+| --- | --- | --- | --- | --- |
+| batch 1 | 9.51 | 3.88 | −4.60 | −5.64 |
+| batch 4 | 9.97 | 4.05 | −4.00 | −5.92 |
+| batch 16 | 7.22 | 4.36 | −3.99 | −2.86 |
+| batch 32 | **3.04** | **5.25** | −4.70 | **+2.21** |
+
+The device gain is **constant at ~4 ms** across every batch and both contexts.
+All of the batch dependence lives in the bubble: piecewise's host bubble
+collapses 9.5 → 3.0 ms as batch grows, because more GPU work per step hides the
+same ~116 round-trips. At batch 32 it **inverts** — whole-chain carries the
+larger bubble and stays ahead only on device time.
+
+At matched batch, context is nearly irrelevant (R1 b16 bubble 7.22 vs R5 b16
+8.27). That is the predicted signature: the draft chain's GPU work scales with
+batch but not with context, because the window caps its attention at 272 keys
+either way. The earlier "+74% with workload" reading of R1 → R5 was
+**confounded** — R1 is batch 1 and R5 is batch 8, so that comparison moved both
+axes at once. It was batch.
+
+### The unification target is the scratchpad path, not paged FA3
+
+| cell | paged FA3 path | splitkv + scratchpad | ratio |
+| --- | --- | --- | --- |
+| R1/b1 | 3936 µs | 1174 | 3.35x |
+| R1/b4 | 3998 | 1706 | 2.34x |
+| R1/b16 | 4983 | 2599 | 1.92x |
+| R1/b32 | 6348 | 2269 | 2.80x |
+| R5/b16 | 4960 | 2631 | 1.88x |
+
+Paged FA3 is more expensive for the draft **everywhere in range**, by roughly
+2-3x, and the gap does not close with batch or context. Section 2's plan — make
+FA3's schedule shape-static so it can be captured — would buy capturability at
+the price of a 2-3x more expensive attention path. It solves a problem the
+scratchpad path does not have.
+
+**Revised recommendation:**
+
+1. Unify on **scratchpad + splitkv inside the full-chain graph** for every
+   windowed configuration. That is what FULLCG already does; the work is to make
+   it the default and to widen capture coverage, not to build a new path.
+2. Keep **paged FA3 + piecewise** only where the scratchpad cannot apply —
+   `window: off`, non-greedy sampling, and any `(batch, K)` capture misses.
+3. **Do not** invest in making paged FA3 capturable. The measurement that would
+   justify it — paged FA3 being the faster kernel — is false at these shapes.
+4. Revisit only if the operating range moves above batch 32, where the margin is
+   1.07x and the bubble advantage has already inverted. That is a K-schedule
+   question first: the K=4 range ends at 32.
+
+Section 3 is unaffected. The W4A16 decode kernel remains the largest single
+opportunity (41% of device time, 65% of bandwidth-bound, ~3.0 ms/step headroom),
+and it is now the *only* large one on the draft side.

@@ -1,0 +1,49 @@
+{
+  "batch": 32,
+  "by_family": {
+    "bf16_gemm": {
+      "calls_per_step": 187.0,
+      "us_per_step": 8657.33408333322
+    },
+    "fa3_paged": {
+      "calls_per_step": 58.0,
+      "us_per_step": 917.0168333333468
+    },
+    "flash_other": {
+      "calls_per_step": 304.0,
+      "us_per_step": 2468.2006666666443
+    },
+    "flash_splitkv": {
+      "calls_per_step": 84.0,
+      "us_per_step": 1667.7893333332893
+    },
+    "other": {
+      "calls_per_step": 982.3333333333334,
+      "us_per_step": 2423.9091666664035
+    },
+    "scratchpad": {
+      "calls_per_step": 589.0,
+      "us_per_step": 1589.7373333331477
+    },
+    "w4a16_gemm": {
+      "calls_per_step": 784.0,
+      "us_per_step": 12379.279833333343
+    }
+  },
+  "device_us_per_step": 30103.267249999397,
+  "loadavg_1min": 7.41796875,
+  "preempted": false,
+  "profiled_steps": 12,
+  "prompt_tokens_mean": 77,
+  "record_type": "w98_crossover_sweep",
+  "regime": "R1",
+  "schema_version": 1,
+  "timed_steps": 50,
+  "wall_mean_ms": 35.343005621107295,
+  "wall_median_ms": 35.35155349527486,
+  "wall_min_ms": 34.83628900721669,
+  "wall_stdev_ms": 0.247523444286844,
+  "wholechain_captured": true,
+  "wholechain_requested": true,
+  "window": 256
+}
