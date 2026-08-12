@@ -1,0 +1,83 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 4,
+    "window": 128
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 155,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.028374533346162505,
+      "draft_chain_samples": 136,
+      "mean_armed_step_s": 0.03830977556776376,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00021356316476335525,
+      "usable": true,
+      "verify_s": 0.006165278567779591
+    },
+    "R4": {
+      "armed_step_count": 251,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.0288521065886016,
+      "draft_chain_samples": 232,
+      "mean_armed_step_s": 0.04252119268874167,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0011784891707469687,
+      "usable": true,
+      "verify_s": 0.00947416852942293
+    },
+    "R5": {
+      "armed_step_count": 185,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.028757918216161856,
+      "draft_chain_samples": 166,
+      "mean_armed_step_s": 0.04399990635747845,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.0018065093392983687,
+      "usable": true,
+      "verify_s": 0.011129868472602942
+    },
+    "R5cot": {
+      "armed_step_count": 165,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.028758465939150383,
+      "draft_chain_samples": 146,
+      "mean_armed_step_s": 0.04399294765510907,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.0017580949873912783,
+      "usable": true,
+      "verify_s": 0.011108418500225526
+    },
+    "R6": {
+      "armed_step_count": 198,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.02967980734687871,
+      "draft_chain_samples": 179,
+      "mean_armed_step_s": 0.0419720539654431,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0015794309421661437,
+      "usable": true,
+      "verify_s": 0.007338321789413587
+    },
+    "R8": {
+      "armed_step_count": 161,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.02875429812103877,
+      "draft_chain_samples": 142,
+      "mean_armed_step_s": 0.03993547967886726,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0008906108138410383,
+      "usable": true,
+      "verify_s": 0.006685261887748941
+    }
+  },
+  "record_type": "w98_round1_measurement",
+  "schema_version": 1
+}
