@@ -121,3 +121,67 @@ purely **weight bits**.
    `use_fp32_reduce`, which target small-M behaviour and were left at defaults.
 4. Only then consider a specialised decode kernel, against a measured Humming
    baseline, for the remaining **~2.9 ms/step**.
+
+---
+
+## X11 — the two gaps closed (Conch installed, Marlin flags swept)
+
+Per-step W4A16 GEMM (28 layers x 4 forwards), ms:
+
+| M | machete | marlin | +atomic | −fp32 | both | humming | conch | triton | ideal |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 9.56 | 6.62 | 6.58 | 6.60 | 6.63 | **6.33** | 329.58 | 35.25 | 3.33 |
+| 4 | 9.62 | 6.74 | 6.71 | 6.72 | 6.72 | **6.26** | 331.92 | 35.18 | 3.33 |
+| 8 | 9.52 | 6.76 | 6.75 | 6.77 | 6.80 | **6.23** | 334.52 | 35.17 | 3.33 |
+| 32 | 9.18 | 8.43 | 8.42 | 8.41 | 8.40 | **7.08** | 376.32 | 35.32 | 3.33 |
+
+**Marlin's flags do nothing.** All four combinations land within 0.15 ms (~2%)
+of each other and of the default.
+`use_atomic_add` is gated off by the `n >= 2048` rule for all four projections
+(n = 4096..24576); forcing it on changes nothing, so that heuristic is correct
+here. `use_fp32_reduce` is free. There is no hidden headroom inside Marlin.
+
+The first run of this sweep had a bug worth recording: the `finally` restoring
+`ops.marlin_gemm` was missing, so forced flags LEAKED into every later variant —
+`marlin_nofp32` silently also carried `atomic`, and the last variant layered all
+of them. The conclusion survived (every variant was within 1% of the unpatched
+default, which runs first), but the labels did not mean what they said. Rerun
+with the restore in place; the table above is the clean version.
+
+**Conch is a non-starter** at 330 ms/step, 50x slower than Humming. It is a
+portability path for hardware without tuned kernels.
+
+## X12 — in-engine, and the finding that decides it
+
+**Humming wedges with whole-chain capture.** It selected correctly and its JIT
+guard fired on all 112 layers (`pre-warmed JIT linear kernels on 112 Humming
+layers x 18 M-tiles (eager, pre-capture)`), then hung immediately after
+`torch.compile took 17.10 s` — GPU pinned at 100%, no output for 2h10m, killed.
+
+So this is **not** the first-use dispatcher deadlock `_prewarm_jit_linear_kernels`
+exists to prevent; that guard worked. It wedges later, at CUDA-graph capture of
+the draft chain. Humming and the whole-chain graph do not compose, and the
+existing mitigation does not cover it.
+
+Verified in-engine, whole-chain captured, kernel resolution read back from the
+log rather than assumed:
+
+| kernel | in-engine median | resolved | wholechain |
+| --- | --- | --- | --- |
+| machete (today) | 25.06 ms | MacheteLinearKernel | captured |
+| **marlin** | **22.36 ms** | MarlinLinearKernel | captured |
+
+machete − marlin = **2.70 ms** in-engine vs **2.94 ms** in the microbenchmark —
+within 8%, so the microbenchmark transfers for kernels that work.
+
+## Decision: Marlin
+
+Humming is 0.3 ms/step faster on isolated GEMMs and **unusable** with the
+runtime adopted in X6. Whole-chain capture is worth 10-13 ms/step; trading it
+for 0.3 ms would be a large net loss. Marlin is verified end to end.
+
+This is why the in-engine check was not a formality: the microbenchmark winner
+does not boot.
+
+Superseded: the earlier recommendation to select Humming (X10), which rested on
+isolated-GEMM timings only.
