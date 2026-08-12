@@ -1,0 +1,106 @@
+{
+  "device_busy_us": 136575.745,
+  "device_idle_us": 124220.65001953125,
+  "device_span_us": 260796.39501953125,
+  "gap_count": 1694,
+  "gap_idle_us": 89188.43359375,
+  "gap_size_histogram": {
+    "20-50us": 1301,
+    "200us-1ms": 45,
+    "50-200us": 347,
+    ">1ms": 1
+  },
+  "gap_threshold_us": 20.0,
+  "idle_by_host_call": {
+    "<no host call spans the gap>": {
+      "gaps": 1626,
+      "idle_us": 83162.365234375
+    },
+    "cudaEventQuery": {
+      "gaps": 7,
+      "idle_us": 264.25390625
+    },
+    "cudaFuncSetAttribute": {
+      "gaps": 1,
+      "idle_us": 27.13623046875
+    },
+    "cudaGraphLaunch": {
+      "gaps": 10,
+      "idle_us": 4296.4580078125
+    },
+    "cudaLaunchKernel": {
+      "gaps": 13,
+      "idle_us": 373.52978515625
+    },
+    "cudaLaunchKernelExC": {
+      "gaps": 2,
+      "idle_us": 210.0458984375
+    },
+    "cudaMemcpyAsync": {
+      "gaps": 33,
+      "idle_us": 786.58154296875
+    },
+    "cudaStreamIsCapturing": {
+      "gaps": 2,
+      "idle_us": 68.06298828125
+    }
+  },
+  "idle_by_kernel_boundary": {
+    "Memcpy DtoD (Device -> Device) -> triton_red_fused__to_copy_embedding_machete_mm_r": {
+      "gaps": 18,
+      "idle_us": 5628.47705078125
+    },
+    "Memcpy DtoH (Device -> Pageable) -> Memcpy DtoH (Device -> Pageable)": {
+      "gaps": 48,
+      "idle_us": 1732.169921875
+    },
+    "Memcpy DtoH (Device -> Pageable) -> Memcpy HtoD (Pinned -> Device)": {
+      "gaps": 3,
+      "idle_us": 2851.77392578125
+    },
+    "Memcpy DtoH (Device -> Pinned) -> Memcpy HtoD (Pinned -> Device)": {
+      "gaps": 2,
+      "idle_us": 1975.4638671875
+    },
+    "Memcpy HtoD (Pinned -> Device) -> Memcpy HtoD (Pinned -> Device)": {
+      "gaps": 44,
+      "idle_us": 2832.349609375
+    },
+    "triton_poi_fused_2 -> void vllm::reshape_and_cache_flash_kernel<__nv_b": {
+      "gaps": 24,
+      "idle_us": 1852.2646484375
+    },
+    "triton_red_fused_fused_add_rms_norm_2 -> Memset (Device)": {
+      "gaps": 18,
+      "idle_us": 2381.38232421875
+    },
+    "void at::native::unrolled_elementwise_kernel<at: -> triton_red_fused__to_copy_embedding_machete_mm_r": {
+      "gaps": 6,
+      "idle_us": 1819.94677734375
+    },
+    "void at::native::unrolled_elementwise_kernel<at: -> triton_red_fused__to_copy_embedding_rms_norm_0": {
+      "gaps": 6,
+      "idle_us": 4179.244140625
+    },
+    "void cutlass::device_kernel<flash::FlashAttnFwdC -> Memset (Device)": {
+      "gaps": 419,
+      "idle_us": 10625.32421875
+    },
+    "void flash::prepare_varlen_num_blocks_kernel<1,  -> void cutlass::device_kernel<flash::enable_sm90_o": {
+      "gaps": 6,
+      "idle_us": 2324.03515625
+    },
+    "void vllm::reshape_and_cache_flash_kernel<__nv_b -> void flash::prepare_varlen_num_blocks_kernel<1, ": {
+      "gaps": 702,
+      "idle_us": 32668.271484375
+    }
+  },
+  "occupancy": 0.5236872426467848,
+  "profiled_steps": 6,
+  "quant": "w4a16-quantized",
+  "record_type": "w98_timeline_gaps",
+  "schema_version": 1,
+  "skip_count": 4,
+  "skip_layers": "2,4,7,16",
+  "window": 256
+}

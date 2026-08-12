@@ -1,0 +1,57 @@
+{
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 128
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 152,
+      "context_tokens": 431,
+      "mean_armed_step_s": 0.03637599137054119,
+      "regions": {
+        "draft_chain": {
+          "mean_ms": 26.47811536680683,
+          "n": 133
+        },
+        "draft_forward": {
+          "mean_ms": 5.505877284832715,
+          "n": 439
+        },
+        "draft_forward_first": {
+          "mean_ms": 5.517823047431788,
+          "n": 133
+        },
+        "verify": {
+          "mean_ms": 6.194567587139752,
+          "n": 134
+        }
+      }
+    },
+    "R5": {
+      "armed_step_count": 227,
+      "context_tokens": 14357,
+      "mean_armed_step_s": 0.04187182437332084,
+      "regions": {
+        "draft_chain": {
+          "mean_ms": 26.582204280622626,
+          "n": 208
+        },
+        "draft_forward": {
+          "mean_ms": 5.5193274906248755,
+          "n": 664
+        },
+        "draft_forward_first": {
+          "mean_ms": 5.544991098689094,
+          "n": 208
+        },
+        "verify": {
+          "mean_ms": 11.207376048545697,
+          "n": 222
+        }
+      }
+    }
+  },
+  "record_type": "w98_skip8_floor_measurement",
+  "schema_version": 1
+}

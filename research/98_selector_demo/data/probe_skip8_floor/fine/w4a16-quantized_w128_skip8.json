@@ -1,0 +1,177 @@
+{
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 128
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 152,
+      "context_tokens": 431,
+      "mean_armed_step_s": 0.040064886754982196,
+      "regions": {
+        "chain_setup": {
+          "mean_ms": 0.18179079227121475,
+          "n": 133
+        },
+        "cpu_bookkeep_loop": {
+          "mean_ms": 0.0132605057286182,
+          "n": 134
+        },
+        "cpu_exec_prepare_inputs": {
+          "mean_ms": 0.7793244752866119,
+          "n": 134
+        },
+        "cpu_next_input_build": {
+          "mean_ms": 0.09293729481078795,
+          "n": 134
+        },
+        "cpu_prepare_inputs_padded": {
+          "mean_ms": 0.08949290019121359,
+          "n": 132
+        },
+        "cpu_reject_parse": {
+          "mean_ms": 0.080759763615347,
+          "n": 132
+        },
+        "cpu_rejection_sample": {
+          "mean_ms": 0.3411172647523044,
+          "n": 132
+        },
+        "draft_chain": {
+          "mean_ms": 30.065921152315166,
+          "n": 133
+        },
+        "draft_forward": {
+          "mean_ms": 5.4635048573698795,
+          "n": 439
+        },
+        "draft_forward_first": {
+          "mean_ms": 5.479275669965586,
+          "n": 133
+        },
+        "step0_build_attn_md": {
+          "mean_ms": 0.5395393774851709,
+          "n": 133
+        },
+        "step0_determine_batch": {
+          "mean_ms": 0.12187551771801777,
+          "n": 133
+        },
+        "step0_sample": {
+          "mean_ms": 0.537499033975506,
+          "n": 133
+        },
+        "step0_set_inputs": {
+          "mean_ms": 0.7249928872570172,
+          "n": 133
+        },
+        "step_build_attn_md": {
+          "mean_ms": 0.40145643659525787,
+          "n": 439
+        },
+        "step_input_buffering": {
+          "mean_ms": 0.11840536180090219,
+          "n": 439
+        },
+        "step_pos_slot_update": {
+          "mean_ms": 0.1970496751815675,
+          "n": 439
+        },
+        "step_sample": {
+          "mean_ms": 0.5432166720545323,
+          "n": 439
+        },
+        "verify": {
+          "mean_ms": 6.193424048121157,
+          "n": 134
+        }
+      }
+    },
+    "R5": {
+      "armed_step_count": 224,
+      "context_tokens": 14357,
+      "mean_armed_step_s": 0.04586719667869537,
+      "regions": {
+        "chain_setup": {
+          "mean_ms": 0.1865507881497828,
+          "n": 205
+        },
+        "cpu_bookkeep_loop": {
+          "mean_ms": 0.026251297320779327,
+          "n": 219
+        },
+        "cpu_exec_prepare_inputs": {
+          "mean_ms": 0.830046519728539,
+          "n": 219
+        },
+        "cpu_next_input_build": {
+          "mean_ms": 0.10211555527514656,
+          "n": 219
+        },
+        "cpu_prepare_inputs_padded": {
+          "mean_ms": 0.09050519934937577,
+          "n": 204
+        },
+        "cpu_reject_parse": {
+          "mean_ms": 0.08964306371304773,
+          "n": 204
+        },
+        "cpu_rejection_sample": {
+          "mean_ms": 0.34465187020353316,
+          "n": 204
+        },
+        "draft_chain": {
+          "mean_ms": 30.305989781712615,
+          "n": 205
+        },
+        "draft_forward": {
+          "mean_ms": 5.509486383996648,
+          "n": 655
+        },
+        "draft_forward_first": {
+          "mean_ms": 5.518601007373413,
+          "n": 205
+        },
+        "step0_build_attn_md": {
+          "mean_ms": 0.5480025764327587,
+          "n": 205
+        },
+        "step0_determine_batch": {
+          "mean_ms": 0.1201300132201939,
+          "n": 205
+        },
+        "step0_sample": {
+          "mean_ms": 0.5421057198673669,
+          "n": 205
+        },
+        "step0_set_inputs": {
+          "mean_ms": 0.7458078053143875,
+          "n": 205
+        },
+        "step_build_attn_md": {
+          "mean_ms": 0.4077296575197225,
+          "n": 655
+        },
+        "step_input_buffering": {
+          "mean_ms": 0.11881858453453156,
+          "n": 655
+        },
+        "step_pos_slot_update": {
+          "mean_ms": 0.1973836705842205,
+          "n": 655
+        },
+        "step_sample": {
+          "mean_ms": 0.5472809351795843,
+          "n": 655
+        },
+        "verify": {
+          "mean_ms": 11.294322657413764,
+          "n": 219
+        }
+      }
+    }
+  },
+  "record_type": "w98_skip8_floor_measurement",
+  "schema_version": 1
+}

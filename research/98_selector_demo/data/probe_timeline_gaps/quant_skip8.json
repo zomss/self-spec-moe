@@ -1,0 +1,106 @@
+{
+  "device_busy_us": 126265.198,
+  "device_idle_us": 156237.81616015625,
+  "device_span_us": 282503.01416015625,
+  "gap_count": 1904,
+  "gap_idle_us": 129799.48876953125,
+  "gap_size_histogram": {
+    "20-50us": 975,
+    "200us-1ms": 45,
+    "50-200us": 884,
+    ">1ms": 0
+  },
+  "gap_threshold_us": 20.0,
+  "idle_by_host_call": {
+    "<no host call spans the gap>": {
+      "gaps": 1840,
+      "idle_us": 123679.943359375
+    },
+    "cudaEventQuery": {
+      "gaps": 4,
+      "idle_us": 160.2548828125
+    },
+    "cudaGraphLaunch": {
+      "gaps": 7,
+      "idle_us": 4443.8544921875
+    },
+    "cudaLaunchKernel": {
+      "gaps": 13,
+      "idle_us": 472.28271484375
+    },
+    "cudaLaunchKernelExC": {
+      "gaps": 1,
+      "idle_us": 33.53564453125
+    },
+    "cudaMemcpyAsync": {
+      "gaps": 37,
+      "idle_us": 943.50634765625
+    },
+    "cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags": {
+      "gaps": 1,
+      "idle_us": 24.4482421875
+    },
+    "cudaStreamIsCapturing": {
+      "gaps": 1,
+      "idle_us": 41.6630859375
+    }
+  },
+  "idle_by_kernel_boundary": {
+    "Memcpy DtoD (Device -> Device) -> Memcpy DtoD (Device -> Device)": {
+      "gaps": 20,
+      "idle_us": 1308.8798828125
+    },
+    "Memcpy DtoD (Device -> Device) -> triton_red_fused__to_copy_embedding_machete_mm_r": {
+      "gaps": 18,
+      "idle_us": 4901.93115234375
+    },
+    "Memcpy DtoH (Device -> Pageable) -> Memcpy DtoH (Device -> Pageable)": {
+      "gaps": 48,
+      "idle_us": 1717.2958984375
+    },
+    "Memcpy DtoH (Device -> Pageable) -> Memcpy HtoD (Pinned -> Device)": {
+      "gaps": 5,
+      "idle_us": 4716.013671875
+    },
+    "Memcpy HtoD (Pinned -> Device) -> Memcpy HtoD (Pinned -> Device)": {
+      "gaps": 43,
+      "idle_us": 3191.10302734375
+    },
+    "Memcpy HtoD (Pinned -> Device) -> void flash::prepare_varlen_num_blocks_kernel<1, ": {
+      "gaps": 6,
+      "idle_us": 1928.36376953125
+    },
+    "triton_poi_fused_2 -> void vllm::reshape_and_cache_flash_kernel<__nv_b": {
+      "gaps": 24,
+      "idle_us": 2577.40966796875
+    },
+    "triton_red_fused_fused_add_rms_norm_2 -> Memset (Device)": {
+      "gaps": 18,
+      "idle_us": 1555.59765625
+    },
+    "void at::native::unrolled_elementwise_kernel<at: -> triton_red_fused__to_copy_embedding_machete_mm_r": {
+      "gaps": 6,
+      "idle_us": 1641.51708984375
+    },
+    "void at::native::unrolled_elementwise_kernel<at: -> triton_red_fused__to_copy_embedding_rms_norm_0": {
+      "gaps": 6,
+      "idle_us": 4390.4150390625
+    },
+    "void cutlass::device_kernel<flash::FlashAttnFwdC -> Memset (Device)": {
+      "gaps": 672,
+      "idle_us": 22906.8369140625
+    },
+    "void vllm::reshape_and_cache_flash_kernel<__nv_b -> void flash::prepare_varlen_num_blocks_kernel<1, ": {
+      "gaps": 672,
+      "idle_us": 63462.2265625
+    }
+  },
+  "occupancy": 0.44695168430457133,
+  "profiled_steps": 6,
+  "quant": "w4a16-quantized",
+  "record_type": "w98_timeline_gaps",
+  "schema_version": 1,
+  "skip_count": 8,
+  "skip_layers": "2,4,7,11,16,20,25,30",
+  "window": 256
+}

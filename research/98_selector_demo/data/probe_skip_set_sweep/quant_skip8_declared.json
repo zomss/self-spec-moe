@@ -1,0 +1,33 @@
+{
+  "arm": "quant_skip8_declared",
+  "observations": {
+    "R1": {
+      "armed_step_count": 149,
+      "mean_armed_step_s": 0.03910860038228058,
+      "regions": {
+        "draft_chain": {
+          "mean_ms": 28.965599484777506,
+          "n": 130
+        },
+        "draft_forward": {
+          "mean_ms": 6.051212276716521,
+          "n": 430
+        },
+        "draft_forward_first": {
+          "mean_ms": 6.096956483536185,
+          "n": 130
+        },
+        "verify": {
+          "mean_ms": 6.199471028663844,
+          "n": 131
+        }
+      }
+    }
+  },
+  "quant": "w4a16-quantized",
+  "record_type": "w98_skip_set_sweep_measurement",
+  "schema_version": 1,
+  "skip_count": 8,
+  "skip_layers": "2,4,7,11,16,20,25,30",
+  "window": 256
+}
