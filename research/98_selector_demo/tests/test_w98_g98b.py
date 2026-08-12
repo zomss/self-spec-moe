@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 PHASE_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = PHASE_DIR.parents[1]
@@ -372,3 +374,77 @@ class DesignIdentifiabilityTests(unittest.TestCase):
             }
         )
         self.assertEqual(singular, 1)
+
+
+class HeldoutScopeTests(unittest.TestCase):
+    """D1 must be reported over composed cells only, without rewriting the split."""
+
+    def test_the_split_divides_into_seven_and_one(self) -> None:
+        composed, invalid = gate.composed_heldout()
+        self.assertEqual(len(composed), 7)
+        self.assertEqual(len(invalid), 1)
+
+    def test_the_invalid_cell_is_the_single_lever_fit_point(self) -> None:
+        _, invalid = gate.composed_heldout()
+        key = gate._config_key(invalid[0])
+        self.assertEqual(key, "target-matching/woff/skip8")
+        singles = {gate._config_key(c) for c in gate.single_lever_profiles()}
+        self.assertIn(key, singles)
+
+    def test_every_scored_cell_varies_at_least_two_axes(self) -> None:
+        composed, _ = gate.composed_heldout()
+        for t in composed:
+            varied = sum(
+                (
+                    t["quant"] != "target-matching",
+                    t["window"] != "off",
+                    t["skip_count"] != 0,
+                )
+            )
+            self.assertGreaterEqual(varied, 2, t)
+
+    def test_no_scored_cell_is_also_a_fit_point(self) -> None:
+        composed, _ = gate.composed_heldout()
+        singles = {gate._config_key(c) for c in gate.single_lever_profiles()}
+        for t in composed:
+            self.assertNotIn(gate._config_key(t), singles)
+
+    def test_the_frozen_split_is_not_rewritten(self) -> None:
+        """The prereg artifact must still carry all eight."""
+        heldout = json.loads((REPO_ROOT / gate.PREREG_HELDOUT).read_text())["heldout"]
+        self.assertEqual(len(heldout), 8)
+
+
+class TraceNamespaceTests(unittest.TestCase):
+    """A single and a held-out cell may share a key; their traces may not."""
+
+    def test_stage_boots_write_under_a_stage_namespaced_trace_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            traces = root / "traces"
+            traces.mkdir()
+            cfg = {"quant": "target-matching", "window": "off", "skip_count": 0}
+            seen = []
+
+            real_run = subprocess.run
+
+            def fake_run(argv, **kwargs):
+                if "--trace" not in argv:  # unrelated preflight calls
+                    return real_run(argv, **kwargs)
+                seen.append(Path(argv[argv.index("--trace") + 1]))
+                Path(argv[argv.index("--stage-dir") + 1]).joinpath(
+                    gate._config_key(cfg).replace("/", "_") + ".json"
+                ).write_text("{}")
+                return subprocess.CompletedProcess(argv, 0)
+
+            with mock.patch.object(subprocess, "run", fake_run):
+                gate._run_stage_boots(
+                    root / gate.SINGLES_DIR, [cfg], traces, root / "auth.json"
+                )
+                gate._run_stage_boots(
+                    root / gate.HELDOUT_DIR, [cfg], traces, root / "auth.json"
+                )
+
+        self.assertEqual(len(set(seen)), 2, seen)
+        self.assertEqual(seen[0].parent.name, gate.SINGLES_DIR)
+        self.assertEqual(seen[1].parent.name, gate.HELDOUT_DIR)

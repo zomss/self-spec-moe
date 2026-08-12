@@ -1,0 +1,65 @@
+{
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 1024
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 145,
+      "batch": 1,
+      "context_tokens": 431,
+      "mean_armed_step_s": 0.03397285545541873,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00023036294329305664,
+      "usable": true
+    },
+    "R4": {
+      "armed_step_count": 288,
+      "batch": 8,
+      "context_tokens": 8853,
+      "mean_armed_step_s": 0.03777321256368143,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0009070070641916505,
+      "usable": true
+    },
+    "R5": {
+      "armed_step_count": 216,
+      "batch": 8,
+      "context_tokens": 14357,
+      "mean_armed_step_s": 0.03919972755021364,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.0017705920386149403,
+      "usable": true
+    },
+    "R5cot": {
+      "armed_step_count": 162,
+      "batch": 8,
+      "context_tokens": 14408,
+      "mean_armed_step_s": 0.03946401106939582,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.001075108069650365,
+      "usable": true
+    },
+    "R6": {
+      "armed_step_count": 159,
+      "batch": 32,
+      "context_tokens": 393,
+      "mean_armed_step_s": 0.03655102423468382,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0009122025047204691,
+      "usable": true
+    },
+    "R8": {
+      "armed_step_count": 169,
+      "batch": 16,
+      "context_tokens": 398,
+      "mean_armed_step_s": 0.035085164779623604,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0005433289055078498,
+      "usable": true
+    }
+  },
+  "record_type": "w98_round1_measurement",
+  "schema_version": 1
+}

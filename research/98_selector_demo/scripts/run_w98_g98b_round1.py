@@ -43,9 +43,9 @@ sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98b-round1-authorization-v4"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v4.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v4"
+PACKAGE_ID = "w98-g98b-round1-authorization-v5"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v5.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v5"
 V1_FAILURE_PATH = "research/98_selector_demo/data/g98_b/failure.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PREREG_HELDOUT = "research/98_selector_demo/data/prereg/w98_d1_heldout.json"
@@ -87,6 +87,8 @@ TARGET_ARMED_STEPS = 128
 COMMITTED_TOKENS_PER_ARMED_STEP = 5
 MEASURE_TOKENS = TARGET_ARMED_STEPS * COMMITTED_TOKENS_PER_ARMED_STEP
 MIN_ARMED_STEPS = TARGET_ARMED_STEPS // 2
+# the profiler drops this many samples before reporting a mean
+PROFILER_WARMUP = 20
 # batch 1..32 -> K=4, so the chain actually arms and a draft cost exists.
 DYNAMIC_K_SCHEDULE = [[1, 32, 4]]
 
@@ -131,6 +133,33 @@ def single_lever_profiles() -> list[dict[str, Any]]:
     ]
     singles += [{"quant": lattice["quant"][1], "window": "off", "skip_count": 0}]
     return singles
+
+
+def composed_heldout() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Split the frozen held-out set into genuinely composed and invalid cells.
+
+    D1 claims a model fit from SINGLE-LEVER profiles covers COMPOSED
+    configurations. One frozen cell -- target-matching/woff/skip8 -- varies a
+    single axis, so it is not composed and is also in the fit set; predicting
+    it would be predicting a point the model was fitted on. The frozen split is
+    NOT rewritten, because it was registered before data. The invalid cell is
+    excluded from D1 with its reason recorded.
+
+    Returns:
+        ``(composed, invalid)`` from the registered held-out set.
+    """
+    heldout = _load_json(matrix._repository_path(PREREG_HELDOUT))["heldout"]
+    composed, invalid = [], []
+    for triple in heldout:
+        varied = sum(
+            (
+                triple["quant"] != "target-matching",
+                triple["window"] != "off",
+                triple["skip_count"] != 0,
+            )
+        )
+        (composed if varied >= 2 else invalid).append(triple)
+    return composed, invalid
 
 
 def expected_authorization() -> dict[str, Any]:
@@ -202,11 +231,30 @@ def expected_authorization() -> dict[str, Any]:
             },
             {"id": "B4", "name": "score", "gpu": False, "boots": 0},
         ],
+        "measurement": {
+            "d_measured": "draft_chain",
+            "source": "VLLM_SELF_SPEC_PROFILE region timings",
+            "why": (
+                "the step trace carries only whole-step time, 61-81% of which "
+                "is the target verify -- a constant the model would then scale "
+                "by keep_frac, which produced a one-directional underprediction "
+                "tracking skip depth (1.05x at skip4, 1.44x at skip8)"
+            ),
+            "verify_recorded_as_control": True,
+            "profiler_warmup": PROFILER_WARMUP,
+        },
         "d1": {
             "epsilon_arm": EPSILON_ARM,
             "elimination_rule": "(K+1)/q_lo < 1 + epsilon_arm",
             "false_elimination_budget": 0,
             "heldout_count": heldout["heldout_count"],
+            "composed_scored": 7,
+            "excluded_invalid": 1,
+            "exclusion_reason": (
+                "target-matching/woff/skip8 varies a single axis, so it is not "
+                "composed and is also a fit point; the frozen split is not "
+                "rewritten"
+            ),
             "fit_uses_single_lever_profiles_only": True,
             "on_coverage_failure": "local non-pruning mask, not global failure",
         },
@@ -441,6 +489,10 @@ def boot_environment(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, str]
             ),
             "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": SKIP_SETS[cfg["skip_count"]],
             "VLLM_SELF_SPEC_KOFF_TRACE": str(trace_path),
+            # draft_chain is the draft-step cost the factored model wants. The
+            # step trace only carries whole-step time, 61-81% of which is the
+            # target verify -- a constant the model would then scale by keep_frac.
+            "VLLM_SELF_SPEC_PROFILE": "1",
         }
     )
     return env
@@ -482,12 +534,17 @@ def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
 
     manifest = _load_json(matrix._repository_path(PROMPT_MANIFEST))
     regimes = {r["regime_id"]: r for r in manifest["prompt_plan"]["regimes"]}
+    from vllm.v1.spec_decode.self_spec_profiler import get_profiler
+
+    profiler = get_profiler()
+    _require(profiler.enabled, "the self-spec profiler is not enabled")
     engine = LLMEngine.from_engine_args(_engine_args(cfg))
     observations: dict[str, Any] = {}
     try:
         for regime_id, spec in regimes.items():
             prompts = _prompts_for(regime_id, spec["batch"])
             before = _trace_len(trace_path)
+            profiler.reset()
             for index, tokens in enumerate(prompts):
                 engine.add_request(
                     f"{regime_id}-{index}",
@@ -499,11 +556,29 @@ def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
             while engine.has_unfinished_requests():
                 engine.step()
             steps = _armed_steps(trace_path, before)
-            usable = len(steps) >= MIN_ARMED_STEPS
+            summary = profiler.summary(warmup=PROFILER_WARMUP)
+            chain = summary.get("draft_chain", {})
+            verify = summary.get("verify", {})
+            usable = (
+                len(steps) >= MIN_ARMED_STEPS
+                and bool(chain.get("n"))
+                and chain.get("mean_ms") is not None
+            )
             observations[regime_id] = {
                 "armed_step_count": len(steps),
                 "usable": usable,
-                "mean_armed_step_s": statistics.mean(steps) if usable else None,
+                # d_measured: the DRAFT chain alone, not the whole engine step.
+                "draft_chain_s": (
+                    chain["mean_ms"] / 1000.0 if chain.get("mean_ms") else None
+                ),
+                "draft_chain_samples": chain.get("n", 0),
+                # Recorded as an independent check: no lever touches the
+                # target, so verify should be roughly constant across the
+                # single-lever configurations at a fixed regime.
+                "verify_s": (
+                    verify["mean_ms"] / 1000.0 if verify.get("mean_ms") else None
+                ),
+                "mean_armed_step_s": statistics.mean(steps) if steps else None,
                 "stdev_armed_step_s": (
                     statistics.stdev(steps) if len(steps) > 1 else None
                 ),
@@ -616,7 +691,7 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
         points, context = [], None
         for row in singles.values():
             obs = row["observations"].get(regime)
-            if not obs or not obs["mean_armed_step_s"]:
+            if not obs or not obs.get("draft_chain_s"):
                 continue
             context = obs["context_tokens"]
             geom = lever_geometry(row["config"], obs["context_tokens"])
@@ -625,7 +700,7 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
                     weight_bytes=geom["weight_bytes"],
                     kv_bytes=geom["kv_bytes"],
                     keep_frac=geom["keep_frac"],
-                    d_measured=obs["mean_armed_step_s"],
+                    d_measured=obs["draft_chain_s"],
                 )
             )
         if len(points) < 3 or context is None:
@@ -681,23 +756,33 @@ def score_reveal(output_dir: Path) -> dict[str, Any]:
         predicted = committed["predictions"].get(key, {})
         for regime, obs in row["observations"].items():
             band = predicted.get(regime)
-            if not band or not obs["mean_armed_step_s"]:
+            if not band or not obs.get("draft_chain_s"):
                 continue
             total += 1
-            inside = band["lo"] <= obs["mean_armed_step_s"] <= band["hi"]
+            inside = band["lo"] <= obs["draft_chain_s"] <= band["hi"]
             covered += inside
             rows.append(
                 {
                     "cell": f"{key}/{regime}",
-                    "measured": obs["mean_armed_step_s"],
+                    "measured": obs["draft_chain_s"],
                     "lo": band["lo"],
                     "hi": band["hi"],
                     "covered": inside,
                 }
             )
+    composed, invalid = composed_heldout()
     return {
         "schema_version": 1,
         "record_type": "w98_round1_result",
+        "heldout_scope": {
+            "registered": len(composed) + len(invalid),
+            "composed_scored": len(composed),
+            "excluded_invalid": [_triple_key(t) for t in invalid],
+            "exclusion_reason": (
+                "varies a single axis, so it is not a composed configuration "
+                "and is also a fit point; the frozen split is not rewritten"
+            ),
+        },
         "package_id": PACKAGE_ID,
         "scored": True,
         "predictions_committed_before_reveal": True,
@@ -727,8 +812,15 @@ def parse_args() -> argparse.Namespace:
 def _run_stage_boots(
     stage_dir: Path, configs, trace_root: Path, authorization_path: Path
 ) -> None:
-    """Boot each configuration in its own child, pinned to the reserved lane."""
+    """Boot each configuration in its own child, pinned to the reserved lane.
+
+    Traces are namespaced by stage: a held-out cell and a single-lever profile
+    can carry the same key, and a shared trace root would have one boot read
+    the other's steps.
+    """
     stage_dir.mkdir(parents=True, exist_ok=True)
+    trace_root = trace_root / stage_dir.name
+    trace_root.mkdir(parents=True, exist_ok=True)
     lane = matrix.lane_for_block(1)
     lo, hi = lane["cpu_affinity"].split("-")
     affinity = sorted(range(int(lo), int(hi) + 1))
@@ -739,6 +831,10 @@ def _run_stage_boots(
         if target.exists():
             continue
         trace = trace_root / f"{key}.jsonl"
+        _require(
+            not trace.exists(),
+            f"trace {trace} already exists; a boot must write its own trace",
+        )
         env = matrix._boot_child_environment(boot_environment(cfg, trace))
         log = stage_dir / f"{key}.log"
         with log.open("w", encoding="utf-8") as handle:
@@ -800,8 +896,8 @@ def execute(authorization_path: Path, output_dir: Path) -> int:
 
     # B3 -- reveal, gated on the commitment.
     require_committed_predictions(output_dir)
-    heldout = _load_json(matrix._repository_path(PREREG_HELDOUT))["heldout"]
-    _run_stage_boots(output_dir / HELDOUT_DIR, heldout, traces, authorization_path)
+    composed, invalid = composed_heldout()
+    _run_stage_boots(output_dir / HELDOUT_DIR, composed, traces, authorization_path)
 
     # B4 -- score against the committed predictions.
     result = score_reveal(output_dir)
