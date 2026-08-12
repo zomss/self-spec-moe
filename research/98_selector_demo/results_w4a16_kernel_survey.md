@@ -1,113 +1,123 @@
-# W4A16 decode kernel: what already exists, and is new code needed?
+# W4A16 decode kernel: which of vLLM's kernels is best for the draft?
 
 Date: 2026-08-12
-Status: answered. **It is a kernel-priority change, not new code — for about
-half the gap.** A specialised kernel is still worth ~3.4 ms/step after that.
+Status: answered. **Humming is fastest at every M; Marlin second; Machete —
+what we run today — is third.** The switch is a kernel-priority change, not new
+code, worth ~3.2-3.4 ms/step. A specialised kernel is still worth ~2.9 ms/step
+after that.
 
-## The question
+## Which kernels can even implement our config
 
-X7/X8 left the W4A16 GEMM as the largest remaining draft-side cost. Before
-writing a decode kernel, two cheaper possibilities had to be excluded:
+Asking the registry directly for the draft's config (group_size 128, `uint4b8`,
+bf16 activations, SM90), CUDA priority order:
 
-1. Machete's `schedule` argument is exposed (`ops.machete_mm(..., schedule=)`)
-   and vLLM's wrapper never passes one, so the C++ default heuristic picks.
-2. Marlin is the kernel designed for small batch, supports our config
-   (group_size 128, `uint4b8`), and sits 4th in the CUDA priority list behind
-   Machete on a general default ordering.
+| kernel | viable | reason |
+| --- | --- | --- |
+| `CutlassW4A8` | no | FP8 activations only |
+| `Machete` | **yes** | selected today |
+| `AllSpark` | no | no SM90 support (also `uint8b128` only) |
+| `Marlin` | **yes** | |
+| `Humming` | **yes** | JIT; needs `ninja` on PATH |
+| `Conch` | no | package not installed — **environment, not merit** |
+| `Exllama` | no | fp16 activations only |
+| `TritonW4A16` | **yes** | |
 
-## What vLLM already ships
+W4A8 / W8A8 / W8A16 / W4A4 are separate quantization schemes, not alternative
+kernels for ours.
 
-`MPLinearKernel` registry, CUDA priority order:
-`CutlassW4A8 → Machete → AllSpark → Marlin → Humming → Conch → Exllama →
-TritonW4A16`. Machete is selected for us. AllSpark is excluded by dtype — it
-supports only `uint8b128` (8-bit). Separately there are W4A8
-(`CutlassW4A8`, `compressed_tensors_w4a8_{int,fp8}`), W8A8 (a different
-`scaled_mm` path), W8A16, and W4A4 (mxfp4/nvfp4) schemes — different quantization
-schemes, not alternative kernels for ours.
+## Result
 
-## Measurement, and why the first attempt failed
+Per-step W4A16 GEMM cost, 28 layers x 4 chain forwards, CUDA-graph timed:
 
-`benchmark_machete.py` at Qwen3-8B's real layer shapes could not resolve it. Its
-`bench_fns` times a Python loop (`for fn in fns: fn()`), so every call carries
-dispatch. Fitting time against weight bytes across the four shapes exposes the
-floor:
+| M | machete (today) | marlin | **humming** | triton | ideal |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 9.55 ms | 6.67 | **6.32** | 35.70 | 3.33 |
+| 4 | 9.64 | 6.71 | **6.28** | 35.27 | 3.33 |
+| 8 | 9.73 | 6.72 | **6.27** | 35.26 | 3.33 |
+| 32 | 9.22 | 8.43 | **7.11** | 35.32 | 3.33 |
 
-| kernel | per-call overhead |
-| --- | --- |
-| machete | 12.58 µs |
-| machete_best (swept) | 14.43 µs |
-| marlin | 24.34 µs |
-| torch.matmul | 4.41 µs |
+Per shape, µs/call and % of that shape's own bandwidth bound:
 
-Those intercepts exceed the entire bandwidth-bound ideal for three of the four
-shapes (o_proj 2.58 µs, qkv 3.87, down 7.75), and Marlin's fitted slope implies
-a bandwidth 5x above HBM — impossible, and the signature of a measurement that
-is all overhead.
+| M=1 | ideal | machete | marlin | humming |
+| --- | --- | --- | --- | --- |
+| qkv_proj | 3.87 | 14.44 (27%) | 9.82 (39%) | **9.40 (41%)** |
+| o_proj | 2.58 | 13.76 (19%) | **7.72 (33%)** | 8.49 (30%) |
+| gate_up_proj | 15.49 | 36.74 (42%) | 25.96 (60%) | **25.46 (61%)** |
+| down_proj | 7.75 | 20.31 (38%) | 16.09 (48%) | **13.11 (59%)** |
 
-X9b therefore captures 32 calls into a CUDA graph and replays it, timed with
-CUDA events, so no per-call host work is included. That is also the regime the
-draft actually runs in, since X6 established the chain is captured.
+| M=32 | ideal | machete | marlin | humming |
+| --- | --- | --- | --- | --- |
+| qkv_proj | 3.87 | 16.14 (24%) | 13.53 (29%) | **11.32 (34%)** |
+| o_proj | 2.58 | 14.66 (18%) | 9.98 (26%) | **9.49 (27%)** |
+| gate_up_proj | 15.49 | 29.85 (52%) | 30.51 (51%) | **27.64 (56%)** |
+| down_proj | 7.75 | 21.66 (36%) | 21.24 (36%) | **15.00 (52%)** |
 
-## Result: Marlin wins at every shape and every M in range
+Humming wins 7 of 8 (Marlin takes `o_proj` at M=1) and its margin is widest
+exactly where Marlin was weakest — `down_proj` (59% vs 48%) and M=32
+(7.11 vs 8.43 ms/step, 16%).
 
-Device µs per call, and % of that shape's own bandwidth bound:
+`TritonW4A16` is a portability fallback: 5-8% of bound, 5x slower than Humming.
 
-| shape (bytes) | ideal | machete | marlin |
-| --- | --- | --- | --- |
-| qkv_proj (12.98 MB) | 3.87 | 14.57 (27%) | **9.99 (39%)** |
-| o_proj (8.65 MB) | 2.58 | 14.09 (18%) | **7.92 (33%)** |
-| gate_up_proj (51.90 MB) | 15.49 | 37.66 (41%) | **25.79 (60%)** |
-| down_proj (25.95 MB) | 7.75 | 20.84 (37%) | **16.22 (48%)** |
+## Two findings about the method, not the kernels
 
-Aggregated over 28 layers x 4 chain forwards:
+**Stopping at "Marlin beats Machete" would have shipped the second-best
+kernel.** The first comparison covered two of eight kernels. Widening it to
+everything the registry admits changed the answer.
 
-| M | machete | marlin | ideal | saving | machete eff | marlin eff |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | 9.76 ms | 6.71 | 3.33 | **3.05** | 34% | 50% |
-| 4 | 9.72 | 6.89 | 3.33 | 2.83 | 34% | 48% |
-| 8 | 9.79 | 6.88 | 3.33 | 2.91 | 34% | 48% |
-| 16 | 9.80 | 7.42 | 3.33 | 2.38 | 34% | 45% |
-| 32 | 9.47 | 8.58 | 3.33 | 0.90 | 35% | 39% |
+**Two of the three exclusions were environment artifacts, not facts about the
+kernels.** Humming failed with `Ninja is required to load C++ extensions` —
+`ninja` is present in `.venv/bin` and the engine's boot environment puts it on
+PATH, but the probe did not. Adding it made Humming the winner. Conch remains
+excluded only because it is not pip-installed. Neither is evidence about kernel
+quality, and one of them already overturned the recommendation once.
 
-Anchor: the graph benchmark puts machete at 9.76 ms/step against the in-engine
-CUPTI measurement of 8.69 ms/step (+12%), so it is not being flattered by L2
-residency.
+## Measurement notes
 
-**Hypothesis 1 is dead.** The schedule sweep did not help: `machete_best` was
-within noise of the default, and at qkv/o_proj slightly worse. The default
-heuristic is not the problem.
+The repo's `benchmark_machete.py` cannot answer this. Its `bench_fns` times a
+Python loop, so every call carries dispatch; fitting time against weight bytes
+gives per-call overheads of 12.58 µs (machete), 24.34 (marlin), 4.41
+(torch.matmul) — larger than the entire bandwidth bound for three of four
+shapes, with Marlin's fitted slope implying 5x HBM, which is impossible.
 
-**Hypothesis 2 holds.** Marlin captures **47% of the available headroom for zero
-new code** — a kernel-priority change for the draft. A specialised decode kernel
-would be worth a further **3.38 ms/step** on top, which is still the largest
-single remaining item.
+X10 therefore drives each kernel through the real `CompressedTensorsWNA16`
+path — `create_weights` with `choose_mp_linear_kernel` patched per kernel, then
+that kernel's own `process_weights_after_loading` repack — and times
+`apply_weights` under CUDA-graph capture. A hand-rolled `nn.Module` does not
+work: the kernels need vLLM's parameter wrappers (`input_dim`/`output_dim`),
+`output_partition_sizes`, `params_dtype`, `has_bias`, and an initialised TP
+group under `set_current_vllm_config`. Graph capture matters because the draft
+chain is captured in production (X6) and because per-call dispatch would
+otherwise dominate.
 
 ## Correction to an earlier figure
 
-This phase previously reported the W4A16 GEMM at "65% of bandwidth-bound, ~3.0
-ms/step headroom". That derived weight bytes by dividing the whole 6.1 GB
-checkpoint by layer count, but the checkpoint includes the **bf16 `lm_head` and
-embeddings**, which are neither quantized nor touched per layer. Counting the
-actual quantized projections gives 99.5 MB/layer → **2.79 GB active, not 4.744
-GB**; 11.14 GB of traffic per step; ideal 3.33 ms against 8.69 measured =
-**38%, with 5.36 ms/step of headroom**. The opportunity is ~1.8x larger than
-first stated.
+This phase previously reported the GEMM at "65% of bandwidth-bound, ~3.0 ms/step
+headroom". That divided the whole 6.1 GB checkpoint by layer count, but the
+checkpoint includes the bf16 `lm_head` and embeddings, which are neither
+quantized nor touched per layer. The quantized projections are 99.5 MB/layer →
+**2.79 GB active**, 11.14 GB/step of traffic, ideal 3.33 ms against 8.69
+measured = **38%, headroom 5.36 ms/step**.
 
-## At M<=32 the activation precision is irrelevant
+## At M<=32 activation precision is irrelevant
 
 A 4096-wide bf16 activation row is 8 KB against tens of MB of weights — 0.02% of
 traffic. **W4A8 and W4A16 have identical decode cost.** A-precision pays only at
-prefill or large-batch verify, where the work is compute-bound. So W4A8 is not a
-route to this 3-5 ms: it would change the checkpoint and the draft's acceptance
-rate (a new lever value needing full re-measurement) while buying nothing where
-the draft is bottlenecked. For decode cost the quantization lever is purely
-**weight bits**.
+prefill or large-batch verify. W4A8 is therefore not a route to this saving: it
+would change the checkpoint and the draft's acceptance rate while buying nothing
+where the draft is bottlenecked. For decode cost the quantization lever is
+purely **weight bits**.
 
 ## Recommendation
 
-1. Switch the draft's W4A16 kernel to Marlin (priority change, gated to the
-   draft so target/serving defaults are untouched). Worth ~3.0 ms/step at
-   M<=8, ~2.4 at M=16, ~0.9 at M=32.
-2. Re-measure in-engine to confirm the microbenchmark transfers.
-3. Only then consider a specialised decode kernel, against a measured Marlin
-   baseline, for the remaining ~3.4 ms/step.
+1. Select **Humming** for the draft's W4A16 layers (priority change, gated to
+   the draft so serving defaults are untouched). ~3.2 ms/step at M<=8, ~2.1 at
+   M=32. Ensure `ninja` is on PATH in every boot path, since Humming JIT-compiles
+   and silently falls back without it.
+2. Re-measure in-engine: the microbenchmark must be confirmed to transfer, and
+   Humming's JIT warmup interacts with capture (`_prewarm_jit_linear_kernels`
+   exists for exactly this reason).
+3. Before calling the selection final, close the two gaps this survey exposed —
+   install Conch and measure it, and sweep Marlin's `use_atomic_add` /
+   `use_fp32_reduce`, which target small-M behaviour and were left at defaults.
+4. Only then consider a specialised decode kernel, against a measured Humming
+   baseline, for the remaining **~2.9 ms/step**.
