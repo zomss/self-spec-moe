@@ -90,12 +90,38 @@ class LeverPoint:
     d_measured: float
 
 
+# Amendment 1 to the preregistration (approved 2026-08-13). The D1 interval is
+# the fit residual and the MEASURED boot-to-boot reproducibility in quadrature.
+# Round 1's fit-residual-only envelope was +/-0.7% to +/-3% against a per-boot
+# stdev of ~0.17 ms -- narrower than the instrument could resolve, which is what
+# produced 9 of its 21 misses.
+Z_COVERAGE = 2.0  # matches D1's registered "95% intervals" wording
+COMPOSED_INFLATION = 2.0  # unchanged by amendment 1, deliberately
+
+
+def combined_envelope(fit_term: float, sigma_repro: float) -> float:
+    """Amendment 1: sqrt(fit_term^2 + (Z*sigma_repro)^2) * INFLATION."""
+    if fit_term < 0 or sigma_repro < 0:
+        raise W98CostModelError("envelope terms must be non-negative")
+    return math.sqrt(fit_term**2 + (Z_COVERAGE * sigma_repro) ** 2) * COMPOSED_INFLATION
+
+
+def is_resolvable(fit_term: float, sigma_repro: float) -> bool:
+    """Amendment 1 section 5: a wide envelope is not a pass.
+
+    When the measurement floor dominates the fit residual, the regime is
+    reported NOT RESOLVABLE rather than covered -- otherwise a noisier campaign
+    would buy an easier D1.
+    """
+    return Z_COVERAGE * sigma_repro < fit_term
+
+
 @dataclass(frozen=True)
 class FactoredCostModel:
     """D(quant, w, k) ~= keep_frac * (Wb*kappa_w + KVb*kappa_kv + c0).
 
     Fit from single-lever points only; composed configurations are
-    predictions carrying the symmetric log-residual envelope.
+    predictions carrying the amendment-1 envelope.
     """
 
     kappa_w: float
@@ -133,11 +159,25 @@ class FactoredCostModel:
         weight_bytes: float,
         kv_bytes: float,
         keep_frac: float,
-        inflation: float = 2.0,
+        sigma_repro: float,
     ) -> tuple[float, float]:
-        """Symmetric log interval; composed use inflates the envelope."""
+        """Symmetric log interval under amendment 1.
+
+        ``sigma_repro`` is REQUIRED and has no default: an interval that omits
+        the measurement term is the defect the amendment exists to fix, and a
+        default would let a caller reintroduce it silently.
+
+        Args:
+            weight_bytes: Draft weight bytes for the configuration.
+            kv_bytes: Draft KV bytes read at the state being predicted.
+            keep_frac: Fraction of draft layers executed.
+            sigma_repro: Measured log-scale boot-to-boot stdev at this regime.
+
+        Returns:
+            ``(lo, hi)`` of the symmetric log interval.
+        """
         point = self.predict(weight_bytes, kv_bytes, keep_frac)
-        half = self.log_envelope * inflation
+        half = combined_envelope(self.log_envelope, sigma_repro)
         return point * math.exp(-half), point * math.exp(half)
 
 

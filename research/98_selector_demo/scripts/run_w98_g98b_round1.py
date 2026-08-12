@@ -28,6 +28,7 @@ import contextlib
 import gzip
 import hashlib
 import json
+import math
 import os
 import statistics
 import subprocess
@@ -43,9 +44,9 @@ sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98b-round1-authorization-v5"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v5.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v5"
+PACKAGE_ID = "w98-g98b-round1-authorization-v6"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v6.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v6"
 V1_FAILURE_PATH = "research/98_selector_demo/data/g98_b/failure.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PREREG_HELDOUT = "research/98_selector_demo/data/prereg/w98_d1_heldout.json"
@@ -54,6 +55,17 @@ G98A_RESULT = "research/98_selector_demo/data/g98_a_v4/g98a_result.json"
 PREDICTIONS_NAME = "d1_predictions.json"
 SINGLES_DIR = "singles"
 HELDOUT_DIR = "heldout"
+# Amendment 1 section 3: repeat boots of two fit-set anchors, bracketing the
+# campaign, supply the measured reproducibility term. PRE runs before the
+# singles, POST after the held-out reveal, so drift over the session is
+# captured rather than assumed away.
+ANCHOR_PRE_DIR = "anchors_pre"
+ANCHOR_POST_DIR = "anchors_post"
+ANCHORS = [
+    {"quant": "target-matching", "window": "off", "skip_count": 0},
+    {"quant": "w4a16-quantized", "window": "off", "skip_count": 0},
+]
+ANCHOR_REPEATS = 3
 EPSILON_ARM = 0.015
 # Measured at G98-A: a resident W4A16 draft leaves far less shared-KV headroom
 # than the target-matching path, so Round 1's shapes are sized against the
@@ -231,6 +243,30 @@ def expected_authorization() -> dict[str, Any]:
             },
             {"id": "B4", "name": "score", "gpu": False, "boots": 0},
         ],
+        "amendment_1_envelope": {
+            "approved": "2026-08-13",
+            "rule": "sqrt(fit_term^2 + (Z*sigma_repro)^2) * INFLATION",
+            "z_coverage": 2.0,
+            "inflation": 2.0,
+            "sigma_repro_source": "3 repeats of 2 fit-set anchors, bracketing",
+            "validity_condition": (
+                "Z*sigma_repro >= fit_term -> regime is NOT RESOLVABLE, not "
+                "covered; a noisier campaign must not buy an easier D1"
+            ),
+        },
+        "runtime": {
+            "class": "piecewise",
+            "wholechain": False,
+            "fullcg": False,
+            "w4a16_kernel": "MarlinLinearKernel",
+            "why": (
+                "Option A (X15): piecewise carries no window>0 constraint, so "
+                "skip and quant are sampled on the same runtime as the rest and "
+                "the fit is identifiable. Marlin makes it resolvable -- it cut "
+                "sigma_repro 3-10x vs Machete. Price: 1.21x slower than "
+                "whole-chain at batch 1, ~1% at batch >= 32"
+            ),
+        },
         "measurement": {
             "d_measured": "draft_chain",
             "source": "VLLM_SELF_SPEC_PROFILE region timings",
@@ -489,6 +525,11 @@ def boot_environment(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, str]
             ),
             "VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS": SKIP_SETS[cfg["skip_count"]],
             "VLLM_SELF_SPEC_KOFF_TRACE": str(trace_path),
+            # Option A (X15): piecewise + Marlin. Pinned here rather than left
+            # to the operator so the scored runtime is part of the record.
+            "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+            "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+            "VLLM_DISABLED_KERNELS": "MacheteLinearKernel",
             # draft_chain is the draft-step cost the factored model wants. The
             # step trace only carries whole-step time, 61-81% of which is the
             # target verify -- a constant the model would then scale by keep_frac.
@@ -668,6 +709,48 @@ def _engine_args(cfg: Mapping[str, Any]):
     )
 
 
+def _run_anchor_stage(stage_dir: Path, traces: Path, authorization_path: Path) -> None:
+    """Boot each anchor ANCHOR_REPEATS times (amendment 1 section 3)."""
+    for repeat in range(ANCHOR_REPEATS):
+        for anchor in ANCHORS:
+            tagged = dict(anchor)
+            tagged["_repeat"] = repeat
+            _run_stage_boots(
+                stage_dir / f"r{repeat}",
+                [anchor],
+                traces / stage_dir.name / f"r{repeat}",
+                authorization_path,
+            )
+
+
+def measured_sigma_repro(output_dir: Path) -> dict[str, float]:
+    """Log-scale boot-to-boot stdev per regime, max across anchors.
+
+    Amendment 1 section 3: anchors are fit-set cells (never held out), repeats
+    bracket the campaign, and the maximum across anchors is taken rather than
+    the mean.
+    """
+    per_anchor: dict[str, dict[str, list[float]]] = {}
+    for stage in (ANCHOR_PRE_DIR, ANCHOR_POST_DIR):
+        for path in sorted((output_dir / stage).rglob("*.json")):
+            record = _load_json(path)
+            key = _config_key(record["config"])
+            for regime, obs in record["observations"].items():
+                value = obs.get("draft_chain_s")
+                if value:
+                    per_anchor.setdefault(key, {}).setdefault(regime, []).append(value)
+    _require(bool(per_anchor), "no anchor measurements found")
+    sigma: dict[str, float] = {}
+    for byreg in per_anchor.values():
+        for regime, values in byreg.items():
+            if len(values) < 2:
+                continue
+            logs = [math.log(v) for v in values]
+            sigma[regime] = max(sigma.get(regime, 0.0), statistics.stdev(logs))
+    _require(bool(sigma), "anchors produced no regime with >= 2 repeats")
+    return sigma
+
+
 def fit_and_predict(output_dir: Path) -> dict[str, Any]:
     """Fit the factored model per regime from singles and predict the held-out.
 
@@ -684,6 +767,7 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
         f"expected {len(single_lever_profiles())} single profiles, got {len(singles)}",
     )
     heldout = _load_json(matrix._repository_path(PREREG_HELDOUT))["heldout"]
+    sigma_repro = measured_sigma_repro(output_dir)
     predictions: dict[str, Any] = {}
     fits: dict[str, Any] = {}
     regimes = sorted({r for row in singles.values() for r in row["observations"]})
@@ -714,18 +798,32 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
             # as unfitted, while the others proceed.
             fits[regime] = {"fitted": False, "reason": str(exc)}
             continue
+        from w98_cost_model import combined_envelope, is_resolvable
+
+        sigma = sigma_repro.get(regime)
+        if sigma is None:
+            fits[regime] = {"fitted": False, "reason": "no anchor reproducibility"}
+            continue
         fits[regime] = {
             "fitted": True,
             "kappa_w": model.kappa_w,
             "kappa_kv": model.kappa_kv,
             "c0": model.c0,
-            "log_envelope": model.log_envelope,
+            # Amendment 1: both terms recorded so a reader can see which binds.
+            "fit_term": model.log_envelope,
+            "sigma_repro": sigma,
+            "z_sigma": 2.0 * sigma,
+            "envelope": combined_envelope(model.log_envelope, sigma),
+            "resolvable": is_resolvable(model.log_envelope, sigma),
             "points": len(points),
         }
         for triple in heldout:
             geom = lever_geometry(triple, context)
             lo, hi = model.predict_interval(
-                geom["weight_bytes"], geom["kv_bytes"], geom["keep_frac"]
+                geom["weight_bytes"],
+                geom["kv_bytes"],
+                geom["keep_frac"],
+                sigma_repro=sigma,
             )
             predictions.setdefault(_triple_key(triple), {})[regime] = {
                 "lo": lo,
@@ -771,9 +869,26 @@ def score_reveal(output_dir: Path) -> dict[str, Any]:
                 }
             )
     composed, invalid = composed_heldout()
+    fits = _load_json(output_dir / "d1_fits.json")
+    unresolvable = sorted(
+        r for r, v in fits.items() if v.get("fitted") and not v.get("resolvable")
+    )
+    scored = [c for c in rows if c["cell"].rsplit("/", 1)[1] not in unresolvable]
     return {
         "schema_version": 1,
         "record_type": "w98_round1_result",
+        # Amendment 1 section 5: a regime whose measurement floor dominates its
+        # fit residual is NOT RESOLVABLE, not covered. Reported separately so a
+        # noisier campaign cannot buy an easier D1.
+        "amendment_1": {
+            "z_coverage": 2.0,
+            "inflation": 2.0,
+            "unresolvable_regimes": unresolvable,
+            "coverage_resolvable_only": {
+                "covered": sum(1 for c in scored if c["covered"]),
+                "total": len(scored),
+            },
+        },
         "heldout_scope": {
             "registered": len(composed) + len(invalid),
             "composed_scored": len(composed),
@@ -881,6 +996,10 @@ def execute(authorization_path: Path, output_dir: Path) -> int:
     traces = output_dir / "traces"
     traces.mkdir(exist_ok=True)
 
+    # B0 -- PRE anchors. Amendment 1 section 3 requires the reproducibility
+    # repeats to bracket the campaign; back-to-back repeats understate drift.
+    _run_anchor_stage(output_dir / ANCHOR_PRE_DIR, traces, authorization_path)
+
     # B1 -- singles only. The held-out set must not be touched before B2.
     _run_stage_boots(
         output_dir / SINGLES_DIR, single_lever_profiles(), traces, authorization_path
@@ -898,6 +1017,9 @@ def execute(authorization_path: Path, output_dir: Path) -> int:
     require_committed_predictions(output_dir)
     composed, invalid = composed_heldout()
     _run_stage_boots(output_dir / HELDOUT_DIR, composed, traces, authorization_path)
+
+    # B3b -- POST anchors, closing the bracket.
+    _run_anchor_stage(output_dir / ANCHOR_POST_DIR, traces, authorization_path)
 
     # B4 -- score against the committed predictions.
     result = score_reveal(output_dir)

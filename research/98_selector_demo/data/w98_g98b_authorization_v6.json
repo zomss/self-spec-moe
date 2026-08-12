@@ -1,0 +1,179 @@
+{
+  "amendment_1_envelope": {
+    "approved": "2026-08-13",
+    "inflation": 2.0,
+    "rule": "sqrt(fit_term^2 + (Z*sigma_repro)^2) * INFLATION",
+    "sigma_repro_source": "3 repeats of 2 fit-set anchors, bracketing",
+    "validity_condition": "Z*sigma_repro >= fit_term -> regime is NOT RESOLVABLE, not covered; a noisier campaign must not buy an easier D1",
+    "z_coverage": 2.0
+  },
+  "authorizations": {
+    "d3_claim": false,
+    "gpu_measurement": true,
+    "production_value_claim": false,
+    "round1_execution": true,
+    "round1_scoring": true,
+    "round2_execution": false,
+    "round2_scoring": false
+  },
+  "commitment_barrier": {
+    "predictions_committed_before_reveal": true,
+    "reveal_refuses_if_heldout_measurements_exist": true,
+    "reveal_refuses_without_committed_predictions": true,
+    "score_refuses_uncommitted_predictions": true,
+    "why": "D1 claims sound elimination, which is testable only if the held-out predictions were fixed before those configurations were measured"
+  },
+  "consumed_v1": {
+    "barrier_held": true,
+    "cause": "trace reader read exclusions/elapsed_s, not exclusion_reasons/counters.decode_time_s",
+    "failure": {
+      "path": "research/98_selector_demo/data/g98_b/failure.json",
+      "sha256": "d86b0dd026915f8b39c1c522509f32d9d77841c5cd438c9ff0175c4107407703"
+    },
+    "heldout_measured": 0,
+    "predictions_committed": false,
+    "retracted_second_cause": "the draft armed normally; 365/405 steps were target-matching-k4",
+    "stage_reached": "B2 fit; refused before commit"
+  },
+  "d1": {
+    "composed_scored": 7,
+    "elimination_rule": "(K+1)/q_lo < 1 + epsilon_arm",
+    "epsilon_arm": 0.015,
+    "excluded_invalid": 1,
+    "exclusion_reason": "target-matching/woff/skip8 varies a single axis, so it is not composed and is also a fit point; the frozen split is not rewritten",
+    "false_elimination_budget": 0,
+    "fit_uses_single_lever_profiles_only": true,
+    "heldout_count": 8,
+    "on_coverage_failure": "local non-pruning mask, not global failure"
+  },
+  "execution_policy": {
+    "boot_scope": "w98-lattice",
+    "create_new_output_required": true,
+    "lane": {
+      "block_ids": [
+        1,
+        3
+      ],
+      "cache_root": "/data/smcho/.cache/vllm-p97-screen-v12/lane-a",
+      "cpu_affinity": "0-15",
+      "lane_id": "lane-a",
+      "physical_gpu_index": 0,
+      "physical_gpu_uuid": "GPU-4938442e-5508-9249-0fa6-37baa1985703"
+    },
+    "on_any_failure": "preserve_and_require_fresh_authorization",
+    "retry_allowed": false
+  },
+  "gate": "G98-B",
+  "measurement": {
+    "d_measured": "draft_chain",
+    "profiler_warmup": 20,
+    "source": "VLLM_SELF_SPEC_PROFILE region timings",
+    "verify_recorded_as_control": true,
+    "why": "the step trace carries only whole-step time, 61-81% of which is the target verify -- a constant the model would then scale by keep_frac, which produced a one-directional underprediction tracking skip depth (1.05x at skip4, 1.44x at skip8)"
+  },
+  "next_artifact": {
+    "kind": "w98_round1_result",
+    "may_authorize_round2": false
+  },
+  "package_id": "w98-g98b-round1-authorization-v6",
+  "prerequisite": {
+    "gate": "G98-A",
+    "passed": true,
+    "quantized_draft_with_shared_kv_verified": true
+  },
+  "resource_note": {
+    "headroom_fraction": 0.0234,
+    "phase_97_floor": 21682,
+    "quantized_shared_kv_blocks": 22190,
+    "shapes_sized_against": "quantized"
+  },
+  "runtime": {
+    "class": "piecewise",
+    "fullcg": false,
+    "w4a16_kernel": "MarlinLinearKernel",
+    "wholechain": false,
+    "why": "Option A (X15): piecewise carries no window>0 constraint, so skip and quant are sampled on the same runtime as the rest and the fit is identifiable. Marlin makes it resolvable -- it cut sigma_repro 3-10x vs Machete. Price: 1.21x slower than whole-chain at batch 1, ~1% at batch >= 32"
+  },
+  "sampling": {
+    "measure_tokens": 640,
+    "min_armed_steps_for_a_usable_mean": 64,
+    "prompts_per_regime": "the regime's registered batch",
+    "rationale": "the factored model is state-indexed, so each regime is measured at its own batch; token depth sets the stability of the mean, which sets the envelope width and hence coverage",
+    "state_indexed": true,
+    "target_armed_steps": 128,
+    "tokens_derived_from_step_target": true
+  },
+  "schema_version": 1,
+  "source_artifacts": {
+    "cost_model": {
+      "path": "research/98_selector_demo/scripts/w98_cost_model.py",
+      "sha256": "408d4f8f7de2aa14d66015b69f0bbd4695b19daaf8110638053a1d6d98589a04"
+    },
+    "g98a_result": {
+      "path": "research/98_selector_demo/data/g98_a_v4/g98a_result.json",
+      "sha256": "dac8da5276879e5fdc7c96fc0087b58e36c18e30cd9458eb5df27441abd6b3db"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "78077e689f57fd627c3dcef5e8837bb15a8348f84abf608b7b439e045ff59dc2"
+    },
+    "prereg_heldout": {
+      "path": "research/98_selector_demo/data/prereg/w98_d1_heldout.json",
+      "sha256": "36d07632545ef40db6c856c62d001bf726cc6844b75844c564dee7e3622cdf9c"
+    },
+    "prereg_matrix": {
+      "path": "research/98_selector_demo/data/prereg/w98_prereg_matrix.json",
+      "sha256": "b54689fa2adb9b8f05ecaa4e289b36261588f7147719ae1485ee5f2b4451f503"
+    },
+    "prompt_manifest": {
+      "path": "research/98_selector_demo/data/prereg/w98_prompt_manifest.json",
+      "sha256": "ad109a34fc7a174f4609047a7663a78f0fa30b59e88aeb9d3ebbd6f9434fff98"
+    },
+    "round1_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98b_round1.py",
+      "sha256": "37cd7ee03897bc6095902dc493a1f1ae156bcb0224d3f1bd3a24b6354cb4248f"
+    },
+    "round1_tests": {
+      "path": "research/98_selector_demo/tests/test_w98_g98b.py",
+      "sha256": "f242cb310218f51e56a5a86ea2be9ec491a172be867ed8bada851299f86c2bbe"
+    }
+  },
+  "stages": [
+    {
+      "boots": 8,
+      "gpu": true,
+      "id": "B1",
+      "name": "singles"
+    },
+    {
+      "boots": 0,
+      "gpu": false,
+      "id": "B2",
+      "name": "fit_and_commit"
+    },
+    {
+      "boots": 8,
+      "gpu": true,
+      "id": "B3",
+      "name": "heldout_reveal"
+    },
+    {
+      "boots": 0,
+      "gpu": false,
+      "id": "B4",
+      "name": "score"
+    }
+  ],
+  "status": "authorized_round1_profiles_and_heldout_reveal",
+  "trace_path": {
+    "note": "the P4 capture path still asserts target/draft weight equality at koff_runtime.py:1927 and :2503 and would refuse a quantized boot; Round 2 must resolve that, Round 1 does not touch it",
+    "scope_aware": true,
+    "uses": "passive koff step trace (VLLM_SELF_SPEC_KOFF_TRACE)",
+    "uses_p4_capture_recorder": false
+  },
+  "w14d_fallback": {
+    "consequence": "affected strata run Round 1 in measure-everything mode and D1 is reported as NOT EXERCISED there, per the preregistration",
+    "phase_96_w14d_scored_surface_present": false,
+    "verified_on": "2026-08-11"
+  }
+}

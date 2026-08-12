@@ -299,6 +299,12 @@ class MeasurementWiringTests(unittest.TestCase):
             out = Path(tmp)
             (out / gate.HELDOUT_DIR).mkdir()
             gate.commit_predictions(out, _predictions())
+            # score_reveal reads the fit to apply amendment 1 section 5; the
+            # real flow always writes it at B2, before any held-out boot.
+            (out / "d1_fits.json").write_text(
+                json.dumps({"R1": {"fitted": True, "resolvable": True}}),
+                encoding="utf-8",
+            )
             result = gate.score_reveal(out)
             self.assertFalse(result["d1_exercised"])
             self.assertFalse(result["may_authorize_round2"])

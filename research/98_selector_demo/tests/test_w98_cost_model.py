@@ -7,11 +7,14 @@ import random
 
 import pytest
 from w98_cost_model import (
+    COMPOSED_INFLATION,
     AffineFit,
     FactoredCostModel,
     LeverPoint,
     W98CostModelError,
+    combined_envelope,
     eliminate,
+    is_resolvable,
     required_acceptance,
     s_max,
     surviving_counts,
@@ -98,7 +101,9 @@ class TestFactoredModel:
         model = FactoredCostModel.fit(single_lever_points(deviations))
         w, kv, keep = 2.0e9, 0.25e9, 1.0 - 8 / N_LAYERS
         truth = true_cost(w, kv, keep, math.exp(delta))
-        lo, hi = model.predict_interval(w, kv, keep, inflation=2.0)
+        # Synthetic points carry no measurement noise, so sigma_repro is 0 and
+        # the amendment-1 envelope reduces to the pre-amendment rule.
+        lo, hi = model.predict_interval(w, kv, keep, sigma_repro=0.0)
         assert lo <= truth <= hi
 
     def test_singular_design_rejected(self):
@@ -157,3 +162,55 @@ class TestCountLadder:
     def test_tau_bar_must_exceed_one(self):
         with pytest.raises(W98CostModelError, match="tau_bar"):
             surviving_counts({0: 0.5}, 4, 1.0, 0.1, tau_bar=1.0)
+
+
+# --- Amendment 1: the D1 interval must carry measured reproducibility ---
+
+
+def test_envelope_is_quadrature_of_fit_and_floor():
+    got = combined_envelope(0.0068, 0.0169)
+    want = math.sqrt(0.0068**2 + (2.0 * 0.0169) ** 2) * 2.0
+    assert got == pytest.approx(want, rel=1e-12)
+
+
+@pytest.mark.parametrize("fit", [0.001, 0.0068, 0.03])
+@pytest.mark.parametrize("sigma", [0.0, 0.001, 0.02])
+def test_envelope_never_narrower_than_fit_alone(fit, sigma):
+    assert combined_envelope(fit, sigma) >= fit * COMPOSED_INFLATION - 1e-12
+
+
+def test_zero_reproducibility_reduces_to_the_old_rule():
+    assert combined_envelope(0.0068, 0.0) == pytest.approx(0.0068 * 2.0, rel=1e-12)
+
+
+def test_resolvable_when_fit_term_dominates():
+    """X15's measured piecewise+Marlin values: all six regimes pass."""
+    assert is_resolvable(0.0300, 0.01410)
+    assert is_resolvable(0.0068, 0.00224)
+
+
+def test_not_resolvable_when_the_floor_dominates():
+    """Round 1's piecewise+Machete floor exceeded every fit term."""
+    assert not is_resolvable(0.0068, 0.0169)
+    assert not is_resolvable(0.0300, 0.0169)
+
+
+def test_predict_interval_requires_sigma_repro():
+    """No default: omitting the term is the defect the amendment fixes."""
+    model = FactoredCostModel(1e-12, 1e-12, 1e-3, 0.01)
+    with pytest.raises(TypeError):
+        model.predict_interval(1e9, 1e6, 1.0)
+
+
+def test_interval_widens_with_measured_noise():
+    model = FactoredCostModel(1e-12, 1e-12, 1e-3, 0.01)
+    lo_a, hi_a = model.predict_interval(1e9, 1e6, 1.0, sigma_repro=0.0)
+    lo_b, hi_b = model.predict_interval(1e9, 1e6, 1.0, sigma_repro=0.02)
+    assert lo_b < lo_a
+    assert hi_b > hi_a
+
+
+@pytest.mark.parametrize("fit,sigma", [(-0.1, 0.01), (0.01, -0.1)])
+def test_negative_terms_rejected(fit, sigma):
+    with pytest.raises(W98CostModelError):
+        combined_envelope(fit, sigma)
