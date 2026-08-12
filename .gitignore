@@ -257,3 +257,10 @@ csrc/cpu/cpu_attn_dispatch_generated.h
 
 # FP4 (W2c) checkpoints — do NOT commit weights
 research/34_worldA_system/ckpts/
+
+# Phase 97/98 raw measurement data. Captures and passive traces are large
+# regenerable measurement artifacts (a single 432-capture screen is ~4.5 GB);
+# what must be preserved immutably are the records, manifests, hashes and
+# results, which are small and stay tracked.
+research/**/captures/
+research/**/traces/

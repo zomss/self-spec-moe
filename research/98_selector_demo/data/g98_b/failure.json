@@ -1,0 +1,48 @@
+{
+  "authorization_consumed": true,
+  "barrier_held": {
+    "commit_refused_an_incomplete_prediction_set": true,
+    "fit_refused_with_fewer_than_three_points": true,
+    "min_armed_steps_excluded_empty_regimes": true,
+    "note": "the failure surfaced as a refusal at the commitment barrier, not as a fitted model over zero armed steps followed by a coverage number that would have looked fine. The measurement bug was in the reader, so the GPU data itself is intact and re-readable.",
+    "nothing_false_was_committed": true
+  },
+  "causes": [
+    {
+      "confirmed_by": "re-reading the preserved trace with the corrected fields yields 359 armed clean steps out of 405",
+      "detail": "the trace reader looked for a top-level 'exclusions' key and a top-level 'elapsed_s'. The record carries 'exclusion_reasons' and nests timing at counters.decode_time_s, so every step read as untimed and no armed step was ever collected. This was the SOLE cause.",
+      "fix": "read exclusion_reasons and counters.decode_time_s",
+      "id": "C1-wrong-trace-fields"
+    }
+  ],
+  "disposition": {
+    "requires_fresh_authorization": true,
+    "retry_allowed": false,
+    "scoring_allowed": false
+  },
+  "heldout_measured": 0,
+  "output": {
+    "path": "research/98_selector_demo/data/g98_b",
+    "preserve_without_overwrite": true
+  },
+  "package_id": "w98-g98b-round1-authorization-v1",
+  "predictions_committed": false,
+  "preserved_data_is_reusable": {
+    "note": "the 8 single-lever traces contain valid armed steps; only the reader was wrong. A rerun re-measures rather than reusing them, because the authorization is consumed and its output is create-only.",
+    "traces_intact": true
+  },
+  "record_type": "w98_round1_failure",
+  "retracted_causes": [
+    {
+      "action_taken": "the dynamic K schedule is still passed explicitly, matching Phase 97's runner, but it is a robustness change and NOT a fix for this failure",
+      "claimed": "the K/OFF policy never selected K4, so no step armed",
+      "id": "C2-draft-never-armed",
+      "retracted": true,
+      "why_wrong": "the claim came from sampling the FIRST traced step, which is a prefill step and is legitimately off. The full trace shows 365 of 405 steps at target-matching-k4 and 359 armed clean steps. The draft armed normally."
+    }
+  ],
+  "schema_version": 1,
+  "scored": false,
+  "singles_booted": 8,
+  "stage_reached": "B2 fit; refused before commit"
+}

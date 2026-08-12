@@ -80,6 +80,8 @@ SKIP_SETS = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
 # sets the fitted envelope width and therefore D1's coverage.
 MEASURE_TOKENS = 256
 MIN_ARMED_STEPS = 64
+# batch 1..32 -> K=4, so the chain actually arms and a draft cost exists.
+DYNAMIC_K_SCHEDULE = [[1, 32, 4]]
 
 
 class G98BError(RuntimeError):
@@ -516,9 +518,15 @@ def _armed_steps(trace_path: Path, skip: int) -> list[float]:
                 continue
             if row.get("record_type") != "koff_engine_step":
                 continue
-            if row.get("exclusions"):
+            # The record names these `exclusion_reasons` and nests timing under
+            # counters; reading top-level `exclusions`/`elapsed_s` silently
+            # collected nothing at all.
+            if row.get("exclusion_reasons"):
                 continue
-            elapsed = row.get("elapsed_s")
+            counters = row.get("counters") or {}
+            if not counters.get("D_armed"):
+                continue
+            elapsed = counters.get("decode_time_s")
             if isinstance(elapsed, (int, float)) and elapsed > 0:
                 out.append(float(elapsed))
     return out
@@ -536,6 +544,9 @@ def _engine_args(cfg: Mapping[str, Any]):
             "method": "draft_model",
             "model": QUANT_CKPT[cfg["quant"]],
             "num_speculative_tokens": 4,
+            # Without the per-batch schedule the K/OFF policy never selects K4,
+            # so every step is OFF and Round 1 measures no draft cost at all.
+            "num_speculative_tokens_per_batch_size": DYNAMIC_K_SCHEDULE,
             "draft_tensor_parallel_size": 1,
         },
         tensor_parallel_size=1,
