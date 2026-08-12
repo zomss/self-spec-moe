@@ -1,8 +1,9 @@
 # Preregistration amendment 1 — the D1 prediction envelope
 
 Date: 2026-08-13
-Status: **DRAFT, awaiting approval.** Not in force. No held-out cell may be
-booted under this rule until it is approved and hash-bound.
+Status: **APPROVED 2026-08-13** (Z=2, INFLATION retained). In force for the
+re-measurement campaign once §9's blocker is resolved. Must be hash-bound with
+the campaign authorization before any held-out cell is booted.
 
 Amends: `w98_prereg.md` §D1. The frozen lattice, the held-out split, and the
 `epsilon_arm = 0.015` elimination rule are **unchanged**.
@@ -42,9 +43,13 @@ For each regime `x`, the half-width of the D1 log interval becomes:
 
 ```text
 envelope(x) = sqrt( fit_term(x)^2 + (Z * sigma_repro(x))^2 ) * INFLATION
-Z         = 3
+Z         = 2      (matches the registered "95% intervals" wording)
 INFLATION = 2.0    (unchanged; see §4)
 ```
+
+`Z = 2` was chosen over a more conservative 3 precisely because D1 registers
+"95% intervals"; raising Z would have been a silent deviation from the
+registered claim in the direction of making D1 easier.
 
 * **`fit_term(x)`** — unchanged: `max |log(pred/measured)|` over the single-lever
   fit points. Retained rather than replaced so the amendment changes exactly one
@@ -61,10 +66,13 @@ binds.
 
 Constraints, all of which are part of the amendment:
 
-* **Anchors are fit-set configurations only** — single-lever cells already in
-  the fit. No held-out cell contributes to the envelope it is scored against.
-  Two anchors: `target-matching/woff/skip0` (the unlevered baseline) and
-  `w4a16-quantized/woff/skip0` (the quant single).
+* **Anchors must not be held-out cells**, so nothing that is scored contributes
+  to the envelope it is scored against. Fit-set cells satisfy this; so does any
+  lattice cell that is neither fitted nor held out.
+* **One anchor per runtime class** (see §9), since reproducibility is a property
+  of the runtime, not the box. `target-matching/woff/skip0` anchors the
+  piecewise class; `target-matching/w256/skip0` anchors the whole-chain class.
+  Both are fit-set cells.
 * **At least 3 repeat boots per anchor per regime**, and they must **bracket the
   campaign** — at least one before the first held-out boot and at least one
   after the last. Back-to-back repeats understate drift: the two whole-chain
@@ -104,25 +112,25 @@ before the data.
 ## 6. What this would have done to Round 1 — illustrative only, not scored
 
 Round 1 is a frozen record and is not rescored. Using X5's measured piecewise
-reproducibility (CV 1.70% → `sigma_repro` ≈ 0.0169, `Z*sigma` ≈ 0.0506) against
-the R4 fit term of 0.0068:
+reproducibility (CV 1.70% → `sigma_repro` ≈ 0.0169, `Z*sigma` = 0.0337 at Z=2)
+against the R4 fit term of 0.0068:
 
 ```text
-envelope = sqrt(0.0068^2 + 0.0506^2) * 2.0 = 0.102   (±10.7%)
+envelope = sqrt(0.0068^2 + 0.0337^2) * 2.0 = 0.0688   (±7.1%)
 ```
 
 That band would have covered all nine near-band misses (1.001–1.046x) and none
 of the twelve quant×skip8 misses (1.187–1.524x). The amended rule separates
 instrument from model exactly where the manual reading of Round 1 did.
 
-But `Z*sigma_repro` (0.0506) exceeds `fit_term` (0.0068), so under §5 Round 1's
+But `Z*sigma_repro` (0.0337) exceeds `fit_term` (0.0068), so under §5 Round 1's
 piecewise campaign would be **not resolvable** — which is the honest verdict on
 a campaign whose instrument was noisier than the effect it was testing.
 
 ## 7. Why the re-measurement makes D1 resolvable
 
 On the whole-chain runtime, boot-to-boot CV is 0.03–0.15%
-(`sigma_repro` ≈ 0.0003–0.0015, `Z*sigma` ≈ 0.0009–0.0045), against Round-1 fit
+(`sigma_repro` ≈ 0.0003–0.0015, `Z*sigma` ≈ 0.0006–0.0030), against Round-1 fit
 terms of 0.0068–0.0300. The fit term dominates, §5 is satisfied, and D1 becomes
 resolvable.
 
@@ -141,3 +149,47 @@ re-measured under the amended protocol and may come out larger.
 2. Re-measure the 15 lattice configurations on whole-chain + Marlin.
 3. Fit, then score D1 over the 7 composed held-out cells with the amended
    envelope, reporting `fit_term` and `Z*sigma_repro` per regime and applying §5.
+
+## 9. BLOCKER — the frozen lattice cannot support a whole-chain fit
+
+Recorded here because it was discovered applying this amendment, and it
+supersedes §8's plan.
+
+FULLCG requires `KV_WINDOW > 0`, so `window: off` cells cannot run the
+whole-chain runtime. Mapping the frozen fit set onto runtime classes:
+
+| single-lever profile | axis it samples | runtime available |
+| --- | --- | --- |
+| target-matching/woff/skip0 | baseline | piecewise only |
+| target-matching/w{128,256,512,1024}/skip0 | **window** | whole-chain |
+| target-matching/woff/skip4 | **skip** | piecewise only |
+| target-matching/woff/skip8 | **skip** | piecewise only |
+| w4a16-quantized/woff/skip0 | **quant** | piecewise only |
+
+**The skip and quant axes are sampled only at `woff`.** Consequences:
+
+* A **whole-chain-only fit is unidentifiable** — it would have window
+  information and nothing else, so `kappa_w` and the `keep_frac` coefficient
+  cannot be estimated.
+* A **mixed fit is invalid** — "unwindowed" and "uncaptured" are the same
+  indicator, so the 10-13 ms/step whole-chain saving is perfectly collinear with
+  the window axis. The fit would attribute the runtime fix to the window lever
+  and then mispredict every composed cell.
+
+This is a lattice-level problem, not an envelope problem, and it needs its own
+decision before any re-measurement:
+
+* **Option A — re-measure on piecewise.** Valid under the frozen prereg, needs
+  no lattice change, and yields a correctly-enveloped D1. But it scores a
+  runtime we have superseded, and by §5 it is likely NOT RESOLVABLE (piecewise
+  `Z*sigma_repro` 0.0337 vs fit terms 0.0068-0.0300).
+* **Option B — re-parameterise the lattice for the whole-chain class.** Give
+  that class its own baseline (`target-matching/w256/skip0`) and its own
+  single-lever profiles, so skip and quant are each sampled windowed
+  (`target-matching/w256/skip4`, `w4a16-quantized/w256/skip0`). Roughly the same
+  boot count. This changes the frozen fit set, so it is a **new round with a new
+  preregistration**, not a re-measurement.
+
+Recommendation: **B**, because A measures a runtime we do not intend to use and
+is probably not resolvable anyway. But B is a new preregistration and that is
+the user's call, not a drafting decision.
