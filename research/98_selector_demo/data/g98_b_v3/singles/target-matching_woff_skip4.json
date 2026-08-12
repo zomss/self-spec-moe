@@ -1,0 +1,59 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 4,
+    "window": "off"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 130,
+      "batch": 1,
+      "context_tokens": 111,
+      "mean_armed_step_s": 0.03397069551552145,
+      "stdev_armed_step_s": 8.363052623642145e-05,
+      "usable": true
+    },
+    "R4": {
+      "armed_step_count": 158,
+      "batch": 8,
+      "context_tokens": 8533,
+      "mean_armed_step_s": 0.049305248167807875,
+      "stdev_armed_step_s": 0.003526417019806271,
+      "usable": true
+    },
+    "R5": {
+      "armed_step_count": 150,
+      "batch": 8,
+      "context_tokens": 14037,
+      "mean_armed_step_s": 0.05815327728089566,
+      "stdev_armed_step_s": 0.0044956950913572135,
+      "usable": true
+    },
+    "R5cot": {
+      "armed_step_count": 137,
+      "batch": 8,
+      "context_tokens": 14088,
+      "mean_armed_step_s": 0.0586535978474294,
+      "stdev_armed_step_s": 0.0037476978805842556,
+      "usable": true
+    },
+    "R6": {
+      "armed_step_count": 135,
+      "batch": 32,
+      "context_tokens": 73,
+      "mean_armed_step_s": 0.039491028708612756,
+      "stdev_armed_step_s": 0.0015135089622837824,
+      "usable": true
+    },
+    "R8": {
+      "armed_step_count": 139,
+      "batch": 16,
+      "context_tokens": 78,
+      "mean_armed_step_s": 0.036310066452263284,
+      "stdev_armed_step_s": 0.0008896549866310012,
+      "usable": true
+    }
+  },
+  "record_type": "w98_round1_measurement",
+  "schema_version": 1
+}

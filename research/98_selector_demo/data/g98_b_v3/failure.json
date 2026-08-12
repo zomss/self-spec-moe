@@ -1,0 +1,32 @@
+{
+  "also_repaired": "a singular regime no longer crashes the run; it is recorded as unfitted and the others proceed, per the preregistration local-mask semantics",
+  "authorization_consumed": true,
+  "barrier_held": {
+    "note": "the fit crashed rather than producing an unidentifiable model",
+    "nothing_false_was_committed": true
+  },
+  "cause": {
+    "detail": "lever_geometry used the mean PROMPT length as the context. R1, R6 and R8 have 73-111 token prompts, so min(context, window+16) returned the context for every window: the window axis carried no information, the design matrix lost rank, and the fit raised a singular-design error.",
+    "fix": "context is now prompt + generated/2, the mean KV length over the measured steps, giving 3 distinct KV values for the short regimes and 5 for the long ones",
+    "id": "C3-singular-design"
+  },
+  "disposition": {
+    "requires_fresh_authorization": true,
+    "retry_allowed": false,
+    "scoring_allowed": false
+  },
+  "heldout_measured": 0,
+  "operator_note": "the waiter used pgrep -f with a pattern that matched its own shell command line, so it reported the dead run as RUNNING for ~80 minutes",
+  "output": {
+    "path": "research/98_selector_demo/data/g98_b_v3",
+    "preserve_without_overwrite": true
+  },
+  "package_id": "w98-g98b-round1-authorization-v3",
+  "predictions_committed": false,
+  "record_type": "w98_round1_failure",
+  "schema_version": 1,
+  "scored": false,
+  "singles_all_usable": true,
+  "singles_booted": 8,
+  "stage_reached": "B2 fit; crashed before commit"
+}

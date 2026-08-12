@@ -337,3 +337,38 @@ class SamplingConsistencyTests(unittest.TestCase):
         achievable = gate.MEASURE_TOKENS // gate.COMMITTED_TOKENS_PER_ARMED_STEP
         self.assertGreaterEqual(achievable, gate.MIN_ARMED_STEPS)
         self.assertGreaterEqual(achievable, gate.TARGET_ARMED_STEPS)
+
+
+class DesignIdentifiabilityTests(unittest.TestCase):
+    """Each regime's window axis must actually vary the KV read."""
+
+    def _distinct_kv(self, prompt_tokens: int) -> int:
+        eff = prompt_tokens + gate.MEASURE_TOKENS // 2
+        return len(
+            {
+                gate.lever_geometry(
+                    {"quant": "target-matching", "window": w, "skip_count": 0}, eff
+                )["kv_bytes"]
+                for w in ("off", 128, 256, 512, 1024)
+            }
+        )
+
+    def test_short_context_regimes_still_identify_the_kv_axis(self) -> None:
+        """R1/R6/R8 have ~73-111 token prompts; the window must still bind."""
+        for prompt in (73, 78, 111):
+            self.assertGreaterEqual(self._distinct_kv(prompt), 3, prompt)
+
+    def test_long_context_regimes_span_every_window(self) -> None:
+        self.assertEqual(self._distinct_kv(8533), 5)
+
+    def test_prompt_only_context_would_be_singular(self) -> None:
+        """The bug: with prompt-only context no window binds at all."""
+        singular = len(
+            {
+                gate.lever_geometry(
+                    {"quant": "target-matching", "window": w, "skip_count": 0}, 73
+                )["kv_bytes"]
+                for w in ("off", 128, 256, 512, 1024)
+            }
+        )
+        self.assertEqual(singular, 1)

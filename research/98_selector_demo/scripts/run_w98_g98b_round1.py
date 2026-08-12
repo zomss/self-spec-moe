@@ -43,9 +43,9 @@ sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
 
-PACKAGE_ID = "w98-g98b-round1-authorization-v3"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v3.json"
-OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v3"
+PACKAGE_ID = "w98-g98b-round1-authorization-v4"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v4.json"
+OUTPUT_PATH = "research/98_selector_demo/data/g98_b_v4"
 V1_FAILURE_PATH = "research/98_selector_demo/data/g98_b/failure.json"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg/w98_prereg_matrix.json"
 PREREG_HELDOUT = "research/98_selector_demo/data/prereg/w98_d1_heldout.json"
@@ -507,7 +507,14 @@ def measure_config(cfg: Mapping[str, Any], trace_path: Path) -> dict[str, Any]:
                 "stdev_armed_step_s": (
                     statistics.stdev(steps) if len(steps) > 1 else None
                 ),
-                "context_tokens": int(statistics.mean(len(t) for t in prompts)),
+                "prompt_tokens": int(statistics.mean(len(t) for t in prompts)),
+                # The draft's KV grows during decode, so the mean KV length
+                # over the measured steps is prompt + generated/2. Using the
+                # prompt alone left every window above the context, which
+                # collapsed the window axis and made the design singular.
+                "context_tokens": int(
+                    statistics.mean(len(t) for t in prompts) + MEASURE_TOKENS / 2
+                ),
                 "batch": spec["batch"],
             }
     finally:
@@ -624,7 +631,14 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
         if len(points) < 3 or context is None:
             fits[regime] = {"fitted": False, "reason": "fewer than three points"}
             continue
-        model = FactoredCostModel.fit(points)
+        try:
+            model = FactoredCostModel.fit(points)
+        except Exception as exc:  # noqa: BLE001 - a regime may be unidentifiable
+            # Per the preregistration a local failure is a local mask, not a
+            # global one: this regime contributes no prediction and is reported
+            # as unfitted, while the others proceed.
+            fits[regime] = {"fitted": False, "reason": str(exc)}
+            continue
         fits[regime] = {
             "fitted": True,
             "kappa_w": model.kappa_w,
@@ -645,7 +659,13 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
                     geom["weight_bytes"], geom["kv_bytes"], geom["keep_frac"]
                 ),
             }
-    return {"fits": fits, "predictions": predictions}
+    fitted = [r for r, v in fits.items() if v.get("fitted")]
+    _require(
+        bool(fitted),
+        "no regime produced an identifiable fit; predictions cannot be "
+        f"committed. Reasons: { {r: v.get('reason') for r, v in fits.items()} }",
+    )
+    return {"fits": fits, "predictions": predictions, "fitted_regimes": fitted}
 
 
 def score_reveal(output_dir: Path) -> dict[str, Any]:
