@@ -1,0 +1,55 @@
+{
+  "batch": 1,
+  "by_family": {
+    "bf16_gemm": {
+      "calls_per_step": 223.0,
+      "us_per_step": 8025.286666666601
+    },
+    "fa3_paged": {
+      "calls_per_step": 2.0,
+      "us_per_step": 3.946666666671414
+    },
+    "flash_other": {
+      "calls_per_step": 220.0,
+      "us_per_step": 768.507833333381
+    },
+    "flash_splitkv": {
+      "calls_per_step": 224.0,
+      "us_per_step": 1071.2877499999097
+    },
+    "other": {
+      "calls_per_step": 591.3333333333334,
+      "us_per_step": 977.1340000000874
+    },
+    "scratchpad": {
+      "calls_per_step": 369.0,
+      "us_per_step": 528.2543333333451
+    },
+    "w4a16_gemm": {
+      "calls_per_step": 780.0,
+      "us_per_step": 7771.9820000000145
+    }
+  },
+  "device_us_per_step": 19146.399250000013,
+  "k_schedule": [
+    [
+      1,
+      128,
+      4
+    ]
+  ],
+  "kernel_resolved": "MarlinLinearKernel",
+  "loadavg_1min": 3.41455078125,
+  "mode": "wholechain",
+  "part": "B",
+  "record_type": "w98_crossover_materialisation",
+  "regime": "R1",
+  "schema_version": 1,
+  "timed_steps": 40,
+  "wall_mean_ms": 22.27406959864311,
+  "wall_median_ms": 22.26729251560755,
+  "wall_min_ms": 22.199287021066993,
+  "wall_stdev_ms": 0.047343098245946916,
+  "wholechain_captured": true,
+  "window": 128
+}
