@@ -1,0 +1,321 @@
+{
+  "group_size": 128,
+  "hbm_bw_bytes_per_s": 3350000000000.0,
+  "model": "Qwen3-8B",
+  "record_type": "w98_w4a16_kernel_bench",
+  "rows": [
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 1,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 141.50130900088698,
+        "machete_best": 155.91066400520504,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 233.20800391957164,
+        "torch.matmul (fp16)": 223.01002172753215
+      }
+    },
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 2,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 143.94631603499874,
+        "machete_best": 155.78908805036917,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 221.3729610084556,
+        "torch.matmul (fp16)": 215.79498099163175
+      }
+    },
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 4,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 143.4049269882962,
+        "machete_best": 157.5395500403829,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 222.67340100370347,
+        "torch.matmul (fp16)": 214.67060496797785
+      }
+    },
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 8,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 144.91830702172592,
+        "machete_best": 156.73662698827684,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 223.02360396133736,
+        "torch.matmul (fp16)": 193.1782660249155
+      }
+    },
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 16,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 142.71959499455988,
+        "machete_best": 157.12555998470634,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 224.0939760231413,
+        "torch.matmul (fp16)": 195.10494251153432
+      }
+    },
+    {
+      "ideal_us": 3.873471044776119,
+      "k": 4096,
+      "layer": "qkv_proj",
+      "m": 32,
+      "n": 6144,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 154.3818329810165,
+        "machete_best": 155.06418194854632,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 223.31853897776455,
+        "torch.matmul (fp16)": 198.9514695305843
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 1,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 215.91425099177286,
+        "machete_best": 224.33599800569937,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 322.4406798835844,
+        "torch.matmul (fp16)": 192.87088149576448
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 2,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 216.14007896278054,
+        "machete_best": 224.13957299431786,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 322.4323151516728,
+        "torch.matmul (fp16)": 193.08330200146884
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 4,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 216.44695498980582,
+        "machete_best": 225.18923302413896,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 322.4811830150429,
+        "torch.matmul (fp16)": 191.98484948719852
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 8,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 216.47917298832908,
+        "machete_best": 222.89538104087114,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 324.1943701868877,
+        "torch.matmul (fp16)": 192.0791145239491
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 16,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 218.1342450203374,
+        "machete_best": 223.64983201259747,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 322.59592151967814,
+        "torch.matmul (fp16)": 237.90367000037804
+      }
+    },
+    {
+      "ideal_us": 2.582314029850746,
+      "k": 4096,
+      "layer": "o_proj",
+      "m": 32,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 207.20953901764005,
+        "machete_best": 216.4592090412043,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 321.27989485161373,
+        "torch.matmul (fp16)": 198.25301601667888
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 1,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 110.22355098975822,
+        "machete_best": 94.13032804150134,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 81.39620098518208,
+        "torch.matmul (fp16)": 200.858946016524
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 2,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 109.64927900931798,
+        "machete_best": 94.37062905635685,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 82.12065004045144,
+        "torch.matmul (fp16)": 201.99860201682895
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 4,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 110.96798002836294,
+        "machete_best": 94.12154299207032,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 82.85827696090564,
+        "torch.matmul (fp16)": 203.70058994740248
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 8,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 110.55213751387781,
+        "machete_best": 94.13466101977974,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 84.17761200689709,
+        "torch.matmul (fp16)": 205.31970803858712
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 16,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 111.65210301987827,
+        "machete_best": 94.47239496512339,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 87.96336350496858,
+        "torch.matmul (fp16)": 204.96242301305756
+      }
+    },
+    {
+      "ideal_us": 15.493884179104477,
+      "k": 4096,
+      "layer": "gate_up_proj",
+      "m": 32,
+      "n": 24576,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 94.32183497119695,
+        "machete_best": 94.32092000497505,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 94.35041598044336,
+        "torch.matmul (fp16)": 207.0914699579589
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 1,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 112.43189801461995,
+        "machete_best": 110.67410500254482,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 122.56432196591051,
+        "torch.matmul (fp16)": 196.14101297338493
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 2,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 112.6412790035829,
+        "machete_best": 112.45675798272714,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 123.06220998289065,
+        "torch.matmul (fp16)": 195.08283599861898
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 4,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 110.62923751887865,
+        "machete_best": 110.62688697711565,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 123.40887298341842,
+        "torch.matmul (fp16)": 194.89478500327098
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 8,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 110.31458401703276,
+        "machete_best": 110.35753699252382,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 121.82946898974478,
+        "torch.matmul (fp16)": 196.6911499912385
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 16,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 112.6016839989461,
+        "machete_best": 111.0936640179716,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 123.14704002346845,
+        "torch.matmul (fp16)": 198.89950900687836
+      }
+    },
+    {
+      "ideal_us": 7.746942089552238,
+      "k": 12288,
+      "layer": "down_proj",
+      "m": 32,
+      "n": 4096,
+      "timings_us": {
+        "machete (Wuint4b8-Abf16-GSbf16-G128)": 118.15472500165924,
+        "machete_best": 118.14073496498168,
+        "marlin (Wuint4b8-Abf16-GSbf16-G128)": 123.81785700563343,
+        "torch.matmul (fp16)": 201.32827199995518
+      }
+    }
+  ],
+  "schema_version": 1
+}
