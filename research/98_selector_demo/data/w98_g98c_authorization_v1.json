@@ -1,0 +1,157 @@
+{
+  "d1_prime": {
+    "claim": "intervals under amendment 1 cover the held-out composed configurations with zero false eliminations",
+    "composed_inflation": 2.0,
+    "envelope": "sqrt(fit_term^2 + (Z*sigma_repro)^2) * inflation",
+    "epsilon_arm": 0.015,
+    "not_resolvable_rule": "where Z*sigma_repro >= fit_term the regime is reported NOT RESOLVABLE, not covered",
+    "registered_in_advance": "Round 1 found R5 and R5cot not resolvable on piecewise+Marlin; if they are again, D1' is reported over the resolvable regimes and the others are named, not dropped",
+    "z_coverage": 2.0
+  },
+  "execution_policy": {
+    "create_only": true,
+    "lane": "lane-a",
+    "output_dir": "research/98_selector_demo/data/g98_c",
+    "resumable": "a completed cell is never re-measured"
+  },
+  "gate": "G98-C",
+  "host_load_gate": {
+    "diagnostics_recorded_not_gated": [
+      "runqueue_wait",
+      "cheap_regime_spread"
+    ],
+    "enforced": true,
+    "max_attempts": 3,
+    "quiet_max_capture_s": 11.0,
+    "quiet_max_compile_s": 12.5,
+    "rejected_attempts_retained": true
+  },
+  "lattice": {
+    "disjoint": true,
+    "every_heldout_varies_two_axes": true,
+    "fit_count": 15,
+    "heldout_count": 8
+  },
+  "model": {
+    "F_outside_keep_frac": true,
+    "F_quant_independent": true,
+    "W_layer_bytes": {
+      "target-matching": 13892000000.0,
+      "w4a16-quantized": 3581000000.0
+    },
+    "form": "D = keep*(W_layer*kappa_w + KV*kappa_kv + c_layer + f_win*[w>0]) + F",
+    "parameters": [
+      "kappa_w",
+      "kappa_kv",
+      "c_layer",
+      "f_win",
+      "F"
+    ],
+    "weight_column": "body bytes only"
+  },
+  "package_id": "w98-g98c-round2-authorization-v1",
+  "prerequisite": {
+    "gate": "G98-B",
+    "result": "research/98_selector_demo/data/g98_b_v6/round1_result.json",
+    "status": "scored and closed; its runner and model are not edited"
+  },
+  "runtime": {
+    "VLLM_DISABLED_KERNELS": "MacheteLinearKernel",
+    "VLLM_SELF_SPEC_DRAFT_FULLCG": "0",
+    "VLLM_SELF_SPEC_DRAFT_WHOLECHAIN": "0",
+    "boot_scope": "w98-lattice",
+    "draft": "piecewise",
+    "kernel": "Marlin",
+    "registered_cost": "1.21x slower than whole-chain at batch 1, ~1% at batch >= 32"
+  },
+  "sampling": {
+    "content_seeds": [
+      2,
+      3
+    ],
+    "measure_tokens": 640,
+    "min_armed_steps": 64,
+    "profiler_warmup": 20,
+    "seed_note": "cost uses seeds 2,3 so Round-1 and Round-2 are comparable",
+    "target_armed_steps": 128
+  },
+  "schema_version": 1,
+  "source_artifacts": {
+    "g98b_result": {
+      "path": "research/98_selector_demo/data/g98_b_v6/round1_result.json",
+      "sha256": "32e8c497b50e7f8667bcbbbf18b49b36ba0b78045405ecbb9dc2487a7b171f9a"
+    },
+    "host_load_gate": {
+      "path": "research/98_selector_demo/scripts/w98_host_load.py",
+      "sha256": "da72287f518b22f465c9b11c199ce8046e627500a669d40fac4ff461a31d0dc1"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "fe111b8ff5a2f0e5ea60e25811ffb11cf63552b2b994edfcfab6671249340cea"
+    },
+    "prereg_doc": {
+      "path": "research/98_selector_demo/w98r2_prereg.md",
+      "sha256": "d8b462988012228b17fc0c4dd9bda42b1be8bc1d298364268a3f5c1ad1c75362"
+    },
+    "prereg_fit": {
+      "path": "research/98_selector_demo/data/prereg2/w98r2_fit.json",
+      "sha256": "f8810b79bd0af93860b100eb55b3f1a2eb5c11cd8357562fcdc391c2118b37b9"
+    },
+    "prereg_heldout": {
+      "path": "research/98_selector_demo/data/prereg2/w98r2_heldout.json",
+      "sha256": "ebebcfe950c369d009cfd7595e119787cccdbb8e34f2d2c930477a887642853d"
+    },
+    "prereg_matrix": {
+      "path": "research/98_selector_demo/data/prereg2/w98r2_matrix.json",
+      "sha256": "4660518c6cc65eb8ff49756d19493495c2482f5871ad4318a5d367b106225059"
+    },
+    "round1_cost_model": {
+      "path": "research/98_selector_demo/scripts/w98_cost_model.py",
+      "sha256": "408d4f8f7de2aa14d66015b69f0bbd4695b19daaf8110638053a1d6d98589a04"
+    },
+    "round1_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98b_round1.py",
+      "sha256": "19da21062aab444a45015b8aa0aa314ef281c00be41bc7b01387c53e8eca80f1"
+    },
+    "round2_cost_model": {
+      "path": "research/98_selector_demo/scripts/w98r2_cost_model.py",
+      "sha256": "35e5ae0182f140ca489ecd5ffe02b95e8a4e95765bc7189c89a02a1610f50aee"
+    },
+    "round2_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98c_round2.py",
+      "sha256": "6c5204840319321bd20ece1fd2ebeb7d0c267b710f97b68cfa01a7dafef008ec"
+    }
+  },
+  "stages": [
+    {
+      "action": "anchors_pre",
+      "id": "C0",
+      "repeats": 3
+    },
+    {
+      "action": "fit_cells",
+      "count": 15,
+      "id": "C1"
+    },
+    {
+      "action": "commit_predictions",
+      "barrier": true,
+      "id": "C2"
+    },
+    {
+      "action": "heldout_cells",
+      "count": 8,
+      "id": "C3"
+    },
+    {
+      "action": "anchors_post",
+      "id": "C4",
+      "repeats": 3
+    },
+    {
+      "action": "score_reveal",
+      "id": "C5"
+    }
+  ],
+  "status": "issued"
+}
