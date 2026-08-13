@@ -11,7 +11,9 @@ w98-lattice relaxes exactly three axes and nothing else.
 from __future__ import annotations
 
 import dataclasses
+import sys
 import unittest
+from pathlib import Path
 
 from vllm.v1.spec_decode.koff_runtime import (
     BOOT_SCOPE_MINIMAL_B0,
@@ -23,6 +25,8 @@ from vllm.v1.spec_decode.koff_runtime import (
     KOffRuntimeError,
     validate_boot_config,
 )
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
 
 class _ModelConfig:
@@ -139,9 +143,42 @@ class W98RelaxationTests(unittest.TestCase):
             _validate(draft_kv_window=window, draft_kv_sinks=16 if window else 0)
 
     def test_every_registered_skip_count_is_admitted(self) -> None:
-        sets = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
+        """Drive the sets from the runner so the two cannot drift apart."""
+        sys.path.insert(0, str(SCRIPTS))
+        from run_w98_g98b_round1 import SKIP_SETS
+
+        self.assertEqual(set(SKIP_SETS), set(W98_SKIP_COUNTS))
         for count in sorted(W98_SKIP_COUNTS):
-            _validate(draft_skip_layers=sets[count])
+            _validate(draft_skip_layers=SKIP_SETS[count])
+
+    def test_skip_sets_are_nested_so_keep_frac_is_a_scalar(self) -> None:
+        """skip4 subset skip8 subset skip16.
+
+        A non-nested set would confound "how many layers are skipped" with
+        "which ones", and X1 measured that confound at up to 5%.
+        """
+        sys.path.insert(0, str(SCRIPTS))
+        from run_w98_g98b_round1 import SKIP_SETS
+
+        def indices(count: int) -> set[int]:
+            return {int(x) for x in SKIP_SETS[count].split(",") if x.strip()}
+
+        ordered = sorted(c for c in SKIP_SETS if c)
+        for smaller, larger in zip(ordered, ordered[1:]):
+            self.assertLess(indices(smaller), indices(larger))
+        for count in ordered:
+            self.assertEqual(len(indices(count)), count)
+            self.assertTrue(all(0 <= i < 36 for i in indices(count)))
+
+    def test_skip16_widens_the_keep_range_that_identifies_F(self) -> None:
+        """The reason skip16 was admitted, pinned as a test.
+
+        Round 1 spanned keep 0.778-1.0 (22%), too narrow to separate an
+        intercept from a slope at the measured reproducibility.
+        """
+        keeps = sorted(1 - c / 36 for c in W98_SKIP_COUNTS)
+        self.assertAlmostEqual(min(keeps), 1 - 16 / 36, places=6)
+        self.assertGreater(max(keeps) - min(keeps), 0.4)
 
     def test_the_full_composition_is_admitted(self) -> None:
         _validate(

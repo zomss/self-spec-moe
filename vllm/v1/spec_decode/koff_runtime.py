@@ -56,7 +56,11 @@ BOOT_SCOPES = frozenset({BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE})
 # The w98 scope relaxes exactly three axes, each bounded to the frozen lattice
 # in research/98_selector_demo/data/prereg/w98_prereg_matrix.json.
 W98_WINDOWS = frozenset({0, 128, 256, 512, 1024})
-W98_SKIP_COUNTS = frozenset({0, 4, 8})
+# skip16 admitted for W98-R2: it is what makes the non-layer cost F estimable.
+# The Round-1 keep range spanned only 22% (0.778-1.0), too narrow to separate an
+# intercept from a slope at the measured reproducibility; skip16 takes it to
+# 0.556 and moves the fit's weakest independent direction 0.0955 -> 0.1686.
+W98_SKIP_COUNTS = frozenset({0, 4, 8, 16})
 W98_WINDOW_SINKS = 16
 
 

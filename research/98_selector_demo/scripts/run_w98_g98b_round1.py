@@ -85,7 +85,16 @@ DRAFT_LAYERS = 36
 # Qwen3-8B GQA: 8 kv heads x 128 head dim x 2 (K and V) x 2 bytes, per layer.
 KV_BYTES_PER_TOKEN = DRAFT_LAYERS * 8 * 128 * 2 * 2
 WINDOW_SINKS = 16
-SKIP_SETS = {0: "", 4: "2,4,7,16", 8: "2,4,7,11,16,20,25,30"}
+# The sets are NESTED (skip4 subset skip8 subset skip16) so that increasing the
+# skip count removes a superset of layers and keep_frac stays a clean scalar.
+# A non-nested set would confound "how many layers" with "which layers", which
+# X1 showed costs up to 5% on its own.
+SKIP_SETS = {
+    0: "",
+    4: "2,4,7,16",
+    8: "2,4,7,11,16,20,25,30",
+    16: "1,2,4,6,7,9,11,13,16,18,20,23,25,27,30,33",
+}
 # Sampling depth. The factored model is STATE-INDEXED, so each regime is
 # measured at its own registered batch rather than a fixed prompt count --
 # otherwise R1 (batch 1) and R6 (batch 32) would both be fit at the wrong
