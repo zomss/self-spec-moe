@@ -1,0 +1,96 @@
+{
+  "cells": {
+    "r0_load": {
+      "cotenant_load": true,
+      "delta_pct_vs_v6": {
+        "R1": -0.56,
+        "R6": -0.41,
+        "R8": -0.5
+      },
+      "draft_chain_ms": {
+        "R1": 30.19,
+        "R6": 33.78,
+        "R8": 31.59
+      },
+      "measurement_gate": "clean",
+      "neighbours_at_start": [
+        "2, 100, 32, 697.59",
+        "3, 100, 30, 696.96"
+      ],
+      "relative_spread": 0.11905552447623563,
+      "status": "ok"
+    },
+    "r0_noload": {
+      "cotenant_load": false,
+      "delta_pct_vs_v6": {
+        "R1": -0.3,
+        "R6": -0.12,
+        "R8": -0.16
+      },
+      "draft_chain_ms": {
+        "R1": 30.27,
+        "R6": 33.88,
+        "R8": 31.7
+      },
+      "measurement_gate": "clean",
+      "neighbours_at_start": [],
+      "relative_spread": 0.11898747794115833,
+      "status": "ok"
+    },
+    "r1_load": {
+      "cotenant_load": true,
+      "delta_pct_vs_v6": {
+        "R1": -1.19,
+        "R6": -0.77,
+        "R8": -1.13
+      },
+      "draft_chain_ms": {
+        "R1": 30.0,
+        "R6": 33.66,
+        "R8": 31.39
+      },
+      "measurement_gate": "clean",
+      "neighbours_at_start": [
+        "2, 100, 30, 698.24",
+        "3, 100, 30, 698.61"
+      ],
+      "relative_spread": 0.1218224305214247,
+      "status": "ok"
+    },
+    "r1_noload": {
+      "cotenant_load": false,
+      "delta_pct_vs_v6": {
+        "R1": -0.2,
+        "R6": 0.03,
+        "R8": -0.19
+      },
+      "draft_chain_ms": {
+        "R1": 30.3,
+        "R6": 33.93,
+        "R8": 31.69
+      },
+      "measurement_gate": "clean",
+      "neighbours_at_start": [],
+      "relative_spread": 0.11969976763144177,
+      "status": "ok"
+    }
+  },
+  "per_regime": {
+    "R1": {
+      "delta_pct": -0.63,
+      "idle_ms": 30.29,
+      "load_ms": 30.09
+    },
+    "R6": {
+      "delta_pct": -0.55,
+      "idle_ms": 33.91,
+      "load_ms": 33.72
+    },
+    "R8": {
+      "delta_pct": -0.65,
+      "idle_ms": 31.7,
+      "load_ms": 31.49
+    }
+  },
+  "verdict": "SYNTHETIC_LOAD_DOES_NOT_REPRODUCE"
+}

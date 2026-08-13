@@ -1,0 +1,46 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "cotenant_load": false,
+  "measurement_gate": {
+    "monotonic": true,
+    "reason": null,
+    "relative_spread": 0.11715838716379352,
+    "values_ms": [
+      30.220880820373193,
+      31.631292817994545,
+      33.76151047595734
+    ],
+    "verdict": "clean"
+  },
+  "neighbours_at_end": [
+    "2, 0, 0, 71.28",
+    "3, 0, 0, 71.30"
+  ],
+  "neighbours_at_start": [],
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "draft_chain_s": 0.03022088082037319,
+      "mean_armed_step_s": 0.040177338751163916
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "draft_chain_s": 0.03376151047595734,
+      "mean_armed_step_s": 0.04614239515922236
+    },
+    "R8": {
+      "armed_step_count": 128,
+      "batch": 16,
+      "draft_chain_s": 0.031631292817994545,
+      "mean_armed_step_s": 0.042752249508339446
+    }
+  },
+  "record_type": "w98_cotenant_ab",
+  "schema_version": 1
+}
