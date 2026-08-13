@@ -1,0 +1,150 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "neighbours_after": [
+    "0, 0, 142.98, 1980, 50",
+    "1, 0, 71.44, 345, 33",
+    "2, 0, 124.46, 1980, 34",
+    "3, 0, 125.48, 1980, 38",
+    "4, 0, 68.76, 345, 32",
+    "5, 0, 74.21, 345, 31",
+    "6, 0, 71.58, 345, 32",
+    "7, 0, 71.56, 345, 30"
+  ],
+  "neighbours_before": [
+    "0, 0, 141.25, 1980, 42",
+    "1, 0, 71.39, 345, 33",
+    "2, 0, 124.50, 1980, 34",
+    "3, 0, 125.50, 1980, 38",
+    "4, 0, 68.79, 345, 32",
+    "5, 0, 74.25, 345, 31",
+    "6, 0, 71.68, 345, 32",
+    "7, 0, 71.58, 345, 30"
+  ],
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "draft_chain_s": 0.030146172164443777,
+      "gpu": {
+        "n": 12,
+        "power_w_median": 405.90999999999997,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1980.0,
+        "sm_mhz_p10": 1980.0,
+        "temp_c_max": 54.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000"
+        ],
+        "util_pct_median": 83.0
+      },
+      "mean_armed_step_s": 0.03995435192700825,
+      "wall_s": 5.214062090963125
+    },
+    "R4": {
+      "armed_step_count": 132,
+      "batch": 8,
+      "draft_chain_s": 0.04341788236175425,
+      "gpu": {
+        "n": 25,
+        "power_w_median": 496.43,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1500.0,
+        "sm_mhz_p10": 1530.0,
+        "temp_c_max": 59.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000",
+          "0x0000000000000004"
+        ],
+        "util_pct_median": 87.0
+      },
+      "mean_armed_step_s": 0.057260342375340056,
+      "wall_s": 9.832547281053849
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "draft_chain_s": 0.0515008845349757,
+      "gpu": {
+        "n": 30,
+        "power_w_median": 544.005,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1395.0,
+        "sm_mhz_p10": 1485.0,
+        "temp_c_max": 64.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000",
+          "0x0000000000000004"
+        ],
+        "util_pct_median": 90.0
+      },
+      "mean_armed_step_s": 0.06718904312717944,
+      "wall_s": 12.382477322942577
+    },
+    "R5cot": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "draft_chain_s": 0.051544343277619024,
+      "gpu": {
+        "n": 30,
+        "power_w_median": 539.925,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1395.0,
+        "sm_mhz_p10": 1485.0,
+        "temp_c_max": 67.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000",
+          "0x0000000000000004"
+        ],
+        "util_pct_median": 90.0
+      },
+      "mean_armed_step_s": 0.06726775646585828,
+      "wall_s": 12.413428580970503
+    },
+    "R6": {
+      "armed_step_count": 129,
+      "batch": 32,
+      "draft_chain_s": 0.03370295578338714,
+      "gpu": {
+        "n": 15,
+        "power_w_median": 490.12,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1710.0,
+        "sm_mhz_p10": 1710.0,
+        "temp_c_max": 61.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000",
+          "0x0000000000000004"
+        ],
+        "util_pct_median": 82.0
+      },
+      "mean_armed_step_s": 0.04592887055067447,
+      "wall_s": 6.265689317020588
+    },
+    "R8": {
+      "armed_step_count": 130,
+      "batch": 16,
+      "draft_chain_s": 0.03154725353191565,
+      "gpu": {
+        "n": 14,
+        "power_w_median": 459.78999999999996,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 1965.0,
+        "sm_mhz_p10": 1965.0,
+        "temp_c_max": 57.0,
+        "throttle_reasons_seen": [
+          "0x0000000000000000",
+          "0x0000000000000004"
+        ],
+        "util_pct_median": 82.5
+      },
+      "mean_armed_step_s": 0.042501266720668916,
+      "wall_s": 5.745192083995789
+    }
+  },
+  "record_type": "w98_clock_clamp",
+  "schema_version": 1
+}

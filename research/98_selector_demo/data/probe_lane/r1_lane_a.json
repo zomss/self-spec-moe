@@ -1,0 +1,119 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "gpu": 0,
+  "host_load": {
+    "cache_load_s": null,
+    "capture_s": 10.0,
+    "compile_cached": false,
+    "compile_s": 10.030000000000001,
+    "full_it_s": 9.4,
+    "piecewise_it_s": 6.15,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "lane": "lane-a",
+  "measurement_gate": {
+    "monotonic": true,
+    "reason": "cheap-regime relative spread 0.0196 < 0.03: the regimes collapsed toward a common floor",
+    "relative_spread": 0.019613108354124168,
+    "values_ms": [
+      33.64461496335651,
+      33.790060021731605,
+      34.30449044216561
+    ],
+    "verdict": "clamped"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.03364461496335651,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04354865934510599,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.0002659655109183113,
+      "usable": true,
+      "verify_s": 0.006204076960090209
+    },
+    "R4": {
+      "armed_step_count": 132,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.04372539267920584,
+      "draft_chain_samples": 113,
+      "mean_armed_step_s": 0.05767950799076282,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.00287929227706471,
+      "usable": true,
+      "verify_s": 0.009659058694941465
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.051752660361638815,
+      "draft_chain_samples": 111,
+      "mean_armed_step_s": 0.06762355148720627,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.002673060051132484,
+      "usable": true,
+      "verify_s": 0.011737972086295486
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.05188898006983271,
+      "draft_chain_samples": 110,
+      "mean_armed_step_s": 0.06762747305568105,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.0024734986667078536,
+      "usable": true,
+      "verify_s": 0.011761225248318947
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.03430449044216561,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04678650388268579,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0008839543208339932,
+      "usable": true,
+      "verify_s": 0.007601986662484706
+    },
+    "R8": {
+      "armed_step_count": 131,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.033790060021731606,
+      "draft_chain_samples": 112,
+      "mean_armed_step_s": 0.04493667182107349,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.000704100367134244,
+      "usable": true,
+      "verify_s": 0.006756754599272612
+    }
+  },
+  "record_type": "w98_lane_control",
+  "schema_version": 1,
+  "telemetry": {
+    "n": 291,
+    "power_w_max": 696.74,
+    "sm_mhz_median": 1980.0,
+    "sm_mhz_min": 345.0,
+    "sm_mhz_p10": 1500.0,
+    "temp_c_max": 67.0,
+    "throttle_reasons": [
+      "SW_POWER_CAP"
+    ],
+    "util_pct_median": 22.0
+  }
+}

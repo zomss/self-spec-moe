@@ -1,0 +1,158 @@
+{
+  "cells": {
+    "_arms": {
+      "pinned_r1_ms": 30.19,
+      "ratio": 1.0032,
+      "unpinned_r1_ms": 30.09
+    },
+    "r0_pinned": {
+      "cheap_monotonic_in_batch": true,
+      "cheap_spread_ms": 3.62,
+      "cpu_affinity_size": 16,
+      "delta_pct_vs_v6": {
+        "R1": -0.63,
+        "R4": -0.28,
+        "R5": -0.44,
+        "R5cot": -0.12,
+        "R6": -0.38,
+        "R8": -0.6
+      },
+      "draft_chain_ms": {
+        "R1": 30.17,
+        "R4": 43.47,
+        "R5": 51.66,
+        "R5cot": 51.78,
+        "R6": 33.79,
+        "R8": 31.56
+      },
+      "host_load_gate": "quiet",
+      "pinned": true,
+      "runqueue_wait_frac": {
+        "R1": 0.0007,
+        "R4": 0.0005,
+        "R5": 0.0004,
+        "R5cot": 0.0004,
+        "R6": 0.0005,
+        "R8": 0.0007
+      },
+      "status": "ok"
+    },
+    "r0_unpinned": {
+      "cheap_monotonic_in_batch": true,
+      "cheap_spread_ms": 3.58,
+      "cpu_affinity_size": 192,
+      "delta_pct_vs_v6": {
+        "R1": -1.02,
+        "R4": -0.78,
+        "R5": -0.69,
+        "R5cot": -0.71,
+        "R6": -0.85,
+        "R8": -1.04
+      },
+      "draft_chain_ms": {
+        "R1": 30.05,
+        "R4": 43.25,
+        "R5": 51.53,
+        "R5cot": 51.47,
+        "R6": 33.63,
+        "R8": 31.42
+      },
+      "host_load_gate": "quiet",
+      "pinned": false,
+      "runqueue_wait_frac": {
+        "R1": 0.0006,
+        "R4": 0.0005,
+        "R5": 0.0008,
+        "R5cot": 0.0004,
+        "R6": 0.0009,
+        "R8": 0.0006
+      },
+      "status": "ok"
+    },
+    "r1_pinned": {
+      "cheap_monotonic_in_batch": true,
+      "cheap_spread_ms": 3.61,
+      "cpu_affinity_size": 16,
+      "delta_pct_vs_v6": {
+        "R1": -0.49,
+        "R4": 0.07,
+        "R5": -0.42,
+        "R5cot": 0.04,
+        "R6": -0.29,
+        "R8": -0.44
+      },
+      "draft_chain_ms": {
+        "R1": 30.21,
+        "R4": 43.62,
+        "R5": 51.67,
+        "R5cot": 51.86,
+        "R6": 33.82,
+        "R8": 31.61
+      },
+      "host_load_gate": "quiet",
+      "pinned": true,
+      "runqueue_wait_frac": {
+        "R1": 0.0009,
+        "R4": 0.0006,
+        "R5": 0.0006,
+        "R5cot": 0.0006,
+        "R6": 0.0007,
+        "R8": 0.0008
+      },
+      "status": "ok"
+    },
+    "r1_unpinned": {
+      "cheap_monotonic_in_batch": true,
+      "cheap_spread_ms": 3.67,
+      "cpu_affinity_size": 192,
+      "delta_pct_vs_v6": {
+        "R1": -0.72,
+        "R4": -0.14,
+        "R5": -0.6,
+        "R5cot": -0.21,
+        "R6": -0.32,
+        "R8": -0.66
+      },
+      "draft_chain_ms": {
+        "R1": 30.14,
+        "R4": 43.53,
+        "R5": 51.58,
+        "R5cot": 51.73,
+        "R6": 33.81,
+        "R8": 31.54
+      },
+      "host_load_gate": "quiet",
+      "pinned": false,
+      "runqueue_wait_frac": {
+        "R1": 0.0003,
+        "R4": 0.0003,
+        "R5": 0.0003,
+        "R5cot": 0.0003,
+        "R6": 0.0002,
+        "R8": 0.0003
+      },
+      "status": "ok"
+    }
+  },
+  "detector_comparison": {
+    "gate_caught": [
+      "quiet",
+      "quiet",
+      "quiet",
+      "quiet"
+    ],
+    "monotonic_flags": {
+      "false": true,
+      "true": true
+    }
+  },
+  "v6_quiet_ms": {
+    "R1": 30.36,
+    "R4": 43.59,
+    "R5": 51.89,
+    "R5cot": 51.84,
+    "R6": 33.92,
+    "R8": 31.75
+  },
+  "verdict": "PINNING_NOT_THE_CAUSE"
+}

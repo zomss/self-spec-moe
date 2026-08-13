@@ -1,0 +1,115 @@
+{
+  "by_path": {
+    "campaign": [
+      "clamped",
+      "clamped"
+    ],
+    "probe": [
+      "clamped",
+      "clamped"
+    ]
+  },
+  "cells": {
+    "r0_campaign": {
+      "delta_pct_vs_v6": {
+        "R1": 13.08,
+        "R6": 3.89,
+        "R8": 9.23
+      },
+      "draft_chain_ms": {
+        "R1": 34.33,
+        "R6": 35.24,
+        "R8": 34.68
+      },
+      "gate": {
+        "monotonic": true,
+        "reason": "cheap-regime relative spread 0.0263 < 0.03: the regimes collapsed toward a common floor",
+        "relative_spread": 0.02632065587290268,
+        "values_ms": [
+          34.33150864086635,
+          34.684709591551794,
+          35.23513646540018
+        ],
+        "verdict": "clamped"
+      },
+      "path": "campaign",
+      "status": "ok"
+    },
+    "r0_probe": {
+      "delta_pct_vs_v6": {
+        "R1": 11.66,
+        "R6": 1.36,
+        "R8": 6.43
+      },
+      "draft_chain_ms": {
+        "R1": 33.9,
+        "R6": 34.38,
+        "R8": 33.79
+      },
+      "gate": {
+        "monotonic": false,
+        "reason": "cheap regimes are not increasing in batch (33.90, 33.79, 34.38 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+        "relative_spread": 0.01742550501630152,
+        "values_ms": [
+          33.896170325850676,
+          33.79018551225142,
+          34.38084339829794
+        ],
+        "verdict": "clamped"
+      },
+      "path": "probe",
+      "status": "ok"
+    },
+    "r1_campaign": {
+      "delta_pct_vs_v6": {
+        "R1": 12.12,
+        "R6": 1.89,
+        "R8": 6.8
+      },
+      "draft_chain_ms": {
+        "R1": 34.04,
+        "R6": 34.56,
+        "R8": 33.91
+      },
+      "gate": {
+        "monotonic": false,
+        "reason": "cheap regimes are not increasing in batch (34.04, 33.91, 34.56 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+        "relative_spread": 0.018957600113375064,
+        "values_ms": [
+          34.03786440281659,
+          33.91279528502785,
+          34.55807150708973
+        ],
+        "verdict": "clamped"
+      },
+      "path": "campaign",
+      "status": "ok"
+    },
+    "r1_probe": {
+      "delta_pct_vs_v6": {
+        "R1": 7.64,
+        "R6": 0.24,
+        "R8": 2.71
+      },
+      "draft_chain_ms": {
+        "R1": 32.68,
+        "R6": 34.0,
+        "R8": 32.61
+      },
+      "gate": {
+        "monotonic": false,
+        "reason": "cheap regimes are not increasing in batch (32.68, 32.61, 34.00 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+        "relative_spread": 0.04236838380378486,
+        "values_ms": [
+          32.6819216112666,
+          32.61324306236798,
+          33.99792326063933
+        ],
+        "verdict": "clamped"
+      },
+      "path": "probe",
+      "status": "ok"
+    }
+  },
+  "verdict": "PATH_IRRELEVANT_BOTH_CLAMP"
+}

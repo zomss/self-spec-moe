@@ -1,0 +1,83 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "host_load": {
+    "cache_load_s": null,
+    "capture_s": 9.0,
+    "compile_cached": false,
+    "compile_s": 10.33,
+    "full_it_s": 10.2,
+    "piecewise_it_s": 6.75,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.03017461966026848,
+      "mean_armed_step_s": 0.04002613023567392,
+      "runqueue_wait_frac": 0.0006723713491083163,
+      "runqueue_wait_s": 0.003512119,
+      "wall_s": 5.223481049062684
+    },
+    "R4": {
+      "armed_step_count": 132,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.04346662789863427,
+      "mean_armed_step_s": 0.057400957728863104,
+      "runqueue_wait_frac": 0.0004683479869723353,
+      "runqueue_wait_s": 0.004608444,
+      "wall_s": 9.839786074007861
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.05165979989934377,
+      "mean_armed_step_s": 0.0674522637273185,
+      "runqueue_wait_frac": 0.0004242123807405684,
+      "runqueue_wait_s": 0.005268621,
+      "wall_s": 12.41977188596502
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.051776985501320184,
+      "mean_armed_step_s": 0.06758196340953253,
+      "runqueue_wait_frac": 0.0004343927068107214,
+      "runqueue_wait_s": 0.00537738,
+      "wall_s": 12.379075236967765
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.033789743292316314,
+      "mean_armed_step_s": 0.04609712255842169,
+      "runqueue_wait_frac": 0.0005470856913604874,
+      "runqueue_wait_s": 0.003417909,
+      "wall_s": 6.24748381099198
+    },
+    "R8": {
+      "armed_step_count": 131,
+      "batch": 16,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.031556043357081114,
+      "mean_armed_step_s": 0.04258534489270612,
+      "runqueue_wait_frac": 0.0006836547732870109,
+      "runqueue_wait_s": 0.003969161,
+      "wall_s": 5.805797246051952
+    }
+  },
+  "pinned": true,
+  "record_type": "w98_affinity_starvation",
+  "schema_version": 1
+}

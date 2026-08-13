@@ -1,0 +1,25 @@
+{
+  "delta_pct_vs_v6": {
+    "R1": 11.66,
+    "R6": 1.36,
+    "R8": 6.43
+  },
+  "draft_chain_ms": {
+    "R1": 33.9,
+    "R6": 34.38,
+    "R8": 33.79
+  },
+  "gate": {
+    "monotonic": false,
+    "reason": "cheap regimes are not increasing in batch (33.90, 33.79, 34.38 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+    "relative_spread": 0.01742550501630152,
+    "values_ms": [
+      33.896170325850676,
+      33.79018551225142,
+      34.38084339829794
+    ],
+    "verdict": "clamped"
+  },
+  "path": "probe",
+  "status": "ok"
+}

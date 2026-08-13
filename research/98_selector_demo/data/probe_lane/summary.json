@@ -1,0 +1,151 @@
+{
+  "by_lane": {
+    "lane-a": [
+      "clamped",
+      "clamped"
+    ],
+    "lane-b": [
+      "clamped",
+      "clamped"
+    ]
+  },
+  "cells": {
+    "r0_lane_a": {
+      "delta_pct_vs_v6": {
+        "R1": 14.72,
+        "R4": 0.6,
+        "R5": 0.19,
+        "R5cot": 0.54,
+        "R6": 3.12,
+        "R8": 9.35
+      },
+      "draft_chain_ms": {
+        "R1": 34.83,
+        "R4": 43.85,
+        "R5": 51.99,
+        "R5cot": 52.12,
+        "R6": 34.98,
+        "R8": 34.72
+      },
+      "gpu": 0,
+      "measurement_gate": "clamped",
+      "relative_spread": 0.007238468461816906,
+      "status": "ok",
+      "telemetry": {
+        "n": 294,
+        "power_w_max": 698.84,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 345.0,
+        "sm_mhz_p10": 1440.0,
+        "temp_c_max": 65.0,
+        "throttle_reasons": [
+          "SW_POWER_CAP"
+        ],
+        "util_pct_median": 25.0
+      }
+    },
+    "r0_lane_b": {
+      "delta_pct_vs_v6": {
+        "R1": 14.3,
+        "R4": 0.62,
+        "R5": 0.37,
+        "R5cot": 0.62,
+        "R6": 2.83,
+        "R8": 9.29
+      },
+      "draft_chain_ms": {
+        "R1": 34.7,
+        "R4": 43.86,
+        "R5": 52.08,
+        "R5cot": 52.16,
+        "R6": 34.88,
+        "R8": 34.7
+      },
+      "gpu": 1,
+      "measurement_gate": "clamped",
+      "relative_spread": 0.005337931719340296,
+      "status": "ok",
+      "telemetry": {
+        "n": 295,
+        "power_w_max": 698.92,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 345.0,
+        "sm_mhz_p10": 1410.0,
+        "temp_c_max": 59.0,
+        "throttle_reasons": [
+          "SW_POWER_CAP"
+        ],
+        "util_pct_median": 24.0
+      }
+    },
+    "r1_lane_a": {
+      "delta_pct_vs_v6": {
+        "R1": 10.8,
+        "R4": 0.32,
+        "R5": -0.27,
+        "R5cot": 0.1,
+        "R6": 1.12,
+        "R8": 6.43
+      },
+      "draft_chain_ms": {
+        "R1": 33.64,
+        "R4": 43.73,
+        "R5": 51.75,
+        "R5cot": 51.89,
+        "R6": 34.3,
+        "R8": 33.79
+      },
+      "gpu": 0,
+      "measurement_gate": "clamped",
+      "relative_spread": 0.019613108354124168,
+      "status": "ok",
+      "telemetry": {
+        "n": 291,
+        "power_w_max": 696.74,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 345.0,
+        "sm_mhz_p10": 1500.0,
+        "temp_c_max": 67.0,
+        "throttle_reasons": [
+          "SW_POWER_CAP"
+        ],
+        "util_pct_median": 22.0
+      }
+    },
+    "r1_lane_b": {
+      "delta_pct_vs_v6": {
+        "R1": 12.88,
+        "R4": 0.62,
+        "R5": 0.42,
+        "R5cot": 0.62,
+        "R6": 2.06,
+        "R8": 8.06
+      },
+      "draft_chain_ms": {
+        "R1": 34.27,
+        "R4": 43.86,
+        "R5": 52.11,
+        "R5cot": 52.16,
+        "R6": 34.62,
+        "R8": 34.31
+      },
+      "gpu": 1,
+      "measurement_gate": "clamped",
+      "relative_spread": 0.0103467164264564,
+      "status": "ok",
+      "telemetry": {
+        "n": 296,
+        "power_w_max": 699.9,
+        "sm_mhz_median": 1980.0,
+        "sm_mhz_min": 345.0,
+        "sm_mhz_p10": 1380.0,
+        "temp_c_max": 59.0,
+        "throttle_reasons": [
+          "SW_POWER_CAP"
+        ],
+        "util_pct_median": 26.0
+      }
+    }
+  },
+  "verdict": "BOX_WIDE"
+}

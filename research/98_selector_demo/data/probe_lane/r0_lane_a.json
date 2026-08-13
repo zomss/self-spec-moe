@@ -1,0 +1,119 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "gpu": 0,
+  "host_load": {
+    "cache_load_s": null,
+    "capture_s": 10.0,
+    "compile_cached": false,
+    "compile_s": 10.0,
+    "full_it_s": 8.63,
+    "piecewise_it_s": 6.01,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "lane": "lane-a",
+  "measurement_gate": {
+    "monotonic": false,
+    "reason": "cheap regimes are not increasing in batch (34.83, 34.72, 34.98 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+    "relative_spread": 0.007238468461816906,
+    "values_ms": [
+      34.83176675578152,
+      34.724326035107616,
+      34.9764546802387
+    ],
+    "verdict": "clamped"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.03483176675578152,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04479176034055854,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00031057336394536443,
+      "usable": true,
+      "verify_s": 0.006207450594626029
+    },
+    "R4": {
+      "armed_step_count": 132,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.04385320086699737,
+      "draft_chain_samples": 113,
+      "mean_armed_step_s": 0.05788445762609075,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.002865729798264912,
+      "usable": true,
+      "verify_s": 0.009658581119213925
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.051985752076615356,
+      "draft_chain_samples": 111,
+      "mean_armed_step_s": 0.0678586985817394,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.002530806055090455,
+      "usable": true,
+      "verify_s": 0.011744505646638571
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.05211739911676638,
+      "draft_chain_samples": 110,
+      "mean_armed_step_s": 0.06798284035266283,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.0023764931530254906,
+      "usable": true,
+      "verify_s": 0.01176416397098482
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.0349764546802387,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04765955944913003,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.000517544395360328,
+      "usable": true,
+      "verify_s": 0.007602233478841794
+    },
+    "R8": {
+      "armed_step_count": 131,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.03472432603510762,
+      "draft_chain_samples": 112,
+      "mean_armed_step_s": 0.04598737234260375,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0007505063262462563,
+      "usable": true,
+      "verify_s": 0.006761566571998451
+    }
+  },
+  "record_type": "w98_lane_control",
+  "schema_version": 1,
+  "telemetry": {
+    "n": 294,
+    "power_w_max": 698.84,
+    "sm_mhz_median": 1980.0,
+    "sm_mhz_min": 345.0,
+    "sm_mhz_p10": 1440.0,
+    "temp_c_max": 65.0,
+    "throttle_reasons": [
+      "SW_POWER_CAP"
+    ],
+    "util_pct_median": 25.0
+  }
+}
