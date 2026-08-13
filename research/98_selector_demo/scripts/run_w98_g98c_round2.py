@@ -89,8 +89,8 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v4"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v4.json"
+PACKAGE_ID = "w98-g98c-round2-authorization-v5"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v5.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
@@ -113,6 +113,21 @@ HELDOUT_COUNT = 8
 # Cheap regimes, recorded as a clamp diagnostic. On a quiet box these separate
 # by batch; a clamped boot compresses them toward a common floor.
 CHEAP_REGIMES = ("R1", "R8", "R6")
+# GPU telemetry sampling during a boot. DISABLED.
+#
+# It was added to catch the clamp in the act, and it did produce the first
+# telemetry during clamped boots. But each sample spawns `nvidia-smi`, whose
+# NVML queries take a driver-wide lock, and the clamp presents as exactly the
+# kind of fixed per-step host delay such a lock could impose -- box-wide,
+# hidden by GPU work. X23 argues against it (its probe arm did no polling and
+# clamped; its campaign arm ran the child directly with no parent telemetry and
+# clamped), so this is not expected to be the cause.
+#
+# It is disabled anyway, because a measurement campaign should not carry an
+# instrument that is even plausibly perturbing the thing it measures, and the
+# diagnostic value has already been extracted. The setting is pinned in the
+# authorization so the record says which way it ran.
+TELEMETRY_ENABLED = False
 
 
 class G98CError(RuntimeError):
@@ -282,6 +297,13 @@ def expected_authorization() -> dict[str, Any]:
                 "29 boots (25 clean, 4 clamped): 0 false positives, 4/4 caught"
             ),
         },
+        "gpu_telemetry": {
+            # Pinned so the record states whether the campaign carried an
+            # NVML sampler while measuring. Disabled: each sample spawns
+            # nvidia-smi, whose driver-wide lock could impose the very
+            # per-step host delay the clamp presents as.
+            "enabled": TELEMETRY_ENABLED,
+        },
         "model": {
             "form": (
                 "D = keep*(W_layer*kappa_w + KV*kappa_kv + c_layer + f_win*[w>0]) + F"
@@ -357,7 +379,14 @@ def validate_authorization(package: Mapping[str, Any]) -> None:
             got.get("sha256") == want["sha256"],
             f"source artifact {name} changed since the authorization was issued",
         )
-    for field in ("runtime", "model", "lattice", "stages", "d1_prime"):
+    for field in (
+        "runtime",
+        "model",
+        "lattice",
+        "stages",
+        "d1_prime",
+        "gpu_telemetry",
+    ):
         _require(
             package.get(field) == expected[field],
             f"authorization field {field!r} does not match this runner",
@@ -451,10 +480,12 @@ def _run_stage_boots(
             # was doing if this boot turns out to be clamped. The clamp has
             # resisted four attempts to reproduce it on demand (X19-X21), so
             # catching it in the act is the only route left to a cause.
-            with (
-                log.open("w", encoding="utf-8") as handle,
-                hostload.GpuTelemetry(lane["physical_gpu_index"]) as telem,
-            ):
+            telem = (
+                hostload.GpuTelemetry(lane["physical_gpu_index"])
+                if TELEMETRY_ENABLED
+                else contextlib.nullcontext()
+            )
+            with log.open("w", encoding="utf-8") as handle, telem:
                 completed = subprocess.run(
                     [
                         sys.executable,
@@ -476,7 +507,8 @@ def _run_stage_boots(
                     stderr=subprocess.STDOUT,
                     preexec_fn=lambda: os.sched_setaffinity(0, affinity),
                 )
-            telemetry[attempt] = telem.summary()
+            if TELEMETRY_ENABLED:
+                telemetry[attempt] = telem.summary()
             _require(
                 completed.returncode == 0 and target.exists(),
                 f"boot {key} attempt {attempt} failed; output preserved at {log}",

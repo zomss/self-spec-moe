@@ -15,6 +15,9 @@
     "resumable": "a completed cell is never re-measured"
   },
   "gate": "G98-C",
+  "gpu_telemetry": {
+    "enabled": false
+  },
   "host_load_gate": {
     "enforced": true,
     "max_attempts": 3,
@@ -56,7 +59,7 @@
     ],
     "weight_column": "body bytes only"
   },
-  "package_id": "w98-g98c-round2-authorization-v4",
+  "package_id": "w98-g98c-round2-authorization-v5",
   "prerequisite": {
     "gate": "G98-B",
     "result": "research/98_selector_demo/data/g98_b_v6/round1_result.json",
@@ -126,7 +129,7 @@
     },
     "round2_runner": {
       "path": "research/98_selector_demo/scripts/run_w98_g98c_round2.py",
-      "sha256": "878d3612cb6f92f5558c4f0fb01d088dd14c1abf2ee16d14ad5aeb692c335a82"
+      "sha256": "ed67c1570667fa9759eee0e37a5136a84f4140f40d36ca4d940c87269c106919"
     }
   },
   "stages": [
