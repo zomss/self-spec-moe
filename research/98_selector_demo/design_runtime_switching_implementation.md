@@ -19,8 +19,31 @@ work:
 | --- | --- | --- | --- |
 | **K / OFF** | `KOffAction` registry, per step | free | **yes** — driven by the selector |
 | **window** (≤ init cap) | mutate `drafter._kv_window` | **~2 ms RPC**, restore exact (P82 E0) | mechanism yes, **not selector-driven** |
-| **quant / draft weights** | in-place `copy_` from pinned DRAM | **113 ms @ 54 GB/s** for an 8B draft (P89) | mechanism yes, **not selector-driven** |
+| **quant** | select between resident draft variants | see §2a — a re-bind, not a copy | **no**: the engine boots exactly one draft |
 | **skip** | `_apply_skip_layers`, load-time structural | n/a | **no mechanism** |
+
+### What `target-matching` means — weights, not KV
+
+Verified from the boot environment rather than assumed:
+
+| arm | `VLLM_SELF_SPEC_SHARED_KV` | `VLLM_SELF_SPEC_SHARE_WEIGHTS` |
+| --- | --- | --- |
+| `target-matching` | **1** | **1** |
+| `w4a16-quantized` | **1** | 0 |
+
+**Shared KV is on in both arms.** The draft reads and writes the target's KV
+cache whether or not it is quantized — the Phase-66 property — which is why the
+quantized boot still had to pass shared-KV alias and true-slot proofs in G98-A.
+
+What `target-matching` adds is that the draft's *parameters are the target's
+tensors*, aliased. That is exactly why G98-A replaced the alias proof with
+`validate_independent_draft_weights` for the quantized arm: the mirror
+assertion that **no** draft parameter shares target storage.
+
+Consequence for this plan: switching quant changes **which weights the draft
+uses and never touches the KV binding**, so the shared-KV alias and true-slot
+proofs hold across a quant switch by construction. That removes a class of
+correctness risk from the lever.
 
 `KOffAction` (`koff_runtime.py:702`) carries exactly `action_id, k,
 target_graph_id, target_query_width, draft_graph_id, draft_query_width`, and
@@ -28,27 +51,56 @@ target_graph_id, target_query_width, draft_graph_id, draft_query_width`, and
 the mutation primitive exists and is measured, **the selector has no way to name
 the setting it wants**. Wiring them is the same edit as for skip.
 
-## 2. Switching cost sets switching cadence
+## 2. Legality and economics are separate questions
 
-The three levers differ by ~5 orders of magnitude in switch cost, against a
-~25 ms step. The selector cannot treat them as one decision:
+An earlier draft of this document conflated them and invented an undefined term
+("per segment"). Correcting that, because it changes what has to be built.
 
-| lever | switch cost | usable cadence |
-| --- | --- | --- |
-| K / OFF | free | **per step** (already so, via `dynamic_sd_lookup[batch]`) |
-| skip (after this work) | dispatch-key change | **per step**, target-step boundary only |
-| window | ~2 ms | **per segment** — 8% of a step; not per-step |
-| quant weights | 113 ms | **per regime shift at most** — 4–5 steps of stall |
+**Legality — identical for every lever.** A switch may take effect **only at a
+target step boundary**, never mid-chain. This is P5's registered correctness
+requirement and it does not vary by lever. There is no lever that may switch
+more freely than another.
 
-**This is a design constraint, not a detail.** A selector that switches
-quantization per step would spend more time swapping than serving. The policy
-must carry a per-lever cadence and a hysteresis rule, and D3's composite must be
-scored against the switch cost actually paid, not an idealised free switch.
+**Economics — differs per lever.** What varies is the cost paid when a switch
+does happen, and therefore how often it is worth doing against a ~25 ms step:
 
-Registered consequence: quant is effectively a **segment-level** lever. If the
-regime mix changes faster than ~113 ms, quant should be pinned boot-static and
-only window/skip/K vary. Whether the declared workload mix is that fast is a
-D3 input.
+| lever | cost per switch | 1 switch every step | 1 switch every 100 steps |
+| --- | --- | --- | --- |
+| K / OFF | free | free | free |
+| skip (after this work) | dispatch-key change | ~free | ~free |
+| window | ~2 ms | ~8% overhead | ~0.08% |
+| quant (both resident) | re-bind, §2a | ~free | ~free |
+
+So the policy needs a switch-frequency term, not a per-lever legality rule. Only
+window carries a cost that a per-step policy would notice, and even that is a
+frequency question rather than a prohibition.
+
+### 2a. Quant as a lever is NOT the RL weight refresh
+
+These are two different operations with different triggers, costs and owners,
+and an earlier draft collapsed them:
+
+**(a) Quant as a selector lever** — choose between draft variants that are
+already resident. With both resident this is a **re-bind**: a dispatch-key
+change like skip, not a data copy. The memory story is favourable, because
+`target-matching` *aliases* the target's weights and costs almost nothing extra,
+while the quantized draft is 6.07 GB.
+
+  *What is missing is not the switch, it is the residency.* The engine boots
+  exactly one draft (`speculative_config.model`). Holding two resident is
+  unbuilt and is the real work item for this lever.
+  (`VLLM_SELF_SPEC_DRAFT_RESIDENT_SETS` is unrelated — it is MoE expert
+  residency in `local_route.py`, not draft weight sets.)
+
+**(b) RL weight refresh** — the target's policy updates during rollout, so the
+draft must be re-derived to match. This is **mandatory, not a selector choice**,
+and it is where Phase 89's **113 ms @ 54 GB/s** pinned-DRAM copy belongs. Phase
+92 measured the staleness curve that decides how often it must be paid
+(accept 3.931 at drafter@0 against 3.834 fresh at policy step 8).
+
+Attributing 113 ms to "the quant lever" was wrong in both directions: the lever
+is cheaper than that, and the refresh is not a lever at all. The plan must carry
+both, separately.
 
 ## 3. The skip ladder — the user's model
 
@@ -113,15 +165,45 @@ draft_weight_set   str | None   None = target-matching
 validation extends unchanged, and an action naming an unregistered cut point,
 window, or weight set is refused at boot rather than at step time.
 
+`draft_weight_set` names a **resident** variant. It does not trigger a load.
+
 Selection keys off the existing `dynamic_sd_lookup[batch]` path (P5 D5), which
 Phase 82 measured as free per-step, rather than introducing a second policy
 mechanism.
 
-### S4 — cadence and hysteresis in the policy
+### S3b — dual draft residency (the real quant work item)
 
-Per §2 each lever carries a minimum dwell time. The policy must refuse a switch
-whose amortised cost exceeds its predicted gain over the expected dwell. This is
-where the cost model is consumed at runtime, and it is why S0 blocks everything.
+Per §2a the quant *switch* is a re-bind; what is missing is holding two drafts
+resident at once. The engine boots one (`speculative_config.model`).
+
+Required: build both variants at init, sharing the KV binding (which is shared
+in both arms — see §1), and keep the target-matching variant as an alias of the
+target's weights so only the quantized set costs new memory (6.07 GB, of which
+2.49 GB is bf16 `lm_head` + embeddings identical in both).
+
+**Measure, do not assume:** whether the two variants can co-reside alongside the
+shared KV cache at the 21,682-block floor. This competes with S1's union for the
+same headroom, and G98-A measured only ~2.3%.
+
+### S3c — RL weight refresh (separate from the levers)
+
+Not a selector choice: when the policy updates, the draft must be re-derived.
+Phase 89's 113 ms @ 54 GB/s is the cost, Phase 92's staleness curve is the
+trigger frequency. It must be sequenced against rollout batch boundaries, not
+against the selector's switch policy.
+
+Open: a target-matching draft **aliases** the target's weights rather than
+owning a copy, so refreshing it may be free (the alias already points at the
+updated tensors) while refreshing a quantized draft requires re-quantizing or
+re-copying. That asymmetry is unchecked and could dominate the RL design.
+
+### S4 — switch-frequency accounting in the policy
+
+Per §2 the constraint is frequency, not legality. Only window carries a
+per-switch cost a step-rate policy would notice (~2 ms, ~8% if switched every
+step). The policy must refuse a switch whose amortised cost exceeds its
+predicted gain over the expected dwell. This is where the cost model is consumed
+at runtime, and it is why S0 blocks everything.
 
 ### S5 — switch-correctness proofs
 
@@ -142,10 +224,15 @@ A tension surfaced by X6–X14 that belongs in this plan:
   so changing window changes captured shapes and would require a graph per
   window, multiplying the S2 budget.
 
-So whole-chain buys steady-state speed (1.21x at batch 1, ~1% at batch ≥ 32) and
-pays for it in switching flexibility. Which side wins depends on switch
-frequency, which is a D3 input. **Do not fix the runtime for the switching
-system until D3 measures how often it actually switches.**
+So whole-chain buys steady-state speed (1.21x at batch 1, ~1% at batch ≥ 32)
+and pays for it in **graph budget**, not in legality: every (cut point, window)
+pair the selector may choose needs its own captured graph, on top of the
+(batch, K) keys already captured. Combined with S1's layer union and S3b's dual
+residency, all three compete for the same headroom above the 21,682-block floor.
+
+Which side wins depends on how many distinct settings the selector actually
+uses, which D2 determines and D3 prices. **Do not fix the runtime for the
+switching system until D2 reports how many settings survive.**
 
 ## 6. Gates
 
@@ -155,7 +242,8 @@ system until D3 measures how often it actually switches.**
 | RS-1 | one boot: capture all cut points, report graph HBM per set **against the 21,682-block shared-KV floor** |
 | RS-2 | switch latency per lever, and a token-correctness proof across a target-step-boundary change |
 | RS-3 | acceptance and draft cost per setting, matched against the boot-static equivalent |
-| RS-4 | policy: cadence/hysteresis honoured, and D3 composite scored against **paid** switch cost |
+| RS-4 | policy: switch-frequency accounting honoured, and D3 composite scored against **paid** switch cost |
+| RS-5 | dual draft residency co-resides with shared KV at the 21,682-block floor, and a quant switch is proven to leave the KV binding untouched |
 
 RS-1 is the gate most likely to fail, for the reason given in S1.
 
@@ -183,13 +271,13 @@ suffices.
 
 1. **Union KV cost** against the 21,682-block floor (S1) — the hard ceiling.
 2. **Graph HBM per cut point** (S2) — one log line is not a measurement.
-3. **Whether target-matching ↔ quantized is a copy or a re-bind.** Phase 89's
-   113 ms is a DRAM→GPU copy between two *owned* weight sets. A target-matching
-   draft **aliases** the target's weights rather than owning a copy, so that
-   transition may be a re-binding with a different cost profile. Not yet checked.
-4. **Whether only the quantized body needs swapping.** `lm_head` and embeddings
-   are bf16 and hold identical values in both checkpoints (2.49 GB of the
-   6.07 GB); if they can be left resident, the swap moves ~2.79 GB rather than
-   the full set, and 113 ms should fall proportionally.
+3. **Whether both drafts can co-reside** with the shared KV cache at the
+   21,682-block floor (S3b). This competes with S1's layer union for the same
+   ~2.3% headroom, and the two together may not fit.
+4. **Whether refreshing a target-matching draft is free** (S3c). It aliases the
+   target's weights, so an updated policy may already be visible through the
+   alias, while a quantized draft needs re-quantizing or re-copying. If so, the
+   RL refresh cost depends on which variant is active — which couples the
+   selector's quant choice to the rollout cadence.
 5. **Window cap at boot.** Window is switchable only *below* the init cap, so
    the boot cap must be the largest window any regime may select.
