@@ -1,0 +1,77 @@
+{
+  "acceptance": {
+    "delta": -0.0078,
+    "piecewise": 3.9131,
+    "wholechain": 3.9052
+  },
+  "cells": {
+    "r0_piecewise": {
+      "accepted_per_armed_request": 3.9151,
+      "draft_chain_ms": {
+        "R1": 31.19,
+        "R6": 33.81,
+        "R8": 32.04
+      },
+      "measurement_gate": "clean",
+      "ran_piecewise": true,
+      "status": "ok",
+      "wholechain": false
+    },
+    "r0_wholechain": {
+      "accepted_per_armed_request": 3.9052,
+      "draft_chain_ms": {
+        "R1": 27.61,
+        "R6": 31.29,
+        "R8": 33.75
+      },
+      "measurement_gate": "clamped",
+      "ran_piecewise": false,
+      "status": "ok",
+      "wholechain": true
+    },
+    "r1_piecewise": {
+      "accepted_per_armed_request": 3.9111,
+      "draft_chain_ms": {
+        "R1": 31.3,
+        "R6": 33.98,
+        "R8": 32.18
+      },
+      "measurement_gate": "clean",
+      "ran_piecewise": true,
+      "status": "ok",
+      "wholechain": false
+    },
+    "r1_wholechain": {
+      "accepted_per_armed_request": 3.9052,
+      "draft_chain_ms": {
+        "R1": 27.55,
+        "R6": 31.24,
+        "R8": 33.73
+      },
+      "measurement_gate": "clamped",
+      "ran_piecewise": false,
+      "status": "ok",
+      "wholechain": true
+    }
+  },
+  "per_regime": {
+    "R1": {
+      "piecewise_ms": 31.25,
+      "saved_ms": 3.67,
+      "speedup": 1.133,
+      "wholechain_ms": 27.58
+    },
+    "R6": {
+      "piecewise_ms": 33.89,
+      "saved_ms": 2.63,
+      "speedup": 1.084,
+      "wholechain_ms": 31.27
+    },
+    "R8": {
+      "piecewise_ms": 32.11,
+      "saved_ms": -1.63,
+      "speedup": 0.952,
+      "wholechain_ms": 33.74
+    }
+  }
+}

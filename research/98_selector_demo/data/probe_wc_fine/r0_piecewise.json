@@ -1,0 +1,74 @@
+{
+  "acceptance": {
+    "A": 8598,
+    "D": 2282,
+    "per_armed_request": 3.7677475898334793
+  },
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": 256
+  },
+  "measurement_gate": null,
+  "observations": {
+    "R1": {
+      "armed_step_count": 133,
+      "batch": 1,
+      "draft_chain_s": 0.03494470023750246,
+      "mean_armed_step_s": 0.04479965941693382,
+      "regions_ms": {
+        "chain_setup": 0.182,
+        "cpu_bookkeep_loop": 0.013,
+        "cpu_exec_prepare_inputs": 0.758,
+        "cpu_next_input_build": 0.092,
+        "cpu_prepare_inputs_padded": 0.083,
+        "cpu_reject_parse": 0.08,
+        "cpu_rejection_sample": 0.331,
+        "draft_chain": 34.945,
+        "draft_forward": 6.658,
+        "draft_forward_first": 6.672,
+        "step0_build_attn_md": 0.541,
+        "step0_determine_batch": 0.123,
+        "step0_sample": 0.542,
+        "step0_set_inputs": 0.708,
+        "step_build_attn_md": 0.403,
+        "step_input_buffering": 0.118,
+        "step_pos_slot_update": 0.2,
+        "step_sample": 0.549,
+        "verify": 6.158
+      }
+    },
+    "R8": {
+      "armed_step_count": 142,
+      "batch": 16,
+      "draft_chain_s": 0.03589469791159064,
+      "mean_armed_step_s": 0.04716436598945121,
+      "regions_ms": {
+        "chain_setup": 0.196,
+        "cpu_bookkeep_loop": 0.039,
+        "cpu_exec_prepare_inputs": 0.797,
+        "cpu_next_input_build": 0.134,
+        "cpu_prepare_inputs_padded": 0.109,
+        "cpu_reject_parse": 0.09,
+        "cpu_rejection_sample": 0.334,
+        "draft_chain": 35.895,
+        "draft_forward": 6.847,
+        "draft_forward_first": 6.84,
+        "step0_build_attn_md": 0.553,
+        "step0_determine_batch": 0.122,
+        "step0_sample": 0.586,
+        "step0_set_inputs": 0.74,
+        "step_build_attn_md": 0.408,
+        "step_input_buffering": 0.119,
+        "step_pos_slot_update": 0.209,
+        "step_sample": 0.559,
+        "verify": 6.735
+      }
+    }
+  },
+  "ran_piecewise": true,
+  "record_type": "w98_wholechain_ab",
+  "schema_version": 1,
+  "wc_capture_seen": false,
+  "wholechain": false
+}

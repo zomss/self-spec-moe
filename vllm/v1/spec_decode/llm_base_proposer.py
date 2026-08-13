@@ -404,6 +404,8 @@ class SpecDecodeBaseProposer:
         # per-cycle scratchpad context (references the window buffers, updated in
         # place each step). Built lazily in the chain.
         self._sp_col_arange: torch.Tensor | None = None
+        # Max-allocated once; _sp_col_arange is a slice of it (Phase 98 S2b).
+        self._sp_col_arange_base: torch.Tensor | None = None
         self._sp_ctx = None
         self._sp_logged = False
         # W7 sampling-in-graph: FULL-wrapped forward+compute_logits+argmax
@@ -1541,7 +1543,22 @@ class SpecDecodeBaseProposer:
         _wc_ncols = common_attn_metadata.block_table_tensor.shape[1]
         # K is baked into the captured loop (dynamic-SD switches it per
         # propose) -- key graphs by (batch, table width, K).
-        _wc_key = (batch_size, _wc_ncols, self.num_speculative_tokens)
+        #
+        # Phase 98 S2: the key must cover EVERY lever the runtime can switch,
+        # or a switch silently replays a graph captured under a different
+        # configuration. `_wc_ncols` is the block-table width, which follows the
+        # CONTEXT, not the window: the window changes the scratchpad geometry
+        # (`_scratchpad_n_kept_blocks`) while leaving the table width alone, so
+        # keying on width would replay a graph built for a different kept-page
+        # count. The lever signature closes that, and carries the skip and
+        # quant identity too so that when those become switchable they are
+        # already covered rather than silently wrong.
+        _wc_key = (
+            batch_size,
+            _wc_ncols,
+            self.num_speculative_tokens,
+            self._lever_signature(),
+        )
         _wc = self._wc_graphs.get(_wc_key) if _wc_armed else None
         _wc_capture = _wc_armed and _wc is None
         _wc_stack = _contextlib.ExitStack()
@@ -2930,6 +2947,28 @@ class SpecDecodeBaseProposer:
         )
         return compact, bs, self.arange[:bs], appended_slots
 
+    def _lever_signature(self) -> tuple:
+        """Identity of every lever a captured chain graph depends on.
+
+        A whole-chain graph bakes in the scratchpad geometry, the layer set the
+        chain walks, and the weights it reads. Replaying one under a different
+        setting is silently wrong rather than an error, so the graph cache is
+        keyed by this.
+
+        `_kv_window` and `_kv_window_sinks` fix the kept-page count and hence
+        every gather shape in the scratchpad. `skip` and `quant` are boot-time
+        today and therefore constant within a process, but they are included so
+        that making them switchable cannot reintroduce the bug: adding a lever
+        to the registry without adding it here would reuse a stale graph.
+        """
+        return (
+            self._kv_window,
+            self._kv_window_sinks,
+            self._scratchpad_n_kept_blocks(),
+            envs.VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS,
+            envs.VLLM_SELF_SPEC_SHARE_WEIGHTS,
+        )
+
     def _scratchpad_n_kept_blocks(self) -> int:
         """Fixed number of kept (sink + trailing-window) pages per chain step.
 
@@ -2954,8 +2993,26 @@ class SpecDecodeBaseProposer:
 
         n_kept = self._scratchpad_n_kept_blocks()
         cap = n_kept * self.block_size
-        if self._sp_col_arange is None or self._sp_col_arange.shape[1] != cap:
-            self._sp_col_arange = torch.arange(cap, device=self.device).unsqueeze(0)
+        # Phase 98 S2b: max-allocate ONCE and slice, exactly as the persistent
+        # window buffers do above. `cap` is derived from `_kv_window`, so a
+        # runtime window switch changes it -- and reallocating here would move
+        # a tensor whose address captured graphs already hold, which is the
+        # IMA the Phase-93 fix exists to prevent. The slice shares the base
+        # storage, so its data pointer is stable across windows.
+        if self._sp_col_arange is None:
+            max_cap = -(-self.max_model_len // self.block_size) * self.block_size
+            self._sp_col_arange_base = torch.arange(
+                max_cap, device=self.device
+            ).unsqueeze(0)
+            self._sp_col_arange = self._sp_col_arange_base
+        if self._sp_col_arange.shape[1] != cap:
+            _require_cap = self._sp_col_arange_base.shape[1]
+            if cap > _require_cap:
+                raise ValueError(
+                    f"scratchpad cap {cap} exceeds the max-allocated "
+                    f"{_require_cap}; the window may not exceed max_model_len"
+                )
+            self._sp_col_arange = self._sp_col_arange_base[:, :cap]
         self._sp_ctx = DraftScratchpadCtx(
             block_table=self._win_block_table,
             seq_lens=self._win_seq_lens,

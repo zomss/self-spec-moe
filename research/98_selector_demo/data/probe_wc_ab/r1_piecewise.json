@@ -1,0 +1,48 @@
+{
+  "acceptance": {
+    "A": 24976,
+    "D": 6386,
+    "per_armed_request": 3.911055433761353
+  },
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": 256
+  },
+  "measurement_gate": {
+    "monotonic": true,
+    "reason": null,
+    "relative_spread": 0.0855902332737679,
+    "values_ms": [
+      31.29886383631904,
+      32.18307975999057,
+      33.977740893273484
+    ],
+    "verdict": "clean"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 133,
+      "batch": 1,
+      "draft_chain_s": 0.03129886383631904,
+      "mean_armed_step_s": 0.04122238479470624
+    },
+    "R6": {
+      "armed_step_count": 131,
+      "batch": 32,
+      "draft_chain_s": 0.03397774089327348,
+      "mean_armed_step_s": 0.0465041616645407
+    },
+    "R8": {
+      "armed_step_count": 140,
+      "batch": 16,
+      "draft_chain_s": 0.03218307975999057,
+      "mean_armed_step_s": 0.04351676573860459
+    }
+  },
+  "ran_piecewise": true,
+  "record_type": "w98_wholechain_ab",
+  "schema_version": 1,
+  "wc_capture_seen": false,
+  "wholechain": false
+}

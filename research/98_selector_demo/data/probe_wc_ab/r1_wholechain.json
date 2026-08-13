@@ -1,0 +1,48 @@
+{
+  "acceptance": {
+    "A": 24970,
+    "D": 6394,
+    "per_armed_request": 3.905223647169221
+  },
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": 256
+  },
+  "measurement_gate": {
+    "monotonic": false,
+    "reason": "cheap regimes are not increasing in batch (27.55, 33.73, 31.24 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+    "relative_spread": 0.22465894928747532,
+    "values_ms": [
+      27.546237453638593,
+      33.73474621679634,
+      31.241782077164057
+    ],
+    "verdict": "clamped"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 133,
+      "batch": 1,
+      "draft_chain_s": 0.027546237453638593,
+      "mean_armed_step_s": 0.037341020722117244
+    },
+    "R6": {
+      "armed_step_count": 131,
+      "batch": 32,
+      "draft_chain_s": 0.031241782077164056,
+      "mean_armed_step_s": 0.043640127973382195
+    },
+    "R8": {
+      "armed_step_count": 144,
+      "batch": 16,
+      "draft_chain_s": 0.03373474621679634,
+      "mean_armed_step_s": 0.044381878521461554
+    }
+  },
+  "ran_piecewise": false,
+  "record_type": "w98_wholechain_ab",
+  "schema_version": 1,
+  "wc_capture_seen": true,
+  "wholechain": true
+}
