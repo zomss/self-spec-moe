@@ -1,0 +1,39 @@
+{
+  "acceptance": {
+    "A_accepted": 8124,
+    "D_armed": 2748,
+    "E_committed": 10846,
+    "accepted_per_armed_step": 2.9563318777292578,
+    "armed_steps": 340,
+    "committed_per_armed_step": 3.9468704512372637
+  },
+  "arm": "baseline",
+  "ckpt_confirmed": true,
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 128
+  },
+  "draft_ckpt": "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+  "kernel_resolved": "MarlinLinearKernel",
+  "observations": {
+    "R1": {
+      "armed_step_count": 153,
+      "batch": 1,
+      "draft_chain_s": 0.01957031551430544,
+      "draft_chain_samples": 134,
+      "mean_armed_step_s": 0.029495400097373312,
+      "stdev_armed_step_s": 0.0008088474805761166
+    },
+    "R8": {
+      "armed_step_count": 187,
+      "batch": 16,
+      "draft_chain_s": 0.019737646523502746,
+      "draft_chain_samples": 168,
+      "mean_armed_step_s": 0.030852763268929773,
+      "stdev_armed_step_s": 0.0010645865533699622
+    }
+  },
+  "record_type": "w98_lmhead_quant",
+  "schema_version": 1
+}
