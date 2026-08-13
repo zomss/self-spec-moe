@@ -89,8 +89,8 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v3"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v3.json"
+PACKAGE_ID = "w98-g98c-round2-authorization-v4"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v4.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
@@ -432,7 +432,11 @@ def _run_stage_boots(
         if target.exists():
             continue
 
-        def boot(attempt: int, cfg=cfg, key=key, target=target) -> str:
+        telemetry: dict[int, Any] = {}
+
+        def boot(
+            attempt: int, cfg=cfg, key=key, target=target, telemetry=telemetry
+        ) -> str:
             trace = trace_root / f"{key}.attempt{attempt}.jsonl"
             log = stage_dir / f"{key}.attempt{attempt}.log"
             _require(
@@ -440,7 +444,17 @@ def _run_stage_boots(
                 f"trace {trace} already exists; a boot must write its own trace",
             )
             env = matrix._boot_child_environment(boot_environment(cfg, trace))
-            with log.open("w", encoding="utf-8") as handle:
+            # Telemetry is sampled in the PARENT, which is otherwise just
+            # blocked on the child. Keeping it out of the measuring process
+            # leaves the measurement path byte-identical to Round 1's, which
+            # the preregistration requires, while still capturing what the GPU
+            # was doing if this boot turns out to be clamped. The clamp has
+            # resisted four attempts to reproduce it on demand (X19-X21), so
+            # catching it in the act is the only route left to a cause.
+            with (
+                log.open("w", encoding="utf-8") as handle,
+                hostload.GpuTelemetry(lane["physical_gpu_index"]) as telem,
+            ):
                 completed = subprocess.run(
                     [
                         sys.executable,
@@ -462,6 +476,7 @@ def _run_stage_boots(
                     stderr=subprocess.STDOUT,
                     preexec_fn=lambda: os.sched_setaffinity(0, affinity),
                 )
+            telemetry[attempt] = telem.summary()
             _require(
                 completed.returncode == 0 and target.exists(),
                 f"boot {key} attempt {attempt} failed; output preserved at {log}",
@@ -503,6 +518,8 @@ def _run_stage_boots(
         record["host_load"] = signature.as_record()
         record["host_load_attempts"] = attempts
         record["measurement_gate"] = measurement.get("verdict")
+        record["gpu_telemetry"] = telemetry.get(len(attempts))
+        record["gpu_telemetry_all_attempts"] = telemetry
         record["cheap_regime_spread_s"] = _cheap_regime_spread(record["observations"])
         target.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 

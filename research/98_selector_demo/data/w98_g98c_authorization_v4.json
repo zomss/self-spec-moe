@@ -56,7 +56,7 @@
     ],
     "weight_column": "body bytes only"
   },
-  "package_id": "w98-g98c-round2-authorization-v3",
+  "package_id": "w98-g98c-round2-authorization-v4",
   "prerequisite": {
     "gate": "G98-B",
     "result": "research/98_selector_demo/data/g98_b_v6/round1_result.json",
@@ -90,7 +90,7 @@
     },
     "host_load_gate": {
       "path": "research/98_selector_demo/scripts/w98_host_load.py",
-      "sha256": "83053aba131dc25e683a9eed4bd515eeee6a8baad11843ac32be535094477832"
+      "sha256": "7025501f0f394b95591aec6454069cec2a033bb6e9365317b636a483668f94b5"
     },
     "koff_runtime": {
       "path": "vllm/v1/spec_decode/koff_runtime.py",
@@ -126,7 +126,7 @@
     },
     "round2_runner": {
       "path": "research/98_selector_demo/scripts/run_w98_g98c_round2.py",
-      "sha256": "e82e6efe1d90bd8f4b42f76903b8832040429e1d21eaf8c55d3f6fc5021a42ab"
+      "sha256": "878d3612cb6f92f5558c4f0fb01d088dd14c1abf2ee16d14ad5aeb692c335a82"
     }
   },
   "stages": [

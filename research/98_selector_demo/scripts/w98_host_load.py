@@ -58,8 +58,10 @@ and closed; the gate applies to Round 2 onward.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import subprocess
+import threading
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -81,6 +83,9 @@ CHEAP_REGIMES_BY_BATCH = ("R1", "R8", "R6")
 # Below this, the cheap regimes have collapsed toward a common floor. Clean
 # boots span 0.046-0.176; the known clamped boots sit at 0.005, 0.012, 0.022.
 MIN_RELATIVE_SPREAD = 0.03
+# GPU telemetry: sampled in the parent, pinned clear of lane-a's CPUs 0-15.
+TELEMETRY_HZ = 4.0
+TELEMETRY_CPUS = frozenset(range(64, 96))
 
 _COMPILE_RE = re.compile(
     r"Compiling a graph for compile range \([^)]*\) takes ([\d.]+) s"
@@ -389,6 +394,109 @@ class MeasurementVerdict:
             "relative_spread": self.relative_spread,
             "verdict": self.verdict,
             "reason": self.reason,
+        }
+
+
+class GpuTelemetry:
+    """Sample GPU clocks, power and throttle reasons while a boot runs.
+
+    Recorded, never gated. Its purpose is forensic: the clamp has resisted four
+    targeted attempts to reproduce it on demand (X19 starvation, X20 pinning,
+    X21 clocks), so the only remaining route to a cause is to have the
+    telemetry already running when one occurs.
+
+    Sampling spawns `nvidia-smi`, which costs real CPU, so this runs in the
+    parent process -- which is otherwise just blocked waiting on the child --
+    and its thread is pinned well clear of the measurement lane. Nothing here
+    touches the measured process.
+    """
+
+    FIELDS = (
+        "clocks.sm,power.draw,temperature.gpu,utilization.gpu,"
+        "clocks_throttle_reasons.active"
+    )
+    # Throttle bits worth naming in a report. GpuIdle (0x1) is not one.
+    INTERESTING_BITS = {
+        0x4: "SW_POWER_CAP",
+        0x8: "HW_SLOWDOWN",
+        0x20: "SW_THERMAL",
+        0x40: "HW_THERMAL",
+        0x80: "HW_POWER_BRAKE",
+    }
+
+    def __init__(self, device: int, hz: float = TELEMETRY_HZ) -> None:
+        self.device = device
+        self.interval = 1.0 / hz
+        self.samples: list[dict[str, Any]] = []
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+
+    def _read(self) -> dict[str, Any] | None:
+        try:
+            out = subprocess.run(
+                [
+                    "nvidia-smi",
+                    f"--id={self.device}",
+                    f"--query-gpu={self.FIELDS}",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            ).stdout.strip()
+            sm, power, temp, util, throttle = (v.strip() for v in out.split(","))
+            return {
+                "sm_mhz": float(sm),
+                "power_w": float(power),
+                "temp_c": float(temp),
+                "util_pct": float(util),
+                "throttle": int(throttle, 16) if throttle.startswith("0x") else 0,
+            }
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return None
+
+    def _loop(self) -> None:
+        with contextlib.suppress(OSError, AttributeError):
+            os.sched_setaffinity(threading.get_native_id(), TELEMETRY_CPUS)
+        while not self._stop.is_set():
+            sample = self._read()
+            if sample is not None:
+                self.samples.append(sample)
+            self._stop.wait(self.interval)
+
+    def __enter__(self) -> GpuTelemetry:
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self._stop.set()
+        self._thread.join(timeout=5)
+
+    def summary(self) -> dict[str, Any]:
+        """Distribution over the boot, plus any throttle reasons observed."""
+        if not self.samples:
+            return {}
+        sm = sorted(s["sm_mhz"] for s in self.samples)
+        reasons = sorted(
+            {
+                name
+                for s in self.samples
+                for bit, name in self.INTERESTING_BITS.items()
+                if s["throttle"] & bit
+            }
+        )
+        return {
+            "n": len(sm),
+            "sm_mhz_median": sm[len(sm) // 2],
+            "sm_mhz_min": sm[0],
+            "sm_mhz_p10": sm[max(0, len(sm) // 10 - 1)],
+            "power_w_max": max(s["power_w"] for s in self.samples),
+            "temp_c_max": max(s["temp_c"] for s in self.samples),
+            "util_pct_median": sorted(s["util_pct"] for s in self.samples)[
+                len(sm) // 2
+            ],
+            "throttle_reasons": reasons,
         }
 
 

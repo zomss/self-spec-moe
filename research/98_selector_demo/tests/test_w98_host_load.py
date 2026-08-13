@@ -18,6 +18,7 @@ from w98_host_load import (
     QUIET_MAX_CAPTURE_S,
     QUIET_MAX_COMPILE_S,
     BootLoadSignature,
+    GpuTelemetry,
     HostLoadError,
     _lane_cpu_ids,
     guarded_boot,
@@ -335,6 +336,56 @@ def test_guarded_boot_does_not_inspect_a_loud_boot():
             inspect=lambda attempt: calls.append(attempt) or None,
         )
     assert calls == []
+
+
+# --- GPU telemetry: forensic, never gating ---
+
+
+def make_telemetry(samples):
+    telem = GpuTelemetry.__new__(GpuTelemetry)
+    telem.samples = samples
+    return telem
+
+
+def sample(sm=1980.0, power=400.0, temp=40.0, util=100.0, throttle=0):
+    return {
+        "sm_mhz": sm,
+        "power_w": power,
+        "temp_c": temp,
+        "util_pct": util,
+        "throttle": throttle,
+    }
+
+
+def test_telemetry_names_only_interesting_throttle_bits():
+    """GpuIdle fires constantly and means nothing here; power caps do."""
+    telem = make_telemetry(
+        [sample(throttle=0x1), sample(throttle=0x4), sample(throttle=0x81)]
+    )
+    reasons = telem.summary()["throttle_reasons"]
+    assert "SW_POWER_CAP" in reasons
+    assert "HW_POWER_BRAKE" in reasons
+    assert not any("IDLE" in r.upper() for r in reasons)
+
+
+def test_telemetry_reports_the_clock_floor():
+    """A cap shows up as a depressed minimum, not a depressed median."""
+    telem = make_telemetry([sample(sm=1980.0)] * 9 + [sample(sm=1200.0)])
+    summary = telem.summary()
+    assert summary["sm_mhz_median"] == 1980.0
+    assert summary["sm_mhz_min"] == 1200.0
+    assert summary["n"] == 10
+
+
+def test_telemetry_is_empty_when_nothing_sampled():
+    assert make_telemetry([]).summary() == {}
+
+
+def test_telemetry_stays_off_the_measurement_lane():
+    """It spawns nvidia-smi, so it must never share the lane's CPUs."""
+    from w98_host_load import TELEMETRY_CPUS, _lane_cpu_ids
+
+    assert not (TELEMETRY_CPUS & _lane_cpu_ids("0-15"))
 
 
 # --- regressions against the recorded boots the thresholds came from ---
