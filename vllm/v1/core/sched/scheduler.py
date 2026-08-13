@@ -412,6 +412,7 @@ class Scheduler(SchedulerInterface):
                 boot_action_id=self._koff_options.p4_boot_action_id,
                 logical_weight_version=(self._koff_options.p4_logical_weight_version),
                 minimum_shared_kv_blocks=self._koff_options.p4_min_kv_blocks,
+                boot_scope=self._koff_options.boot_scope,
             )
         # Bind GPU block pool to the KV connector. This must happen after
         # kv_cache_manager is constructed so block_pool is available.
@@ -2736,6 +2737,7 @@ class Scheduler(SchedulerInterface):
                     draft_armed=koff_draft_armed,
                     invalid_spec_tokens=koff_invalid_spec_tokens,
                     elapsed_s=elapsed_s,
+                    boot_scope=self._koff_options.boot_scope,
                 )
                 self._p4_capture_recorder.record(event, koff_evidence)
 

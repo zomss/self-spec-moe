@@ -1921,8 +1921,17 @@ def build_same_event_record(
     draft_armed: Mapping[str, bool],
     invalid_spec_tokens: Mapping[str, int],
     elapsed_s: float,
+    boot_scope: str = BOOT_SCOPE_MINIMAL_B0,
 ) -> dict[str, Any]:
-    """Build one explicit P4 record from a single synchronous engine event."""
+    """Build one explicit P4 record from a single synchronous engine event.
+
+    Args:
+        boot_scope: The registered scope. Under ``w98-lattice`` the draft is a
+            distinct realization by design -- quantized, or with layers replaced
+            by passthroughs -- so it legitimately carries its own weight
+            version. The record states both versions instead of asserting they
+            are equal, exactly as the passive step record does.
+    """
     if not capture_id:
         raise KOffRuntimeError("P4 capture id is empty")
     if metadata.verified_action_id is None or not metadata.decode_req_ids:
@@ -1931,7 +1940,15 @@ def build_same_event_record(
         raise KOffRuntimeError("scheduler/runner verified-action mismatch")
     if evidence.next_action_id != metadata.next_action_id:
         raise KOffRuntimeError("scheduler/runner next-action mismatch")
-    if evidence.target_weight_version_id != evidence.draft_weight_version_id:
+    # Gate only. The B0 capture schema is frozen with additionalProperties:
+    # false, so the observation is NOT written into the record here -- the
+    # passive step record already carries target_matching_weights and both
+    # version ids. Extending the capture schema is a separate, deliberate
+    # phase-97 decision, not a side effect of admitting a new scope.
+    if (
+        evidence.target_weight_version_id != evidence.draft_weight_version_id
+        and boot_scope != BOOT_SCOPE_W98_LATTICE
+    ):
         raise KOffRuntimeError("target-matching draft weight version diverged")
     if not math.isfinite(elapsed_s) or elapsed_s <= 0:
         raise KOffRuntimeError(f"non-positive P4 engine-event time {elapsed_s}")
@@ -2142,7 +2159,9 @@ class P4SameEventRecorder:
         boot_action_id: str = "",
         logical_weight_version: str = "",
         minimum_shared_kv_blocks: int = 0,
+        boot_scope: str = BOOT_SCOPE_MINIMAL_B0,
     ) -> None:
+        self._boot_scope = boot_scope
         self.config_path = Path(config_path)
         self.output_path = Path(output_path)
         if self.config_path.resolve() == self.output_path.resolve():
@@ -2507,7 +2526,10 @@ class P4SameEventRecorder:
             evidence.shared_weight_binding_id,
             evidence.draft_weight_version_id,
         )
-        if evidence.target_weight_version_id != evidence.draft_weight_version_id:
+        if (
+            evidence.target_weight_version_id != evidence.draft_weight_version_id
+            and self._boot_scope != BOOT_SCOPE_W98_LATTICE
+        ):
             raise KOffRuntimeError("P4 capture observed divergent target/draft weights")
         if (
             self._logical_weight_version
