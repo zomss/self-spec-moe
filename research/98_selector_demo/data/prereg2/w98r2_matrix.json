@@ -1,0 +1,24 @@
+{
+  "layers": 36,
+  "model": "Qwen3-8B",
+  "note": "skip16 extends W98_SKIP_COUNTS from {0,4,8}; required to identify F",
+  "quant": [
+    "target-matching",
+    "w4a16-quantized"
+  ],
+  "record_type": "w98r2_matrix",
+  "schema_version": 1,
+  "skip_counts": [
+    0,
+    4,
+    8,
+    16
+  ],
+  "window": [
+    128,
+    256,
+    512,
+    1024,
+    "off"
+  ]
+}

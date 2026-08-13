@@ -1,0 +1,47 @@
+{
+  "count": 8,
+  "heldout": [
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 8,
+      "window": 128
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 4,
+      "window": 1024
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 16,
+      "window": 512
+    },
+    {
+      "quant": "w4a16-quantized",
+      "skip_count": 4,
+      "window": "off"
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 4,
+      "window": 128
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 8,
+      "window": 1024
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 16,
+      "window": 512
+    },
+    {
+      "quant": "target-matching",
+      "skip_count": 16,
+      "window": 1024
+    }
+  ],
+  "record_type": "w98r2_heldout",
+  "schema_version": 1
+}
