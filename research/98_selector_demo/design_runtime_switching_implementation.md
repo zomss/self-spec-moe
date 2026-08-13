@@ -51,29 +51,93 @@ target_graph_id, target_query_width, draft_graph_id, draft_query_width`, and
 the mutation primitive exists and is measured, **the selector has no way to name
 the setting it wants**. Wiring them is the same edit as for skip.
 
-## 2. Legality and economics are separate questions
+## 2. Every lever can be free at switch time
 
-An earlier draft of this document conflated them and invented an undefined term
-("per segment"). Correcting that, because it changes what has to be built.
+Two earlier drafts of this section were wrong, and the correction shrinks the
+work rather than growing it.
 
-**Legality — identical for every lever.** A switch may take effect **only at a
-target step boundary**, never mid-chain. This is P5's registered correctness
-requirement and it does not vary by lever. There is no lever that may switch
-more freely than another.
+### Legality is uniform
 
-**Economics — differs per lever.** What varies is the cost paid when a switch
-does happen, and therefore how often it is worth doing against a ~25 ms step:
+A switch may take effect **only at a target step boundary**, never mid-chain.
+P5's registered requirement, identical for every lever. No lever switches more
+freely than another, and the first draft's invented "per segment" granularity
+does not exist.
 
-| lever | cost per switch | 1 switch every step | 1 switch every 100 steps |
-| --- | --- | --- | --- |
-| K / OFF | free | free | free |
-| skip (after this work) | dispatch-key change | ~free | ~free |
-| window | ~2 ms | ~8% overhead | ~0.08% |
-| quant (both resident) | re-bind, §2a | ~free | ~free |
+### The 2 ms window cost is wiring, not physics
 
-So the policy needs a switch-frequency term, not a per-lever legality rule. Only
-window carries a cost that a per-step policy would notice, and even that is a
-frequency question rather than a prohibition.
+Phase 82 E0 measured, and the mechanism explains the difference:
+
+| lever | mechanism | cost |
+| --- | --- | --- |
+| OFF ↔ on | scheduler per-step primitive (`disable_by_batch_size`) | **0** |
+| K | scheduler per-step `dynamic_sd_lookup[batch]` | **0** — "CG widths for the K set captured at init" |
+| window | `drafter._kv_window` mutation | **~2 ms RPC** |
+
+`self._kv_window` is an int on the **worker-side** proposer, initialised from an
+env var, so changing it needs an out-of-band control-plane message. The mutation
+itself is an attribute assignment; the forward path just reads the int.
+
+K and OFF are free because the **scheduler** owns the decision and it rides the
+per-step scheduler output that already flows to the worker. The difference is
+which plane carries the decision, not the nature of the value.
+
+**So the fix is S3 itself**: put `draft_kv_window` in `KOffAction` and let the
+action ride the existing per-step path. The RPC disappears and window costs what
+K costs — zero. The K row even states the pattern: prepare every pool member at
+init, select per-step by key.
+
+### The one real cap, and where it lives
+
+The window's persistent buffers (`_win_block_table`, `_win_seq_lens`,
+`_win_col_arange`) are allocated **once at `max_model_len`** and used as
+left-slices. That is a deliberate Phase-93 IMA fix: *"the buffers are read by
+CAPTURED graphs through capture-time pointers, so they must NEVER be
+reallocated after the first capture (data change, not shape change)."* They
+impose **no cap**.
+
+The cap comes from the FULLCG scratchpad:
+
+```python
+n_kept = self._scratchpad_n_kept_blocks()   # n_sink + n_last, derived from _kv_window
+cap    = n_kept * self.block_size
+if self._sp_col_arange is None or self._sp_col_arange.shape[1] != cap:
+    self._sp_col_arange = torch.arange(cap, ...)   # REALLOCATES
+```
+
+`_sp_col_arange` is sized from the window and **reallocates when the window
+grows** — precisely what the Phase-93 fix forbids for a buffer a captured graph
+points at. So:
+
+* **under piecewise** (the W98-R2 runtime) there is no cap at all;
+* **under whole-chain** the cap is this one index vector, and the fix is to
+  allocate it at the same max as the buffers it indexes.
+
+An earlier draft claimed whole-chain needs a captured graph per window because
+"the scratchpad is sized by the window". That is wrong: X13 measured the
+scratchpad copy **flat** across windows 128→1024 (0.526–0.528 ms at batch 1),
+because `_sp_col_arange` is only an index vector over max-sized data buffers.
+Max-allocating it removes the cap without a graph per window.
+
+### Consequence
+
+With S3 wiring window into the per-step action and `_sp_col_arange`
+max-allocated, **all four levers are free at switch time**:
+
+| lever | switch cost | paid instead at |
+| --- | --- | --- |
+| K / OFF | 0 | init (CG widths captured) |
+| window | 0 | init (max-sized buffers) |
+| skip | 0 (dispatch key) | init (one graph per cut point, S2) |
+| quant | 0 (re-bind) | init (dual residency, S3b) |
+
+The costs move to **initialisation memory**, which is one budget against one
+ceiling — the 21,682-block shared-KV floor — rather than four different runtime
+penalties. That is a much simpler design problem, and it is why §6's RS-1 and
+RS-5 are the gates that matter.
+
+A switch-frequency term in the policy is therefore **not required** for the
+levers themselves. It is still required for the RL weight refresh (§2a b),
+which is the only operation left with a real per-event cost.
 
 ### 2a. Quant as a lever is NOT the RL weight refresh
 
@@ -151,6 +215,14 @@ dispatch-key change with no recapture. Graph HBM per set is a **deliverable, not
 an estimate** — the one available data point is 0.55 GiB for the full
 target+draft pool at boot, and a skip set changes only the draft.
 
+### S2b — max-allocate the scratchpad index vector
+
+`_sp_col_arange` is sized from `_kv_window` and reallocates when the window
+grows, which is the FULLCG init cap (§2). Allocate it at the same maximum as the
+window buffers it indexes, so the cap disappears and a captured graph never sees
+a moved pointer. Small change; it is what makes window free under whole-chain
+rather than only under piecewise.
+
 ### S3 — extend the action registry for all three levers (P5 D4, widened)
 
 `KOffAction` gains:
@@ -224,13 +296,17 @@ A tension surfaced by X6–X14 that belongs in this plan:
   so changing window changes captured shapes and would require a graph per
   window, multiplying the S2 budget.
 
-So whole-chain buys steady-state speed (1.21x at batch 1, ~1% at batch ≥ 32)
-and pays for it in **graph budget**, not in legality: every (cut point, window)
-pair the selector may choose needs its own captured graph, on top of the
-(batch, K) keys already captured. Combined with S1's layer union and S3b's dual
-residency, all three compete for the same headroom above the 21,682-block floor.
+Corrected in §2: whole-chain does **not** need a captured graph per window.
+The scratchpad's only window-sized object is the `_sp_col_arange` index vector,
+and max-allocating it (S2b) removes the cap, exactly as the Phase-93 fix already
+did for the data buffers it indexes.
 
-Which side wins depends on how many distinct settings the selector actually
+What remains true is that whole-chain multiplies the **cut-point** graph budget,
+since a captured chain is per (batch, K, cut point). That competes with S1's
+layer union and S3b's dual residency for the same headroom above the
+21,682-block floor.
+
+Which side wins depends on how many distinct cut points the selector actually
 uses, which D2 determines and D3 prices. **Do not fix the runtime for the
 switching system until D2 reports how many settings survive.**
 
