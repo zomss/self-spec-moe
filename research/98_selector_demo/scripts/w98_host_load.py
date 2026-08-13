@@ -86,6 +86,11 @@ _COMPILE_RE = re.compile(
     r"Compiling a graph for compile range \([^)]*\) takes ([\d.]+) s"
 )
 _CAPTURE_SECS_RE = re.compile(r"Graph capturing finished in (\d+) secs")
+# Emitted instead of the compile line when the torch.compile cache is warm.
+_CACHE_LOAD_RE = re.compile(
+    r"Directly load the compiled graph\(s\) for compile range \([^)]*\) "
+    r"from the cache, took ([\d.]+) s"
+)
 _PIECEWISE_RE = re.compile(
     r"PIECEWISE\): 100%\|[^|]*\| (\d+)/\1 \[[^\]]*?([\d.]+)it/s\]"
 )
@@ -117,6 +122,8 @@ class BootLoadSignature:
     piecewise_it_s: float | None
     full_it_s: float | None
     runtime: str = "unknown"
+    compile_cached: bool = False
+    cache_load_s: float | None = None
 
     @property
     def verdict(self) -> str:
@@ -128,17 +135,29 @@ class BootLoadSignature:
         contention -- a legitimate whole-chain boot in this phase took 86 s to
         capture against a perfectly normal 10.35 s compile. Judging it by the
         piecewise band would call correct work contaminated.
+
+        A WARM COMPILE CACHE has no compile time to measure. The boot logs
+        "Directly load the compiled graph(s) ... from the cache" instead, and
+        that is the normal state for any repeated configuration -- the campaign
+        boots each anchor three times per stage, so all but the first are warm
+        by construction. Treating the absent compile time as ``unknown`` made
+        the gate fail closed and reject those boots, which would have aborted
+        the campaign at its anchors on a perfectly quiet box. Such boots are
+        judged on capture time alone.
         """
-        if self.compile_s is None or self.capture_s is None:
+        if self.capture_s is None:
+            return "unknown"
+        if self.compile_s is None and not self.compile_cached:
+            # No compile time AND no evidence of a cache hit: the log is not
+            # one this gate understands, so it does not get a pass.
             return "unknown"
         if self.runtime != "piecewise":
             return "not_applicable"
-        if (
-            self.compile_s <= QUIET_MAX_COMPILE_S
-            and self.capture_s <= QUIET_MAX_CAPTURE_S
-        ):
-            return "quiet"
-        return "loud"
+        if self.compile_s is not None and self.compile_s > QUIET_MAX_COMPILE_S:
+            return "loud"
+        if self.capture_s > QUIET_MAX_CAPTURE_S:
+            return "loud"
+        return "quiet"
 
     @property
     def reason(self) -> str | None:
@@ -199,6 +218,7 @@ def signature_from_log(text: str) -> BootLoadSignature:
     capture = _CAPTURE_SECS_RE.search(text)
     piecewise = _PIECEWISE_RE.findall(text)
     full = _FULL_RE.findall(text)
+    cache_loads = [float(v) for v in _CACHE_LOAD_RE.findall(text)]
     return BootLoadSignature(
         compile_s=sum(compiles) if compiles else None,
         capture_s=float(capture.group(1)) if capture else None,
@@ -206,6 +226,10 @@ def signature_from_log(text: str) -> BootLoadSignature:
         piecewise_it_s=float(piecewise[-1][1]) if piecewise else None,
         full_it_s=float(full[-1][1]) if full else None,
         runtime=runtime_from_log(text),
+        compile_cached=bool(cache_loads) and not compiles,
+        # Recorded, not gated: there is no calibration for how long a warm
+        # cache load should take on a quiet box.
+        cache_load_s=sum(cache_loads) if cache_loads else None,
     )
 
 

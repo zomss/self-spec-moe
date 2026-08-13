@@ -153,6 +153,71 @@ def test_record_round_trips_verdict():
     assert record["compile_s"] == pytest.approx(15.63)
 
 
+# --- a warm compile cache is normal, not suspicious ---
+
+# Assembled rather than written literally: the marker must sit on ONE log line
+# for the parser to see it, and that line is longer than the source limit.
+_CACHE_LINE = (
+    "INFO backends.py:292] Directly load the compiled graph(s) for "
+    "compile range (1, 8192) from the cache, took {} s\n"
+)
+CACHED_LOG = (
+    _CACHE_LINE.format("1.254")
+    + _CACHE_LINE.format("1.178")
+    + "Capturing (PIECEWISE): 100%|##| 37/37 [00:04<00:00,  7.56it/s]\n"
+    + "INFO llm_base_proposer.py:1451] Draft chain PIECEWISE: runtime_mode=PIECEWISE\n"
+    + "INFO gpu_model_runner.py:7122] Graph capturing finished in 9 secs\n"
+)
+
+
+def test_warm_cache_is_quiet_not_unknown():
+    """The bug that would have aborted the campaign at its own anchors.
+
+    ANCHOR_REPEATS boots each anchor three times per stage, so all but the
+    first hit a warm cache by construction. Failing closed on the absent
+    compile time rejected them on a perfectly quiet box.
+    """
+    sig = signature_from_log(CACHED_LOG)
+    assert sig.compile_s is None
+    assert sig.compile_cached is True
+    assert sig.cache_load_s == pytest.approx(2.432)
+    assert sig.verdict == "quiet"
+    require_quiet(sig, "cell")
+
+
+def test_warm_cache_still_judged_on_capture():
+    """Losing the compile limb must not lose the gate entirely."""
+    slow = CACHED_LOG.replace("finished in 9 secs", "finished in 14 secs")
+    sig = signature_from_log(slow)
+    assert sig.compile_cached is True
+    assert sig.verdict == "loud"
+    assert "capture" in sig.reason
+
+
+def test_no_compile_and_no_cache_evidence_stays_unknown():
+    """A log this gate does not understand still does not get a pass."""
+    mystery = CACHED_LOG.replace("Directly load the compiled", "Something else")
+    sig = signature_from_log(mystery)
+    assert sig.compile_cached is False
+    assert sig.verdict == "unknown"
+
+
+def test_a_cold_compile_is_not_marked_cached():
+    sig = signature_from_log(QUIET_LOG)
+    assert sig.compile_cached is False
+    assert sig.cache_load_s is None
+
+
+def test_missing_capture_is_unknown_even_with_compile():
+    """A boot killed before capture cannot be judged."""
+    truncated = QUIET_LOG.replace(
+        "INFO gpu_model_runner.py:7122] Graph capturing finished in 8 secs, "
+        "took 0.51 GiB",
+        "",
+    )
+    assert signature_from_log(truncated).verdict == "unknown"
+
+
 # --- guarded_boot: the campaign runner's whole integration surface ---
 
 
@@ -381,13 +446,20 @@ def test_signature_keys_are_unique_paths():
 
 
 def test_live_logs_still_parse_to_the_recorded_verdict():
-    """Guard the parser against drift where the logs are still present."""
+    """Guard the parser against drift where the logs are still present.
+
+    Only logs older than the snapshot are compared. A probe running while the
+    tests run keeps appending to its log, so a newer log legitimately parses to
+    a different verdict than the snapshot recorded mid-write -- that is the
+    artifact being stale, not the parser drifting.
+    """
     if not SIGNATURES.is_file():
         pytest.skip("signature artifact absent")
+    snapshot_mtime = SIGNATURES.stat().st_mtime
     checked = 0
     for key, recorded in _recorded().items():
         log = DATA / f"{key}.log"
-        if not log.is_file():
+        if not log.is_file() or log.stat().st_mtime > snapshot_mtime:
             continue
         assert signature_from_log_path(log).verdict == recorded["verdict"], key
         checked += 1

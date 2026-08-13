@@ -89,8 +89,8 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v2"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v2.json"
+PACKAGE_ID = "w98-g98c-round2-authorization-v3"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v3.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
