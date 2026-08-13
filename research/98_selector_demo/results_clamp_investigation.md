@@ -139,7 +139,53 @@ core the process's threads occupy, a cost paid by other threads and invisible in
 the syscall's own duration. Worth fixing on its own merits; whether it varies
 between clean and clamped boots is UNKNOWN, because no clean trace exists.
 
-## 7. Open items
+## 7. The profiler's own syncs cost 2.4 ms/step (X25)
+
+X24 found 12 `cudaDeviceSynchronize` per engine step, all from
+`SelfSpecProfiler.region`, which syncs at both ends of every timed region:
+`draft_chain` (2), `draft_forward_first` (2), `draft_forward` x3 (6),
+`verify` (2). `_fine_only()` gates per-step sub-timers behind
+VLLM_SELF_SPEC_PROFILE_FINE but matches only `step_`, `step0_` and
+`chain_setup`, so `draft_forward` -- which fires once per CHAIN STEP -- syncs by
+default, putting 8 of the 12 syncs INSIDE the `draft_chain` region being
+measured.
+
+Interleaved A/B, four boots, all gating clean, with `_fine_only` monkeypatched
+in the child to also match `draft_forward` (12 syncs -> 4):
+
+| regime | chain ON | chain OFF | delta | step ON | step OFF | delta |
+| --- | --- | --- | --- | --- | --- | --- |
+| R1 (b1) | 30.21 | 27.80 | +2.41 | 40.13 | 37.66 | **+2.47** |
+| R8 (b16) | 31.59 | 29.20 | +2.38 | 42.70 | 40.23 | **+2.46** |
+| R6 (b32) | 33.86 | 31.48 | +2.38 | 46.23 | 43.77 | **+2.47** |
+
+The decisive column is `mean_armed_step`, taken from the koff trace and measured
+identically in both arms, independent of the profiler. Its delta matches the
+`draft_chain` delta (2.47 against 2.40), so this is **not misattribution but
+real time destroyed**: the inner syncs serialise host against device, costing
+~0.3 ms of lost overlap each. The cost is constant across batch, as an
+overlap loss should be.
+
+**Consequence for `F`.** A constant per-step cost is absorbed by whatever
+constant term a model carries, and in the Round-2 model that term is `F`,
+registered as an irreducible floor at 3.66 ms at R1. Up to ~2.4 ms of it may be
+the instrument rather than lm_head and embeddings. This is a hypothesis about
+what the FITTED `F` will absorb -- `F` was originally derived from checkpoint
+bytes, not from the fit -- and it is directly checkable once Round 2 fits `F`
+from data. It should be checked, not assumed.
+
+**Removing the syncs is safe for CUDA graphs** and was demonstrated: all four
+`syncs_off` boots ran the identical piecewise graphs. The syncs never occur
+inside capture -- the whole-chain path already disables the profiler while
+capturing, since a sync is illegal there.
+
+**Not changed for the campaign.** Round 1's v6 numbers carry the same +2.4 ms,
+and the preregistration requires Round-2 cost to be comparable to Round 1.
+Removing it mid-campaign would break that comparison AND silently shift `F`.
+Round 2 runs as registered; the correction is a preregistration decision to be
+taken with both measurements in hand.
+
+## 8. Open items
 
 1. **Resume is broken by a guard of its own.** `_require(not trace.exists())`
    correctly stops a boot reading another boot's steps, but also rejects

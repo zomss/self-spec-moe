@@ -1,0 +1,44 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "measurement_gate": {
+    "monotonic": true,
+    "reason": null,
+    "relative_spread": 0.12143484083257805,
+    "values_ms": [
+      30.180927707788047,
+      31.5843493583689,
+      33.84594386016283
+    ],
+    "verdict": "clean"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "draft_chain_s": 0.030180927707788047,
+      "draft_forward_timed": true,
+      "mean_armed_step_s": 0.04008518858154275
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "draft_chain_s": 0.03384594386016283,
+      "draft_forward_timed": true,
+      "mean_armed_step_s": 0.0461832256978596
+    },
+    "R8": {
+      "armed_step_count": 128,
+      "batch": 16,
+      "draft_chain_s": 0.0315843493583689,
+      "draft_forward_timed": true,
+      "mean_armed_step_s": 0.04267968478688999
+    }
+  },
+  "record_type": "w98_sync_ab",
+  "schema_version": 1,
+  "syncs_on": true
+}
