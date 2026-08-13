@@ -141,7 +141,7 @@ Signatures are distilled to `data/host_load_signatures.json` and regression-
 tested from there, because `*.log` and `research/**/traces/` are both gitignored
 — a test globbing the logs would pass here and fail on a fresh checkout.
 
-## 7. Control: reproducible when quiet, with one exception
+## 7. Control: reproducible, with one unexplained transient
 
 Re-measuring the two v6 reference points tonight, interleaved with a skip16
 repeat, all three passing the gate:
@@ -154,37 +154,78 @@ repeat, all three passing the gate:
 skip8 reproduces v6 to **under 1% on every regime, across sessions**. That
 validates both the box and σ_repro's tightness.
 
-skip0 does not, and this is an **open item**. Its R1 CV is 0.43% (v6: 0.23%), so
-+10.15% is a *stable offset, not jitter* — dispersion does not flag it, and
-neither does the gate. Both boots read quiet; skip8 reproduced perfectly the
-same night. I have no mechanism for it and am not going to invent one. What can
-be said:
+skip0 did not, and X19 chased it.
 
-* It is lever-dependent (skip0 yes, skip8 no) and regime-dependent (R1 and R8
-  only, batch 1 and batch 16).
-* σ_repro was measured **within** a session (CV 0.03–0.26%). If a cell can shift
-  10% **between** sessions at R1, σ_repro understates cross-session
-  reproducibility and any envelope built on it is too narrow for cross-session
-  comparison.
-* Round 2 runs as a single ~3 h session with bracketing anchors, so its internal
-  comparisons are unaffected. What is **not** safe is comparing R2 numbers to v6
-  numbers — including, strictly, §3's ladder above, whose `woff` reference
-  points come from v6.
+### The shape of the anomaly
 
-Cheapest next test: record SM clocks and power during measurement. Four
-neighbours at ~70% util share a chassis thermal and power envelope, and skip0 is
-the heaviest per-step draft cell at R1, so clock capping under a hot chassis is
-the first hypothesis worth eliminating — but it is only a hypothesis, and skip8
-showing no effect argues against it.
+Sorting skip0's regimes by their v6 cost shows the delta shrinking monotonically
+to zero as the baseline grows: R1 +3.08 ms, R8 +1.77, R6 +0.25, R4 +0.14,
+R5cot +0.10, R5 −0.07. That is not an offset, it is a **floor at ~33.5 ms** —
+every regime cheaper than the floor lifted to it, every regime above untouched.
+The same clamp that made the contaminated skip16 boot read flat across a 33×
+context range, only milder. Its within-boot signature agrees: on a quiet box the
+cheap regimes separate by batch (v6 skip0: 30.36 / 31.75 / 33.92, spread
+3.56 ms), and the anomalous boot compressed to **0.73 ms**.
+
+Across all 15 v6 boots that spread ranges 1.31–3.72 ms and tracks the window
+sensibly. **No v6 boot shows the compressed signature** — a second, independent
+confirmation that the Round-1 residual is not a load artifact.
+
+### X19: the clamp hypothesis does not reproduce
+
+I predicted this was mid-measurement host starvation, invisible to a gate that
+samples compile and capture at startup, and that skip0 and skip8 would therefore
+both clamp to a common floor under load. Four boots, interleaved
+(skip8, skip0, skip8, skip0), on a **busier** box than X18 ran on:
+
+| boot | R1 | R8 | R6 | spread | Δ R1 vs v6 | runqueue wait | SM clock |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| r0_skip0 | 30.15 | 31.56 | 33.80 | 3.65 | −0.69% | 0.01% | 1980 MHz |
+| r1_skip0 | 30.30 | 31.73 | 33.97 | 3.67 | −0.20% | 0.07% | 1980 MHz |
+| r0_skip8 | 24.25 | 25.30 | 26.59 | 2.34 | −0.74% | 0.01% | 1980 MHz |
+| r1_skip8 | 24.27 | 25.29 | 26.60 | 2.33 | −0.65% | 0.02% | 1980 MHz |
+
+**The prediction failed.** skip0 reproduces v6 to −0.69% and −0.20% with normal
+spreads. Worst deviation across all six regimes of all four boots is 2.02%.
+Runqueue wait — measured directly from `/proc/self/task/*/schedstat` field 2,
+the kernel's own count of time runnable-but-not-running — never exceeds 0.07%,
+so there was no starvation to find. SM clocks sat pinned at 1980/1980 MHz
+throughout, eliminating thermal capping independently.
+
+Initialisation was identical across the anomalous boot, X19's clean boots, and
+v6: 53.89 GiB KV cache, 392,432 tokens, 9 s capture, 0.55 GiB of graphs.
+
+### What this leaves
+
+The X18 skip0 boot is a **single unexplained transient**, not a reproducible
+property of the cell, the box under load, or the lever. Six boots of these two
+cells across two sessions agree with v6 to within 0.74%; one did not, by 10%,
+with a clamp-shaped signature and no identifiable cause.
+
+Two claims from the first version of this section are **withdrawn**:
+
+* That the effect is lever-dependent. skip0 reproduces fine; X18 confounded the
+  cell with the moment it was measured.
+* That σ_repro understates *cross-session* reproducibility and R2 numbers cannot
+  be compared to v6. Cross-session agreement is ≤0.74% in five of six boots, so
+  §3's ladder — which uses v6 `woff` reference points — stands as written.
+
+What survives is narrower and still worth acting on: **a boot can be corrupted
+in a way the startup gate cannot see**, since the anomalous boot passed it. The
+runqueue instrument now exists but has only ever read ~0, so it is unvalidated
+against a positive case. The cheap-regime spread did flag the bad boot, but it
+varies 3× across cells for legitimate reasons and there is exactly one clamped
+example to calibrate against — enough to **record** per boot as a diagnostic,
+not enough to **gate** on.
 
 ## 8. Consequences for the campaign
 
 1. skip16 stays in the R2 lattice. Prereg §7 assumption 1 resolves favourably.
-2. Every R2 boot must pass the gate, with rejected attempts retained.
-3. **The Round-2 runner does not exist yet.** `run_w98_g98b_round1.py` is
+2. Every R2 boot must pass the startup gate, with rejected attempts retained.
+3. Record cheap-regime spread and runqueue wait per boot as diagnostics, so a
+   transient like X18's is auditable after the fact. Do not gate on either yet.
+4. **The Round-2 runner does not exist yet.** `run_w98_g98b_round1.py` is
    hash-bound and closed, and its package ID, prereg paths, and output directory
    are module constants. R2 needs its own runner, and the R2 model needs its own
    module — `w98_cost_model.py` is likewise hash-bound. This build sits between
    the G98-C authorization and the campaign; it was missing from the plan.
-4. §7's open item should be closed, or explicitly registered as a limitation,
-   before the campaign — not after.
