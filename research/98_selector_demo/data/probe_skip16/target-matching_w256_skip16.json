@@ -1,0 +1,96 @@
+{
+  "acceptance": {
+    "A_accepted": 25723,
+    "D_armed_requests": 20804,
+    "E_committed": 46454,
+    "H_target_steps": 20804,
+    "accepted_tokens_per_armed_request": 1.2364449144395309,
+    "armed_steps": 1996,
+    "committed_tokens_per_request_step": 2.2329359738511823
+  },
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 16,
+    "window": 256
+  },
+  "keep_frac": 0.5555555555555556,
+  "kernel_resolved": null,
+  "koff_runtime_error": false,
+  "observations": {
+    "R1": {
+      "armed_step_count": 237,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.019411443325759278,
+      "draft_chain_samples": 218,
+      "mean_armed_step_s": 0.029021923234273644,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00012270675312055026,
+      "usable": true,
+      "verify_s": 0.006165953013369788
+    },
+    "R4": {
+      "armed_step_count": 439,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.01987516280108442,
+      "draft_chain_samples": 420,
+      "mean_armed_step_s": 0.03325802235278579,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0016167211256452522,
+      "usable": true,
+      "verify_s": 0.009543727839958261
+    },
+    "R5": {
+      "armed_step_count": 383,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.019843986104396017,
+      "draft_chain_samples": 364,
+      "mean_armed_step_s": 0.03483604555420684,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.00163497263956954,
+      "usable": true,
+      "verify_s": 0.011228290598694157
+    },
+    "R5cot": {
+      "armed_step_count": 322,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.019801221457125602,
+      "draft_chain_samples": 303,
+      "mean_armed_step_s": 0.0348156961599388,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.001533041323133787,
+      "usable": true,
+      "verify_s": 0.011249339051562293
+    },
+    "R6": {
+      "armed_step_count": 293,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.020555208938495412,
+      "draft_chain_samples": 274,
+      "mean_armed_step_s": 0.03245772515406114,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0013695752705119794,
+      "usable": true,
+      "verify_s": 0.0073060043185779995
+    },
+    "R8": {
+      "armed_step_count": 322,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.01992480212817946,
+      "draft_chain_samples": 303,
+      "mean_armed_step_s": 0.030702141444748324,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0007972876685505149,
+      "usable": true,
+      "verify_s": 0.006692240939867732
+    }
+  },
+  "record_type": "w98_skip16_smoke",
+  "schema_version": 1,
+  "skip_layers": "1,2,4,6,7,9,11,13,16,18,20,23,25,27,30,33"
+}

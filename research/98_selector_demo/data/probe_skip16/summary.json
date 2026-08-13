@@ -1,0 +1,114 @@
+{
+  "cells": {
+    "target-matching_w256_skip16": {
+      "acceptance": {
+        "A_accepted": 25723,
+        "D_armed_requests": 20804,
+        "E_committed": 46454,
+        "H_target_steps": 20804,
+        "accepted_tokens_per_armed_request": 1.2364449144395309,
+        "armed_steps": 1996,
+        "committed_tokens_per_request_step": 2.2329359738511823
+      },
+      "draft_chain_ms": {
+        "R1": 19.41,
+        "R4": 19.88,
+        "R5": 19.84,
+        "R5cot": 19.8,
+        "R6": 20.56,
+        "R8": 19.92
+      },
+      "keep_frac": 0.5555555555555556,
+      "kernel_resolved": null,
+      "koff_runtime_error": false,
+      "status": "ok",
+      "usable_regimes": 6
+    },
+    "target-matching_woff_skip16": {
+      "acceptance": {
+        "A_accepted": 27231,
+        "D_armed_requests": 19310,
+        "E_committed": 46454,
+        "H_target_steps": 19310,
+        "accepted_tokens_per_armed_request": 1.4102019678922837,
+        "armed_steps": 1887,
+        "committed_tokens_per_request_step": 2.405696530295184
+      },
+      "draft_chain_ms": {
+        "R1": 29.56,
+        "R4": 29.65,
+        "R5": 32.66,
+        "R5cot": 32.9,
+        "R6": 29.7,
+        "R8": 29.69
+      },
+      "keep_frac": 0.5555555555555556,
+      "kernel_resolved": null,
+      "koff_runtime_error": false,
+      "status": "ok",
+      "usable_regimes": 6
+    },
+    "w4a16-quantized_w256_skip16": {
+      "acceptance": {
+        "A_accepted": 23970,
+        "D_armed_requests": 22547,
+        "E_committed": 46454,
+        "H_target_steps": 22547,
+        "accepted_tokens_per_armed_request": 1.0631126092163037,
+        "armed_steps": 2126,
+        "committed_tokens_per_request_step": 2.0603184459129817
+      },
+      "draft_chain_ms": {
+        "R1": 31.12,
+        "R4": 31.15,
+        "R5": 31.22,
+        "R5cot": 31.15,
+        "R6": 31.48,
+        "R8": 31.45
+      },
+      "keep_frac": 0.5555555555555556,
+      "kernel_resolved": "MarlinLinearKernel",
+      "koff_runtime_error": false,
+      "status": "ok",
+      "usable_regimes": 6
+    }
+  },
+  "reference_acceptance": {
+    "skip0": {
+      "A_accepted": 37259,
+      "D_armed_requests": 9345,
+      "E_committed": 46454,
+      "H_target_steps": 9345,
+      "accepted_tokens_per_armed_request": 3.98705189941145,
+      "armed_steps": 774,
+      "committed_tokens_per_request_step": 4.971000535045479
+    },
+    "skip0_quant": {
+      "A_accepted": 36802,
+      "D_armed_requests": 9786,
+      "E_committed": 46454,
+      "H_target_steps": 9786,
+      "accepted_tokens_per_armed_request": 3.7606785203351727,
+      "armed_steps": 850,
+      "committed_tokens_per_request_step": 4.74698548947476
+    },
+    "skip4": {
+      "A_accepted": 36771,
+      "D_armed_requests": 9817,
+      "E_committed": 46454,
+      "H_target_steps": 9817,
+      "accepted_tokens_per_armed_request": 3.7456453091575836,
+      "armed_steps": 850,
+      "committed_tokens_per_request_step": 4.731995517979016
+    },
+    "skip8": {
+      "A_accepted": 35469,
+      "D_armed_requests": 11142,
+      "E_committed": 46454,
+      "H_target_steps": 11142,
+      "accepted_tokens_per_armed_request": 3.1833602584814216,
+      "armed_steps": 1040,
+      "committed_tokens_per_request_step": 4.1692694309818705
+    }
+  }
+}

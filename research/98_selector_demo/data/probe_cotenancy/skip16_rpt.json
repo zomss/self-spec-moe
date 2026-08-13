@@ -1,0 +1,117 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 16,
+    "window": "off"
+  },
+  "host_load_after": {
+    "gpus": [
+      "0, 17253 MiB, 0 %",
+      "1, 0 MiB, 0 %",
+      "2, 76239 MiB, 100 %",
+      "3, 76149 MiB, 100 %",
+      "4, 0 MiB, 0 %",
+      "5, 25143 MiB, 72 %",
+      "6, 25073 MiB, 68 %",
+      "7, 25091 MiB, 59 %"
+    ],
+    "loadavg": [
+      8.44384765625,
+      8.11376953125,
+      8.28125
+    ]
+  },
+  "host_load_before": {
+    "gpus": [
+      "0, 0 MiB, 0 %",
+      "1, 0 MiB, 0 %",
+      "2, 0 MiB, 0 %",
+      "3, 0 MiB, 0 %",
+      "4, 0 MiB, 0 %",
+      "5, 25143 MiB, 70 %",
+      "6, 25073 MiB, 68 %",
+      "7, 25091 MiB, 58 %"
+    ],
+    "loadavg": [
+      5.9296875,
+      6.58251953125,
+      7.82666015625
+    ]
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 239,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.01854283636732196,
+      "draft_chain_samples": 220,
+      "mean_armed_step_s": 0.028184278044463856,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00016434638836078456,
+      "usable": true,
+      "verify_s": 0.006156444558515572
+    },
+    "R4": {
+      "armed_step_count": 370,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.02590903299104454,
+      "draft_chain_samples": 351,
+      "mean_armed_step_s": 0.03942738256536776,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0019101955811646695,
+      "usable": true,
+      "verify_s": 0.009598064832971431
+    },
+    "R5": {
+      "armed_step_count": 383,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.02929491334170062,
+      "draft_chain_samples": 364,
+      "mean_armed_step_s": 0.04438513017827329,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.00449399940044295,
+      "usable": true,
+      "verify_s": 0.011163005394991684
+    },
+    "R5cot": {
+      "armed_step_count": 309,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.029791467903776032,
+      "draft_chain_samples": 290,
+      "mean_armed_step_s": 0.04513943898054533,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.0037676860559141953,
+      "usable": true,
+      "verify_s": 0.011385136127309556
+    },
+    "R6": {
+      "armed_step_count": 293,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.019958691417841228,
+      "draft_chain_samples": 274,
+      "mean_armed_step_s": 0.03168190114951848,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0018132467042435469,
+      "usable": true,
+      "verify_s": 0.007149663198400627
+    },
+    "R8": {
+      "armed_step_count": 292,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.01930341222144377,
+      "draft_chain_samples": 273,
+      "mean_armed_step_s": 0.030142809621182792,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0009031532092674101,
+      "usable": true,
+      "verify_s": 0.006699254389607558
+    }
+  },
+  "record_type": "w98_cotenancy_control",
+  "schema_version": 1
+}

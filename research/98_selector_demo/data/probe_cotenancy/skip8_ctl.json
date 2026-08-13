@@ -1,0 +1,117 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 8,
+    "window": "off"
+  },
+  "host_load_after": {
+    "gpus": [
+      "0, 17293 MiB, 4 %",
+      "1, 0 MiB, 0 %",
+      "2, 0 MiB, 0 %",
+      "3, 0 MiB, 0 %",
+      "4, 0 MiB, 0 %",
+      "5, 25143 MiB, 71 %",
+      "6, 25073 MiB, 68 %",
+      "7, 25091 MiB, 57 %"
+    ],
+    "loadavg": [
+      6.0107421875,
+      6.609375,
+      7.84228515625
+    ]
+  },
+  "host_load_before": {
+    "gpus": [
+      "0, 0 MiB, 0 %",
+      "1, 0 MiB, 0 %",
+      "2, 0 MiB, 0 %",
+      "3, 0 MiB, 0 %",
+      "4, 0 MiB, 0 %",
+      "5, 25143 MiB, 72 %",
+      "6, 25073 MiB, 68 %",
+      "7, 25091 MiB, 59 %"
+    ],
+    "loadavg": [
+      10.0732421875,
+      7.15673828125,
+      8.1669921875
+    ]
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 146,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.024249808647391187,
+      "draft_chain_samples": 127,
+      "mean_armed_step_s": 0.03398856349378722,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00012928782241137615,
+      "usable": true,
+      "verify_s": 0.006172264410452044
+    },
+    "R4": {
+      "armed_step_count": 220,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.033622832331732286,
+      "draft_chain_samples": 201,
+      "mean_armed_step_s": 0.0470426456224893,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.00418288134340241,
+      "usable": true,
+      "verify_s": 0.009315460016174863
+    },
+    "R5": {
+      "armed_step_count": 201,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.03949965070229494,
+      "draft_chain_samples": 182,
+      "mean_armed_step_s": 0.05478334873659879,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.00493866006364174,
+      "usable": true,
+      "verify_s": 0.011281526177095212
+    },
+    "R5cot": {
+      "armed_step_count": 158,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.04040447122119233,
+      "draft_chain_samples": 139,
+      "mean_armed_step_s": 0.055929530081132876,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.0037752286865484295,
+      "usable": true,
+      "verify_s": 0.011560716733239055
+    },
+    "R6": {
+      "armed_step_count": 151,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.026695995470755875,
+      "draft_chain_samples": 132,
+      "mean_armed_step_s": 0.0387526530046201,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.0017885772820013636,
+      "usable": true,
+      "verify_s": 0.007434309741195039
+    },
+    "R8": {
+      "armed_step_count": 166,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.025296662240384186,
+      "draft_chain_samples": 147,
+      "mean_armed_step_s": 0.03621729702060392,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0010213119312081542,
+      "usable": true,
+      "verify_s": 0.00671879417259825
+    }
+  },
+  "record_type": "w98_cotenancy_control",
+  "schema_version": 1
+}
