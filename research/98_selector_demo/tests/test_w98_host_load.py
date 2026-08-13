@@ -12,7 +12,9 @@ from pathlib import Path
 
 import pytest
 from w98_host_load import (
+    CHEAP_REGIMES_BY_BATCH,
     DEFAULT_MAX_ATTEMPTS,
+    MIN_RELATIVE_SPREAD,
     QUIET_MAX_CAPTURE_S,
     QUIET_MAX_COMPILE_S,
     BootLoadSignature,
@@ -20,6 +22,7 @@ from w98_host_load import (
     _lane_cpu_ids,
     guarded_boot,
     host_snapshot,
+    measurement_verdict,
     require_quiet,
     signature_from_log,
     signature_from_log_path,
@@ -191,6 +194,84 @@ def test_guarded_boot_passes_the_attempt_number():
     assert seen == [1]
 
 
+# --- the measurement-shape gate ---
+
+
+def obs(r1_ms, r8_ms, r6_ms):
+    return {
+        "R1": {"draft_chain_s": r1_ms / 1000.0},
+        "R8": {"draft_chain_s": r8_ms / 1000.0},
+        "R6": {"draft_chain_s": r6_ms / 1000.0},
+    }
+
+
+def test_clean_measurement_passes():
+    """v6's anchor: rises with batch, healthy spread."""
+    verdict = measurement_verdict(obs(30.36, 31.75, 33.92))
+    assert verdict.verdict == "clean"
+    assert verdict.monotonic is True
+    assert verdict.reason is None
+
+
+def test_inverted_ordering_is_clamped():
+    """The aborted G98-C boot: R1 and R8 lifted above R6."""
+    verdict = measurement_verdict(obs(38.18, 38.26, 34.54))
+    assert verdict.verdict == "clamped"
+    assert verdict.monotonic is False
+    # Spread alone would have passed this, which is why ordering is checked.
+    assert verdict.relative_spread > MIN_RELATIVE_SPREAD
+    assert "not increasing in batch" in verdict.reason
+
+
+def test_collapsed_spread_is_clamped():
+    """X17's contaminated skip16 boot: everything on one floor."""
+    verdict = measurement_verdict(obs(29.56, 29.69, 29.70))
+    assert verdict.verdict == "clamped"
+    assert verdict.monotonic is True
+    assert "relative spread" in verdict.reason
+
+
+def test_missing_cheap_regime_fails_closed():
+    assert measurement_verdict({"R1": {"draft_chain_s": 0.03}}) is None
+    assert measurement_verdict(obs(30.0, 31.0, 32.0) | {"R6": {}}) is None
+
+
+def test_threshold_sits_between_the_populations():
+    """Clean boots bottom out at 0.046; clamped ones top out at 0.022."""
+    assert 0.022 < MIN_RELATIVE_SPREAD < 0.046
+
+
+def test_guarded_boot_rejects_a_clamped_measurement():
+    """A boot can pass the startup gate and still be thrown out."""
+    seen = []
+    logs = [QUIET_LOG, QUIET_LOG]
+    checks = ["cheap regimes are not increasing in batch", None]
+    signature, attempts = guarded_boot(
+        "cell",
+        lambda attempt: logs[attempt - 1],
+        on_reject=lambda label, attempt, sig: seen.append(attempt),
+        inspect=lambda attempt: checks[attempt - 1],
+    )
+    assert signature.verdict == "quiet"
+    assert seen == [1]
+    # The rejection is recorded as clamped, not misfiled as a loud box.
+    assert attempts[0]["verdict"] == "clamped"
+    assert attempts[1]["verdict"] == "quiet"
+
+
+def test_guarded_boot_does_not_inspect_a_loud_boot():
+    """No point judging the shape of a measurement already known bad."""
+    calls = []
+    with pytest.raises(HostLoadError):
+        guarded_boot(
+            "cell",
+            lambda attempt: LOUD_LOG,
+            max_attempts=2,
+            inspect=lambda attempt: calls.append(attempt) or None,
+        )
+    assert calls == []
+
+
 # --- regressions against the recorded boots the thresholds came from ---
 #
 # These read the CHECKED-IN signature artifact, not the logs. Boot logs are
@@ -231,6 +312,54 @@ def test_wholechain_boots_are_not_judged_by_the_piecewise_band():
     wc = boots["probe_wholechain_v2/r0_skip4_wcon"]
     assert wc["capture_s"] > 60 and wc["runtime"] == "wholechain"
     assert wc["verdict"] == "not_applicable"
+
+
+CALIBRATION = DATA / "measurement_gate_calibration.json"
+
+
+@pytest.mark.skipif(not CALIBRATION.is_file(), reason="calibration artifact absent")
+def test_measurement_gate_separates_the_labelled_boots():
+    """The gate's whole justification, kept honest.
+
+    25 clean boots and 4 known-clamped ones. If a later tweak trades a catch
+    for a false positive, or the other way, this fails and the trade has to be
+    argued rather than absorbed.
+    """
+    import json
+
+    boots = json.loads(CALIBRATION.read_text())["boots"]
+    clean = {k: v for k, v in boots.items() if v["label"] == "clean"}
+    clamped = {k: v for k, v in boots.items() if v["label"] == "clamped"}
+    assert len(clean) == 25 and len(clamped) == 4
+    false_positives = {k for k, v in clean.items() if v["verdict"] != "clean"}
+    missed = {k for k, v in clamped.items() if v["verdict"] != "clamped"}
+    assert not false_positives, false_positives
+    assert not missed, missed
+
+
+@pytest.mark.skipif(not CALIBRATION.is_file(), reason="calibration artifact absent")
+def test_neither_limb_of_the_gate_is_redundant():
+    """Ordering and spread each catch cases the other misses."""
+    import json
+
+    boots = json.loads(CALIBRATION.read_text())["boots"]
+    clamped = [v for v in boots.values() if v["label"] == "clamped"]
+    caught_by_order = [v for v in clamped if not v["monotonic"]]
+    caught_by_spread = [
+        v for v in clamped if v["monotonic"] and v["relative_spread"] < 0.03
+    ]
+    assert caught_by_order, "ordering limb catches nothing; it would be dead code"
+    assert caught_by_spread, "spread limb catches nothing; it would be dead code"
+    assert len(caught_by_order) + len(caught_by_spread) == len(clamped)
+
+
+@pytest.mark.skipif(not CALIBRATION.is_file(), reason="calibration artifact absent")
+def test_calibration_thresholds_match_the_module():
+    import json
+
+    thresholds = json.loads(CALIBRATION.read_text())["thresholds"]
+    assert thresholds["min_relative_spread"] == MIN_RELATIVE_SPREAD
+    assert thresholds["cheap_regimes_by_batch"] == list(CHEAP_REGIMES_BY_BATCH)
 
 
 @pytest.mark.skipif(not SIGNATURES.is_file(), reason="signature artifact absent")

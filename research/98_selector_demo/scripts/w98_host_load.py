@@ -60,7 +60,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -75,6 +75,12 @@ QUIET_MAX_CAPTURE_S = 11.0
 # up on the cell. A loud box usually stays loud for a while, so retrying
 # forever would just burn the session.
 DEFAULT_MAX_ATTEMPTS = 3
+# Cheap regimes in increasing batch order: R1 is batch 1, R8 is 16, R6 is 32.
+# Draft chain rises along this list on every clean boot on record.
+CHEAP_REGIMES_BY_BATCH = ("R1", "R8", "R6")
+# Below this, the cheap regimes have collapsed toward a common floor. Clean
+# boots span 0.046-0.176; the known clamped boots sit at 0.005, 0.012, 0.022.
+MIN_RELATIVE_SPREAD = 0.03
 
 _COMPILE_RE = re.compile(
     r"Compiling a graph for compile range \([^)]*\) takes ([\d.]+) s"
@@ -296,11 +302,103 @@ def host_snapshot(cpu_affinity: str | None = None) -> dict[str, Any]:
     return snapshot
 
 
+@dataclass(frozen=True)
+class MeasurementVerdict:
+    """Within-boot check on the measurement itself, after it has run.
+
+    The startup signature reads compile and capture time, which happen BEFORE
+    any measurement. A boot whose lane goes loud afterwards passes it and still
+    produces a clamped measurement -- that is exactly what aborted the first
+    G98-C run, at +25.8% on a cell with 0.027% historical CV.
+
+    This looks at the shape of the result instead, and needs no cross-session
+    reference. Two independent signatures, because contamination has two shapes:
+
+    * **ordering** -- draft chain must rise with batch across the cheap
+      regimes (R1 batch 1, R8 batch 16, R6 batch 32). A partial clamp lifts the
+      cheapest regimes onto a floor ABOVE the most expensive one and inverts
+      this. All 25 clean boots on record are monotonic; the aborted campaign
+      boot is the only non-monotonic boot ever recorded.
+    * **relative spread** -- a hard clamp collapses the cheap regimes onto a
+      common value. Clean boots span 0.046 to 0.176; the three known clamped
+      boots sit at 0.005, 0.012 and 0.022.
+
+    Calibrated on 29 boots (25 clean, 4 contaminated), where the combined rule
+    gives zero false positives and catches all four. The threshold sits between
+    the populations but the margin is only ~2x, and the spread limb is a
+    heuristic where the ordering limb is physically motivated. Treat a
+    borderline rejection as worth reading, not as proof.
+    """
+
+    values_ms: tuple[float, ...]
+    monotonic: bool
+    relative_spread: float
+
+    @property
+    def verdict(self) -> str:
+        """``clean`` or ``clamped``."""
+        if not self.monotonic:
+            return "clamped"
+        if self.relative_spread < MIN_RELATIVE_SPREAD:
+            return "clamped"
+        return "clean"
+
+    @property
+    def reason(self) -> str | None:
+        if self.monotonic and self.relative_spread >= MIN_RELATIVE_SPREAD:
+            return None
+        if not self.monotonic:
+            return (
+                "cheap regimes are not increasing in batch "
+                f"({', '.join(f'{v:.2f}' for v in self.values_ms)} ms): a clamp "
+                "lifts the cheapest regimes onto a floor above the dearest"
+            )
+        return (
+            f"cheap-regime relative spread {self.relative_spread:.4f} < "
+            f"{MIN_RELATIVE_SPREAD}: the regimes collapsed toward a common floor"
+        )
+
+    def as_record(self) -> dict[str, Any]:
+        return {
+            "values_ms": list(self.values_ms),
+            "monotonic": self.monotonic,
+            "relative_spread": self.relative_spread,
+            "verdict": self.verdict,
+            "reason": self.reason,
+        }
+
+
+def measurement_verdict(observations: Mapping[str, Any]) -> MeasurementVerdict | None:
+    """Judge a completed boot by the shape of its own measurement.
+
+    Args:
+        observations: Per-regime records carrying ``draft_chain_s``.
+
+    Returns:
+        The verdict, or None if the cheap regimes are not all present, in which
+        case the caller should not treat silence as a pass.
+    """
+    values = []
+    for regime in CHEAP_REGIMES_BY_BATCH:
+        entry = observations.get(regime) or {}
+        value = entry.get("draft_chain_s")
+        if not value:
+            return None
+        values.append(value * 1000.0)
+    monotonic = all(values[i] < values[i + 1] for i in range(len(values) - 1))
+    return MeasurementVerdict(
+        values_ms=tuple(values),
+        monotonic=monotonic,
+        relative_spread=(max(values) - min(values)) / values[0],
+    )
+
+
 def guarded_boot(
     label: str,
     boot: Callable[[int], str],
     max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     on_reject: Callable[[str, int, BootLoadSignature], None] | None = None,
+    inspect: Callable[[int], str | None] | None = None,
 ) -> tuple[BootLoadSignature, list[dict[str, Any]]]:
     """Run one campaign boot, retrying while the box is loud.
 
@@ -321,23 +419,38 @@ def guarded_boot(
         max_attempts: How many times to retry a loud box before giving up.
         on_reject: Optional hook called with (label, attempt, signature) after
             each rejected attempt, e.g. to discard that attempt's output files.
+        inspect: Optional post-measurement check, called with the attempt
+            number once the startup gate has passed. Returning a string
+            rejects the attempt with that reason; returning None accepts it.
+            This is where the measurement-shape gate runs, because the startup
+            signature cannot see contamination that begins after capture.
 
     Returns:
         The accepted boot's signature, and the per-attempt record.
 
     Raises:
-        HostLoadError: If no attempt ran on a quiet box.
+        HostLoadError: If no attempt produced a clean measurement on a quiet
+            box.
     """
     attempts: list[dict[str, Any]] = []
     for attempt in range(1, max_attempts + 1):
         signature = signature_from_log(boot(attempt))
-        attempts.append({"attempt": attempt, **signature.as_record()})
-        if signature.verdict == "quiet":
+        record = {"attempt": attempt, **signature.as_record()}
+        rejection = None if signature.verdict == "quiet" else signature.reason
+        if rejection is None and inspect is not None:
+            rejection = inspect(attempt)
+            if rejection is not None:
+                # The startup gate passed and the measurement did not; say so,
+                # rather than filing it under "loud box".
+                record["verdict"] = "clamped"
+                record["reason"] = rejection
+        attempts.append(record)
+        if rejection is None:
             return signature, attempts
         if on_reject is not None:
             on_reject(label, attempt, signature)
     raise HostLoadError(
-        f"{label}: no quiet boot in {max_attempts} attempts -- "
+        f"{label}: no clean boot in {max_attempts} attempts -- "
         + "; ".join(f"#{a['attempt']} {a['verdict']} ({a['reason']})" for a in attempts)
     )
 

@@ -1,0 +1,81 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "host_load": {
+    "capture_s": 9.0,
+    "compile_s": 10.09,
+    "full_it_s": 10.3,
+    "piecewise_it_s": 6.77,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.030118255736092704,
+      "mean_armed_step_s": 0.03993029444336571,
+      "runqueue_wait_frac": 0.0004463815300283831,
+      "runqueue_wait_s": 0.002326711,
+      "wall_s": 5.212381882942282
+    },
+    "R4": {
+      "armed_step_count": 131,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.043502197773445266,
+      "mean_armed_step_s": 0.05738177801258435,
+      "runqueue_wait_frac": 0.0005902722900211562,
+      "runqueue_wait_s": 0.005781498,
+      "wall_s": 9.79462884797249
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.05161635608198373,
+      "mean_armed_step_s": 0.06742776824573342,
+      "runqueue_wait_frac": 0.0005450018039455241,
+      "runqueue_wait_s": 0.006771684,
+      "wall_s": 12.425067130010575
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.051758612772788516,
+      "mean_armed_step_s": 0.06752037148662778,
+      "runqueue_wait_frac": 0.0006677011152252402,
+      "runqueue_wait_s": 0.00827814,
+      "wall_s": 12.397972402977757
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.03369795885513784,
+      "mean_armed_step_s": 0.04597406857556052,
+      "runqueue_wait_frac": 0.0007031801707383637,
+      "runqueue_wait_s": 0.004377779,
+      "wall_s": 6.225686079007573
+    },
+    "R8": {
+      "armed_step_count": 128,
+      "batch": 16,
+      "cpu_affinity_size": 16,
+      "draft_chain_s": 0.03149245571721038,
+      "mean_armed_step_s": 0.0424794716964243,
+      "runqueue_wait_frac": 0.0007167199429768151,
+      "runqueue_wait_s": 0.004054941,
+      "wall_s": 5.657636626041494
+    }
+  },
+  "pinned": true,
+  "record_type": "w98_affinity_starvation",
+  "schema_version": 1
+}

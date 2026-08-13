@@ -30,13 +30,21 @@ What this runner adds over Round 1
    "composition costs more than predicted" signature Round 2 is trying to
    explain, so an ungated campaign could confirm its own hypothesis. Rejected
    attempts are retained in the record.
-3. Two per-boot diagnostics that are recorded but do NOT gate: runqueue wait,
-   and the spread across the cheap regimes. X18 produced one boot that passed
-   the startup gate and was still clamped; X19 failed to reproduce it in four
-   attempts. Neither instrument is calibrated well enough to gate on -- the
-   runqueue reading has only ever been ~0, and cheap-regime spread varies 3x
-   across cells for legitimate reasons -- but recording them makes such a boot
-   auditable after the fact instead of invisible.
+3. The measurement-shape gate, added after the first G98-C run was aborted at
+   its very first boot. That boot passed the startup gate and still measured
+   +25.8% at R1 on a cell whose historical CV is 0.027%. The startup signature
+   is read before any measurement exists, so it structurally cannot see
+   contamination that begins afterwards. The second gate judges the completed
+   measurement by its own shape instead: draft chain must rise with batch
+   across the cheap regimes, and their relative spread must not collapse. On
+   the 29 boots on record it gives zero false positives over 25 clean boots and
+   catches all four known-clamped ones.
+
+Three hypotheses for the underlying cause were tested and all three failed:
+mid-measurement starvation (X19), lane CPU pinning (X20), and thermal capping
+(clocks stayed at 1980/1980 MHz throughout). The clamp is intermittent and has
+not been reproduced on demand. The gates therefore detect it by its shape
+rather than by its cause, which is weaker but is what the evidence supports.
 
 Order of operations is the falsifiability barrier and is enforced, not merely
 documented: anchors, then the 15 fit cells, then predictions are COMMITTED with
@@ -81,8 +89,8 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v1"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v1.json"
+PACKAGE_ID = "w98-g98c-round2-authorization-v2"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v2.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
@@ -259,7 +267,20 @@ def expected_authorization() -> dict[str, Any]:
             "quiet_max_capture_s": hostload.QUIET_MAX_CAPTURE_S,
             "max_attempts": hostload.DEFAULT_MAX_ATTEMPTS,
             "rejected_attempts_retained": True,
-            "diagnostics_recorded_not_gated": ["runqueue_wait", "cheap_regime_spread"],
+        },
+        "measurement_gate": {
+            # Added after the first G98-C run was aborted: a boot passed the
+            # startup gate and still measured +25.8% on a cell whose historical
+            # CV is 0.027%. The startup signature is read before any
+            # measurement exists, so it cannot see contamination that begins
+            # afterwards; this judges the measurement by its own shape.
+            "enforced": True,
+            "cheap_regimes_by_batch": list(hostload.CHEAP_REGIMES_BY_BATCH),
+            "requires_monotonic_in_batch": True,
+            "min_relative_spread": hostload.MIN_RELATIVE_SPREAD,
+            "calibration": (
+                "29 boots (25 clean, 4 clamped): 0 false positives, 4/4 caught"
+            ),
         },
         "model": {
             "form": (
@@ -344,6 +365,10 @@ def validate_authorization(package: Mapping[str, Any]) -> None:
     _require(
         (package.get("host_load_gate") or {}).get("enforced") is True,
         "authorization does not enforce the host-load gate",
+    )
+    _require(
+        package.get("measurement_gate") == expected["measurement_gate"],
+        "authorization does not enforce the measurement-shape gate as issued",
     )
 
 
@@ -443,6 +468,24 @@ def _run_stage_boots(
             )
             return log.read_text(encoding="utf-8", errors="replace")
 
+        measurement: dict[str, Any] = {}
+
+        def check(attempt: int, target=target, measurement=measurement) -> str | None:
+            """Judge the completed measurement by its own shape.
+
+            The startup gate reads compile and capture time, both of which
+            happen BEFORE anything is measured. The first G98-C run was aborted
+            because a boot passed it and still produced a clamped measurement,
+            +25.8% on a cell with 0.027% historical CV. This is the check that
+            would have caught it.
+            """
+            verdict = hostload.measurement_verdict(_load_json(target)["observations"])
+            if verdict is None:
+                # Fail closed: an incomplete measurement is not a pass.
+                return "measurement lacks the cheap regimes needed to judge it"
+            measurement["verdict"] = verdict.as_record()
+            return verdict.reason
+
         def discard(label: str, attempt: int, signature, target=target) -> None:
             """Drop a contaminated attempt's measurement, keeping its log.
 
@@ -451,12 +494,15 @@ def _run_stage_boots(
             """
             with contextlib.suppress(OSError):
                 target.unlink()
-            print(f"[g98c] rejected {label} attempt {attempt}: {signature.reason}")
+            print(f"[g98c] rejected {label} attempt {attempt}")
 
-        signature, attempts = hostload.guarded_boot(key, boot, on_reject=discard)
+        signature, attempts = hostload.guarded_boot(
+            key, boot, on_reject=discard, inspect=check
+        )
         record = _load_json(target)
         record["host_load"] = signature.as_record()
         record["host_load_attempts"] = attempts
+        record["measurement_gate"] = measurement.get("verdict")
         record["cheap_regime_spread_s"] = _cheap_regime_spread(record["observations"])
         target.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 
