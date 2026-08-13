@@ -1,0 +1,47 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "measurement_gate": {
+    "monotonic": false,
+    "reason": "cheap regimes are not increasing in batch (34.16, 32.01, 34.54 ms): a clamp lifts the cheapest regimes onto a floor above the dearest",
+    "relative_spread": 0.07418203036322762,
+    "values_ms": [
+      34.16267089831959,
+      32.01024284187172,
+      34.54449913173982
+    ],
+    "verdict": "clamped"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "draft_chain_s": 0.03416267089831959,
+      "engine_steps": 130,
+      "mean_armed_step_s": 0.04399605510297988
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "draft_chain_s": 0.03454449913173982,
+      "engine_steps": 130,
+      "mean_armed_step_s": 0.04706356745373341
+    },
+    "R8": {
+      "armed_step_count": 131,
+      "batch": 16,
+      "draft_chain_s": 0.03201024284187172,
+      "engine_steps": 133,
+      "mean_armed_step_s": 0.043274028110317886
+    }
+  },
+  "profile_window": {
+    "start_step": 60,
+    "stop_step": 120
+  },
+  "record_type": "w98_nsys_profile",
+  "schema_version": 1
+}

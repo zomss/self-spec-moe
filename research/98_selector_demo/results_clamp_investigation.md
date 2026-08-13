@@ -106,7 +106,40 @@ Operationally the campaign needs a window in which the box is not clamping. It
 is resumable, so a retry loop ratchets forward through the lattice across
 windows.
 
-## 6. Open items
+## 6. Nsight Systems: the step budget (X24)
+
+Two profiled boots, both confirmed clamped by the gate (R1 34.16 and 34.28 ms
+against a clean 30.1). No clean baseline was obtainable -- the box clamped every
+boot for over an hour -- so this characterises the PATH, not the clamp.
+
+Per batch-1 engine step, 48.0 ms wall under nsys, 60 steps profiled:
+
+| component | ms/step | tail >50us |
+| --- | --- | --- |
+| GPU kernels (busy) | 5.14 | — |
+| `cudaDeviceSynchronize` (waiting) | 7.91 | all 720 calls |
+| kernel launches (3 APIs) | 6.01 | negligible |
+| `cudaMemcpyAsync` | 0.59 | 33.6% |
+| `mmap` + `munmap` | 1.05 | — |
+| host work outside CUDA | ~33 | — |
+
+**GPU utilisation is 10.7%.** At batch 1 the draft chain is overwhelmingly
+host-bound, which confirms X8-X12 by direct measurement rather than inference
+and explains the clamp's regime ordering: a host delay is fully exposed where
+there is almost no GPU work to hide it, and invisible at long context.
+
+`cudaLaunchKernel` shows a 0.5% tail, so this is NOT driver contention on
+launches. The time is in Python and framework code between CUDA calls.
+
+**One concrete inefficiency.** There is exactly one `mmap` and one `munmap` per
+flash-attention call: 8640 of each against 8640 attention kernels, 144 pairs per
+step = 36 layers x 4 chain steps, ~1.05 ms/step. Beyond the syscall time, each
+pair takes the process's `mmap_lock` and forces TLB-shootdown IPIs across every
+core the process's threads occupy, a cost paid by other threads and invisible in
+the syscall's own duration. Worth fixing on its own merits; whether it varies
+between clean and clamped boots is UNKNOWN, because no clean trace exists.
+
+## 7. Open items
 
 1. **Resume is broken by a guard of its own.** `_require(not trace.exists())`
    correctly stops a boot reading another boot's steps, but also rejects

@@ -264,3 +264,8 @@ research/34_worldA_system/ckpts/
 # results, which are small and stay tracked.
 research/**/captures/
 research/**/traces/
+
+# Nsight Systems traces and their SQLite exports (large binaries)
+*.nsys-rep
+*.sqlite
+research/**/probe_nsys*/koff.jsonl
