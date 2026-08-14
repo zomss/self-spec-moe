@@ -7,6 +7,18 @@ and is not asserted here.
 
 ## Verdict numbers
 
+The registered claim has two clauses; both are now scored.
+
+* **Zero false eliminations — and the rule was EXERCISED.** Under
+  `(K+1)/q_lo < 1.015` with the most elimination-favorable defensible `q`
+  (optimistic draft bound inside the full measured armed step, over
+  verify-only), the sound rule fired **5 times** — `target-matching/w1024/
+  skip8` at R1 and R8, `target-matching/w128/skip4` at R1, R6, R8; min
+  `s_max` 0.902 — and in every case the measured `q` confirms the kill
+  (`d1p_false_elimination.json`, `score_w98r2_elimination.py`). Round 1
+  reported this rule NOT EXERCISED for lack of a scored surface; Round 2
+  both covers and correctly eliminates. The coverage-miss cell is not among
+  the eliminated, so the clauses do not interact.
 * **Coverage: 47/48 (97.9%)** of held-out (cell, regime) pairs inside their
   committed intervals.
 * **All six regimes resolvable** — including R5 and R5cot, which Round 1
