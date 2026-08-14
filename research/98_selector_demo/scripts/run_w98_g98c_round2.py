@@ -89,8 +89,8 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v5"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v5.json"
+PACKAGE_ID = "w98-g98c-round2-authorization-v6"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v6.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
@@ -113,21 +113,22 @@ HELDOUT_COUNT = 8
 # Cheap regimes, recorded as a clamp diagnostic. On a quiet box these separate
 # by batch; a clamped boot compresses them toward a common floor.
 CHEAP_REGIMES = ("R1", "R8", "R6")
-# GPU telemetry sampling during a boot. DISABLED.
+# GPU telemetry sampling during a boot. RE-ENABLED in v6.
 #
-# It was added to catch the clamp in the act, and it did produce the first
-# telemetry during clamped boots. But each sample spawns `nvidia-smi`, whose
-# NVML queries take a driver-wide lock, and the clamp presents as exactly the
-# kind of fixed per-step host delay such a lock could impose -- box-wide,
-# hidden by GPU work. X23 argues against it (its probe arm did no polling and
-# clamped; its campaign arm ran the child directly with no parent telemetry and
-# clamped), so this is not expected to be the cause.
+# v5 disabled it to test the hypothesis that the sampler's own NVML locking
+# caused the clamp. The campaign then clamped with it disabled, and the
+# X23-rerun clamped both paths on a fully idle box, so the hypothesis is
+# refuted (results_clamp_investigation.md, table entry 9). With the cause now
+# known to be box-intrinsic and outside our reach, the telemetry's value is
+# evidentiary -- per-boot GPU state to hand the box administrator -- and v6
+# turns it back on. It samples in the PARENT on the analysis CPUs, so the
+# measurement path stays byte-identical to Round 1's.
 #
-# It is disabled anyway, because a measurement campaign should not carry an
-# instrument that is even plausibly perturbing the thing it measures, and the
-# diagnostic value has already been extracted. The setting is pinned in the
-# authorization so the record says which way it ran.
-TELEMETRY_ENABLED = False
+# v6 also persists each attempt's telemetry the moment the child exits,
+# instead of only on acceptance: v5 wrote it into accepted records alone, so
+# the rejected boots -- the ones whose GPU state actually matters -- lost
+# theirs.
+TELEMETRY_ENABLED = True
 
 
 class G98CError(RuntimeError):
@@ -299,10 +300,11 @@ def expected_authorization() -> dict[str, Any]:
         },
         "gpu_telemetry": {
             # Pinned so the record states whether the campaign carried an
-            # NVML sampler while measuring. Disabled: each sample spawns
-            # nvidia-smi, whose driver-wide lock could impose the very
-            # per-step host delay the clamp presents as.
+            # NVML sampler while measuring. Re-enabled in v6: the v5 campaign
+            # clamped with it disabled, refuting the sampler as a cause, and
+            # per-boot GPU state is the evidence the box escalation needs.
             "enabled": TELEMETRY_ENABLED,
+            "persisted_per_attempt": True,
         },
         "model": {
             "form": (
@@ -354,7 +356,10 @@ def expected_authorization() -> dict[str, Any]:
             "output_dir": OUTPUT_PATH,
             "create_only": True,
             "lane": "lane-a",
-            "resumable": "a completed cell is never re-measured",
+            "resumable": (
+                "a completed cell is never re-measured; an aborted run's "
+                "attempt traces are retained and numbering continues past them"
+            ),
         },
         "status": "issued",
     }
@@ -436,6 +441,21 @@ def _cheap_regime_spread(observations: Mapping[str, Any]) -> float | None:
     return max(values) - min(values)
 
 
+def _max_attempt_index(root: Path, key: str, suffix: str) -> int:
+    """Highest attempt number already on disk for this cell's files.
+
+    Checked over BOTH traces and logs: an operator-era cleanup could delete a
+    trace while its log survives, and numbering from traces alone would then
+    reopen -- and truncate -- that log.
+    """
+    best = 0
+    for path in root.glob(f"{key}.attempt*{suffix}"):
+        stem = path.name.removeprefix(f"{key}.attempt").removesuffix(suffix)
+        if stem.isdigit():
+            best = max(best, int(stem))
+    return best
+
+
 def _run_stage_boots(
     stage_dir: Path,
     configs: Sequence[Mapping[str, Any]],
@@ -447,6 +467,12 @@ def _run_stage_boots(
     Traces are namespaced by stage: a held-out cell and a fit cell can carry
     the same key, and a shared trace root would have one boot read the other's
     steps.
+
+    An aborted run leaves its attempt traces and logs behind, deliberately:
+    they are the audit trail of the rejections. A resumed run continues the
+    attempt numbering past them instead of colliding with them -- v5 required
+    the operator to delete stale traces by hand, which destroyed exactly that
+    evidence.
     """
     stage_dir.mkdir(parents=True, exist_ok=True)
     trace_root = trace_root / stage_dir.name
@@ -461,13 +487,23 @@ def _run_stage_boots(
         if target.exists():
             continue
 
+        offset = max(
+            _max_attempt_index(trace_root, key, ".jsonl"),
+            _max_attempt_index(stage_dir, key, ".log"),
+        )
         telemetry: dict[int, Any] = {}
 
         def boot(
-            attempt: int, cfg=cfg, key=key, target=target, telemetry=telemetry
+            attempt: int,
+            cfg=cfg,
+            key=key,
+            target=target,
+            telemetry=telemetry,
+            offset=offset,
         ) -> str:
-            trace = trace_root / f"{key}.attempt{attempt}.jsonl"
-            log = stage_dir / f"{key}.attempt{attempt}.log"
+            slot = attempt + offset
+            trace = trace_root / f"{key}.attempt{slot}.jsonl"
+            log = stage_dir / f"{key}.attempt{slot}.log"
             _require(
                 not trace.exists(),
                 f"trace {trace} already exists; a boot must write its own trace",
@@ -508,7 +544,12 @@ def _run_stage_boots(
                     preexec_fn=lambda: os.sched_setaffinity(0, affinity),
                 )
             if TELEMETRY_ENABLED:
+                # Persisted before ANY acceptance decision, so a rejected or
+                # failed attempt keeps its GPU evidence.
                 telemetry[attempt] = telem.summary()
+                (stage_dir / f"{key}.attempt{slot}.telemetry.json").write_text(
+                    json.dumps(telemetry[attempt], indent=2, sort_keys=True) + "\n"
+                )
             _require(
                 completed.returncode == 0 and target.exists(),
                 f"boot {key} attempt {attempt} failed; output preserved at {log}",
@@ -549,6 +590,7 @@ def _run_stage_boots(
         record = _load_json(target)
         record["host_load"] = signature.as_record()
         record["host_load_attempts"] = attempts
+        record["attempt_offset"] = offset
         record["measurement_gate"] = measurement.get("verdict")
         record["gpu_telemetry"] = telemetry.get(len(attempts))
         record["gpu_telemetry_all_attempts"] = telemetry

@@ -237,19 +237,21 @@ to hand them).
 
 ## 9. Open items
 
-1. **Resume is broken by a guard of its own.** `_require(not trace.exists())`
-   correctly stops a boot reading another boot's steps, but also rejects
-   legitimate resumption, because an aborted run leaves `attempt1.jsonl`
-   behind. Currently worked around by deleting stale traces between attempts;
-   the runner should key traces by run or clear them itself.
-2. **Telemetry is discarded on cell failure.** It is written only when a cell is
-   accepted, so the three most informative boots of the night lost theirs. It
-   belongs in the `discard` callback.
+1. ~~Resume is broken by a guard of its own.~~ **FIXED in v6**: attempt
+   numbering continues past whatever traces AND logs an aborted run left
+   behind (both checked, because an operator-era cleanup could delete a trace
+   while its log survives), so the audit trail is retained instead of
+   hand-deleted and the `_require(not trace.exists())` guard becomes the
+   invariant it was meant to be.
+2. ~~Telemetry is discarded on cell failure.~~ **FIXED in v6**: telemetry is
+   re-enabled (the v5 campaign clamped with it disabled -- table entry 9 --
+   so the sampler is refuted as a cause) and every attempt's summary is
+   persisted to a sidecar the moment the child exits, before any acceptance
+   decision. Rejected boots -- the ones whose GPU state matters -- now keep
+   their evidence for the box escalation.
 3. **The sampler lacks temperature**, which matters if thermal state drives the
    power ceiling.
 4. **A continuous instrument spanning many boots** is the only design that can
    catch an intermittent effect that is never present when a probe is aimed at
    it. Started; it produced section 4. It should record per-regime windows, not
    just per-boot.
-
-Both (1) and (2) change hashes and need a v6 re-issue.

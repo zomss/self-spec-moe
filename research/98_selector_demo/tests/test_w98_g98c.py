@@ -358,3 +358,31 @@ def test_cheap_regime_spread_is_recorded():
 
 def test_cheap_regime_spread_is_none_when_a_regime_is_missing():
     assert g98c._cheap_regime_spread({"R1": {"draft_chain_s": 0.03}}) is None
+
+
+# --- the v6 resume and telemetry fixes ---
+
+
+def test_attempt_numbering_continues_past_stale_traces(tmp_path):
+    """An aborted run's traces are audit trail; a resume must not collide."""
+    key = "target-matching_woff_skip0"
+    for stale in ("attempt1", "attempt3", "attemptX"):
+        (tmp_path / f"{key}.{stale}.jsonl").write_text("", encoding="utf-8")
+    assert g98c._max_attempt_index(tmp_path, key, ".jsonl") == 3
+    assert g98c._max_attempt_index(tmp_path, "some_other_key", ".jsonl") == 0
+
+
+def test_attempt_numbering_also_respects_surviving_logs(tmp_path):
+    """A deleted trace whose log survives must still advance the numbering."""
+    key = "target-matching_woff_skip0"
+    (tmp_path / f"{key}.attempt3.log").write_text("", encoding="utf-8")
+    assert g98c._max_attempt_index(tmp_path, key, ".jsonl") == 0
+    assert g98c._max_attempt_index(tmp_path, key, ".log") == 3
+
+
+def test_authorization_pins_telemetry_on_and_persisted_per_attempt():
+    package = g98c.expected_authorization()
+    assert package["gpu_telemetry"] == {
+        "enabled": True,
+        "persisted_per_attempt": True,
+    }
