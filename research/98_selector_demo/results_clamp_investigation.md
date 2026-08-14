@@ -439,7 +439,16 @@ X28's canary and mmap unchanged for continuity, and the box snapshot.
 h104 idle references (GPU 5, CPUs 72-87, node 1): chase 9-12 / 76-83 /
 119-126 ns per hop, clock 52-98 ns/read, getpid 120-233 ns, munmap_mt
 143-210 us, wake overhead ~0.7 us, canary 3.21 ms, mmap 2615 us,
-clocksource `tsc`. Running continuously as `channels_h104.jsonl`.
+clocksource `tsc`. 104 bursts recorded as `channels_h104.jsonl`.
+
+The record ends with a positive control the channels could not have asked
+for: at 03:03:32 a ~1.2 TB tmpfs teardown began on the box (an unrelated
+GPU 0-1 job ending; node-0 free memory went 11 GB -> 987 GB) and the canary
+stepped 3.11 -> 5.24 ms (+68%) with munmap_mt 130 -> 262 us, while clock,
+chase, and wake held flat. The channels DO respond, selectively, to a real
+memory-system event on bare metal — which sharpens the old-box null: the
+VM's flat canary and mmap during confirmed clamp were genuine nulls, not
+dead instruments.
 
 **X29b: the clock-read census promotes candidate 2 to prime suspect.** An
 LD_PRELOAD shim counting `clock_gettime`/`munmap` around a counted window of
