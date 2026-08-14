@@ -36,7 +36,7 @@ Magnitude is reproducible across independent boots: R1 whole-step 44.51, 44.93,
 44.93 ms against a clean 39.91 — three sessions agreeing to the hundredth of a
 millisecond at 1.126x.
 
-## 2. Seven hypotheses, seven refutations
+## 2. The refutation table
 
 | # | hypothesis | test | result |
 | --- | --- | --- | --- |
@@ -46,8 +46,13 @@ millisecond at 1.126x.
 | 4 | thermal capping | X21 | 42–69 °C, clocks at max |
 | 5 | GPU-0-local fault | X22 | lane-b (GPU 1, CPUs 96-111) clamps identically |
 | 6 | neighbour GPU activity | run 4 | clamped with neighbours at 0% / 125 W |
-| 7 | campaign code path | X23 | both paths clamp, interleaved |
+| 7 | campaign code path | X23, X23-rerun | both paths clamp, interleaved, twice |
 | 8 | our own power cap | live telemetry | cap fires during the regimes that DON'T clamp |
+| 9 | campaign GPU telemetry | v5 re-issue | telemetry disabled, campaign still clamps |
+| 10 | co-tenant compute / power | X26 gemm | clean under 100% SM, 700 W on GPUs 2+3 |
+| 11 | co-tenant memory bandwidth | X26 membw | clean under 100% mem utilisation |
+| 12 | co-tenant residency (24.5 GiB) | X26 hold | clean; 76 GB untested |
+| 13 | any co-tenant at all | X23-rerun | clamps on a fully idle box (section 8) |
 
 **The cause is not identified.**
 
@@ -185,7 +190,52 @@ Removing it mid-campaign would break that comparison AND silently shift `F`.
 Round 2 runs as registered; the correction is a preregistration decision to be
 taken with both measurements in hand.
 
-## 8. Open items
+## 8. X23-rerun: the clamp on a fully idle box
+
+The strongest result of the investigation arrived last, by accident. After X26
+and X27 ran clean for ~90 minutes on an idle box (all four GPUs 0%
+utilisation, 0 MiB resident, no co-tenant processes), the campaign was
+relaunched at 04:51 and its first three boots were all rejected by the
+measurement gate. That inverted the conditions that made the original X23
+uninformative -- both arms clamped then, on a bad box -- so X23 was re-run
+immediately, interleaved, on the SAME cell (`target-matching`/`woff`/`skip0`):
+
+| boot | path | R1 ms | vs v6 quiet | spread | verdict |
+| --- | --- | --- | --- | --- | --- |
+| r0_campaign | campaign | 34.19 | +12.62% | 0.0126 | clamped |
+| r0_probe | probe | 33.19 | +9.32% | 0.0299 | clamped |
+| r1_campaign | campaign | 34.30 | +12.98% | 0.0098 | clamped |
+| r1_probe | probe | 33.64 | +10.80% | 0.0207 | clamped |
+
+Verdict: `PATH_IRRELEVANT_BOTH_CLAMP` (`data/probe_path_ab2/`). Two
+consequences:
+
+1. **The campaign path is exonerated a second time**, now under conditions
+   with discriminating power: the probe arm had been clean twenty minutes
+   earlier and clamps here, alternating with the campaign arm, at the same
+   magnitude (the familiar ~1.13x at R1).
+2. **Co-tenancy is not necessary for the clamp.** The box flipped from clean
+   to clamped between ~04:35 and 04:51 with NOTHING else running on it --
+   no neighbour process, no resident memory, no host load of ours beyond the
+   probes themselves. Together with X26 (manufactured co-tenant load does not
+   produce the clamp), the co-tenant framing is dead in both directions:
+   co-tenant activity is neither sufficient nor necessary. The correlation
+   that drove the first half of the night was time-of-night, not tenancy.
+
+What remains is a box-intrinsic, time-varying host condition that switches on
+a timescale of tens of minutes, adds a fixed ~4-5 ms of host time per step,
+and survives every process-level control we can apply from userspace. In ~7
+hours the box offered two clean windows (~00:10-00:20 and ~03:20-04:50); the
+campaign needs 70-90 continuous minutes and was gated nine times.
+
+**Investigation stopped here by decision.** The gate detects the state
+reliably (13 refutations, 0 false accepts), so the campaign can be re-armed
+whenever the box is next clean. The remaining diagnostic step is not ours to
+take: it needs whoever administers the box to account for what changes
+host-side on that cadence (the signature and timeline above are the evidence
+to hand them).
+
+## 9. Open items
 
 1. **Resume is broken by a guard of its own.** `_require(not trace.exists())`
    correctly stops a boot reading another boot's steps, but also rejects
@@ -202,4 +252,4 @@ taken with both measurements in hand.
    it. Started; it produced section 4. It should record per-regime windows, not
    just per-boot.
 
-Both (1) and (2) change hashes and need a v5 re-issue.
+Both (1) and (2) change hashes and need a v6 re-issue.

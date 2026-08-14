@@ -1,0 +1,115 @@
+{
+  "by_path": {
+    "campaign": [
+      "clamped",
+      "clamped"
+    ],
+    "probe": [
+      "clamped",
+      "clamped"
+    ]
+  },
+  "cells": {
+    "r0_campaign": {
+      "delta_pct_vs_v6": {
+        "R1": 12.62,
+        "R6": 2.06,
+        "R8": 8.35
+      },
+      "draft_chain_ms": {
+        "R1": 34.19,
+        "R6": 34.62,
+        "R8": 34.4
+      },
+      "gate": {
+        "monotonic": true,
+        "reason": "cheap-regime relative spread 0.0126 < 0.03: the regimes collapsed toward a common floor",
+        "relative_spread": 0.012629672177745127,
+        "values_ms": [
+          34.188936816938565,
+          34.40439662725631,
+          34.62073188104214
+        ],
+        "verdict": "clamped"
+      },
+      "path": "campaign",
+      "status": "ok"
+    },
+    "r0_probe": {
+      "delta_pct_vs_v6": {
+        "R1": 9.32,
+        "R6": 0.77,
+        "R8": 5.29
+      },
+      "draft_chain_ms": {
+        "R1": 33.19,
+        "R6": 34.18,
+        "R8": 33.43
+      },
+      "gate": {
+        "monotonic": true,
+        "reason": "cheap-regime relative spread 0.0299 < 0.03: the regimes collapsed toward a common floor",
+        "relative_spread": 0.029855581878773536,
+        "values_ms": [
+          33.18819931148628,
+          33.43489228581172,
+          34.17905231343941
+        ],
+        "verdict": "clamped"
+      },
+      "path": "probe",
+      "status": "ok"
+    },
+    "r1_campaign": {
+      "delta_pct_vs_v6": {
+        "R1": 12.98,
+        "R6": 2.12,
+        "R8": 8.25
+      },
+      "draft_chain_ms": {
+        "R1": 34.3,
+        "R6": 34.64,
+        "R8": 34.37
+      },
+      "gate": {
+        "monotonic": true,
+        "reason": "cheap-regime relative spread 0.0098 < 0.03: the regimes collapsed toward a common floor",
+        "relative_spread": 0.00984785104025243,
+        "values_ms": [
+          34.302913827326044,
+          34.369990645974944,
+          34.64072381294417
+        ],
+        "verdict": "clamped"
+      },
+      "path": "campaign",
+      "status": "ok"
+    },
+    "r1_probe": {
+      "delta_pct_vs_v6": {
+        "R1": 10.8,
+        "R6": 1.24,
+        "R8": 6.24
+      },
+      "draft_chain_ms": {
+        "R1": 33.64,
+        "R6": 34.34,
+        "R8": 33.73
+      },
+      "gate": {
+        "monotonic": true,
+        "reason": "cheap-regime relative spread 0.0207 < 0.03: the regimes collapsed toward a common floor",
+        "relative_spread": 0.020731598486274046,
+        "values_ms": [
+          33.642562917954876,
+          33.72515245185544,
+          34.34002702441913
+        ],
+        "verdict": "clamped"
+      },
+      "path": "probe",
+      "status": "ok"
+    }
+  },
+  "verdict": "PATH_IRRELEVANT_BOTH_CLAMP"
+}

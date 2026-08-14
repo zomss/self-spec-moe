@@ -1,0 +1,84 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "observations": {
+    "R1": {
+      "armed_step_count": 128,
+      "batch": 1,
+      "context_tokens": 431,
+      "draft_chain_s": 0.03418893681693856,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04412797256736667,
+      "prompt_tokens": 111,
+      "stdev_armed_step_s": 0.00017712455972988226,
+      "usable": true,
+      "verify_s": 0.006209305134093897
+    },
+    "R4": {
+      "armed_step_count": 132,
+      "batch": 8,
+      "context_tokens": 8853,
+      "draft_chain_s": 0.04378878338616836,
+      "draft_chain_samples": 113,
+      "mean_armed_step_s": 0.057737162429310214,
+      "prompt_tokens": 8533,
+      "stdev_armed_step_s": 0.0028669489998691434,
+      "usable": true,
+      "verify_s": 0.009654352739147965
+    },
+    "R5": {
+      "armed_step_count": 130,
+      "batch": 8,
+      "context_tokens": 14357,
+      "draft_chain_s": 0.05199748571743971,
+      "draft_chain_samples": 111,
+      "mean_armed_step_s": 0.06779667992288103,
+      "prompt_tokens": 14037,
+      "stdev_armed_step_s": 0.00254406881937547,
+      "usable": true,
+      "verify_s": 0.0117436489649117
+    },
+    "R5cot": {
+      "armed_step_count": 129,
+      "batch": 8,
+      "context_tokens": 14408,
+      "draft_chain_s": 0.0520744211230935,
+      "draft_chain_samples": 110,
+      "mean_armed_step_s": 0.06792182653109984,
+      "prompt_tokens": 14088,
+      "stdev_armed_step_s": 0.002444190504362318,
+      "usable": true,
+      "verify_s": 0.011771738698195306
+    },
+    "R6": {
+      "armed_step_count": 128,
+      "batch": 32,
+      "context_tokens": 393,
+      "draft_chain_s": 0.03462073188104214,
+      "draft_chain_samples": 109,
+      "mean_armed_step_s": 0.04721718576547573,
+      "prompt_tokens": 73,
+      "stdev_armed_step_s": 0.000677485785613853,
+      "usable": true,
+      "verify_s": 0.007603234217756174
+    },
+    "R8": {
+      "armed_step_count": 131,
+      "batch": 16,
+      "context_tokens": 398,
+      "draft_chain_s": 0.03440439662725631,
+      "draft_chain_samples": 112,
+      "mean_armed_step_s": 0.04562437242494171,
+      "prompt_tokens": 78,
+      "stdev_armed_step_s": 0.0007402946187876551,
+      "usable": true,
+      "verify_s": 0.006761691079730481
+    }
+  },
+  "package_id": "w98-g98c-round2-authorization-v5",
+  "record_type": "w98r2_cell",
+  "schema_version": 1
+}

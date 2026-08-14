@@ -1,0 +1,25 @@
+{
+  "delta_pct_vs_v6": {
+    "R1": 12.98,
+    "R6": 2.12,
+    "R8": 8.25
+  },
+  "draft_chain_ms": {
+    "R1": 34.3,
+    "R6": 34.64,
+    "R8": 34.37
+  },
+  "gate": {
+    "monotonic": true,
+    "reason": "cheap-regime relative spread 0.0098 < 0.03: the regimes collapsed toward a common floor",
+    "relative_spread": 0.00984785104025243,
+    "values_ms": [
+      34.302913827326044,
+      34.369990645974944,
+      34.64072381294417
+    ],
+    "verdict": "clamped"
+  },
+  "path": "campaign",
+  "status": "ok"
+}
