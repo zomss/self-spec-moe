@@ -17,9 +17,13 @@ ATTEMPTS=${1:-16}
 SLEEP_S=${2:-1800}
 REPO_ROOT=$(cd -- "$(dirname -- "$0")/../../.." && pwd)
 cd "$REPO_ROOT" || exit 2
+# h104 CPU map, all NUMA node 1 (GPU 4's node; NUMA 0 carries other tenants):
+# loop+runner parent 56-63, hash-bound telemetry set 64-95, engine lane 96-111
+# (set by the runner's own sched_setaffinity). membind=1 keeps first-touch
+# allocations off the contended node-0 pool.
 for i in $(seq 1 "$ATTEMPTS"); do
   echo "[loop] attempt $i start $(date -Is)"
-  taskset -c 32-63 .venv/bin/python \
+  numactl --physcpubind=56-63 --membind=1 .venv/bin/python \
     research/98_selector_demo/scripts/run_w98_g98c_round2.py
   rc=$?
   if [ "$rc" -eq 0 ]; then

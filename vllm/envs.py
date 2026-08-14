@@ -2622,6 +2622,9 @@ def compile_factors() -> dict[str, object]:
 
     ignored_factors: set[str] = {
         "MAX_JOBS",
+        # Output artifact path; cannot affect compiled code. Hashing it keys
+        # the cache on the trace filename, so per-run trace paths recompile.
+        "VLLM_SELF_SPEC_KOFF_TRACE",
         "VLLM_RPC_BASE_PATH",
         "VLLM_USE_MODELSCOPE",
         "VLLM_RINGBUFFER_WARNING_INTERVAL",

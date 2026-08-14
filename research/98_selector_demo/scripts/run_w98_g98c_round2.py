@@ -89,8 +89,11 @@ from w98r2_cost_model import (  # noqa: E402
 
 matrix = r1.matrix
 
-PACKAGE_ID = "w98-g98c-round2-authorization-v6"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v6.json"
+# v7: box relocation to h104 (bare metal). Rebinds round1_runner after its
+# lane and checkpoint paths moved off the clamping QEMU/KVM guest; nothing in
+# the model, lattice, gates, or sampling changed.
+PACKAGE_ID = "w98-g98c-round2-authorization-v7"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v7.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"

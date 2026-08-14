@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import copy
 import gzip
 import hashlib
 import json
@@ -43,6 +44,29 @@ sys.path.insert(0, str(REPO_ROOT / "research/97_composition_runtime/scripts"))
 sys.path.insert(0, str(PHASE_DIR / "scripts"))
 
 import run_p4_b0_value_screen as matrix  # noqa: E402
+
+# Box relocation (2026-08-14): the campaign moved off the QEMU/KVM guest after
+# the clamp was localised to its hypervisor layer (results_clamp_investigation
+# sections 8-9) onto h104, bare metal. The phase-97 lane table describes the
+# old box and is referenced read-only, so lane-a is redefined here. GPU 4 and
+# CPUs 96-111 are both NUMA node 1 -- NUMA 0 carries other tenants' CPU work
+# -- and the CPU range stays clear of the hash-bound telemetry set
+# (w98_host_load.TELEMETRY_CPUS, 64-95), which also lands on node 1 here.
+H104_LANE_A = {
+    "lane_id": "lane-a",
+    "physical_gpu_index": 4,
+    "physical_gpu_uuid": "GPU-dce679cb-69cb-22ce-bb75-c36e49c7a39b",
+    "cpu_affinity": "96-111",
+    "cache_root": "/tmp/v-sukmincho-w98/vllm-cache/lane-a",
+    "block_ids": [1, 2, 3],
+}
+
+
+def _h104_lane_for_block(block_id: int) -> dict[str, Any]:
+    return copy.deepcopy(H104_LANE_A)
+
+
+matrix.lane_for_block = _h104_lane_for_block
 
 PACKAGE_ID = "w98-g98b-round1-authorization-v6"
 AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98b_authorization_v6.json"
@@ -72,12 +96,15 @@ EPSILON_ARM = 0.015
 # quantized figure rather than the comfortable one.
 QUANTIZED_KV_BLOCKS = 22190
 PHASE_97_KV_FLOOR = 21682
+# h104 paths. The target-matching snapshot is byte-identical to the registered
+# one (same b968826d hash); the W4A16 checkpoint is rebuilt on h104 with the
+# identical data-free RTN recipe (research/74 make_w4a16_int4_ckpt.py).
 QUANT_CKPT = {
     "target-matching": (
-        "/data/smcho/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/"
+        "/h/v-sukmincho/.cache/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/"
         "b968826d9c46dd6066d109eabc6255188de91218"
     ),
-    "w4a16-quantized": "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4",
+    "w4a16-quantized": "/h/v-sukmincho/ckpts/Qwen3-8B-W4A16-INT4",
 }
 # Draft weight bytes per step, from the checkpoints G98-A actually booted.
 WEIGHT_BYTES = {"target-matching": 16.4e9, "w4a16-quantized": 6.1e9}

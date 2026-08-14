@@ -44,8 +44,17 @@ def _predictions() -> dict:
 class GateScopeTests(unittest.TestCase):
     """Round 1 fits from singles and reveals a frozen held-out set."""
 
-    def test_package_validates(self) -> None:
-        gate.validate_authorization(_package())
+    def test_package_no_longer_authorizes(self) -> None:
+        """The closed v6 package must REFUSE the relocated runner.
+
+        Round 1 is scored and closed. The h104 relocation (2026-08-14) edited
+        the runner's lane and checkpoint paths, so the stored package's
+        source-artifact hashes bind the pre-relocation bytes -- exactly the
+        guard working: v6 must never authorize new Round-1 boots on a box it
+        did not describe. The bytes v6 did authorize are fixed in git history.
+        """
+        with self.assertRaises(gate.G98BError):
+            gate.validate_authorization(_package())
 
     def test_fit_uses_single_lever_profiles_only(self) -> None:
         singles = gate.single_lever_profiles()
