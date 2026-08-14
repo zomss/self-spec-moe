@@ -67,6 +67,11 @@ def main() -> int:
         trace = scratch / f"{key}.jsonl"
         trace.unlink(missing_ok=True)
         env = matrix._boot_child_environment(r1.boot_environment(cfg, trace))
+        # The compile cache is device-index-agnostic (CUDA_VISIBLE_DEVICES is
+        # an ignored hash factor), so warming may borrow any idle same-model
+        # GPU while the lane GPU is occupied.
+        if os.environ.get("W98_WARM_GPU"):
+            env[matrix.DEVICE_PIN_ENV] = os.environ["W98_WARM_GPU"]
         log = scratch / f"{key}.log"
         with log.open("w", encoding="utf-8") as handle:
             completed = subprocess.run(
