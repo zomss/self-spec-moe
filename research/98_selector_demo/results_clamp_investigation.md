@@ -53,8 +53,23 @@ millisecond at 1.126x.
 | 11 | co-tenant memory bandwidth | X26 membw | clean under 100% mem utilisation |
 | 12 | co-tenant residency (24.5 GiB) | X26 hold | clean; 76 GB untested |
 | 13 | any co-tenant at all | X23-rerun | clamps on a fully idle box (section 8) |
+| 14 | the Kimina server (user-controlled co-project) | shutdown test | attempts 13-14 clamped with the server fully down |
+| 15 | kernel memory management | /proc snapshot | numa_balancing=0, THP madvise-only + idle, zero compact stalls, no pressure |
 
 **The cause is not identified.**
+
+Entry 14 deserves its context: a host-side server was the first candidate that
+fit ALL the evidence, because every "idle box" reading in this investigation
+was nvidia-smi-based -- GPU utilisation and residency -- and a server's
+host-side existence (polling, NVML queries, request threads) is invisible to
+that check while the clamp itself is a host-side delay. The user could control
+this server, which made it the first co-tenant hypothesis that was actually
+manipulable. Its GPU jobs exited at ~12:50 and the clamp persisted (attempts
+10-12); the server itself went down at ~13:15 and the clamp persisted
+(attempts 13-14, 2026-08-14). Refuted like everything else -- but the
+host-side-invisible-to-nvidia-smi argument survives it, and applies equally
+to the other host-side actors observed on the box (an nvitop NVML poller and
+terminal/agent sessions under two other users).
 
 ## 3. The methodological error, stated plainly
 
@@ -251,7 +266,14 @@ to hand them).
    their evidence for the box escalation.
 3. **The sampler lacks temperature**, which matters if thermal state drives the
    power ceiling.
-4. **A continuous instrument spanning many boots** is the only design that can
-   catch an intermittent effect that is never present when a probe is aimed at
-   it. Started; it produced section 4. It should record per-regime windows, not
-   just per-boot.
+4. ~~A continuous instrument spanning many boots.~~ **BUILT (X28,
+   `probe_w98_flip_sentinel.py`)**: a 30-second-cadence canary mimicking the
+   draft chain's host profile (800 tiny launches + synchronize per iteration,
+   GPU 1, lane-b pinned) with a per-burst box snapshot (per-user process
+   census, GPU state, load, pressure, vmstat). Two questions it answers that
+   nothing else could: whether the clamp is vLLM-specific (does a bare launch
+   loop feel it?), and what changes on the box at the flip moment. Deployed
+   2026-08-14 ~13:50 with the box reliably clamped, alongside a 30-minute-
+   cadence campaign loop whose first boot per attempt doubles as ground truth
+   on the real workload. On the next clean flip: verify with the gate, capture
+   the clean nsys twin of X24, and let the campaign complete.
