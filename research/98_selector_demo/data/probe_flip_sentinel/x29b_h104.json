@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "record_type": "x29b_clock_read_census",
+  "box": "h104 (bare metal, Xeon 8480C, driver 580.65)",
+  "date": "2026-08-14",
+  "config": "target-matching/woff/skip0, R1 prompt, batch 1, campaign boot env",
+  "runs": [
+    {"profiler": "on", "steps": 175, "wall_ms_per_step": 37.68,
+     "clock_reads_per_step": 160925.5, "munmaps_per_step": 0.0},
+    {"profiler": "off", "steps": 175, "wall_ms_per_step": 37.816,
+     "clock_reads_per_step": 149661.3, "munmaps_per_step": 0.0},
+    {"profiler": "on", "steps": 175, "wall_ms_per_step": 37.59,
+     "clock_reads_per_step": 168308.4, "munmaps_per_step": 0.0,
+     "spin_reads_per_ms": 6727.8, "spin_window_ms": 5.0}
+  ],
+  "notes": [
+    "gettimeofday and munmap both zero per step on h104; the old box's 144 munmaps/step (X24) is a VM-environment allocator behaviour, absent here.",
+    "spin_reads_per_ms measured against a pure torch.cuda._sleep + synchronize wait: libcuda's spin-wait reads the clock every ~149 ns.",
+    "serial-path reads per step >= total minus spin share; at 8-15 ms/step of sync wait that is ~68-114k serial reads."
+  ]
+}

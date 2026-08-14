@@ -441,6 +441,31 @@ h104 idle references (GPU 5, CPUs 72-87, node 1): chase 9-12 / 76-83 /
 143-210 us, wake overhead ~0.7 us, canary 3.21 ms, mmap 2615 us,
 clocksource `tsc`. Running continuously as `channels_h104.jsonl`.
 
+**X29b: the clock-read census promotes candidate 2 to prime suspect.** An
+LD_PRELOAD shim counting `clock_gettime`/`munmap` around a counted window of
+batch-1 engine steps on h104 (`probe_w98_clock_reads.py`,
+`x29b_h104.json`): the engine makes **~150-168k clock reads per step** —
+one every ~230 ns of wall time — and the count is intrinsic, not
+instrumentation (profiler off: 150k). Decomposition: libcuda's sync
+spin-wait reads at ~6.7/us, and spin reads cannot amplify (the spin exits on
+GPU completion regardless of read cost), but even granting 8-15 ms/step of
+sync wait, the SERIAL path carries ~68-114k reads per step. The arithmetic:
+**+40-66 ns per clock read reproduces the entire +4.5 ms clamp.** That is a
+mild pvclock slow path — extra seqlock retries while the host updates
+pvclock data, nowhere near a full syscall fallback (which would add
+150-300 ms/step and is excluded by the observed magnitude). Every property
+fits: serial-path cost (hidden exactly where host work overlaps GPU work —
+the regime ordering), fixed per step, box-wide, zero steal, invisible to a
+canary that reads the clock twice per 5 ms iteration, and flipping on
+host-event cadence. Candidate 1 (LLC contention) remains live; candidate
+3's substrate is VM-specific — **h104 makes ZERO munmaps per step**, so the
+144/step storm X24 saw is the old box's allocator behaviour, not the
+engine's intrinsic cost.
+
+Independent of the clamp: ~160k reads x ~25 ns is ~4 ms of every batch-1
+step — 10% — spent reading the clock on a healthy box. Like section 6's
+mmap note, worth fixing on its own merits once the campaign closes.
+
 **Deployment ask for the old box** (this is where the answer is): pull this
 branch and run, pinned clear of the campaign lane —
 
@@ -454,7 +479,12 @@ the gate still clamps, the mechanism is narrower than all three and the
 next probe is designed against THAT null. Expected VM signatures —
 clocksource reads `kvm-clock`; chase values well above h104's given
 virtualised EPT walks; the discriminator is the within-box step at the
-flip, never the cross-box level.
+flip, never the cross-box level. Under X29b's arithmetic the sharpest
+prediction is the clock channel: a step of a few tens of ns per read
+between clean and clamped windows — trivially resolvable, the channel
+averages 200k reads per burst — confirms the mechanism AND quantifies it
+(observed engine clamp per step should equal the per-read step times the
+serial read count).
 
 ## 12. Open items
 
