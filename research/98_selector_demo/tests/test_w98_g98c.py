@@ -386,3 +386,19 @@ def test_authorization_pins_telemetry_on_and_persisted_per_attempt():
         "enabled": True,
         "persisted_per_attempt": True,
     }
+
+
+def test_stage_readers_exclude_telemetry_sidecars():
+    """v6 sidecars share the stage dirs; counting them as cells aborted the
+    first campaign that ever survived past its fit stage (v9 fix)."""
+    from pathlib import Path
+
+    paths = [
+        Path("target-matching_woff_skip0.json"),
+        Path("target-matching_woff_skip0.attempt1.telemetry.json"),
+        Path("w4a16-quantized_w256_skip4.json"),
+    ]
+    assert [p.name for p in g98c._cell_paths(paths)] == [
+        "target-matching_woff_skip0.json",
+        "w4a16-quantized_w256_skip4.json",
+    ]

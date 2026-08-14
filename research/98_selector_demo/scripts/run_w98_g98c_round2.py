@@ -93,8 +93,13 @@ matrix = r1.matrix
 # lane and checkpoint paths moved off the clamping QEMU/KVM guest; nothing in
 # the model, lattice, gates, or sampling changed.
 # v8: lane GPU 4 -> 7 within h104's NUMA node 1 (co-tenant parked on GPU 4).
-PACKAGE_ID = "w98-g98c-round2-authorization-v8"
-AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v8.json"
+# v9: stage readers exclude the v6 per-attempt telemetry sidecars. Latent
+# since v6 (no campaign survived past its first cells until h104): the fit
+# reader counted sidecars as cells and aborted after all 21 boots of the
+# anchors_pre and fit stages had been measured and accepted under v8. Those
+# cells are retained; v9 resumes past them by design.
+PACKAGE_ID = "w98-g98c-round2-authorization-v9"
+AUTHORIZATION_PATH = "research/98_selector_demo/data/w98_g98c_authorization_v9.json"
 OUTPUT_PATH = "research/98_selector_demo/data/g98_c"
 PREREG_DOC = "research/98_selector_demo/w98r2_prereg.md"
 PREREG_MATRIX = "research/98_selector_demo/data/prereg2/w98r2_matrix.json"
@@ -614,11 +619,19 @@ def _run_anchor_stage(stage_dir: Path, traces: Path, authorization_path: Path) -
             )
 
 
+def _cell_paths(paths) -> list[Path]:
+    """Cell results only. v6 persists per-attempt GPU telemetry sidecars
+    (<key>.attempt<N>.telemetry.json) into the SAME stage directories; a
+    reader that globs *.json must not count or parse them as measurements.
+    Latent since v6 -- no campaign had ever survived past its first cells."""
+    return sorted(p for p in paths if not p.name.endswith(".telemetry.json"))
+
+
 def measured_sigma_repro(output_dir: Path) -> dict[str, float]:
     """Log-scale boot-to-boot stdev per regime, max across anchors."""
     per_anchor: dict[str, dict[str, list[float]]] = {}
     for stage in (ANCHOR_PRE_DIR, ANCHOR_POST_DIR):
-        for path in sorted((output_dir / stage).rglob("*.json")):
+        for path in _cell_paths((output_dir / stage).rglob("*.json")):
             record = _load_json(path)
             key = _config_key(record["config"])
             for regime, obs in record["observations"].items():
@@ -647,7 +660,8 @@ def fit_and_predict(output_dir: Path) -> dict[str, Any]:
     contributes no prediction and is reported unfitted while the others proceed.
     """
     fit_rows = {
-        p.stem: _load_json(p) for p in sorted((output_dir / FIT_DIR).glob("*.json"))
+        p.stem: _load_json(p)
+        for p in _cell_paths((output_dir / FIT_DIR).glob("*.json"))
     }
     _require(
         len(fit_rows) == FIT_COUNT,
@@ -729,7 +743,9 @@ def commit_predictions(
         "held-out predictions are already committed and are immutable",
     )
     heldout_dir = output_dir / HELDOUT_DIR
-    existing = sorted(heldout_dir.glob("*.json")) if heldout_dir.is_dir() else []
+    existing = (
+        _cell_paths(heldout_dir.glob("*.json")) if heldout_dir.is_dir() else []
+    )
     _require(
         not existing,
         "refusing to commit predictions after held-out measurements exist: "
@@ -777,7 +793,8 @@ def score_reveal(output_dir: Path) -> dict[str, Any]:
     """Compare the committed predictions against the revealed measurements."""
     committed = require_committed_predictions(output_dir)
     revealed = {
-        p.stem: _load_json(p) for p in sorted((output_dir / HELDOUT_DIR).glob("*.json"))
+        p.stem: _load_json(p)
+        for p in _cell_paths((output_dir / HELDOUT_DIR).glob("*.json"))
     }
     _require(
         len(revealed) == HELDOUT_COUNT,
