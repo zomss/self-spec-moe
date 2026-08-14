@@ -294,7 +294,169 @@ the ask to check what runs on the physical host at the flip timestamps and
 whether this guest's vCPUs/memory can be dedicated. Nothing inside the guest
 ever moved the clamp because nothing inside the guest is causing it.
 
-## 10. Open items
+## 10. Relocation to h104 (2026-08-14)
+
+Section 9 ended the in-guest investigation: the cause lives on the physical
+host under the VM and recurs across the user's other (virtualised) servers.
+The campaign therefore moved to **h104** (`h104.prometheus.msr`): bare metal
+-- no `hypervisor` cpuinfo flag, `systemd-detect-virt: none` -- 2x Xeon
+Platinum 8480C, 8x H100. The entire hypervisor mechanism class of section 9
+is structurally absent here.
+
+**Placement constraint.** NUMA node 0 of h104 carries other tenants' heavy
+CPU jobs (and their vLLM processes on GPUs 0-1). Everything of ours is pinned
+to NUMA node 1, whose CPUs are 56-111 (+HT 168-223) and whose PCIe root owns
+GPUs 4-7:
+
+| role | GPU | CPUs | notes |
+| --- | --- | --- | --- |
+| campaign lane-a | 4 | 96-111 | only 16-wide physical node-1 range clear of the telemetry set |
+| GPU telemetry sampler | — | 64-95 | hash-bound constant in `w98_host_load.py`; lands on node 1 here unchanged |
+| loop + runner parent | — | 56-63 | `numactl --physcpubind=56-63 --membind=1` in `run_g98c_loop.sh` |
+| X28 sentinel | 5 | 72-87 | GPUs 6-7 left free |
+
+`--membind=1` is inherited by every child, so first-touch allocation cannot
+spill to the contended node-0 pool (node 0 had 11 GB free at relocation
+time; node 1 had 608 GB).
+
+**What changed, and what did not.** The authorization was re-issued as
+**v7** (`w98_g98c_authorization_v7.json`), rebinding hashes after exactly two
+relocations inside `run_w98_g98b_round1.py`: lane-a is redefined for h104
+(the phase-97 lane table describes the old box and stays read-only), and
+`QUANT_CKPT` repoints to h104 paths. The target-matching snapshot is
+**byte-identical** to the registered one (same HF snapshot
+`b968826d9c46dd...`); the W4A16 draft was rebuilt on h104 with the identical
+data-free RTN recipe (`research/74 make_w4a16_int4_ckpt.py`, int4 symmetric
+group-128 weight-only, lm_head ignored — `recipe.yaml` in the checkpoint
+records it), which needs no calibration data and so cannot drift with the
+box. The prereg documents, lattice, model, both gates, and sampling are
+untouched; `validate_authorization` enforces that by construction.
+
+**Closed gates became box-bound records.** G98-A's package embeds a live
+`is_dir()` of the old box's checkpoint (two tests now skip off that box), and
+G98-B's v6 package hash-binds the pre-relocation runner bytes, so its
+round-trip test now asserts the guard REFUSES — v6 must never authorize new
+Round-1 boots on a box it did not describe. The bytes it did authorize are
+fixed in git history.
+
+**Comparability caveat, stated in advance of any Round-2 number.** Round 1
+was measured on the old box; Round 2 will be measured on h104. Prompt bytes,
+measurement path, and the +2.4 ms profiler-sync overhead (section 7) carry
+over unchanged, and everything Round 2 SCORES is internal to Round 2 —
+anchors, sigma_repro, fits, and held-out predictions all come from h104
+boots. But any comparison of ABSOLUTE per-step times across rounds now
+contains a box term, and the section-7 check of what the fitted `F` absorbs
+must remember `F` may also absorb host differences between the boxes.
+
+**First bare-metal sentinel readings — CORRECTED.** The X28 twin deployed on
+GPU 5 during the campaign's first attempts read canary ~5.17 ms and mmap
+~4610 us; an idle re-measurement (X29, below) reads **3.21 ms and 2615 us**.
+The first readings were inflated by our own campaign and warmup boots on the
+same NUMA node — which is itself a finding: the mmap channel moves +76%
+under same-node co-activity on h104, so old-box sentinel readings must be
+interpreted against what else the guest was doing (on the VM the channel did
+NOT move during engine boots; its lanes plausibly sit on a different guest
+node). h104 idle references, steal identically zero: canary 3.21 ms, mmap
+2615 us (1.28 us/fault vs the VM's clamped 1.92), clocksource `tsc`. The
+verdict on the memory-state-amplification hypothesis still requires the VM's
+OWN clean-state reading at its next flip.
+
+**The first campaign attempt produced three FALSE 'loud' verdicts.**
+Attempts 1-3 of the first anchor cell were rejected by the startup gate
+(compile 14.70 / 13.02 / 15.10 s against the 12.5 s ceiling) on an idle box.
+The per-attempt logs show why: the torch.compile cache directory hash
+changed on every boot of the same cell. vllm hashes every registered env var
+into its compile-cache key, and `VLLM_SELF_SPEC_KOFF_TRACE` carries the
+attempt-numbered trace path — so each boot got a fresh key, compiled cold
+(~14.7 s on these cores), and the gate read a cold cache as a loud host.
+Those three rejections are cold-cache artifacts, not host-load events, and
+must not be counted in any future gate tally. Two fixes, neither touching a
+bound artifact's semantics: the trace path joined `ignored_factors` in
+`vllm/envs.py` (an output path cannot affect compiled code), and
+`warm_g98c_compile_cache.py` boots each unique configuration once before the
+loop is armed — fit and held-out cells treated identically, engine
+construction only, no measurement and no campaign outputs — so campaign
+boots load the cache and the startup gate operates in the warm regime its
+thresholds were calibrated against (warm 'Directly load' boots were part of
+the old box's quiet population; the v3 re-issue exists because of them).
+
+## 11. The clamp does not touch the probes (X28 record analysis, X29 design)
+
+The committed sentinel record (13:45-15:52 +0900, 246 bursts) spans a
+stretch the status checkpoint describes as reliably clamped, with four
+campaign boot windows at the loop's ~35-minute cadence visible in the GPU
+channel (GPU 0 at 74-100%, 73.7 GB resident, guest page-fault rate 25-38k/s
+against a 1.5-2k/s idle floor). Across ALL of it:
+
+* **canary: flat.** 5.13-5.38 ms, no step — idle-clamped and boot-clamped
+  minutes are indistinguishable.
+* **mmap: flat.** 3855-4012 us (4% total span over its 40 minutes),
+  including DURING the engine's own boots — 30k faults/s of engine mmap
+  storm on the neighbouring GPU does not move the channel by more than its
+  noise. Contrast h104, where our own same-node boots moved it +76%.
+* **steal: negligible.** 1-13 ticks per 2.5 min across 192 vCPUs.
+* **co-tenants: negligible.** Other users' census CPU totals 13-22%
+  throughout.
+
+So while the engine measurably clamps (+4-5 ms/step), nothing the probes
+exercise — kernel launch + spin-sync dispatch, single-threaded page faults,
+CPU availability — degrades at all. Whatever the mechanism is, it lives in
+a channel the engine step has and these probes lack. That kills one more
+class and constrains the rest:
+
+* **Blocking-sync wake latency is refuted by shape.** The engine issues 12
+  `cudaDeviceSynchronize` per step in every regime; a per-sync wake penalty
+  would add a constant ~12x per step everywhere, and post-completion wake
+  delay cannot be hidden by concurrent GPU work. Observed: R4 +0.24 ms
+  against R1 +5.02 ms. The added cost is proportional to EXPOSED HOST TIME,
+  not to sync count.
+* Three candidates fit everything and are exactly the engine-vs-probe gap:
+  1. **Physical-host LLC/DRAM latency contention** (other guests on the
+     socket). Slows the engine's large pointer-chasing host working set
+     (~33 ms/step of Python and framework at batch 1; +15% of it is the
+     whole clamp), spares the canary's cache-resident loop and the mmap
+     probe's streaming page-zeroing, produces no steal, no clock effect,
+     flips on neighbour-workload timescales, and is hidden wherever host
+     work overlaps GPU work — the observed regime ordering.
+  2. **Timekeeping fast-path degradation** (kvm-clock vDSO falling back to
+     syscall when the host clears the TSC-stable bit). Two clock reads per
+     5 ms probe iteration is invisible; thousands per engine step is
+     milliseconds. Same hiding pattern, host-event flip cadence.
+  3. **Synchronous TLB-shootdown amplification on a multi-core mm.** The
+     engine's 144 munmaps/step must IPI every vCPU its threads occupy —
+     vCPU kicks whose cost depends on host state. The X28 mmap probe sends
+     none (single-threaded mm), and X24's 1.05 ms/step munmap figure sits
+     in the one nsys profile that had no clean twin.
+
+**X29 (`probe_w98_clamp_channels.py`) gives each candidate its own
+channel**: serial pointer-chase at 1 MiB / 32 MiB / 512 MiB working sets
+(contention steps the big chains, spares the small one); ns per monotonic
+clock read with getpid as syscall baseline (vDSO loss is a ~20x step);
+timed munmap of a mapping resident in 8 pinned toucher threads' TLBs
+(shootdown cost); spin-vs-block GPU wait (wake latency, the control); plus
+X28's canary and mmap unchanged for continuity, and the box snapshot.
+
+h104 idle references (GPU 5, CPUs 72-87, node 1): chase 9-12 / 76-83 /
+119-126 ns per hop, clock 52-98 ns/read, getpid 120-233 ns, munmap_mt
+143-210 us, wake overhead ~0.7 us, canary 3.21 ms, mmap 2615 us,
+clocksource `tsc`. Running continuously as `channels_h104.jsonl`.
+
+**Deployment ask for the old box** (this is where the answer is): pull this
+branch and run, pinned clear of the campaign lane —
+
+    CUDA_VISIBLE_DEVICES=1 taskset -c 96-111 \
+      .venv/bin/python research/98_selector_demo/scripts/probe_w98_clamp_channels.py \
+      --out research/98_selector_demo/data/probe_flip_sentinel/channels_vm.jsonl
+
+The first burst in a CLAMPED window plus the first burst after a clean flip
+settle it: the channel that steps names the mechanism; if none steps while
+the gate still clamps, the mechanism is narrower than all three and the
+next probe is designed against THAT null. Expected VM signatures —
+clocksource reads `kvm-clock`; chase values well above h104's given
+virtualised EPT walks; the discriminator is the within-box step at the
+flip, never the cross-box level.
+
+## 12. Open items
 
 1. ~~Resume is broken by a guard of its own.~~ **FIXED in v6**: attempt
    numbering continues past whatever traces AND logs an aborted run left
