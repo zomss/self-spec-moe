@@ -12,7 +12,7 @@ export VLLM_SELF_SPEC_CPU_ORCH=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1
 export VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1
 export VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1
 export HF_HOME=/data/smcho/huggingface HF_HUB_OFFLINE=1 TMPDIR=/data/smcho/tmp
-export COMPILE_MODEL=Qwen/Qwen3-32B COMPILE_DRAFT=$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq
+export COMPILE_MODEL=Qwen/Qwen3-32B COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq
 export COMPILE_TP=2 COMPILE_BATCHES=1,8,16 COMPILE_CTXS=2000,8000,14000
 export COMPILE_KV_LIMIT=200000 COMPILE_CELLS=policy_cells_32b.csv COMPILE_TABLE=policy_table_32b.json
 for arm in ${C32_ARMS:-off k4 k5}; do
@@ -21,7 +21,7 @@ for arm in ${C32_ARMS:-off k4 k5}; do
     > research/82_runtime_switching/logs/c32_$arm.log 2>&1 || echo "  $arm FAILED"
 done
 .venv/bin/python research/82_runtime_switching/scripts/compile_policy.py --solve
-export E2_MODEL=Qwen/Qwen3-32B E2_DRAFT=$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq E2_TP=2
+export E2_MODEL=Qwen/Qwen3-32B E2_DRAFT=/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq E2_TP=2
 export E2_TRACE32=1 E2_POLICY="$REPO/research/82_runtime_switching/data/policy_table_32b.json"
 export VLLM_SELF_SPEC_POLICY_FILE="$E2_POLICY"
 export VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL=128 VLLM_SELF_SPEC_ACCEPT_PROBE_BURST=8 VLLM_SELF_SPEC_ACCEPT_GATE_MIN_BATCH=1

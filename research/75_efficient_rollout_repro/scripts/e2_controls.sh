@@ -7,7 +7,7 @@ set -u
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO="$(cd "$PHASE/../.." && pwd)"
 P52="$REPO/research/52_two_node_e2e"; PY="$REPO/.venv/bin/python"
-CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+CKPT_ROOT="${CKPT_ROOT:-/data/smcho/ckpts}"
 W4="$CKPT_ROOT/Qwen2.5-7B-Instruct-W4A16-INT4-sym"
 PROMPTS="$PHASE/prompts/math_prompts.txt"
 ME="$(whoami)"

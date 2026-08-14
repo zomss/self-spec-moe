@@ -15,7 +15,7 @@ export VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_S
 export CUDA_VISIBLE_DEVICES=${R89_GPUS:-4,5}
 export PYTHONFAULTHANDLER=1
 export R88_MODEL=Qwen/Qwen3-32B R88_TP=2
-export R88_DRAFT_W4WIN=$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq
+export R88_DRAFT_W4WIN=/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq
 export R88_REGIMES=RKS,R1,R5cot
 
 run_arm () {  # name arm K extra-env...
@@ -36,7 +36,7 @@ echo "=== R89-skip ALL DONE ($(date +%H:%M:%S)) ==="
 # appended mid-run (offset-safe): skip composes on ANY ckpt -- if it
 # stacks on Humming like it does on W4 (+3-4%), skip x Hum is the new
 # 32B winner. Measure it.
-export R88_DRAFT_W4A8=$HOME/ckpts/Qwen3-32B-W4A8-gptq
+export R88_DRAFT_W4A8=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq
 HUM=VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel
 run_arm skiphum_k5 w4a8 5 $SKIP $HUM
 run_arm skiphum_k4 w4a8 4 $SKIP $HUM

@@ -3,7 +3,7 @@
 set -euo pipefail
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LC_VENV="${LC_VENV:-$HOME/.cache/eff_lc_venv}"
-CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+CKPT_ROOT="${CKPT_ROOT:-/data/smcho/ckpts}"
 export HF_HOME=/data/smcho/huggingface
 PY="$LC_VENV/bin/python"
 

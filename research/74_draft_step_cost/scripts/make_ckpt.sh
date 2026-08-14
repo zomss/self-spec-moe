@@ -4,7 +4,7 @@
 set -u
 PHASE=/data/smcho/self-spec-moe/research/74_draft_step_cost
 LCVENV=${LC_VENV:-$HOME/.cache/eff_lc_venv}   # portable across servers; override via LC_VENV
-OUT_DIR="$HOME/ckpts/Qwen3-8B-W8A16-FP8"
+OUT_DIR="/data/smcho/ckpts/Qwen3-8B-W8A16-FP8"
 LOG="$PHASE/logs/make_ckpt.log"
 : > "$LOG"
 echo "[ckpt] disk free:" | tee -a "$LOG"; df -h "$HOME" /tmp 2>/dev/null | tee -a "$LOG"

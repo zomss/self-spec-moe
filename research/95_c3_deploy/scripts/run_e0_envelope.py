@@ -61,7 +61,7 @@ REGIMES = os.environ.get(
 ARCHS = {
     "dense": {
         "model": "Qwen/Qwen3-8B",
-        "draft": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
+        "draft": os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq"),
         "config": "q-hum_s-b2",
         "kv_limit": 330000,
         # skip sets are SEARCH-DERIVED PER ARCHITECTURE -- not a shared
@@ -72,7 +72,7 @@ ARCHS = {
     "llama": {
         "model": "NousResearch/Meta-Llama-3.1-8B-Instruct",
         "draft": os.path.expanduser(
-            "~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"),
+            "/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"),
         "config": "q-w4a16_s-b2",
         "kv_limit": 260000,
         "skip": "3,8",

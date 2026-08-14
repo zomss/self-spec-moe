@@ -42,12 +42,12 @@ case "$ARCH" in
   dense)
     MODEL="Qwen/Qwen3-8B"; TP=1; KVLIM=260000
     GPU="${STAGEA_GPU:-6}"
-    ARMS[w4a16]="$HOME/ckpts/Qwen3-8B-W4A16-INT4|$SHARED"
-    ARMS[w4a8cut]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|$SHARED"
-    ARMS[w4a8hum]="$HOME/ckpts/Qwen3-8B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
-    ARMS[w8int8]="$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym|$SHARED"
-    ARMS[w8fp8]="$HOME/ckpts/Qwen3-8B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
-    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-8B-FP8-dynamic|$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1"
+    ARMS[w4a16]="/data/smcho/ckpts/Qwen3-8B-W4A16-INT4|$SHARED"
+    ARMS[w4a8cut]="/data/smcho/ckpts/Qwen3-8B-W4A8-gptq|$SHARED"
+    ARMS[w4a8hum]="/data/smcho/ckpts/Qwen3-8B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+    ARMS[w8int8]="/data/smcho/ckpts/Qwen3-8B-W8A16-INT8-sym|$SHARED"
+    ARMS[w8fp8]="/data/smcho/ckpts/Qwen3-8B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+    ARMS[fp8dyn]="/data/smcho/ckpts/Qwen3-8B-FP8-dynamic|$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1"
     ARMS[win128]="$MODEL|$(winplain 128)"
     ARMS[win512]="$MODEL|$(winplain 512)"
     ARMS[win2048]="$MODEL|$(winplain 2048)"
@@ -59,9 +59,9 @@ case "$ARCH" in
   mla)
     MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; KVLIM=250000
     GPU="${STAGEA_GPU:-7}"
-    ARMS[w4a16]="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
-    ARMS[w8chan]="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|$SHARED"
-    ARMS[fp8dyn]="$HOME/ckpts/DeepSeek-V2-Lite-FP8-dynamic|$SHARED"
+    ARMS[w4a16]="/data/smcho/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+    ARMS[w8chan]="/data/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|$SHARED"
+    ARMS[fp8dyn]="/data/smcho/ckpts/DeepSeek-V2-Lite-FP8-dynamic|$SHARED"
     ARMS[win128]="$MODEL|$(winplain 128)"
     ARMS[win512]="$MODEL|$(winplain 512)"
     ARMS[win2048]="$MODEL|$(winplain 2048)"
@@ -73,9 +73,9 @@ case "$ARCH" in
   moe)
     MODEL="Qwen/Qwen3-30B-A3B"; TP=2; KVLIM=130000
     GPU="${STAGEA_GPU:-6,7}"
-    ARMS[w4a16]="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED"
-    ARMS[w8chan]="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
-    ARMS[fp8dyn]="$HOME/ckpts/Qwen3-30B-A3B-FP8-dynamic|$SHARED"
+    ARMS[w4a16]="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED"
+    ARMS[w8chan]="/data/smcho/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
+    ARMS[fp8dyn]="/data/smcho/ckpts/Qwen3-30B-A3B-FP8-dynamic|$SHARED"
     ARMS[win128]="$MODEL|$(winplain 128)"
     ARMS[win512]="$MODEL|$(winplain 512)"
     ARMS[win2048]="$MODEL|$(winplain 2048)"
@@ -89,9 +89,9 @@ case "$ARCH" in
     GPU="${STAGEA_GPU:-7}"
     SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b2'])" 2>/dev/null || echo "2,8")
     SB4=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b4'])" 2>/dev/null || echo "2,4,8,10")
-    ARMS[w4a16]="$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|$SHARED"
-    ARMS[w8int8]="$HOME/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|$SHARED"
-    ARMS[fp8dyn]="$HOME/ckpts/Llama31-8B-Instruct-FP8-dynamic|$SHARED"
+    ARMS[w4a16]="/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|$SHARED"
+    ARMS[w8int8]="/data/smcho/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|$SHARED"
+    ARMS[fp8dyn]="/data/smcho/ckpts/Llama31-8B-Instruct-FP8-dynamic|$SHARED"
     ARMS[win128]="$MODEL|$(winstack 128)"
     ARMS[win512]="$MODEL|$(winstack 512)"
     ARMS[win2048]="$MODEL|$(winstack 2048)"
@@ -105,10 +105,10 @@ case "$ARCH" in
     GPU="${STAGEA_GPU:-6,7}"
     SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b2'])" 2>/dev/null || echo "2,8")
     SB4=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_q3_32b.json'))['b4'])" 2>/dev/null || echo "2,4,8,10")
-    ARMS[w4gptq]="$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|$SHARED"
-    ARMS[w4a8]="$HOME/ckpts/Qwen3-32B-W4A8-gptq|$SHARED"
-    ARMS[w4a8hum]="$HOME/ckpts/Qwen3-32B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
-    ARMS[w8fp8]="$HOME/ckpts/Qwen3-32B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
+    ARMS[w4gptq]="/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq|$SHARED"
+    ARMS[w4a8]="/data/smcho/ckpts/Qwen3-32B-W4A8-gptq|$SHARED"
+    ARMS[w4a8hum]="/data/smcho/ckpts/Qwen3-32B-W4A8-gptq|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+    ARMS[w8fp8]="/data/smcho/ckpts/Qwen3-32B-W8A16-FP8|$SHARED VLLM_TEST_FORCE_FP8_MARLIN=1"
     ARMS[win128]="$MODEL|$(winstack 128)"
     ARMS[win512]="$MODEL|$(winstack 512)"
     ARMS[win2048]="$MODEL|$(winstack 2048)"

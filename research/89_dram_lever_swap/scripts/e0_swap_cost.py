@@ -24,8 +24,8 @@ from safetensors import safe_open
 DEV = os.environ.get("E0_DEV", "cuda:0")
 CKPTS = os.environ.get(
     "E0_CKPTS",
-    os.path.expanduser("~/ckpts/Qwen3-8B-W4A16-INT4") + ","
-    + os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
+    os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4") + ","
+    + os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq"),
 ).split(",")
 
 

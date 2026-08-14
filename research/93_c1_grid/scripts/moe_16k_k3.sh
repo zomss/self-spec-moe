@@ -57,8 +57,8 @@ C16="16000"
 run_one off off "$MODEL" "$C16" ""
 
 declare -A LEAD
-LEAD[w4a16]="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
-LEAD[w8chan]="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
+LEAD[w4a16]="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
+LEAD[w8chan]="/data/smcho/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan|$SHARED"
 LEAD[win512]="$MODEL|$(winplain 512)"
 LEAD[win2048]="$MODEL|$(winplain 2048)"
 LEAD[win8192]="$MODEL|$(winplain 8192)"

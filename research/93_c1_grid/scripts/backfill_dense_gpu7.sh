@@ -56,10 +56,10 @@ for k in k2 k4; do run_one win128 $k "$MODEL" "$B64" "$(winstack 128)"; done
 for k in k2 k4 k6; do run_one win2048 $k "$MODEL" "$B64" "$(winstack 2048)"; done
 for k in k2 k4 k6; do run_one win8192 $k "$MODEL" "$B64" "$(winstack 8192)"; done
 # 3) fp8dyn without the cache-disable env (precompile conflict)
-for k in k2 k4 k6; do run_one fp8dyn $k "$HOME/ckpts/Qwen3-8B-FP8-dynamic" "$BFULL" "$SHARED"; done
+for k in k2 k4 k6; do run_one fp8dyn $k "/data/smcho/ckpts/Qwen3-8B-FP8-dynamic" "$BFULL" "$SHARED"; done
 # 4) Humming k2 wedge retry (two attempts)
-run_one w4a8hum k2 "$HOME/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
-run_one w4a8hum k2 "$HOME/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+run_one w4a8hum k2 "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+run_one w4a8hum k2 "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
 
 cp -f "$P82DATA"/cells_93_dense_*.csv "$PHASE/data/" 2>/dev/null
 echo "[BF] DENSE-BACKFILL-DONE"

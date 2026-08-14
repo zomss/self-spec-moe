@@ -14,9 +14,9 @@ cd "$REPO"
 GPU="${AN_GPU:-0}"; ARCH="${AN_ARCH:-dense}"
 HUM="VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
 case "$ARCH" in
-  dense) MODEL="Qwen/Qwen3-8B"; DRAFT="$HOME/ckpts/Qwen3-8B-W4A8-gptq"; QE="$HUM";;
+  dense) MODEL="Qwen/Qwen3-8B"; DRAFT="/data/smcho/ckpts/Qwen3-8B-W4A8-gptq"; QE="$HUM";;
   llama) MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"
-         DRAFT="$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; QE="";;
+         DRAFT="/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; QE="";;
 esac
 COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=1 VLLM_SELF_SPEC_CPU_ORCH=1"
 SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"

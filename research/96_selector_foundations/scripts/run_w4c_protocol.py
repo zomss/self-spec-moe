@@ -47,7 +47,7 @@ from regime_datasets import load_regime  # noqa: E402
 
 ARM = os.environ["W4C_ARM"]           # off | spec
 MODEL = "NousResearch/Meta-Llama-3.1-8B-Instruct"
-DRAFT = os.path.expanduser("~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
+DRAFT = os.path.expanduser("/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
 B = 8
 CTX = 14000
 K = 4

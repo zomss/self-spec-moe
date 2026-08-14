@@ -19,7 +19,7 @@ set -euo pipefail
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LC_VENV="${LC_VENV:-$HOME/.cache/eff_lc_venv}"
 SRC="${SRC_MODEL:-Qwen/Qwen2.5-7B-Instruct}"
-CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+CKPT_ROOT="${CKPT_ROOT:-/data/smcho/ckpts}"
 MK="$PHASE/scripts/make_wxa16_ckpt.py"
 mkdir -p "$CKPT_ROOT"
 

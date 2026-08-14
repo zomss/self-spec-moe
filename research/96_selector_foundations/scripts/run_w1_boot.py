@@ -43,7 +43,7 @@ BOOT = int(os.environ.get("W1_BOOT", "0"))
 ITERS = int(os.environ.get("W1_ITERS", "3"))
 
 MODEL = "NousResearch/Meta-Llama-3.1-8B-Instruct"
-DRAFT = os.path.expanduser("~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
+DRAFT = os.path.expanduser("/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
 SKIP = "3,8"
 KMAX = 4
 

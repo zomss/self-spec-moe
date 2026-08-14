@@ -16,7 +16,7 @@ cleanup() { for g in ${1//,/ }; do for p in $(nvidia-smi --query-compute-apps=pi
 
 cleanup 0
 env CUDA_VISIBLE_DEVICES=0 G93_MODEL=deepseek-ai/DeepSeek-V2-Lite G93_TP=1 \
-    G93_DRAFT="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan" G93_K=4 \
+    G93_DRAFT="/data/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan" G93_K=4 \
     G93_BATCHES=32 G93_DATASETS=R2 G93_ITERS=3 G93_CEILING=2048 G93_MAXLEN=24576 \
     G93_TUNE=0 G93_FIXED_LEN=256 G93_TAG=w8d_mla_unc_noprof \
     G93_OUT="$PHASE/data/w8/w8d_mla_uncond_noprof_b32.json" $SHARED \
@@ -24,7 +24,7 @@ env CUDA_VISIBLE_DEVICES=0 G93_MODEL=deepseek-ai/DeepSeek-V2-Lite G93_TP=1 \
     > "$PHASE/logs/w8d_mla.log" 2>&1 || echo "FAILED mla"
 cleanup 0,1
 env CUDA_VISIBLE_DEVICES=0,1 G93_MODEL=Qwen/Qwen3-30B-A3B G93_TP=2 \
-    G93_DRAFT="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym" G93_K=4 \
+    G93_DRAFT="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym" G93_K=4 \
     G93_BATCHES=32 G93_DATASETS=R2 G93_ITERS=3 G93_CEILING=16384 G93_MAXLEN=24576 \
     G93_TUNE=0 G93_FIXED_LEN=256 G93_TAG=w8d_moe_unc_noprof \
     G93_OUT="$PHASE/data/w8/w8d_moe_uncond_noprof_b32.json" $SHARED \

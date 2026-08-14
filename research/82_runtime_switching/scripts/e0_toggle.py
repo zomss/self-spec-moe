@@ -24,7 +24,7 @@ from pathlib import Path
 
 PHASE = Path(__file__).resolve().parents[1]
 OUT = PHASE / "data/e0_toggle.json"
-CKPT = os.path.expanduser("~/ckpts/Qwen3-8B-W4A16-INT4")
+CKPT = os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4")
 PROMPTS = PHASE.parent / "57_large_ep_spec_strategy/data/prompts_ondist.txt"
 
 

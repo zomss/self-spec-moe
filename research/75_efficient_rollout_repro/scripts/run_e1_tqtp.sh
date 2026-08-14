@@ -20,7 +20,7 @@ set -u
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO="$(cd "$PHASE/../.." && pwd)"
 PY="$REPO/.venv/bin/python"
-CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+CKPT_ROOT="${CKPT_ROOT:-/data/smcho/ckpts}"
 BASE="${E75_MODEL:-Qwen/Qwen2.5-7B-Instruct}"
 W4="${E75_W4:-$CKPT_ROOT/Qwen2.5-7B-Instruct-W4A16-INT4-sym}"
 W8="${E75_W8:-$CKPT_ROOT/Qwen2.5-7B-Instruct-W8A16-INT8-sym}"

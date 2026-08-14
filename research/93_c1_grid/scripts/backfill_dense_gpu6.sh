@@ -49,9 +49,9 @@ B64="1,4,8,16,32,64"
 BFULL="1,4,8,16,32,64,128"
 
 for k in k2 k4 k6; do run_one win8192 $k "$MODEL" "$B64" "$(winstack 8192)"; done
-for k in k2 k4 k6; do run_one fp8dyn $k "$HOME/ckpts/Qwen3-8B-FP8-dynamic" "$BFULL" "$SHARED"; done
-run_one w4a8hum k2 "$HOME/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
-run_one w4a8hum k2 "$HOME/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+for k in k2 k4 k6; do run_one fp8dyn $k "/data/smcho/ckpts/Qwen3-8B-FP8-dynamic" "$BFULL" "$SHARED"; done
+run_one w4a8hum k2 "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
+run_one w4a8hum k2 "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq" "$BFULL" "$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
 
 cp -f "$P82DATA"/cells_93_dense_*.csv "$PHASE/data/" 2>/dev/null
 echo "[BF] DENSE-BACKFILL6-DONE"

@@ -11,7 +11,7 @@ import os
 
 import torch
 
-CKPT = os.path.expanduser("~/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym")
+CKPT = os.path.expanduser("/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym")
 TP = 2
 
 PICK = ("layers.1.mlp.experts", "layers.1.self_attn.qkv_proj",

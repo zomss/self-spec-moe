@@ -15,7 +15,7 @@ export VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_S
 export VLLM_ALLOW_INSECURE_SERIALIZATION=1
 export CUDA_VISIBLE_DEVICES=0
 export COMPILE_MODEL=Qwen/Qwen3-8B
-export COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A16-INT4
+export COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A16-INT4
 export COMPILE_CELLS=policy_cells_w4grid.csv
 export COMPILE_TABLE=policy_table_w4grid.json
 for arm in off k2 k3 k4; do
@@ -33,7 +33,7 @@ print("k3-filtered table written")
 PYEOF
 export E3_MODE=run E3_EPS=0,0.1,0.2,0.3,0.4 E3_GATE=2.45 E3_POLL=10
 export E3_MAXTOK=3072 E3_EOS=1
-export E3_DRAFT=$HOME/ckpts/Qwen3-8B-W4A16-INT4
+export E3_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A16-INT4
 run_arm () {
   local name=$1 k=$2 table=$3
   echo "=== MK $name ($(date +%H:%M:%S)) ==="

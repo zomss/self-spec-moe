@@ -12,7 +12,7 @@ from compressed_tensors.quantization import (
 )
 
 SRC = os.environ.get("SRC_MODEL", "Qwen/Qwen3-8B")
-OUT = os.environ.get("OUT_DIR", os.path.expanduser("~/ckpts/Qwen3-8B-W4A16-INT4"))
+OUT = os.environ.get("OUT_DIR", os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"))
 
 scheme = QuantizationScheme(
     targets=["Linear"],

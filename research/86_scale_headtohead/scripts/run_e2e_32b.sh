@@ -1,6 +1,6 @@
 #!/bin/bash
 # E4: Qwen3-32B e2e arms (TP2, GPUs 0-1) -- the matched-scale head-to-head row vs KnapSpec's
-# 1.28x, plus our batch/context rows. W4 draft ckpt: ~/ckpts/Qwen3-8B-W4A16-INT4
+# 1.28x, plus our batch/context rows. W4 draft ckpt: /data/smcho/ckpts/Qwen3-8B-W4A16-INT4
 # (P74, data-free RTN -- matches the measured beta 0.9523 fake-quant semantics).
 # Run BY PATH: bash scripts/run_e2e_8b.sh [filter]
 set -u
@@ -38,7 +38,7 @@ run(){  # arm mode K B ctx [extra-env...]
     export W7_MASTER_PORT=$((19600 + K + B + RANDOM % 40))
     export VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=180
     if [ "$MODE" = spec ]; then
-      export W7_SPEC_METHOD=draft_model W7_SPEC_MODEL="$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq"
+      export W7_SPEC_METHOD=draft_model W7_SPEC_MODEL="/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq"
       export VLLM_DISABLED_KERNELS="MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
     fi
     for kv in "$@"; do export "${kv?}"; done
@@ -63,20 +63,20 @@ want w4win_b1_k6 && run w4win  spec   6 1 16384 $WINENV $FIXENV
 want w4win_b1_t07 && run w4wint07 spec 4 1 16384 W7_TEMP=0.7 $WINENV $FIXENV
 want w4win_b8    && run w4win8 spec   5 8 16384 $WINENV $FIXENV
 want fp8win_b1   && run fp8win spec   5 1 16384 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV
-want fp8mwin_b1_k5 && run fp8mwin spec 5 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
-want fp8mwin_b1_k6 && run fp8mwin spec 6 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
+want fp8mwin_b1_k5 && run fp8mwin spec 5 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
+want fp8mwin_b1_k6 && run fp8mwin spec 6 1 16384 VLLM_TEST_FORCE_FP8_MARLIN=1 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W8A16-FP8 $WINENV $FIXENV
 want nospec_b1_t07 && run nospect07 nospec 0 1 16384 W7_TEMP=0.7
 want best_b1_t07 && run bestt07 spec  5 1 16384 W7_TEMP=0.7 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV
 # W4A8 queue arm (map v6.3): default disable list keeps Cutlass off -> Humming
-want w4a8win_b8  && run w4a8win spec 5 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b8  && run w4a8win spec 5 8 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
 # b1 prose Humming arms (88 canonical sweep: Humming wins every 32B b1 cell
 # on the serving driver -> re-price the KnapSpec parity cell, their 1.43)
-want w4a8win_b1_k4 && run w4a8win spec 4 1 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
-want w4a8win_b1_k5 && run w4a8win spec 5 1 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b1_k4 && run w4a8win spec 4 1 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b1_k5 && run w4a8win spec 5 1 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
 # b16 cell (8B evidence: the W4A8 win grows with batch; K6 matches 8B b16 geometry)
 want nospec_b16  && run nospec nospec 0 16 16384
 want w4win_b16   && run w4win16 spec  6 16 16384 $WINENV $FIXENV
-want w4a8win_b16 && run w4a8win spec 6 16 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
+want w4a8win_b16 && run w4a8win spec 6 16 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq $WINENV $FIXENV
 # --- our regime bonus row
 want nospec_b8   && run nospec nospec 0 8 16384
 want best_b8     && run best8  spec   5 8 16384 W7_SPEC_MODEL=Qwen/Qwen3-32B W7_DRAFT_QUANT=fp8_per_block $WINENV $FIXENV

@@ -16,10 +16,10 @@ export CUDA_VISIBLE_DEVICES=0
 
 if [ ! -f research/91_bandit_stage3/data/policy_table_e6.json ]; then
   echo "[e6-compile] k8 cells ($(date +%H:%M:%S))"
-  env COMPILE_MODEL=Qwen/Qwen3-8B COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A8-gptq \
+  env COMPILE_MODEL=Qwen/Qwen3-8B COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq \
     COMPILE_CELLS=policy_cells_hum.csv COMPILE_TABLE=policy_table_hum_k8.json \
     timeout -k 30 1200 .venv/bin/python research/82_runtime_switching/scripts/compile_policy.py --measure k8
-  env COMPILE_MODEL=Qwen/Qwen3-8B COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A8-gptq \
+  env COMPILE_MODEL=Qwen/Qwen3-8B COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq \
     COMPILE_CELLS=policy_cells_hum.csv COMPILE_TABLE=policy_table_hum_k8.json \
     .venv/bin/python research/82_runtime_switching/scripts/compile_policy.py --solve
   .venv/bin/python - <<'PYEOF'

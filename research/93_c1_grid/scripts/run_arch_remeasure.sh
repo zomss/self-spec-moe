@@ -15,16 +15,16 @@ SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE
 case "$ARCH" in
   mla)  MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; KVLIM=250000
         case "$ARM" in
-          w4a16) DRAFT="$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym"; EXTRA="$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel";;
-          w8chan) DRAFT="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan"; EXTRA="$SHARED";;
+          w4a16) DRAFT="/data/smcho/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym"; EXTRA="$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel";;
+          w8chan) DRAFT="/data/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan"; EXTRA="$SHARED";;
         esac;;
   moe)  MODEL="Qwen/Qwen3-30B-A3B"; TP=2; KVLIM=130000
         case "$ARM" in
-          w4a16) DRAFT="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"; EXTRA="$SHARED";;
-          w8chan) DRAFT="$HOME/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan"; EXTRA="$SHARED";;
+          w4a16) DRAFT="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"; EXTRA="$SHARED";;
+          w8chan) DRAFT="/data/smcho/ckpts/Qwen3-30B-A3B-W8A16-INT8-chan"; EXTRA="$SHARED";;
         esac;;
   llama) MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; TP=1; KVLIM=260000
-        DRAFT="$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; EXTRA="$SHARED";;
+        DRAFT="/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; EXTRA="$SHARED";;
 esac
 gpu_cleanup() {
   for i in ${GPU//,/ }; do

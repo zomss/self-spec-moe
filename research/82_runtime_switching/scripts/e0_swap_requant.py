@@ -15,7 +15,7 @@ import time
 
 import torch
 
-CKPT = os.path.expanduser("~/ckpts/Qwen3-8B-W4A16-INT4")
+CKPT = os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4")
 
 
 def bench_swap():

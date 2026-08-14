@@ -24,7 +24,7 @@ from pathlib import Path
 PHASE = Path(__file__).resolve().parents[1]
 TARGET = os.environ.get("E92_TARGET", "Qwen/Qwen2.5-7B")
 DRAFT = os.path.expanduser(os.environ.get(
-    "E92_DRAFT", "~/ckpts/Qwen2.5-7B-W4A16-INT4-sym"))
+    "E92_DRAFT", "/data/smcho/ckpts/Qwen2.5-7B-W4A16-INT4-sym"))
 K = int(os.environ.get("E92_K", "4"))
 TAG = os.environ.get("E92_TAG", "step?")
 N_PROMPTS = int(os.environ.get("E92_NPROMPTS", "16"))

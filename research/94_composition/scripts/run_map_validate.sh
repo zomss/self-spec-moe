@@ -15,13 +15,13 @@ COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=
 SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
 WIN2048="VLLM_SELF_SPEC_DRAFT_KV_WINDOW=2048 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16 VLLM_SELF_SPEC_DRAFT_FULLCG=1"
 case "$ARCH" in
-  dense) M="Qwen/Qwen3-8B"; DR="$HOME/ckpts/Qwen3-8B-W4A8-gptq"; QE="$HUM"
+  dense) M="Qwen/Qwen3-8B"; DR="/data/smcho/ckpts/Qwen3-8B-W4A8-gptq"; QE="$HUM"
          KARM=k4
          WIN_EXTRA="$WIN2048 VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"   # q-hum_w-2048_s-b2
          SGL_EXTRA=""                                                 # q-hum_w-none_s-none
          ;;
   llama) M="NousResearch/Meta-Llama-3.1-8B-Instruct"
-         DR="$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; QE=""
+         DR="/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"; QE=""
          KARM=k2
          WIN_EXTRA="$WIN2048"                                         # q-w4a16_w-2048_s-none
          SGL_EXTRA=""                                                 # q-w4a16_w-none_s-none

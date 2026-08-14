@@ -57,7 +57,7 @@ def main():
     llm = LLM(model="Qwen/Qwen3-8B",
               speculative_config={
                   "method": "draft_model",
-                  "model": os.path.expanduser("~/ckpts/Qwen3-8B-W4A16-INT4"),
+                  "model": os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"),
                   "num_speculative_tokens": 4,
                   "draft_tensor_parallel_size": 1},
               tensor_parallel_size=1, max_model_len=8192,

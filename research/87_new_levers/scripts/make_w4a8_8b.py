@@ -7,7 +7,7 @@ from llmcompressor.modifiers.quantization import GPTQModifier
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 SRC = "Qwen/Qwen3-8B"
-OUT = os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq")
+OUT = os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq")
 model = AutoModelForCausalLM.from_pretrained(SRC, dtype="bfloat16", device_map="cuda")
 tok = AutoTokenizer.from_pretrained(SRC)
 files = glob.glob("/data/smcho/huggingface/hub/datasets--allenai--c4/**/*.json.gz",

@@ -31,10 +31,10 @@ case "$ARM" in
   # for the collision. Post-fix that env FAILS outright ("Cannot precompile
   # with force_disable_caches=True"), which proves fp8dyn never compiled its
   # own graph in C1 -- it only ever booted by loading a foreign cached one.
-  fp8dyn)  DRAFT="$HOME/ckpts/Qwen3-8B-FP8-dynamic";   EXTRA="$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1";;
-  fp8dyn_nc) DRAFT="$HOME/ckpts/Qwen3-8B-FP8-dynamic"; EXTRA="$SHARED";;
-  w4a8cut) DRAFT="$HOME/ckpts/Qwen3-8B-W4A8-gptq";     EXTRA="$SHARED";;
-  w4a16)   DRAFT="$HOME/ckpts/Qwen3-8B-W4A16-INT4";    EXTRA="$SHARED";;
+  fp8dyn)  DRAFT="/data/smcho/ckpts/Qwen3-8B-FP8-dynamic";   EXTRA="$SHARED TORCHINDUCTOR_FORCE_DISABLE_CACHES=1";;
+  fp8dyn_nc) DRAFT="/data/smcho/ckpts/Qwen3-8B-FP8-dynamic"; EXTRA="$SHARED";;
+  w4a8cut) DRAFT="/data/smcho/ckpts/Qwen3-8B-W4A8-gptq";     EXTRA="$SHARED";;
+  w4a16)   DRAFT="/data/smcho/ckpts/Qwen3-8B-W4A16-INT4";    EXTRA="$SHARED";;
 esac
 gpu_cleanup() {
   local u; u=$(nvidia-smi --query-gpu=uuid --format=csv,noheader -i "$GPU")

@@ -6,7 +6,7 @@ set -euo pipefail
 STEP=${1:?usage: make_fresh_drafter.sh <step>}
 CKPT_DIR=${CKPT_DIR:-/data/smcho/ckpts/92_grpo_no-sd}
 SRC="$CKPT_DIR/global_step_${STEP}/actor/huggingface"
-OUT="$HOME/ckpts/92-drafter-step${STEP}-W4A16-INT4-sym"
+OUT="/data/smcho/ckpts/92-drafter-step${STEP}-W4A16-INT4-sym"
 [ -f "$SRC/config.json" ] || { echo "no dump at $SRC"; exit 1; }
 # completeness gate, not existence: a killed build leaves a partial dir
 # (observed: dir present but config.json missing quantization_config)

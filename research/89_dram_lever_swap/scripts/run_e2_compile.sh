@@ -13,7 +13,7 @@ export VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1
 export VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1
 export CUDA_VISIBLE_DEVICES=0
 export COMPILE_MODEL=Qwen/Qwen3-8B
-export COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A8-gptq
+export COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq
 export VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel
 export COMPILE_CELLS=policy_cells_hum.csv
 export COMPILE_TABLE=policy_table_hum.json

@@ -46,14 +46,14 @@ REGIMES = os.environ.get("W2_REGIMES", "R4,R5,R5cot,R8,R1,R6").split(",")
 ARCHS = {   # identical to 95/run_e0_envelope.py
     "dense": {
         "model": "Qwen/Qwen3-8B",
-        "draft": os.path.expanduser("~/ckpts/Qwen3-8B-W4A8-gptq"),
+        "draft": os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq"),
         "config": "q-hum_s-b2",
         "skip": "2,8",
     },
     "llama": {
         "model": "NousResearch/Meta-Llama-3.1-8B-Instruct",
         "draft": os.path.expanduser(
-            "~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"),
+            "/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym"),
         "config": "q-w4a16_s-b2",
         "skip": "3,8",
     },

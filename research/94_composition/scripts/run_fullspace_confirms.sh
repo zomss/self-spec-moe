@@ -29,12 +29,12 @@ gpu_cleanup() {
 python3 - "$PHASE/../../paper/data/c2_fullspace_plan.json" <<'PY' > /tmp/fs_plan.txt
 import json, sys
 plan = json.load(open(sys.argv[1]))["plan"]
-CK = {"w4a16": ("$HOME/ckpts/Qwen3-8B-W4A16-INT4", ""),
-      "w4a8cut": ("$HOME/ckpts/Qwen3-8B-W4A8-gptq", ""),
-      "w4a8hum": ("$HOME/ckpts/Qwen3-8B-W4A8-gptq", "HUM"),
-      "w8int8": ("$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym", ""),
-      "w8fp8": ("$HOME/ckpts/Qwen3-8B-W8A16-FP8", "VLLM_TEST_FORCE_FP8_MARLIN=1"),
-      "fp8dyn": ("$HOME/ckpts/Qwen3-8B-FP8-dynamic", "VLLM_SELF_SPEC_DRAFT_EAGER=1")}
+CK = {"w4a16": ("/data/smcho/ckpts/Qwen3-8B-W4A16-INT4", ""),
+      "w4a8cut": ("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq", ""),
+      "w4a8hum": ("/data/smcho/ckpts/Qwen3-8B-W4A8-gptq", "HUM"),
+      "w8int8": ("/data/smcho/ckpts/Qwen3-8B-W8A16-INT8-sym", ""),
+      "w8fp8": ("/data/smcho/ckpts/Qwen3-8B-W8A16-FP8", "VLLM_TEST_FORCE_FP8_MARLIN=1"),
+      "fp8dyn": ("/data/smcho/ckpts/Qwen3-8B-FP8-dynamic", "VLLM_SELF_SPEC_DRAFT_EAGER=1")}
 SK = {"skipb2": "2,8", "skipb4": "2,4,8,10"}
 for name, ks in sorted(plan.items()):
     parts = name.split("+")

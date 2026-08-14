@@ -14,8 +14,8 @@ export VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1
 export VLLM_SELF_SPEC_DRAFT_FULLCG=1 VLLM_SELF_SPEC_DRAFT_STEP0_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_WHOLECHAIN=1
 export CUDA_VISIBLE_DEVICES=${R88_GPUS:-0,1}
 export R88_MODEL=Qwen/Qwen3-32B R88_TP=2
-export R88_DRAFT_W4WIN=$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq
-export R88_DRAFT_W4A8=$HOME/ckpts/Qwen3-32B-W4A8-gptq
+export R88_DRAFT_W4WIN=/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq
+export R88_DRAFT_W4A8=/data/smcho/ckpts/Qwen3-32B-W4A8-gptq
 HUM=VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel
 
 run_arm () {  # arm K extra-env...

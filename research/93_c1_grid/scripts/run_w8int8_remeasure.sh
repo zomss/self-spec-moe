@@ -23,9 +23,9 @@ COMMON="VLLM_SELF_SPEC_DRAFT_DP_COORD_CPU=1 VLLM_SELF_SPEC_DRAFT_CHAIN_LIGHT_MD=
 SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE=1 VLLM_SELF_SPEC_SKIP_PREFILL_DRAFT=1 VLLM_SELF_SPEC_DRAFT_FULL_CG=1 VLLM_SELF_SPEC_DRAFT_CHAIN_PIECEWISE=1"
 case "$ARCH" in
   dense) MODEL="Qwen/Qwen3-8B"; KVLIM=260000
-         DRAFT="$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym";;
+         DRAFT="/data/smcho/ckpts/Qwen3-8B-W8A16-INT8-sym";;
   llama) MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; KVLIM=260000
-         DRAFT="$HOME/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym";;
+         DRAFT="/data/smcho/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym";;
 esac
 gpu_cleanup() {
   local u; u=$(nvidia-smi --query-gpu=uuid --format=csv,noheader -i "$GPU")

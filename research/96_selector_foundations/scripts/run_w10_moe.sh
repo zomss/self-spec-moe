@@ -17,7 +17,7 @@ SHARED="$COMMON VLLM_SELF_SPEC_SHARED_KV=1 VLLM_SELF_SPEC_SHARED_KV_STEP0_DECODE
 winplain() { echo "$SHARED VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$1 VLLM_SELF_SPEC_DRAFT_KV_SINKS=16"; }
 
 MODEL="Qwen/Qwen3-30B-A3B"
-CKPT="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"
+CKPT="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"
 # per-regime natural p50 from the Stage-B off arm (median across batches)
 FLEN="R1:280,R2:205,R3:265,R4:815,R5:330,R5cot:1030,R6:76,R7:23,R8:1250"
 

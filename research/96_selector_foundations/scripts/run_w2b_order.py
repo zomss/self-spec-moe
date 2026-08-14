@@ -36,7 +36,7 @@ sys.path.insert(0, str(PHASE.parent / "88_regime_eval/scripts"))
 from regime_datasets import load_regime  # noqa: E402
 
 MODEL = "NousResearch/Meta-Llama-3.1-8B-Instruct"
-DRAFT = os.path.expanduser("~/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
+DRAFT = os.path.expanduser("/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym")
 ITERS = int(os.environ.get("W2B_ITERS", "3"))
 
 

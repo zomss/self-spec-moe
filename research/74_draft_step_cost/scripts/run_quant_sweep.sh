@@ -48,7 +48,7 @@ run d_w8a8_prefill   "$DENSE" "$DPAR" "--quantization fp8"      ""              
 # quant detected from the checkpoint config (no --quantization flag). Marlin gated off on
 # SM90 without this env. Expect a WIN at weight-bound decode (decshort), weak at KV-bound.
 export VLLM_TEST_FORCE_FP8_MARLIN=1
-WO_CK="$HOME/ckpts/Qwen3-8B-W8A16-FP8"
+WO_CK="/data/smcho/ckpts/Qwen3-8B-W8A16-FP8"
 run d_wo_declong     "$WO_CK" "$DPAR" ""                        ""                         16384 128 1
 run d_wo_decshort    "$WO_CK" "$DPAR" ""                        ""                           512 128 1
 unset VLLM_TEST_FORCE_FP8_MARLIN
@@ -56,7 +56,7 @@ unset VLLM_TEST_FORCE_FP8_MARLIN
 # ---- DENSE weight-only INT4 (Machete, 4x read cut) — the STRONGER weight-only lever ----
 # quant detected from ckpt; int4 Machete/Marlin are NOT gated on Hopper (no force env).
 # Head-to-head vs d_wo_* (fp8 2x) and d_bf16_* : does the 4x cut win bigger at weight-bound?
-I4_CK="$HOME/ckpts/Qwen3-8B-W4A16-INT4"
+I4_CK="/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"
 run d_int4_declong   "$I4_CK" "$DPAR" ""                        ""                         16384 128 1
 run d_int4_decshort  "$I4_CK" "$DPAR" ""                        ""                           512 128 1
 

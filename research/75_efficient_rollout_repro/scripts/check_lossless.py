@@ -11,7 +11,7 @@ Run once per mode (separate processes; a 7B target + 7B draft in one process is 
 and the second engine can inherit the first's allocator state):
 
   python check_lossless.py --mode nospec --out data/lossless_nospec.json
-  python check_lossless.py --mode spec --draft ~/ckpts/... --out data/lossless_spec.json
+  python check_lossless.py --mode spec --draft /data/smcho/ckpts/... --out data/lossless_spec.json
   python check_lossless.py --compare data/lossless_nospec.json data/lossless_spec.json
 """
 

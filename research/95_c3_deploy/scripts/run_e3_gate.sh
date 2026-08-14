@@ -39,11 +39,11 @@ case "$ARCH" in
     MODEL="deepseek-ai/DeepSeek-V2-Lite"; TP=1; MAXLEN=24576
     # V2-Lite's base model LOOPS at T=0 on 8/9 datasets -> ceiling protocol (93)
     CEIL=2048
-    DRAFT="$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan"
+    DRAFT="/data/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan"
     TABLE="$PHASE/data/policy_mla_q-w8chan_wnone.json" ;;
   moe)
     MODEL="Qwen/Qwen3-30B-A3B"; TP=2; MAXLEN=24576; CEIL=16384
-    DRAFT="$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"
+    DRAFT="/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym"
     TABLE="$PHASE/data/policy_moe_q-w4a16_wnone.json" ;;
   *) echo "unknown arch $ARCH"; exit 2 ;;
 esac

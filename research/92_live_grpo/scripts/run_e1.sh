@@ -11,7 +11,7 @@ set -euo pipefail
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO=/data/smcho/self-spec-moe
 CKPT_DIR=${CKPT_DIR:-/data/smcho/ckpts/92_grpo_no-sd}
-DRAFT0=${DRAFT0:-$HOME/ckpts/Qwen2.5-7B-W4A16-INT4-sym}
+DRAFT0=${DRAFT0:-/data/smcho/ckpts/Qwen2.5-7B-W4A16-INT4-sym}
 K=${E1_K:-4}
 GPU=${E1_GPU:-0}
 STEPS=("$@")
@@ -47,7 +47,7 @@ for s in "${STEPS[@]}"; do
   fi
   run_one "$hf" "$DRAFT0" "step${s}-stale"
   if [ "${E1_FRESH:-0}" = "1" ]; then
-    dk="$HOME/ckpts/92-drafter-step${s}-W4A16-INT4-sym"
+    dk="/data/smcho/ckpts/92-drafter-step${s}-W4A16-INT4-sym"
     [ -d "$dk" ] && run_one "$hf" "$dk" "step${s}-fresh"
   fi
 done

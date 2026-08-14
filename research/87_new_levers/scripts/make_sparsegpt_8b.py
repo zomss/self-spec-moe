@@ -9,7 +9,7 @@ from llmcompressor.modifiers.pruning import SparseGPTModifier
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 SRC = "Qwen/Qwen3-8B"
-OUT = os.path.expanduser("~/ckpts/Qwen3-8B-sparse24-sgpt")
+OUT = os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-sparse24-sgpt")
 model = AutoModelForCausalLM.from_pretrained(SRC, dtype="bfloat16", device_map="cuda")
 tok = AutoTokenizer.from_pretrained(SRC)
 files = glob.glob(os.path.expanduser(

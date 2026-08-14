@@ -63,7 +63,7 @@ boot() {  # gpus arch model tp flen name draft k window extra
         || echo "[W11] FAILED $arch/$name (continuing)"
 }
 
-LC="$HOME/ckpts"
+LC="/data/smcho/ckpts"
 llama_lane0() {
   boot 0 llama "$LLAMA_MODEL" 1 "$LLAMA_FLEN" off off 0 0 "" ""
   boot 0 llama "$LLAMA_MODEL" 1 "$LLAMA_FLEN" w4a16_k2 \

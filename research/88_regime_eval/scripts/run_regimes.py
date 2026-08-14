@@ -25,9 +25,9 @@ ARM = os.environ.get("R88_ARM", "off")
 K = int(os.environ.get("R88_K", "6"))
 ITERS = int(os.environ.get("R88_ITERS", "3"))
 DRAFTS = {"w4win": os.environ.get(
-              "R88_DRAFT_W4WIN", "~/ckpts/Qwen3-8B-W4A16-INT4"),
+              "R88_DRAFT_W4WIN", "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"),
           "w4a8": os.environ.get(
-              "R88_DRAFT_W4A8", "~/ckpts/Qwen3-8B-W4A8-gptq")}
+              "R88_DRAFT_W4A8", "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq")}
 
 
 def spec_counters(llm):

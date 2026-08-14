@@ -33,7 +33,7 @@ GROUP = int(os.environ.get("GROUP", "128"))
 OUT = os.environ.get(
     "OUT_DIR",
     os.path.expanduser(
-        f"~/ckpts/{SRC.split('/')[-1]}-W{BITS}A16-INT{BITS}-{'sym' if SYM else 'asym'}"
+        f"/data/smcho/ckpts/{SRC.split('/')[-1]}-W{BITS}A16-INT{BITS}-{'sym' if SYM else 'asym'}"
     ),
 )
 

@@ -11,7 +11,7 @@ from llmcompressor.modifiers.quantization import GPTQModifier
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 SRC = "Qwen/Qwen2.5-7B-Instruct"
-OUT = os.path.expanduser("~/ckpts/Qwen2.5-7B-Instruct-W4A16-INT4-gptq")
+OUT = os.path.expanduser("/data/smcho/ckpts/Qwen2.5-7B-Instruct-W4A16-INT4-gptq")
 
 model = AutoModelForCausalLM.from_pretrained(SRC, dtype="bfloat16",
                                              device_map="cuda")

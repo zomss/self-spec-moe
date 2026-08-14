@@ -32,9 +32,9 @@ case "$ARCH" in
     SB2=$(python3 -c "import json;print(json.load(open('$PHASE/data/skipsets_llama.json'))['b2'])" 2>/dev/null || echo "3,8")
     ARMLIST=(
       "off|off|0|||"
-      "w4a16_k2|$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|2|||$SHARED"
-      "w4a16_k4|$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|4|||$SHARED"
-      "w8int8_k2|$HOME/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|2|||$SHARED"
+      "w4a16_k2|/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|2|||$SHARED"
+      "w4a16_k4|/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym|4|||$SHARED"
+      "w8int8_k2|/data/smcho/ckpts/Llama31-8B-Instruct-W8A16-INT8-sym|2|||$SHARED"
       "win512_k2|self|2|512||$(winplain 512)"
       "win2048_k4|self|4|2048||$(winplain 2048)"
     )
@@ -43,8 +43,8 @@ case "$ARCH" in
     MODEL="Qwen/Qwen3-8B"; TP=1; GPU="${STAGEB_GPU:-6}"; MAXLEN=32768
     ARMLIST=(
       "off|off|0|||"
-      "w4a8hum_k2|$HOME/ckpts/Qwen3-8B-W4A8-gptq|2|||$SHARED $HUM"
-      "w4a8hum_k4|$HOME/ckpts/Qwen3-8B-W4A8-gptq|4|||$SHARED $HUM"
+      "w4a8hum_k2|/data/smcho/ckpts/Qwen3-8B-W4A8-gptq|2|||$SHARED $HUM"
+      "w4a8hum_k4|/data/smcho/ckpts/Qwen3-8B-W4A8-gptq|4|||$SHARED $HUM"
       "win2048_k4|self|4|2048||$(winplain 2048)"
       "win512_k2|self|2|512||$(winplain 512)"
       "win128_k2|self|2|128||$(winplain 128)"
@@ -57,13 +57,13 @@ case "$ARCH" in
     CEIL=2048
     ARMLIST=(
       "off|off|0|||"
-      "w8chan_k2|$HOME/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|2|||$SHARED"
+      "w8chan_k2|/data/smcho/ckpts/DeepSeek-V2-Lite-W8A16-INT8-chan|2|||$SHARED"
       # added after the cache-key fix: Stage-A originally reported w4a16 at
       # S~0.11 (a 9x slowdown) so it was never promoted to Stage B. Corrected,
       # it wins 13/14 Stage-A cells, so the Stage-B arm set was selected from
       # corrupt data and must include it.
-      "w4a16_k2|$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
-      "w4a16_k4|$HOME/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|4|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+      "w4a16_k2|/data/smcho/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
+      "w4a16_k4|/data/smcho/ckpts/DeepSeek-V2-Lite-W4A16-INT4-sym|4|||$SHARED VLLM_DISABLED_KERNELS=MarlinLinearKernel"
       "skipb2_k2|self|2||10,11|$SHARED"
     )
     ;;
@@ -72,8 +72,8 @@ case "$ARCH" in
     # filled from the (c)-updated winner map via STAGEB_MOE_ARMS or defaults
     ARMLIST=(
       "off|off|0|||"
-      "w4a16_k2|$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
-      "w4a16_k3|$HOME/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|3|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
+      "w4a16_k2|/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|2|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
+      "w4a16_k3|/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym|3|||$SHARED VLLM_DISABLED_KERNELS=MacheteLinearKernel"
       "win2048_k3|self|3|2048||$(winplain 2048)"
       "win8192_k3|self|3|8192||$(winplain 8192)"
     )
@@ -88,8 +88,8 @@ case "$ARCH" in
     # uncapped e2e on a non-wedging kernel (conservative vs Humming).
     ARMLIST=(
       "off|off|0|||"
-      "w4gptq_k4|$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|4|||$SHARED"
-      "w4gptq_k6|$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq|6|||$SHARED"
+      "w4gptq_k4|/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq|4|||$SHARED"
+      "w4gptq_k6|/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq|6|||$SHARED"
       "win512_k4|self|4|512||$(winplain 512)"
       "skipb2_k4|self|4||$SB2|$SHARED"
     )

@@ -12,7 +12,7 @@ set -euo pipefail
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO=/data/smcho/self-spec-moe
 CKPT_DIR=${CKPT_DIR:-/data/smcho/ckpts/92_grpo_no-sd}
-DRAFT0=${DRAFT0:-$HOME/ckpts/Qwen2.5-7B-W4A16-INT4-sym}
+DRAFT0=${DRAFT0:-/data/smcho/ckpts/Qwen2.5-7B-W4A16-INT4-sym}
 STEPS=${STEPS:-"1 2 4 8 12 16"}
 SEEDS=${SEEDS:-"0 1"}
 GPU=${E2_GPU:-0}
@@ -43,7 +43,7 @@ for seed in $SEEDS; do
     [ -f "$hf/config.json" ] || { echo "[e2] SKIP step $s"; continue; }
     run_one "$hf" "$DRAFT0" "e2-step${s}-stale" "$seed"
     if [ "${E2_FRESH:-0}" = "1" ]; then
-      dk="$HOME/ckpts/92-drafter-step${s}-W4A16-INT4-sym"
+      dk="/data/smcho/ckpts/92-drafter-step${s}-W4A16-INT4-sym"
       [ -d "$dk" ] && run_one "$hf" "$dk" "e2-step${s}-fresh" "$seed"
     fi
   done

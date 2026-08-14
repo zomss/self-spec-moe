@@ -26,8 +26,8 @@ case "$ARCH" in
   dense)
     MODEL="Qwen/Qwen3-8B"; TP=1; KVLIM=260000; GPU="${PROBE_GPU:-6}"
     BATCHES="1,8,32"; CTXS="2000,8000,14000"; KS="k2 k4"
-    Q4A8=$HOME/ckpts/Qwen3-8B-W4A8-gptq
-    Q4A16=$HOME/ckpts/Qwen3-8B-W4A16-INT4
+    Q4A8=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq
+    Q4A16=/data/smcho/ckpts/Qwen3-8B-W4A16-INT4
     HUM="VLLM_DISABLED_KERNELS=MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
     SK="VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=2,8"
     COMPS=(
@@ -42,7 +42,7 @@ case "$ARCH" in
   llama)
     MODEL="NousResearch/Meta-Llama-3.1-8B-Instruct"; TP=1; KVLIM=260000
     GPU="${PROBE_GPU:-7}"; BATCHES="1,8,32"; CTXS="2000,8000,14000"; KS="k2 k4"
-    Q4=$HOME/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym
+    Q4=/data/smcho/ckpts/Llama31-8B-Instruct-W4A16-INT4-sym
     SK="VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=3,8"
     COMPS=(
       "w4a16_x_win512|$Q4|$SHARED $(win 512)"
@@ -55,7 +55,7 @@ case "$ARCH" in
     MODEL="Qwen/Qwen3-32B"; TP=2; KVLIM=130000; GPU="${PROBE_GPU:-6,7}"
     BATCHES="1,8,32"; CTXS="2000,8000,14000"; KS="k4"
     # Machete (W4-GPTQ): Humming wedges at TP2 odd width (C1 ledger)
-    Q4G=$HOME/ckpts/Qwen3-32B-W4A16-INT4-gptq
+    Q4G=/data/smcho/ckpts/Qwen3-32B-W4A16-INT4-gptq
     SK="VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS=7,16"
     COMPS=(
       "w4gptq_x_win512|$Q4G|$SHARED $(win 512)"

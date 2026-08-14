@@ -17,7 +17,7 @@ for W in 512 4096; do
   for arm in off k2 k3; do
     echo "[e6d-compile] win$W arm=$arm ($(date +%H:%M:%S))"
     env VLLM_SELF_SPEC_DRAFT_KV_WINDOW=$W COMPILE_MODEL=Qwen/Qwen3-8B \
-      COMPILE_DRAFT=$HOME/ckpts/Qwen3-8B-W4A8-gptq \
+      COMPILE_DRAFT=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq \
       COMPILE_BATCHES=32,48 COMPILE_CTXS=2000,6000 \
       COMPILE_CELLS=cells_e6d_w$W.csv COMPILE_TABLE=table_e6d_w$W.json \
       timeout -k 30 1500 .venv/bin/python $CPS --measure $arm \

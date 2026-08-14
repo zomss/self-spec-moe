@@ -46,7 +46,7 @@ def main():
     if ARM != "off":
         spec = {"method": "draft_model",
                 "model": os.path.expanduser(os.environ.get(
-                    "E6_DRAFT", "~/ckpts/Qwen3-8B-W4A8-gptq")),
+                    "E6_DRAFT", "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq")),
                 "num_speculative_tokens": int(os.environ.get("E6_K", "8")),
                 "draft_tensor_parallel_size": 1}
         if os.environ.get("E6_SCHEDULE"):

@@ -48,7 +48,7 @@ export E76_MOE_GPUS="${E76_MOE_GPUS:-0,1,6,7}"
 export E76_DENSE="Qwen/Qwen2.5-7B-Instruct"           # 28 layers
 export E76_MOE="Qwen/Qwen3-30B-A3B"                   # 48 layers, GQA
 export E76_MLA="deepseek-ai/DeepSeek-V2-Lite"         # 27 layers, MLA
-CKPT_ROOT="${CKPT_ROOT:-$HOME/ckpts}"
+CKPT_ROOT="${CKPT_ROOT:-/data/smcho/ckpts}"
 export E76_W4="$CKPT_ROOT/Qwen2.5-7B-Instruct-W4A16-INT4-sym"
 
 # Force the Marlin mixed-precision kernel (else vLLM auto-picks Machete on SM90).

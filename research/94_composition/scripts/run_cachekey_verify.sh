@@ -35,8 +35,8 @@ run() {  # <name> <ckpt>
       >> "$PHASE/logs/cachekey_${TAG}.log" 2>&1 || echo "[CK:$TAG] FAIL $name"
   gpu_cleanup
 }
-run w4a16  "$HOME/ckpts/Qwen3-8B-W4A16-INT4"
-run w8int8 "$HOME/ckpts/Qwen3-8B-W8A16-INT8-sym"
+run w4a16  "/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"
+run w8int8 "/data/smcho/ckpts/Qwen3-8B-W8A16-INT8-sym"
 echo "[CK:$TAG] keys used:"
 grep -ohE "torch_compile_cache/[0-9a-f]{10}/rank_0_0/draft_model" "$PHASE/logs/cachekey_${TAG}.log" | sort -u
 cp -f "$P82DATA"/anom_ck_*.csv "$PHASE/data/" 2>/dev/null

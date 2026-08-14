@@ -5,7 +5,7 @@
 set -u
 PHASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PY=/data/smcho/self-spec-moe/.venv/bin/python
-W4="$HOME/ckpts/Qwen2.5-7B-Instruct-W4A16-INT4-sym"
+W4="/data/smcho/ckpts/Qwen2.5-7B-Instruct-W4A16-INT4-sym"
 source "$PHASE/scripts/env_e75.sh"
 # Batch-invariant on BOTH arms directly. COMPILE_CONSISTENT only fires inside
 # SpeculativeConfig (spec arm), so it would leave nospec on default kernels ->

@@ -16,7 +16,7 @@ from compressed_tensors.quantization import (
 )
 
 SRC = os.environ.get("SRC_MODEL", "Qwen/Qwen3-8B")
-OUT = os.environ.get("OUT_DIR", os.path.expanduser("~/ckpts/Qwen3-8B-W8A16-FP8"))
+OUT = os.environ.get("OUT_DIR", os.path.expanduser("/data/smcho/ckpts/Qwen3-8B-W8A16-FP8"))
 
 # fp8 weights, per-channel static, symmetric; NO input_activations -> weight-only A16.
 scheme = QuantizationScheme(

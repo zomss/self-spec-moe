@@ -1,6 +1,6 @@
 #!/bin/bash
 # E2: Qwen3-8B e2e arms -- the matched-scale head-to-head row vs KnapSpec's
-# 1.28x, plus our batch/context rows. W4 draft ckpt: ~/ckpts/Qwen3-8B-W4A16-INT4
+# 1.28x, plus our batch/context rows. W4 draft ckpt: /data/smcho/ckpts/Qwen3-8B-W4A16-INT4
 # (P74, data-free RTN -- matches the measured beta 0.9523 fake-quant semantics).
 # Run BY PATH: bash scripts/run_e2e_8b.sh [filter]
 set -u
@@ -38,7 +38,7 @@ run(){  # arm mode K B ctx [extra-env...]
     export W7_MASTER_PORT=$((19600 + K + B + RANDOM % 40))
     export VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS=180
     if [ "$MODE" = spec ]; then
-      export W7_SPEC_METHOD=draft_model W7_SPEC_MODEL="$HOME/ckpts/Qwen3-8B-W4A16-INT4"
+      export W7_SPEC_METHOD=draft_model W7_SPEC_MODEL="/data/smcho/ckpts/Qwen3-8B-W4A16-INT4"
       export VLLM_DISABLED_KERNELS="MacheteLinearKernel,CutlassW4A8LinearKernel,AllSparkLinearKernel"
     fi
     for kv in "$@"; do export "${kv?}"; done
@@ -65,12 +65,12 @@ want nospec_b1_2k && run nospecs nospec 0 1 2048
 # --- our regimes (no KnapSpec counterpart)
 # W4A8 arms: re-enable CutlassW4A8 (the default spec-env disable exists to
 # force Marlin on W4A16 arms; Humming-fallback b16 preserved as *_humming)
-W4A8ENV="W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq VLLM_DISABLED_KERNELS=MacheteLinearKernel,AllSparkLinearKernel"
+W4A8ENV="W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq VLLM_DISABLED_KERNELS=MacheteLinearKernel,AllSparkLinearKernel"
 want w4a8win_b8  && run w4a8win spec 4 8 16384 $W4A8ENV $WINENV $FIXENV
 want w4a8win_b16 && run w4a8win spec 6 16 16384 $W4A8ENV $WINENV $FIXENV
 # Humming realization (default disable list keeps Cutlass off)
-want w4a8hwin_b8  && run w4a8hwin spec 4 8 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
-want w4a8hwin_b16 && run w4a8hwin spec 6 16 16384 W7_SPEC_MODEL=$HOME/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
+want w4a8hwin_b8  && run w4a8hwin spec 4 8 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
+want w4a8hwin_b16 && run w4a8hwin spec 6 16 16384 W7_SPEC_MODEL=/data/smcho/ckpts/Qwen3-8B-W4A8-gptq $WINENV $FIXENV
 want nospec_b8   && run nospec nospec 0 8 16384
 want w4win_b8    && run w4win  spec   4 8 16384 $WINENV $FIXENV
 want nospec_b32  && run nospec nospec 0 32 16384

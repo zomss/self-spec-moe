@@ -106,7 +106,7 @@ def main():
     if os.environ.get("E3_SPEC", "1") == "1":
         spec = {"method": "draft_model",
                 "model": os.path.expanduser(os.environ.get(
-                    "E3_DRAFT", "~/ckpts/Qwen3-8B-W4A8-gptq")),
+                    "E3_DRAFT", "/data/smcho/ckpts/Qwen3-8B-W4A8-gptq")),
                 "num_speculative_tokens": int(os.environ.get("E3_K", "4")),
                 "draft_tensor_parallel_size": 1}
     extra = {}
