@@ -52,10 +52,13 @@ import run_p4_b0_value_screen as matrix  # noqa: E402
 # CPUs 96-111 are both NUMA node 1 -- NUMA 0 carries other tenants' CPU work
 # -- and the CPU range stays clear of the hash-bound telemetry set
 # (w98_host_load.TELEMETRY_CPUS, 64-95), which also lands on node 1 here.
+# v8: GPU 4 -> GPU 7. A co-tenant serving job parked on GPU 4 while 5-7 sat
+# free; all four are NUMA node 1 and identical H100s, so the lane takes the
+# farthest free one. CPU map unchanged.
 H104_LANE_A = {
     "lane_id": "lane-a",
-    "physical_gpu_index": 4,
-    "physical_gpu_uuid": "GPU-dce679cb-69cb-22ce-bb75-c36e49c7a39b",
+    "physical_gpu_index": 7,
+    "physical_gpu_uuid": "GPU-7a8308d6-2a78-2929-99f2-11d2f11a45f3",
     "cpu_affinity": "96-111",
     "cache_root": "/tmp/v-sukmincho-w98/vllm-cache/lane-a",
     "block_ids": [1, 2, 3],
