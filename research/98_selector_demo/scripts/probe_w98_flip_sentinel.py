@@ -67,6 +67,42 @@ def canary_burst() -> dict[str, float]:
     }
 
 
+MMAP_BYTES = 8 * 1024 * 1024
+MMAP_ITERS = 100
+
+
+def mmap_burst() -> dict[str, float]:
+    """Cost of the map-fault-unmap cycle the engine step performs 144x.
+
+    The steal data refuted vCPU preemption (ticks accrue during boots but at
+    ~0.2% of wall against the ~11% the clamp requires), which leaves the
+    fault/exit class: hypervisor state -- dirty-page logging, KSM, EPT churn
+    -- that makes guest memory-mapping operations expensive without
+    registering as steal. The engine step does 144 mmap/munmap pairs (one per
+    flash-attention call); ~31 us of extra cost per cycle explains the whole
+    clamp. This measures that cycle directly: map, touch every page, unmap.
+    If this channel steps down at the flip while the launch canary holds
+    flat, the mechanism is localised.
+    """
+    import mmap as mmap_mod
+
+    samples: list[float] = []
+    for _ in range(MMAP_ITERS):
+        start = time.perf_counter()
+        region = mmap_mod.mmap(-1, MMAP_BYTES)
+        for offset in range(0, MMAP_BYTES, 4096):
+            region[offset] = 1
+        region.close()
+        samples.append((time.perf_counter() - start) * 1e6)
+    samples.sort()
+    n = len(samples)
+    return {
+        "cycle_us_p10": round(samples[n // 10], 2),
+        "cycle_us_median": round(statistics.median(samples), 2),
+        "cycle_us_p90": round(samples[(9 * n) // 10], 2),
+    }
+
+
 def process_census() -> dict[str, Any]:
     """Who is on the box: enough to diff at a flip, small enough to log."""
     out = subprocess.run(
@@ -119,6 +155,32 @@ def pressure() -> dict[str, str]:
     return out
 
 
+# The box is a KVM guest on kvm-clock, so hypervisor preemption of a vCPU
+# shows up as guest wall time with nothing visible consuming CPU -- the
+# clamp's exact presentation. Steal ticks per lane are the discriminator:
+# steal accruing during a clamped boot means vCPU preemption; a clamped boot
+# with flat steal means the fault/exit class (dirty-page logging, KSM, EPT
+# pressure), which inflates wall time without registering as steal.
+STEAL_LANES = {
+    "lane_a": range(0, 16),
+    "lane_b": range(96, 112),
+    "analysis": range(32, 64),
+}
+
+
+def steal_ticks() -> dict[str, int]:
+    per_cpu: dict[int, int] = {}
+    for line in Path("/proc/stat").read_text().splitlines():
+        if line.startswith("cpu") and line[3].isdigit():
+            fields = line.split()
+            per_cpu[int(fields[0][3:])] = int(fields[8])
+    out = {
+        lane: sum(per_cpu.get(c, 0) for c in cpus) for lane, cpus in STEAL_LANES.items()
+    }
+    out["total"] = sum(per_cpu.values())
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
@@ -129,10 +191,12 @@ def main() -> int:
         record = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "canary": canary_burst(),
+            "mmap": mmap_burst(),
             "gpus": gpu_state(),
             "loadavg": Path("/proc/loadavg").read_text().split()[:3],
             "pressure": pressure(),
             "vmstat": vmstat_snapshot(),
+            "steal": steal_ticks(),
             "census": process_census(),
         }
         with args.out.open("a", encoding="utf-8") as handle:
