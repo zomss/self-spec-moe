@@ -141,8 +141,14 @@ def main() -> int:
     env = r1.matrix._boot_child_environment(r1.boot_environment(cfg, trace))
     env["LD_PRELOAD"] = str(lib)
     completed = subprocess.run(
-        [sys.executable, "-c", _DRIVER, str(SCRIPT_DIR), str(MAX_TOKENS),
-         str(MEASURE_STEPS)],
+        [
+            sys.executable,
+            "-c",
+            _DRIVER,
+            str(SCRIPT_DIR),
+            str(MAX_TOKENS),
+            str(MEASURE_STEPS),
+        ],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
