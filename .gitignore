@@ -269,3 +269,13 @@ research/**/traces/
 *.nsys-rep
 *.sqlite
 research/**/probe_nsys*/koff.jsonl
+
+# Reference-output mirrors used for acceptance checks: hundreds of GB of
+# regenerable model outputs. The scored records derived from them stay tracked.
+research/**/data/refs/
+
+# Draft-weight snapshots for the DRAM-swap experiments (5.7 GB each)
+research/89_dram_lever_swap/data/*.pt
+
+# Derived per-model prompt caches (regenerated from the manifests)
+research/93_c1_grid/data/prompts_cache_*.json
