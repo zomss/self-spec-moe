@@ -58,6 +58,7 @@ def create_scheduler(
     pipeline_parallel_size: int = 1,
     use_ec_connector: bool = False,
     ec_role: str | None = None,
+    speculative_model: str = "ngram",
 ) -> Scheduler | AsyncScheduler:
     """Create scheduler under test.
 
@@ -122,10 +123,14 @@ def create_scheduler(
             kv_connector_extra_config={"shared_storage_path": "local_storage"},
         )
 
+    parallel_config = ParallelConfig(pipeline_parallel_size=pipeline_parallel_size)
     speculative_config: SpeculativeConfig | None = None
     if num_speculative_tokens is not None:
         speculative_config = SpeculativeConfig(
-            model="ngram", num_speculative_tokens=num_speculative_tokens
+            model=speculative_model,
+            num_speculative_tokens=num_speculative_tokens,
+            target_model_config=model_config,
+            target_parallel_config=parallel_config,
         )
 
     ec_transfer_config = (
@@ -142,7 +147,7 @@ def create_scheduler(
         scheduler_config=scheduler_config,
         model_config=model_config,
         cache_config=cache_config,
-        parallel_config=ParallelConfig(pipeline_parallel_size=pipeline_parallel_size),
+        parallel_config=parallel_config,
         kv_transfer_config=kv_transfer_config,
         speculative_config=speculative_config,
         ec_transfer_config=ec_transfer_config,
