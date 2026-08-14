@@ -55,8 +55,10 @@ millisecond at 1.126x.
 | 13 | any co-tenant at all | X23-rerun | clamps on a fully idle box (section 8) |
 | 14 | the Kimina server (user-controlled co-project) | shutdown test | attempts 13-14 clamped with the server fully down |
 | 15 | kernel memory management | /proc snapshot | numa_balancing=0, THP madvise-only + idle, zero compact stalls, no pressure |
+| 16 | hypervisor vCPU preemption | steal tracking | steal clusters in boot windows but at ~0.2% of wall vs the ~11% required |
 
-**The cause is not identified.**
+**The cause is not identified — but it is now localised to the hypervisor
+layer (section 9), with one mechanism class left standing.**
 
 Entry 14 deserves its context: a host-side server was the first candidate that
 fit ALL the evidence, because every "idle box" reading in this investigation
@@ -250,7 +252,49 @@ take: it needs whoever administers the box to account for what changes
 host-side on that cadence (the signature and timeline above are the evidence
 to hand them).
 
-## 9. Open items
+## 9. The box is a virtual machine
+
+Found while checking CPU frequency governors during the 2026-08-14 clamped
+stretch: the cpufreq/cpuidle sysfs nodes do not exist, because **this machine
+is a QEMU/KVM guest** (`hypervisor` flag in cpuinfo, `systemd-detect-virt:
+kvm`, QEMU DMI strings, 192 vCPUs) running on **kvm-clock**.
+
+This dissolves the paradox the first 15 refutations built. Under kvm-clock,
+time the physical host spends elsewhere still advances the guest's clock, so
+host-side interference presents as guest wall time passing with nothing
+visible consuming CPU -- the clamp's exact presentation. The cause was never
+on this box; it is on the physical host underneath, which no in-guest
+instrument can see. Every property fits: box-wide (all vCPUs share the
+host), a fixed per-operation cost, flips on tens-of-minutes timescales (host
+operations -- co-located guests, snapshots, backups, migration pre-copy --
+run on exactly that cadence), and complete indifference to everything running
+inside the VM.
+
+Two hypervisor mechanism classes, one already refuted:
+
+1. **vCPU preemption** registers as steal time, and steal accounting is
+   active (cpu0 carries ~11 minutes cumulative). Per-lane tracking over 76
+   clamped minutes shows steal clustering exactly in our boot windows -- the
+   host does preempt us when we are busy -- but at ~0.2% of wall time
+   against the ~11% of one core the clamp requires. Sixty-fold short:
+   REFUTED (entry 16).
+2. **Memory-state amplification** -- dirty-page logging (snapshot, backup,
+   migration), kernel same-page merging, EPT churn -- inflates every guest
+   memory-mapping operation WITHOUT registering as steal. The engine step
+   performs 144 mmap/munmap cycles (one per flash-attention call); ~31 us of
+   added cost per cycle accounts for the entire clamp. The launch canary maps
+   nothing and holds flat while gate boots clamp, consistent with this class.
+   PRIME SUSPECT, directly instrumented: the sentinel's `mmap` channel
+   measures the map-fault-unmap cycle every 30 s (clamped-state reading:
+   ~4003 us per 8 MiB cycle). The clean-state twin at the next flip is the
+   verdict.
+
+The escalation therefore has a precise address: the VM host operator, with
+the ask to check what runs on the physical host at the flip timestamps and
+whether this guest's vCPUs/memory can be dedicated. Nothing inside the guest
+ever moved the clamp because nothing inside the guest is causing it.
+
+## 10. Open items
 
 1. ~~Resume is broken by a guard of its own.~~ **FIXED in v6**: attempt
    numbering continues past whatever traces AND logs an aborted run left
