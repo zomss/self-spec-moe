@@ -1,0 +1,114 @@
+{
+  "boot_scope": "w98-d2",
+  "boots": [
+    {
+      "acceptance_rate_over_drafted": 1.0,
+      "acceptance_rows": 187,
+      "action_observed": [
+        "w98-d2-kmax8"
+      ],
+      "armed_steps": 22,
+      "boot_scope": "w98-d2",
+      "config": {
+        "quant": "target-matching",
+        "skip_count": 0,
+        "window": "off"
+      },
+      "kmax": 8,
+      "mean_accepted_per_request": 8.0,
+      "per_position_accepted": [
+        187,
+        187,
+        187,
+        187,
+        187,
+        187,
+        187,
+        187
+      ],
+      "per_position_conditional": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "per_position_reached": [
+        187,
+        187,
+        187,
+        187,
+        187,
+        187,
+        187,
+        187
+      ],
+      "priming_steps_unarmed": 2,
+      "record_type": "w98_g98d0_smoke",
+      "schema_version": 1,
+      "scored": false,
+      "steps_with_suffix_spread": 0,
+      "unarmed_violations": 0
+    },
+    {
+      "acceptance_rate_over_drafted": 0.8708,
+      "acceptance_rows": 210,
+      "action_observed": [
+        "w98-d2-kmax8"
+      ],
+      "armed_steps": 31,
+      "boot_scope": "w98-d2",
+      "config": {
+        "quant": "w4a16-quantized",
+        "skip_count": 0,
+        "window": "off"
+      },
+      "kmax": 8,
+      "mean_accepted_per_request": 6.9667,
+      "per_position_accepted": [
+        204,
+        193,
+        190,
+        184,
+        180,
+        175,
+        169,
+        168
+      ],
+      "per_position_conditional": [
+        0.9714,
+        0.9461,
+        0.9845,
+        0.9684,
+        0.9783,
+        0.9722,
+        0.9657,
+        0.9941
+      ],
+      "per_position_reached": [
+        210,
+        204,
+        193,
+        190,
+        184,
+        180,
+        175,
+        169
+      ],
+      "priming_steps_unarmed": 2,
+      "record_type": "w98_g98d0_smoke",
+      "schema_version": 1,
+      "scored": false,
+      "steps_with_suffix_spread": 13,
+      "unarmed_violations": 0
+    }
+  ],
+  "kmax": 8,
+  "note": "non-scored engine-path proof on the seeds 2-3 bundle; the scored D2 campaign uses the disjoint seeds 4-5 freeze",
+  "record_type": "w98_g98d0_smoke_summary",
+  "schema_version": 1,
+  "scored": false
+}

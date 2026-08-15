@@ -1062,8 +1062,19 @@ def validate_boot_config(
         raise KOffRuntimeError(
             f"minimal-B0 requires speculative method 'draft_model', got {method!r}"
         )
-    if getattr(spec_config, "num_speculative_tokens", None) != 4:
-        raise KOffRuntimeError("minimal-B0 requires num_speculative_tokens=4")
+    expected_spec_tokens = (
+        W98_D2_KMAX if options.boot_scope == BOOT_SCOPE_W98_D2 else 4
+    )
+    if getattr(spec_config, "num_speculative_tokens", None) != expected_spec_tokens:
+        # Legacy wording preserved for every scope but w98-d2.
+        label = (
+            BOOT_SCOPE_W98_D2
+            if options.boot_scope == BOOT_SCOPE_W98_D2
+            else "minimal-B0"
+        )
+        raise KOffRuntimeError(
+            f"{label} requires num_speculative_tokens={expected_spec_tokens}"
+        )
     if getattr(spec_config, "disable_padded_drafter_batch", False):
         raise KOffRuntimeError("minimal-B0 requires the padded draft-model batch")
 
@@ -1162,14 +1173,20 @@ def validate_boot_config(
     validate_policy_k_values(policy)
 
     if options.boot_scope == BOOT_SCOPE_W98_D2:
-        # "Unconditionally armed" is the measurement contract, so it is
-        # enforced at boot rather than assumed: a schedule that can select
-        # OFF would silently mix unarmed steps into the acceptance sample.
-        scheduled = set(dynamic_k_values)
-        if scheduled != {W98_D2_KMAX}:
+        # KMAX is the only speculative depth this scope may select. Zero is
+        # tolerated here and NOT read as "can select OFF": the scheduler
+        # passes a DENSE batch-size -> K lookup whose index 0 is an unused
+        # sentinel (and whose tail beyond the configured ranges is zero-
+        # filled), so a strict equality check would refuse every legitimate
+        # boot. The runtime guarantee that no decode step goes unarmed is
+        # therefore verified where it is actually observable -- against the
+        # trace, by the G98-D0 smoke gate and the campaign runner -- rather
+        # than inferred from a lookup table that cannot express it.
+        selectable = set(dynamic_k_values) - {0}
+        if selectable != {W98_D2_KMAX}:
             raise KOffRuntimeError(
-                f"w98-d2 requires an unconditionally armed K={W98_D2_KMAX} "
-                f"schedule, got {sorted(scheduled)}"
+                f"w98-d2 permits only K={W98_D2_KMAX}, but the schedule can "
+                f"select {sorted(selectable)}"
             )
         if policy:
             raise KOffRuntimeError(

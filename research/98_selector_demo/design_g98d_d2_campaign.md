@@ -110,3 +110,47 @@ greedy at fixed realization, so boots repeat only when a gate rejects.
 
 `w98d2_prereg` additions (seeds 4-5 manifest hashes, KMAX contract, bridge
 protocol) + the G98-D smoke gate, before any scored acceptance number.
+
+## G98-D0 smoke gate: PASSED (2026-08-15)
+
+`run_w98_g98d0_smoke.py`, h104 GPU 7, both quant paths, non-scored. The
+engine path is proven: the boot contract admits `w98-d2`, K=8 arms, and
+`acceptance_rows` land with per-request suffix lengths.
+
+| path | armed steps | rows | action | mean accepted / 8 |
+| --- | --- | --- | --- | --- |
+| target-matching | 22 | 187 | `w98-d2-kmax8` | **8.0000** |
+| w4a16-quantized | 31 | 210 | `w98-d2-kmax8` | 6.9667 |
+
+**The target-matching row is the instrument's own sanity check.** A draft
+whose weights are identical to the target must, under greedy verification,
+accept every drafted token — and it measures exactly 8.000 with a
+per-position conditional of 1.0 at all eight positions. The acceptance
+accounting is therefore correct by construction, not merely plausible. The
+quantized path then reads 6.97/8 (87.1%), the first acceptance signal of
+this phase.
+
+**A mechanism worth recording for the u-axis.** Suffix spread appeared in
+13 of the quantized boot's armed steps and in ZERO of the target-matching
+boot's: when acceptance is perfect every request advances in lockstep, and
+the batch diverges only as acceptance varies between requests. So batch
+inhomogeneity is not an incidental nuisance — it is produced by exactly the
+quantity D2 measures, and is guaranteed to be present wherever tau is
+interesting. Per-request binning is required, not defensive.
+
+Four defects were found and fixed by this gate before any scored number,
+which is what it exists for:
+
+1. the boot contract hard-required `num_speculative_tokens=4` for every
+   scope;
+2. step-0 work evidence was forwarded only when the action id was literally
+   K4, so an armed K=8 step arrived with `None` and tripped the armed-action
+   evidence check (`gpu_model_runner`, now keyed on "armed", identical for
+   K=4 scopes);
+3. my own boot check read the scheduler's DENSE batch-size -> K lookup,
+   whose index 0 is an unused sentinel, and would have refused every D2
+   boot; the runtime guarantee moved to the trace, where it is observable;
+4. unarmed decode steps are structural at generated suffix 1 — the priming
+   step after prefill has no previous token to draft from — so the contract
+   permits exactly that class and refuses any unarmed step past it (2
+   priming steps per boot observed, 0 violations).

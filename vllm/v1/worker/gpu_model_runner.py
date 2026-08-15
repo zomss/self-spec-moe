@@ -184,7 +184,6 @@ from vllm.v1.spec_decode.eagle import EagleProposer
 from vllm.v1.spec_decode.extract_hidden_states import ExtractHiddenStatesProposer
 from vllm.v1.spec_decode.gemma4 import Gemma4Proposer
 from vllm.v1.spec_decode.koff_runtime import (
-    K4_ACTION_ID,
     SharedKVIdentity,
     SharedWeightIdentity,
     action_for_id,
@@ -4890,26 +4889,34 @@ class GPUModelRunner(
                 raise RuntimeError("shared-KV aliases were not validated")
             if self._koff_shared_weight_identity is None:
                 raise RuntimeError("shared-weight aliases were not validated")
-            is_k4 = metadata.next_action_id == K4_ACTION_ID
+            # Step-0 evidence belongs to any ARMED action, not to one
+            # specific action id: w98-d2 arms at K=8, and keying on
+            # K4_ACTION_ID alone forwarded None and tripped the
+            # armed-action evidence check. Identical for K=4 scopes.
+            is_armed = action_for_id(metadata.next_action_id).k > 0
             step0_query_width = (
                 getattr(self.drafter, "_last_step0_query_width", None)
-                if is_k4
+                if is_armed
                 else None
             )
             step0_num_tokens = (
-                getattr(self.drafter, "_last_step0_num_tokens", None) if is_k4 else None
+                getattr(self.drafter, "_last_step0_num_tokens", None)
+                if is_armed
+                else None
             )
             step0_batch_size = (
-                getattr(self.drafter, "_last_step0_batch_size", None) if is_k4 else None
+                getattr(self.drafter, "_last_step0_batch_size", None)
+                if is_armed
+                else None
             )
             step0_runtime_mode = (
                 getattr(self.drafter, "_last_step0_runtime_mode", None)
-                if is_k4
+                if is_armed
                 else None
             )
             chain_runtime_mode = (
                 getattr(self.drafter, "_last_chain_runtime_mode", None)
-                if is_k4
+                if is_armed
                 else None
             )
             koff_runtime_evidence = make_runner_evidence(
