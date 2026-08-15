@@ -35,11 +35,41 @@ G98-C closed; nothing here is a measurement.
 | host-load + measurement gates, lane, ratchet loop | carried from G98-C unchanged |
 | prompt machinery | `generate_w98_prompt_manifest.py` |
 
+## Build status (2026-08-15)
+
+* **Gap 2 (KMAX-8) and gap 3 (per-request rows): DONE**, committed as the
+  `w98-d2` boot scope. Details in the commit; the two design points worth
+  keeping here: acceptance is a PREFIX, so per-position profiles need no
+  per-position counters (accepted=a means 1..a accepted, a+1 rejected); and
+  the per-request suffix length is genuinely required, because G98-C traces
+  show **84% of armed steps span a range** of generated-suffix lengths, so
+  the batch min/max cannot be inverted into a u-bin.
+* **Gap 1 (seeds 4, 5): BLOCKED on a provenance decision** (below).
+* Gaps 4, 5 (runner, bridge boot) not started.
+
 ## Gaps, in build order
 
-1. **Seeds 4, 5 prompt manifest.** The committed bundle carries seeds 2, 3
-   only. Generate with the existing script; create-only files beside the
-   frozen ones; hash-bind in the G98-D authorization.
+1. **Seeds 4, 5 prompt manifest — needs a decision.** The committed bundle
+   carries seeds 2, 3 only, and the frozen generator cannot be re-run
+   unmodified on h104. What was established by re-fetching the five pinned
+   datasets here:
+   * **Content provenance is PROVEN.** All four `datasets` fingerprints
+     match the frozen values exactly (`59ec1b7f9357c7a2`,
+     `e3d8dec87297b9de`, `561ad8a9f5f90b8d`, `0d657f6528371f13`), and 4 of
+     5 cache files are **byte-identical** to the pins on a different box.
+   * Three mechanical blockers remain: the `aime` arrow cache differs in
+     bytes while matching in fingerprint (arrow writer nondeterminism);
+     `refs/main` is absent because the fetch pinned an explicit revision;
+     and `regime_datasets.py` — which is itself hash-pinned — hard-codes
+     the c4 glob at `/data/smcho/...`, a path that cannot exist here.
+   * **Recommended resolution:** a D2-specific generator that keeps the
+     strong checks (same dataset revisions, same fingerprints, same
+     tokenizer snapshot, canonical encoding) and records its OWN file
+     hashes and loader hash for h104 — the same relocation pattern already
+     applied to the model checkpoints. This changes the verification basis
+     from "byte-identical cache files" to "identical content fingerprints
+     plus own pins", which is a preregistration-adjacent call and so is
+     left to the researcher rather than taken silently.
 2. **KMAX-8 unconditional arming.** No `KMAX` path exists in
    `koff_runtime.py`. Candidate route: `num_speculative_tokens = 8` with
    the existing per-batch schedule (`[[1, 32, 8]]`) plus a forced-ON boot
