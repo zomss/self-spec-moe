@@ -19,7 +19,14 @@ from typing import Any
 OFF_ACTION_ID = "off"
 K4_ACTION_ID = "target-matching-k4"
 W512_ACTION_ID = "target-matching-w512-masked-k4"
+# W98-D2 measures acceptance, not cost: one unconditionally-armed KMAX stream
+# per (composition, regime), so the chain always drafts its full depth and the
+# per-position acceptance profile is observable to depth 8. Admitted ONLY under
+# the w98-d2 boot scope -- every other scope keeps the closed K in {0, 4}.
+KMAX8_ACTION_ID = "w98-d2-kmax8"
+W98_D2_KMAX = 8
 ALLOWED_K_VALUES = frozenset({0, 4})
+W98_D2_ALLOWED_K_VALUES = frozenset({0, 4, W98_D2_KMAX})
 P4_MIN_SHARED_KV_BLOCKS = 21682
 P4_CAPTURE_PLAN_CONTRACT_ID = "p4-b0-same-boot-capture-plan-v1"
 P4_CAPTURE_COHORT_CONTRACT_ID = "p4-capture-cohort-barrier-v1"
@@ -52,7 +59,18 @@ class KOffRuntimeError(RuntimeError):
 # contract stays fail-closed and an unknown scope is refused.
 BOOT_SCOPE_MINIMAL_B0 = "minimal-b0"
 BOOT_SCOPE_W98_LATTICE = "w98-lattice"
-BOOT_SCOPES = frozenset({BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE})
+# w98-d2 is the acceptance campaign over the SAME frozen lattice as
+# w98-lattice, so it inherits that scope's axis contract verbatim and differs
+# in exactly one registered way: the draft is unconditionally armed at
+# KMAX = 8 (see KMAX8_ACTION_ID).
+BOOT_SCOPE_W98_D2 = "w98-d2"
+BOOT_SCOPES = frozenset(
+    {BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2}
+)
+# Scopes that draw from the phase-98 lattice: a declared quantized/skipped
+# draft realization is admitted, so its weight version legitimately differs
+# from the target's.
+W98_LATTICE_SCOPES = frozenset({BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2})
 # The w98 scope relaxes exactly three axes, each bounded to the frozen lattice
 # in research/98_selector_demo/data/prereg/w98_prereg_matrix.json.
 W98_WINDOWS = frozenset({0, 128, 256, 512, 1024})
@@ -729,11 +747,57 @@ K4_ACTION = KOffAction(
     draft_graph_id="draft-target-matching-k1",
     draft_query_width=1,
 )
+KMAX8_ACTION = KOffAction(
+    action_id=KMAX8_ACTION_ID,
+    k=W98_D2_KMAX,
+    target_graph_id=f"target-k{W98_D2_KMAX + 1}",
+    target_query_width=W98_D2_KMAX + 1,
+    draft_graph_id="draft-target-matching-k1",
+    draft_query_width=1,
+)
 ACTIONS_BY_ID = {
     OFF_ACTION.action_id: OFF_ACTION,
     K4_ACTION.action_id: K4_ACTION,
 }
 ACTIONS_BY_K = {action.k: action for action in ACTIONS_BY_ID.values()}
+W98_D2_ACTIONS_BY_ID = {**ACTIONS_BY_ID, KMAX8_ACTION.action_id: KMAX8_ACTION}
+W98_D2_ACTIONS_BY_K = {action.k: action for action in W98_D2_ACTIONS_BY_ID.values()}
+
+
+def _active_boot_scope() -> str:
+    """The scope this process booted under.
+
+    Read from the environment rather than threaded through the fourteen
+    action-resolution call sites: the scope is fixed for the process, and
+    `validate_boot_config` has already refused an unregistered one. An
+    unreadable or unknown value falls back to the closed minimal-B0
+    registry, so the K=8 action stays unresolvable unless a w98-d2 boot
+    explicitly asked for it.
+    """
+    try:
+        from vllm import envs
+
+        return envs.VLLM_SELF_SPEC_BOOT_SCOPE
+    except Exception:  # noqa: BLE001 - resolution must stay fail-closed
+        return BOOT_SCOPE_MINIMAL_B0
+
+
+def _active_actions_by_id() -> dict[str, KOffAction]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_D2:
+        return W98_D2_ACTIONS_BY_ID
+    return ACTIONS_BY_ID
+
+
+def _active_actions_by_k() -> dict[int, KOffAction]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_D2:
+        return W98_D2_ACTIONS_BY_K
+    return ACTIONS_BY_K
+
+
+def _active_k_values() -> frozenset[int]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_D2:
+        return W98_D2_ALLOWED_K_VALUES
+    return ALLOWED_K_VALUES
 
 
 @dataclass(frozen=True)
@@ -783,6 +847,13 @@ class KOffSchedulerMetadata:
     aborted_action_id: str | None
     discarded_draft_width: int
     aborted_draft_request_count: int
+    # Per-request generated-suffix lengths, aligned with `decode_req_ids`.
+    # The min/max pair above summarises the batch; D2 bins acceptance by each
+    # request's OWN suffix length, and batches are not suffix-homogeneous in
+    # practice (measured on G98-C traces: 84% of armed steps span a range),
+    # so that reduction cannot be inverted. Last field with a default, so
+    # every existing construction is unaffected.
+    generated_suffix_by_req: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -879,30 +950,39 @@ def options_from_env() -> KOffBootOptions:
 
 
 def action_for_k(k: int) -> KOffAction:
-    """Resolve K to the closed two-action registry."""
+    """Resolve K to the registry this boot scope admits."""
     try:
-        return ACTIONS_BY_K[k]
+        return _active_actions_by_k()[k]
     except KeyError as exc:
+        # Legacy wording preserved verbatim for the closed registry: Rounds
+        # 1-2 ran under those scopes and nothing about them may move.
+        if _active_boot_scope() != BOOT_SCOPE_W98_D2:
+            raise KOffRuntimeError(
+                f"minimal-B0 permits only K=0 or K=4, got K={k}"
+            ) from exc
+        permitted = ", ".join(f"K={value}" for value in sorted(_active_k_values()))
         raise KOffRuntimeError(
-            f"minimal-B0 permits only K=0 or K=4, got K={k}"
+            f"{BOOT_SCOPE_W98_D2} permits only {permitted}, got K={k}"
         ) from exc
 
 
 def action_for_id(action_id: str) -> KOffAction:
-    """Resolve an action ID to the closed two-action registry."""
+    """Resolve an action ID to the registry this boot scope admits."""
     try:
-        return ACTIONS_BY_ID[action_id]
+        return _active_actions_by_id()[action_id]
     except KeyError as exc:
-        raise KOffRuntimeError(f"unknown minimal-B0 action {action_id!r}") from exc
+        raise KOffRuntimeError(
+            f"unknown {_active_boot_scope()} action {action_id!r}"
+        ) from exc
 
 
 def validate_k_values(values: Sequence[int], source: str) -> None:
     """Reject any boot-time schedule capable of selecting another K."""
-    invalid = sorted(set(values) - ALLOWED_K_VALUES)
+    scope = _active_boot_scope()
+    invalid = sorted(set(values) - _active_k_values())
     if invalid:
-        raise KOffRuntimeError(
-            f"{source} contains K values outside minimal-B0: {invalid}"
-        )
+        label = BOOT_SCOPE_W98_D2 if scope == BOOT_SCOPE_W98_D2 else "minimal-B0"
+        raise KOffRuntimeError(f"{source} contains K values outside {label}: {invalid}")
 
 
 def validate_policy_k_values(policy: Sequence[Mapping[str, Any]] | None) -> None:
@@ -1007,7 +1087,7 @@ def validate_boot_config(
         (not options.consume_ahead, "no consumed ahead draft chain"),
     )
 
-    if options.boot_scope == BOOT_SCOPE_W98_LATTICE:
+    if options.boot_scope in W98_LATTICE_SCOPES:
         skip_layers = [
             token for token in options.draft_skip_layers.split(",") if token.strip()
         ]
@@ -1058,7 +1138,7 @@ def validate_boot_config(
     same_quantization = getattr(draft, "quantization", None) == getattr(
         target, "quantization", None
     )
-    if options.boot_scope == BOOT_SCOPE_W98_LATTICE:
+    if options.boot_scope in W98_LATTICE_SCOPES:
         # The quant axis is the point of this scope, so a differing draft is
         # admitted -- but only as a declared quantized realization. A bare
         # unrelated checkpoint is still refused, and a self-draft must still
@@ -1080,6 +1160,22 @@ def validate_boot_config(
 
     validate_k_values(dynamic_k_values, "dynamic speculative schedule")
     validate_policy_k_values(policy)
+
+    if options.boot_scope == BOOT_SCOPE_W98_D2:
+        # "Unconditionally armed" is the measurement contract, so it is
+        # enforced at boot rather than assumed: a schedule that can select
+        # OFF would silently mix unarmed steps into the acceptance sample.
+        scheduled = set(dynamic_k_values)
+        if scheduled != {W98_D2_KMAX}:
+            raise KOffRuntimeError(
+                f"w98-d2 requires an unconditionally armed K={W98_D2_KMAX} "
+                f"schedule, got {sorted(scheduled)}"
+            )
+        if policy:
+            raise KOffRuntimeError(
+                "w98-d2 measures acceptance under a fixed K; a live K/OFF "
+                "policy would disarm the stream"
+            )
 
 
 def validate_p4_shared_kv_capacity(capacity: int, minimum: int) -> None:
@@ -1285,6 +1381,7 @@ def make_scheduler_metadata(
         ),
         generated_suffix_min=min(suffixes) if suffixes else None,
         generated_suffix_max=max(suffixes) if suffixes else None,
+        generated_suffix_by_req=tuple(suffixes),
         shared_target_kv_blocks_in_use=shared_target_kv_blocks_in_use,
         shared_target_kv_block_capacity=shared_target_kv_block_capacity,
         preemptions=preemptions,
@@ -1613,7 +1710,7 @@ def validate_shared_weight_aliases(
         raise KOffRuntimeError(
             f"draft adds parameters the target lacks: extra_in_draft={extra}"
         )
-    if missing and boot_scope == BOOT_SCOPE_W98_LATTICE:
+    if missing and boot_scope in W98_LATTICE_SCOPES:
         allowed = _skipped_layer_prefixes(skip_layers)
         unexplained = sorted(
             name for name in missing if not (allowed and name.startswith(allowed))
@@ -1810,7 +1907,7 @@ def build_live_step_record(
     weight_versions_match = (
         evidence.target_weight_version_id == evidence.draft_weight_version_id
     )
-    if not weight_versions_match and boot_scope != BOOT_SCOPE_W98_LATTICE:
+    if not weight_versions_match and boot_scope not in W98_LATTICE_SCOPES:
         raise KOffRuntimeError("target-matching draft weight version diverged")
     if elapsed_s <= 0:
         raise KOffRuntimeError(f"non-positive engine-step time {elapsed_s}")
@@ -1861,6 +1958,32 @@ def build_live_step_record(
 
     target_graph_id = None if action is None else action.target_graph_id
     draft_graph_id = None if action is None else action.draft_graph_id
+    # D2 acceptance rows. Written only under w98-d2, so every other scope's
+    # record stays byte-identical. Acceptance is a PREFIX -- chain
+    # verification accepts the longest matching run -- so `accepted` per
+    # request yields the full per-position reached/accepted profile without
+    # per-position counters: positions 1..accepted were accepted and
+    # accepted+1 was rejected. Paired with each request's own suffix length,
+    # this is exactly what tau(w, g, u) needs.
+    acceptance_rows: list[dict[str, Any]] | None = None
+    if boot_scope == BOOT_SCOPE_W98_D2 and h_steps:
+        suffix_by_req = metadata.generated_suffix_by_req
+        if len(suffix_by_req) != h_steps:
+            raise KOffRuntimeError(
+                "w98-d2 requires a generated-suffix length per decode request"
+            )
+        acceptance_rows = [
+            {
+                "request_id": req_id,
+                "accepted_draft_tokens": max(raw - 1, 0),
+                "drafted_tokens": action.k if action is not None else 0,
+                "generated_suffix_len": suffix,
+                "committed_tokens": kept,
+            }
+            for req_id, raw, kept, suffix in zip(
+                decode_ids, raw_lengths, committed, suffix_by_req, strict=True
+            )
+        ]
     return {
         "schema_version": 1,
         "record_type": "koff_engine_step",
@@ -1911,6 +2034,7 @@ def build_live_step_record(
             "true_slot_mapping_id": evidence.true_slot_mapping_id,
         },
         "execution": asdict(evidence),
+        **({} if acceptance_rows is None else {"acceptance_rows": acceptance_rows}),
     }
 
 
@@ -1951,7 +2075,7 @@ def build_same_event_record(
     # phase-97 decision, not a side effect of admitting a new scope.
     if (
         evidence.target_weight_version_id != evidence.draft_weight_version_id
-        and boot_scope != BOOT_SCOPE_W98_LATTICE
+        and boot_scope not in W98_LATTICE_SCOPES
     ):
         raise KOffRuntimeError("target-matching draft weight version diverged")
     if not math.isfinite(elapsed_s) or elapsed_s <= 0:
@@ -2532,7 +2656,7 @@ class P4SameEventRecorder:
         )
         if (
             evidence.target_weight_version_id != evidence.draft_weight_version_id
-            and self._boot_scope != BOOT_SCOPE_W98_LATTICE
+            and self._boot_scope not in W98_LATTICE_SCOPES
         ):
             raise KOffRuntimeError("P4 capture observed divergent target/draft weights")
         if (

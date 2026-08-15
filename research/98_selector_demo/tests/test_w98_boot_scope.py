@@ -17,6 +17,7 @@ from pathlib import Path
 
 from vllm.v1.spec_decode.koff_runtime import (
     BOOT_SCOPE_MINIMAL_B0,
+    BOOT_SCOPE_W98_D2,
     BOOT_SCOPE_W98_LATTICE,
     BOOT_SCOPES,
     W98_SKIP_COUNTS,
@@ -84,8 +85,12 @@ def _validate(draft: _ModelConfig | None = None, **overrides) -> None:
 class ScopeRegistryTests(unittest.TestCase):
     """Scopes are closed and default to the Phase 97 behaviour."""
 
-    def test_two_registered_scopes(self) -> None:
-        self.assertEqual(BOOT_SCOPES, {BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE})
+    def test_three_registered_scopes(self) -> None:
+        """w98-d2 (G98-D acceptance) joins the closed registry."""
+        self.assertEqual(
+            BOOT_SCOPES,
+            {BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2},
+        )
 
     def test_unknown_scope_fails_closed(self) -> None:
         with self.assertRaises(KOffRuntimeError) as ctx:

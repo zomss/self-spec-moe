@@ -12,8 +12,10 @@ from types import SimpleNamespace
 import pytest
 import torch
 
+from vllm import envs as vllm_envs
 from vllm.v1.spec_decode.koff_runtime import (
     K4_ACTION_ID,
+    KMAX8_ACTION_ID,
     OFF_ACTION_ID,
     P4_MIN_SHARED_KV_BLOCKS,
     W512_ACTION_ID,
@@ -34,6 +36,7 @@ from vllm.v1.spec_decode.koff_runtime import (
     validate_action_transport,
     validate_boot_config,
     validate_draft_token_batch,
+    validate_k_values,
     validate_p4_shared_kv_capacity,
     validate_shared_kv_aliases,
     validate_shared_weight_aliases,
@@ -1070,3 +1073,101 @@ def test_trace_writer_is_create_new_and_append_only(tmp_path):
     ]
     with pytest.raises(KOffRuntimeError, match="refusing to overwrite"):
         KOffTraceWriter(str(path), header)
+
+
+# --- w98-d2 acceptance scope (G98-D) ---------------------------------------
+#
+# The scope adds K=8 unconditional arming and per-request acceptance rows for
+# the D2 campaign. Rounds 1-2 were measured under minimal-b0/w98-lattice, so
+# the first requirement of these tests is that those scopes did not move.
+
+
+def _d2_scope(monkeypatch):
+    monkeypatch.setattr(vllm_envs, "VLLM_SELF_SPEC_BOOT_SCOPE", "w98-d2")
+
+
+def test_kmax8_is_unresolvable_outside_the_d2_scope():
+    """K=8 must not exist for minimal-b0 or w98-lattice."""
+    with pytest.raises(KOffRuntimeError):
+        action_for_k(8)
+    with pytest.raises(KOffRuntimeError):
+        validate_k_values([0, 8], "schedule")
+
+
+def test_kmax8_resolves_only_under_the_d2_scope(monkeypatch):
+    _d2_scope(monkeypatch)
+    assert action_for_k(8).action_id == KMAX8_ACTION_ID
+    assert action_for_k(8).target_query_width == 9
+    validate_k_values([8], "schedule")
+    # The closed values still resolve; the scope extends, never replaces.
+    assert action_for_k(0).action_id == OFF_ACTION_ID
+    assert action_for_k(4).action_id == K4_ACTION_ID
+    with pytest.raises(KOffRuntimeError):
+        action_for_k(2)
+
+
+def test_d2_requires_an_unconditionally_armed_schedule(monkeypatch):
+    _d2_scope(monkeypatch)
+    metadata = _metadata()
+    shared_kv, shared_weights = _identities()
+    evidence = make_runner_evidence(
+        metadata=metadata,
+        target_runtime_mode="FULL",
+        output=torch.empty((2, 4), dtype=torch.int32),
+        proposal_called=True,
+        draft_step0_query_width=1,
+        draft_step0_num_tokens=2,
+        draft_step0_batch_size=2,
+        draft_step0_runtime_mode="PIECEWISE",
+        draft_chain_runtime_mode="PIECEWISE",
+        shared_kv=shared_kv,
+        shared_weights=shared_weights,
+        true_slot_mapping_id="slots",
+    )
+    record = build_live_step_record(
+        metadata=metadata,
+        evidence=evidence,
+        raw_generated_lengths={"r0": 3, "r1": 2},
+        committed_lengths={"r0": 3, "r1": 2},
+        invalid_spec_tokens=0,
+        elapsed_s=0.02,
+        boot_scope="w98-d2",
+    )
+    rows = record["acceptance_rows"]
+    assert [row["request_id"] for row in rows] == ["r0", "r1"]
+    # Acceptance is a prefix: raw generated minus the target's own token.
+    assert [row["accepted_draft_tokens"] for row in rows] == [2, 1]
+    # Each request carries its OWN suffix length, not the batch min/max.
+    assert [row["generated_suffix_len"] for row in rows] == [8, 10]
+    assert record["engine"]["generated_suffix_min"] == 8
+    assert record["engine"]["generated_suffix_max"] == 10
+
+
+def test_other_scopes_emit_no_acceptance_rows():
+    metadata = _metadata()
+    shared_kv, shared_weights = _identities()
+    evidence = make_runner_evidence(
+        metadata=metadata,
+        target_runtime_mode="FULL",
+        output=torch.empty((2, 4), dtype=torch.int32),
+        proposal_called=True,
+        draft_step0_query_width=1,
+        draft_step0_num_tokens=2,
+        draft_step0_batch_size=2,
+        draft_step0_runtime_mode="PIECEWISE",
+        draft_chain_runtime_mode="PIECEWISE",
+        shared_kv=shared_kv,
+        shared_weights=shared_weights,
+        true_slot_mapping_id="slots",
+    )
+    for scope in ("minimal-b0", "w98-lattice"):
+        record = build_live_step_record(
+            metadata=metadata,
+            evidence=evidence,
+            raw_generated_lengths={"r0": 3, "r1": 2},
+            committed_lengths={"r0": 3, "r1": 2},
+            invalid_spec_tokens=0,
+            elapsed_s=0.02,
+            boot_scope=scope,
+        )
+        assert "acceptance_rows" not in record
