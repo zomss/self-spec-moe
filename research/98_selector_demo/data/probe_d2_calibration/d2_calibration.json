@@ -1,0 +1,162 @@
+{
+  "boot_determinism": {
+    "mean_accepted_delta": 0.0,
+    "per_position_conditional_delta": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "requests_bit_identical": 17,
+    "requests_compared": 17,
+    "steps_compared": 210,
+    "steps_mismatched": 0
+  },
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "kmax": 8,
+  "profiles": {
+    "captured_a": {
+      "armed_steps": 31,
+      "mean_accepted": 6.928571,
+      "per_position_accepted": [
+        204,
+        193,
+        189,
+        183,
+        179,
+        173,
+        168,
+        166
+      ],
+      "per_position_conditional": [
+        0.971429,
+        0.946078,
+        0.979275,
+        0.968254,
+        0.978142,
+        0.96648,
+        0.971098,
+        0.988095
+      ],
+      "per_position_reached": [
+        210,
+        204,
+        193,
+        189,
+        183,
+        179,
+        173,
+        168
+      ],
+      "priming_steps": 2,
+      "rows": 210,
+      "unarmed_violations": 0
+    },
+    "captured_b": {
+      "armed_steps": 31,
+      "mean_accepted": 6.928571,
+      "per_position_accepted": [
+        204,
+        193,
+        189,
+        183,
+        179,
+        173,
+        168,
+        166
+      ],
+      "per_position_conditional": [
+        0.971429,
+        0.946078,
+        0.979275,
+        0.968254,
+        0.978142,
+        0.96648,
+        0.971098,
+        0.988095
+      ],
+      "per_position_reached": [
+        210,
+        204,
+        193,
+        189,
+        183,
+        179,
+        173,
+        168
+      ],
+      "priming_steps": 2,
+      "rows": 210,
+      "unarmed_violations": 0
+    },
+    "eager": {
+      "armed_steps": 27,
+      "mean_accepted": 7.303483,
+      "per_position_accepted": [
+        199,
+        195,
+        191,
+        184,
+        181,
+        176,
+        172,
+        170
+      ],
+      "per_position_conditional": [
+        0.99005,
+        0.979899,
+        0.979487,
+        0.963351,
+        0.983696,
+        0.972376,
+        0.977273,
+        0.988372
+      ],
+      "per_position_reached": [
+        201,
+        199,
+        195,
+        191,
+        184,
+        181,
+        176,
+        172
+      ],
+      "priming_steps": 2,
+      "rows": 201,
+      "unarmed_violations": 0
+    }
+  },
+  "realization_bridge": {
+    "mean_accepted_delta": 0.374912,
+    "per_position_conditional_delta": [
+      0.018621,
+      0.033821,
+      0.000212,
+      -0.004903,
+      0.005554,
+      0.005896,
+      0.006175,
+      0.000277
+    ],
+    "requests_bit_identical": 11,
+    "requests_compared": 17,
+    "steps_compared": 201,
+    "steps_mismatched": 19
+  },
+  "record_type": "w98_d2_calibration",
+  "regimes": [
+    "R1",
+    "R8"
+  ],
+  "schema_version": 1,
+  "scored": false
+}

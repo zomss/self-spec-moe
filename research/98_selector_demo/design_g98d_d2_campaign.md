@@ -154,3 +154,55 @@ which is what it exists for:
    step after prefill has no previous token to draft from — so the contract
    permits exactly that class and refuses any unarmed step past it (2
    priming steps per boot observed, 0 violations).
+
+## D2 calibration: two registered assumptions, measured (2026-08-15)
+
+`probe_w98_d2_calibration.py`, non-scored, quantized path (target-matching
+is degenerate here — it accepts everything, so it cannot show a difference
+between boots or realizations).
+
+### Boot determinism: CONFIRMED, and exactly
+
+| comparison | requests identical | steps mismatched | mean accepted delta |
+| --- | --- | --- | --- |
+| captured boot A vs boot B | **17 / 17** | **0 / 210** | **0.000000** |
+
+Every per-position conditional matches to six decimals. The measurement
+contract's assumption — replicate over content seeds, not boots, "since
+acceptance is near-deterministic under greedy at fixed batch and
+realization" — is not merely near-deterministic here but bit-identical. Two
+consequences for the campaign:
+
+1. Repeat boots buy nothing; the sampling budget belongs entirely to
+   content seeds and requests, as registered.
+2. **D2 is immune to the clamp.** Acceptance is a function of weights and
+   prompts, not of time, so a contaminated box cannot bias it. The G98-C
+   measurement-shape gate must NOT be carried into D2 — it judges timing
+   shape and would reject perfectly good acceptance data — and the D2
+   campaign can run in windows the cost campaign would have refused.
+
+### Realization bridge: NON-TRIVIAL, and now quantified
+
+| arm | mean accepted / 8 | armed steps |
+| --- | --- | --- |
+| captured (deployed) | 6.9286 | 31 |
+| eager | 7.3035 | 27 |
+
+**Bridge width: +0.375 accepted tokens, eager over captured** (~5%
+relative), with 19 of 201 compared steps (9.5%) disagreeing and only 11 of
+17 requests bit-identical. Per-position, the gap concentrates at the head of
+the chain: +0.019 at position 1 and +0.034 at position 2, ~0 thereafter.
+
+The mechanism is numerical, not logical: capture can change kernel
+selection and reduction order, perturbing logits enough to flip an argmax
+occasionally, which changes the drafted token and therefore acceptance.
+Greedy decoding does not make the two realizations identical — it only
+makes each one deterministic.
+
+This is exactly why the preregistration registered a bridge and required
+survivors to clear `tau*` by more than its width. That width now has a
+measured value instead of a placeholder: **screening in eager
+OVERESTIMATES acceptance**, so an eager screen must be treated as
+optimistic and the margin applied in the conservative direction. One paired
+boot per the registered protocol; re-measure if the finalist set's
+compositions differ materially from the calibration cell.
