@@ -244,3 +244,32 @@ Two constraints surfaced by actually running it:
    guarantee for pool uniformity. A boot consumes `batch` prompts (R4 batch
    = 8), so 17 is sufficient; the D2 generator therefore checks SUFFICIENCY
    against batch and records every shortfall rather than absorbing it.
+
+## Analysis chain: validated end to end (2026-08-15)
+
+`w98d2_stream.py` bridges w98-d2 traces to the frozen G98-0 accounting rows.
+The bridge is a translation only — every estimate comes from
+`w98_accounting`, which already carried u-bucket binning, `tau_at_depth`,
+request-level bootstrap and paired-delta comparison. The one derivation is
+the clip, `clipped = accepted + 1 - committed`, which inverts `row_emitted`
+so a stream that closes here closes under the FROZEN identity rather than a
+private one.
+
+Run against the G98-D0 traces, the whole path — engine to trace to StepRow
+to closure to bootstrapped tau — produces:
+
+| path | H | D | A | C | E | E+C = A+H | tau (u-bucket 0) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| target-matching | 204 | 187 | 1496 | 85 | 1615 | yes | **9.0000** [9.0000, 9.0000] |
+| w4a16-quantized | 227 | 210 | 1463 | 75 | 1615 | yes | 7.9485 [7.4476, 8.3716] |
+
+Both readings are checks, not just outputs. `tau = 9.0000` is arithmetically
+forced for a self-draft at KMAX=8 (eight accepted draft tokens plus the
+target's own), and its bootstrap interval correctly collapses to a point
+because the outcome is deterministic. Both streams emit exactly E = 1615,
+as they must: same prompts, same token budget. The quantized path then
+shows a real interval, which is what every scored D2 cell will look like.
+
+Only bucket 0 is populated here because the smoke boots generated 96
+tokens; the campaign's longer streams populate the upper u-buckets, whose
+boundaries are a scored OUTPUT of the first run rather than an input.
