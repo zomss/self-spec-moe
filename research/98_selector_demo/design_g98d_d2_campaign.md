@@ -1,0 +1,82 @@
+# G98-D design — the D2 acceptance campaign
+
+Source phase: this one. Objective: measure what the preregistration's D2
+section registers — screen honesty (a), the knapsack identity against
+count-matched controls (b), and u-axis resolution of `tau(w, g, u)` (c) —
+using the cost model Round 2 just validated (47/48 covered, sound
+elimination exercised 5/5 correct). Written 2026-08-14, immediately after
+G98-C closed; nothing here is a measurement.
+
+## What the prereg fixes in advance
+
+* One unconditionally-armed **KMAX = 8** stream per (composition, regime);
+  greedy, fixed batch shape, pinned realization.
+* Per-position reached/accepted counters, binned by generated-suffix
+  position; 2,000-4,000 armed steps per (composition, regime, u-bucket).
+* Replication over **content seeds 4, 5** (fresh; cost used 2, 3), not
+  boots; request-level bootstrap; identical prompt sets across compositions.
+* Accounting closes as `E + C = A + H`; screen by the product bound
+  (admit-only), confirm only portfolio finalists; controls frozen in
+  `data/prereg/w98_d2_controls.json` (seeds 98001-3).
+* u-buckets provisional at [0,256), [256,1024), [1024,3072), [3072,inf);
+  final boundaries are a scored OUTPUT of the first run.
+* Realization bridge: screening may run eager/piecewise; one paired boot
+  quantifies the eager-vs-captured acceptance bridge; survivors clear
+  `tau*` by more than the bridge width.
+
+## Asset inventory (already built and tested)
+
+| asset | state |
+| --- | --- |
+| accounting identity `E + C = A + H` | `w98_accounting.py` + tests |
+| knapsack + count-matched controls | `w98_knapsack.py` + tests, seeds frozen |
+| cost side of `tau*` | Round-2 fits (`d1p_fits.json`), validated |
+| per-position counters | upstream `SpecDecodingStats.num_{accepted,draft}_tokens_per_pos` |
+| host-load + measurement gates, lane, ratchet loop | carried from G98-C unchanged |
+| prompt machinery | `generate_w98_prompt_manifest.py` |
+
+## Gaps, in build order
+
+1. **Seeds 4, 5 prompt manifest.** The committed bundle carries seeds 2, 3
+   only. Generate with the existing script; create-only files beside the
+   frozen ones; hash-bind in the G98-D authorization.
+2. **KMAX-8 unconditional arming.** No `KMAX` path exists in
+   `koff_runtime.py`. Candidate route: `num_speculative_tokens = 8` with
+   the existing per-batch schedule (`[[1, 32, 8]]`) plus a forced-ON boot
+   scope so the K/OFF policy cannot disarm. The preregistration's own risk
+   register (w98r2 section 7.3) says the capture-path weight-equality and
+   action-identity assertions will fire: the P4 event contract hard-codes
+   `expected_k in {0, 4}` ("P4 event K differs from its capture action")
+   and same-boot binding identity. These must be generalised under a new
+   boot scope (`w98-d2`), not weakened for the existing ones.
+3. **Per-request, per-suffix-position accumulation.** Upstream counters
+   are engine-global per scheduler step; D2 needs them per request and
+   binned by generated-suffix position for the u-axis. Either extend the
+   koff trace with per-step per-request accept counts (the trace already
+   carries request rows) or add a D2 sidecar to the profiler.
+4. **The G98-D runner**, in the G98-C mold: hash-bound authorization
+   (create-only, versioned), both gates, resumable stage boots, singles ->
+   screen (CPU, product bound) -> composed confirmation, with the
+   commitment barrier between screen output and confirmation boots.
+5. **Bridge boot** (eager vs captured acceptance) as its own recorded
+   stage.
+
+## Sizing
+
+Singles per regime x 2 seeds, then finalists: on G98-C boot times (~2 min
+warm), a singles sweep on the Round-2 axes is ~30-40 boots per seed;
+confirmation adds the finalist set. Two to three h104 windows of the size
+G98-C used, all gates carried over. Acceptance is near-deterministic under
+greedy at fixed realization, so boots repeat only when a gate rejects.
+
+## Decision criteria to leave the design stage
+
+* Amendment 2 (instrument) approved or explicitly deferred — D2 itself is
+  timing-free, so it may proceed regardless; only D3 waits on it.
+* The KMAX-8 route validated by one smoke boot (assertions generalised,
+  counters flowing, accounting closing) — the G98-A analogue for this gate.
+
+## Expected next artifact
+
+`w98d2_prereg` additions (seeds 4-5 manifest hashes, KMAX contract, bridge
+protocol) + the G98-D smoke gate, before any scored acceptance number.
