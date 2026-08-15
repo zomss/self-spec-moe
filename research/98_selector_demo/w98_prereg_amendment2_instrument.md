@@ -1,10 +1,9 @@
 # Preregistration amendment 2 — the instrument, for D3 currency
 
 Date drafted: 2026-08-14. Revised 2026-08-15 (§3 framing corrected, dual-arm
-option added).
-Status: **DRAFT — awaiting approval** (protocol per amendment 1: an explicit
-APPROVED stamp, dated, before it binds anything). The researcher stamps this,
-not the agent that drafted it.
+option added). **Approved 2026-08-15 under option (C).**
+Status: **APPROVED (C, dual-arm)** — see §6 for the stamp and §7 for what
+the approval changed in the tree.
 
 Amends: the measurement instrument for **future timing-currency
 measurements only** (D3 and any later cost work). Rounds 1 and 2 are closed
@@ -98,8 +97,31 @@ as post-phase engineering, not amended into the campaign midstream.
 ## 6. Stamp
 
 ```
-Status:  [ ] APPROVED (A)   [ ] APPROVED (C, dual-arm)   [ ] DEFERRED   [ ] REJECTED
-Date:
-By:
-Note:
+Status:  [ ] APPROVED (A)   [x] APPROVED (C, dual-arm)   [ ] DEFERRED   [ ] REJECTED
+Date:    2026-08-15
+By:      researcher (v-sukmincho), decision given in session; recorded by the
+         drafting agent on that instruction rather than self-approved
+Note:    Approved with the dual-arm requirement of section 4(C), including
+         its reporting rule: both numbers appear wherever the D3 result
+         appears.
 ```
+
+## 7. What the approval changed
+
+* `SelfSpecProfiler._fine_only` now also gates `draft_forward*`. Verified:
+  timed regions drop from `draft_chain, draft_forward_first, draft_forward,
+  verify` to `draft_chain, verify` — **12 syncs per step to 4**, with none
+  left inside the measured `draft_chain` region, exactly as §2 specifies.
+* `VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS=1` restores the pre-amendment
+  instrument. This is the dual-arm mechanism, not a compatibility shim:
+  option (C) requires the legacy arm to remain runnable so the registered
+  conservative bound can be produced beside the corrected number.
+* **Scored runners are unaffected in shape**: Round 1 and Round 2 read only
+  `draft_chain` and `verify`, both still timed. Their recorded NUMBERS
+  stand as measured and are not recomputed.
+* Two diagnostics assume the legacy instrument if ever re-run:
+  `probe_w98_skip8_floor` (reads `draft_chain - draft_forward`) and
+  `probe_w98_sync_ab` (X25 itself, whose monkeypatch is now the default and
+  would therefore show no delta). Both are historical records; re-running
+  either requires `VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS=1` or
+  `VLLM_SELF_SPEC_PROFILE_FINE=1`.

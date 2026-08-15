@@ -73,8 +73,26 @@ class SelfSpecProfiler:
 
     @staticmethod
     def _fine_only(label: str) -> bool:
-        """Whether a region label is a fine-grained per-step sub-region."""
-        return label.startswith(("step_", "step0_", "chain_setup"))
+        """Whether a region label is a fine-grained per-step sub-region.
+
+        `draft_forward` fires once per CHAIN STEP, so leaving it ungated put
+        8 of the 12 per-step syncs INSIDE the `draft_chain` region being
+        measured, destroying ~0.3 ms of host/device overlap each: +2.4 ms per
+        engine step of real time, measured by an interleaved A/B over four
+        boots (X25). It is gated here under preregistration amendment 2, so
+        the profiler stops charging armed configurations for its own
+        instrumentation.
+
+        `VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS=1` restores the pre-amendment
+        behaviour. That is not a compatibility shim: amendment 2 was approved
+        with a DUAL-ARM requirement, so the legacy instrument must remain
+        runnable in order to report the registered conservative bound
+        alongside the corrected number.
+        """
+        labels = ("step_", "step0_", "chain_setup")
+        if not envs.VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS:
+            labels += ("draft_forward",)
+        return label.startswith(labels)
 
     def _record(self, label: str, elapsed: float) -> None:
         self._samples.setdefault(label, []).append(elapsed)

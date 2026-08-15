@@ -305,6 +305,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_FAST_PARSE: bool = False
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
+    VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS: bool = False
     VLLM_SELF_SPEC_MOE_NUM_DUMP: str = ""
     VLLM_SELF_SPEC_MOE_DUMP_LAYER: int = 0
     VLLM_SELF_SPEC_MOE_FP32_ACCUM: bool = False
@@ -2337,6 +2338,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # profiler; listed here for discoverability.
     "VLLM_SELF_SPEC_PROFILE_FINE": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_PROFILE_FINE", "0"))
+    ),
+    # Restores the pre-amendment-2 profiler, whose per-chain-step
+    # `draft_forward` timers put 8 syncs inside the measured `draft_chain`
+    # region and cost +2.4 ms per engine step (X25). Amendment 2 was approved
+    # with a dual-arm requirement, so the legacy instrument stays runnable to
+    # produce the registered conservative bound beside the corrected number.
+    "VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS", "0"))
     ),
     # Self-spec W7 numerical-divergence instrumentation (Step 1): when set to a
     # directory path, the MoE runner dumps, for the FIRST decode forward on DP
