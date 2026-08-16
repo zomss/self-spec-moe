@@ -168,6 +168,77 @@ is the payoff that is absent, which is a lever-selection problem rather than
 an implementation one -- and D3's selector already never picks w128 at short
 context.
 
+## R6 (batch 32): what changes, and what does not
+
+The same eight combinations at batch 32. The composition shifts by
+construction, so the bounds differ from R1's; that is the point of running it.
+
+| | R1 (b1) | R6 (b32) |
+| --- | --- | --- |
+| GEMM share of draft | **83.6%** | **73.7%** |
+| attention share | 10.9% | **18.9%** |
+| `draft_forward` | 6.237 ms | 7.121 ms |
+| `verify` | 5.984 ms | **7.330 ms** |
+
+**The draft/verify cost ratio inverts.** At batch 1 a draft forward costs MORE
+than a verify forward (+4.2%); at batch 32 it costs LESS (-2.9%). Verify
+processes K+1 tokens per sequence -- 160 at batch 32 -- which is enough work to
+start leaving the purely weight-bound regime, while the draft's single token
+per sequence is not. Modest in size, but it is part of why speculation's
+economics improve with batch.
+
+| combo | bound | kernels | model | kernel gap | fixed gap |
+| --- | --- | --- | --- | --- | --- |
+| quant | 0.4469 | 0.7692 | 0.7451 | **+0.3222** | -0.0241 |
+| skip4 | 0.8889 | 0.8973 | 0.8857 | +0.0084 | -0.0116 |
+| skip8 | 0.7778 | 0.7920 | 0.7697 | +0.0142 | -0.0223 |
+| w1024 | 1.0000 | 0.9994 | 0.9997 | -0.0006 | +0.0003 |
+| w128 | 0.8642 | 0.9601 | 0.9514 | +0.0959 | -0.0088 |
+| composed | 0.3973 | 0.6926 | 0.6610 | +0.2953 | -0.0316 |
+
+### skip is clean at both batch sizes
+
++0.84% and +1.42% against their bounds at R6, against +0.98% and +1.75% at R1.
+The layer-skip path scales as removing layers should, independent of batch.
+Nothing to fix, at either size.
+
+### the window has an ACTIVATION THRESHOLD, not a weakness
+
+| | R1 | R6 |
+| --- | --- | --- |
+| `w128` attention ratio | 0.9938 | **0.7608** |
+| `w128` chain against base | **+8.3% slower** | **-3.2% faster** |
+
+At batch 1, windowing to 128 barely moved attention (0.994) because the kernel
+is launch-latency-bound, so the 0.480 ms rewrite was pure loss. At batch 32
+there is enough work per launch that trimming the KV read lands (0.761), and
+the saving clears a 0.316 ms rewrite with room to spare.
+
+So the window is not a weak lever -- it is a lever with a threshold, set by
+attention's share of the draft, and **batch is a second route to that
+threshold besides context length**. That is sharper than "the window pays at
+long context".
+
+One ceiling the bound exposes: even at batch 32, attention scales only to
+0.761 where a KV-length-proportional model predicts 0.281. Attention keeps a
+large fixed per-call component that does not shrink with the read, so the
+window's ceiling is well below the naive model at any batch.
+
+`w1024` is free at both batch sizes (rewrite 0.000, fast path firing), which
+re-confirms the X30 fix independently at a second size.
+
+### cost still composes multiplicatively
+
+| | predicted product | measured | error |
+| --- | --- | --- | --- |
+| kernel time | 0.6898 | 0.6926 | **+0.41%** |
+| model time | 0.6597 | 0.6610 | **+0.19%** |
+
+R1 gave -0.18% and +3.58%. The model-time residual shrinks at batch 32 because
+the fixed orchestration is a smaller share there (10.7% of the chain against
+11.5%), so it distorts multiplicativity less. The kernel-level result holds at
+both sizes.
+
 ## The floor no lever touches
 
 Orchestration (`step0_*`, `step_*`, `chain_setup`, `cpu_*`) is ~3.2 ms/chain

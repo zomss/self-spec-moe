@@ -15,6 +15,21 @@
       "unattributed_ms": -0.6609,
       "window_rewrite_ms": 0.0
     },
+    "composed": {
+      "armed": true,
+      "chain_ms": 22.1969,
+      "kernel_classes_ms": {
+        "attention": 241.8709,
+        "elementwise": 32.7632,
+        "gemm": 826.6859,
+        "other": 40.4375
+      },
+      "model_ms": 18.9109,
+      "model_share": 0.852,
+      "orchestration_ms": 3.861,
+      "unattributed_ms": -1.0165,
+      "window_rewrite_ms": 0.4415
+    },
     "off": {
       "armed": false,
       "chain_ms": null
@@ -33,6 +48,66 @@
       "orchestration_ms": 3.459,
       "unattributed_ms": -0.6437,
       "window_rewrite_ms": 0.0
+    },
+    "skip4": {
+      "armed": true,
+      "chain_ms": 28.0581,
+      "kernel_classes_ms": {
+        "attention": 239.5744,
+        "elementwise": 64.7753,
+        "gemm": 1051.6862,
+        "other": 41.443
+      },
+      "model_ms": 25.3416,
+      "model_share": 0.9032,
+      "orchestration_ms": 3.3889,
+      "unattributed_ms": -0.6724,
+      "window_rewrite_ms": 0.0
+    },
+    "skip8": {
+      "armed": true,
+      "chain_ms": 24.7733,
+      "kernel_classes_ms": {
+        "attention": 206.4699,
+        "elementwise": 60.4514,
+        "gemm": 959.8279,
+        "other": 39.198
+      },
+      "model_ms": 22.022,
+      "model_share": 0.8889,
+      "orchestration_ms": 3.4568,
+      "unattributed_ms": -0.7055,
+      "window_rewrite_ms": 0.0
+    },
+    "w1024": {
+      "armed": true,
+      "chain_ms": 31.3302,
+      "kernel_classes_ms": {
+        "attention": 268.3224,
+        "elementwise": 68.4217,
+        "gemm": 1144.3802,
+        "other": 43.8909
+      },
+      "model_ms": 28.6033,
+      "model_share": 0.913,
+      "orchestration_ms": 3.3801,
+      "unattributed_ms": -0.6533,
+      "window_rewrite_ms": 0.0
+    },
+    "w128": {
+      "armed": true,
+      "chain_ms": 30.2938,
+      "kernel_classes_ms": {
+        "attention": 212.1035,
+        "elementwise": 73.0751,
+        "gemm": 1146.861,
+        "other": 43.8902
+      },
+      "model_ms": 27.2192,
+      "model_share": 0.8985,
+      "orchestration_ms": 3.7268,
+      "unattributed_ms": -0.9684,
+      "window_rewrite_ms": 0.3163
     }
   },
   "draft_kernel_ms": {
@@ -43,15 +118,69 @@
       "other": 0.8923,
       "total": 31.2304
     },
+    "composed": {
+      "attention": 5.2322,
+      "elementwise": 0.5089,
+      "gemm": 15.0875,
+      "other": 0.8019,
+      "total": 21.6305
+    },
     "quant": {
       "attention": 5.8733,
       "elementwise": 0.5,
       "gemm": 16.7924,
       "other": 0.8557,
       "total": 24.0214
+    },
+    "skip4": {
+      "attention": 5.1748,
+      "elementwise": 1.3092,
+      "gemm": 20.7125,
+      "other": 0.827,
+      "total": 28.0235
+    },
+    "skip8": {
+      "attention": 4.3471,
+      "elementwise": 1.2011,
+      "gemm": 18.416,
+      "other": 0.7709,
+      "total": 24.7351
+    },
+    "w1024": {
+      "attention": 5.8935,
+      "elementwise": 1.4004,
+      "gemm": 23.0299,
+      "other": 0.8882,
+      "total": 31.212
+    },
+    "w128": {
+      "attention": 4.488,
+      "elementwise": 1.5167,
+      "gemm": 23.0919,
+      "other": 0.8882,
+      "total": 29.9848
     }
   },
   "levers": {
+    "composed": {
+      "bound_scale": 0.3973,
+      "draft_kernel_ms": {
+        "attention": 5.2322,
+        "elementwise": 0.5089,
+        "gemm": 15.0875,
+        "other": 0.8019,
+        "total": 21.6305
+      },
+      "expectation_basis": [
+        "skip 4/36 layers -> all classes x0.8889",
+        "window 512+16 of ctx~512 -> attention x1.0000 (nothing to trim)",
+        "w4a16 weights -> gemm x0.25 (optimistic bound)"
+      ],
+      "fixed_gap": -0.0316,
+      "kernel_gap": 0.2953,
+      "kernel_scale": 0.6926,
+      "model_scale": 0.661
+    },
     "quant": {
       "bound_scale": 0.4469,
       "draft_kernel_ms": {
@@ -68,6 +197,74 @@
       "kernel_gap": 0.3222,
       "kernel_scale": 0.7692,
       "model_scale": 0.7451
+    },
+    "skip4": {
+      "bound_scale": 0.8889,
+      "draft_kernel_ms": {
+        "attention": 5.1748,
+        "elementwise": 1.3092,
+        "gemm": 20.7125,
+        "other": 0.827,
+        "total": 28.0235
+      },
+      "expectation_basis": [
+        "skip 4/36 layers -> all classes x0.8889"
+      ],
+      "fixed_gap": -0.0116,
+      "kernel_gap": 0.0084,
+      "kernel_scale": 0.8973,
+      "model_scale": 0.8857
+    },
+    "skip8": {
+      "bound_scale": 0.7778,
+      "draft_kernel_ms": {
+        "attention": 4.3471,
+        "elementwise": 1.2011,
+        "gemm": 18.416,
+        "other": 0.7709,
+        "total": 24.7351
+      },
+      "expectation_basis": [
+        "skip 8/36 layers -> all classes x0.7778"
+      ],
+      "fixed_gap": -0.0223,
+      "kernel_gap": 0.0142,
+      "kernel_scale": 0.792,
+      "model_scale": 0.7697
+    },
+    "w1024": {
+      "bound_scale": 1.0,
+      "draft_kernel_ms": {
+        "attention": 5.8935,
+        "elementwise": 1.4004,
+        "gemm": 23.0299,
+        "other": 0.8882,
+        "total": 31.212
+      },
+      "expectation_basis": [
+        "window 1024+16 of ctx~512 -> attention x1.0000 (nothing to trim)"
+      ],
+      "fixed_gap": 0.0003,
+      "kernel_gap": -0.0006,
+      "kernel_scale": 0.9994,
+      "model_scale": 0.9997
+    },
+    "w128": {
+      "bound_scale": 0.8642,
+      "draft_kernel_ms": {
+        "attention": 4.488,
+        "elementwise": 1.5167,
+        "gemm": 23.0919,
+        "other": 0.8882,
+        "total": 29.9848
+      },
+      "expectation_basis": [
+        "window 128+16 of ctx~512 -> attention x0.2812"
+      ],
+      "fixed_gap": -0.0088,
+      "kernel_gap": 0.0959,
+      "kernel_scale": 0.9601,
+      "model_scale": 0.9514
     }
   },
   "note": "nsys inflates absolute time; ratios are the currency, not milliseconds",
