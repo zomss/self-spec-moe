@@ -1,0 +1,22 @@
+{
+  "content_seeds": [
+    2,
+    3
+  ],
+  "digest": "63e1d305e6b090cf3edbc150287cb1c611c4510c2b7a8dac32038398b575c8ce",
+  "predictions": {
+    "F1": "knapsack_k8 acceptance > frozen_k8 acceptance at R8",
+    "F2": "knapsack_k8 acceptance > frozen_k8 in >= 4 of 6 regimes",
+    "F3": "draft_chain differs < 2% between frozen and knapsack at the same count",
+    "F4": "skip8_knapsack decode rate > off in >= 3 of 6 regimes"
+  },
+  "record_type": "w98f_predictions",
+  "schema_version": 1,
+  "selection_provenance": "knapsack sets chosen from R8 seed-4 per-layer retention, confirmed on seed 5 (D2b, digest f9474093...); evaluation here uses seeds 2-3, so the sets are scored out of sample",
+  "sets": {
+    "frozen_k4": "2,4,7,16",
+    "frozen_k8": "2,4,7,11,16,20,25,30",
+    "knapsack_k4": "2,4,9,16",
+    "knapsack_k8": "2,4,6,7,8,9,10,16"
+  }
+}
