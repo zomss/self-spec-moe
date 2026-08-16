@@ -61,6 +61,9 @@ class SelfSpecProfiler:
         # are extra and perturb the chain total via additional CUDA syncs; only
         # record them when explicitly requested.
         self._fine: bool = bool(int(os.environ.get("VLLM_SELF_SPEC_PROFILE_FINE", "0")))
+        # NVTX ranges for Nsight. Sync-free, so unlike `_fine` it can cover
+        # every region without perturbing the chain it is measuring.
+        self._nvtx: bool = envs.VLLM_SELF_SPEC_PROFILE_NVTX
         if self.enabled:
             self._out_dir = os.environ.get(
                 "VLLM_SELF_SPEC_PROFILE_OUT", ""
@@ -109,10 +112,32 @@ class SelfSpecProfiler:
         No-op when profiling is disabled. The leading sync ensures prior GPU
         work has drained so it is not attributed to this region; the trailing
         sync captures the region's own GPU work in the elapsed wall time.
+
+        Under `VLLM_SELF_SPEC_PROFILE_NVTX` the region is ALSO bracketed by an
+        NVTX range, and that path deliberately ignores the `_fine_only` gate:
+        the gate exists because the wall-clock timers sync, and NVTX does not.
         """
         if not self.enabled:
             yield
             return
+        if self._nvtx:
+            with self._nvtx_range(label):
+                with self._timed_region(label):
+                    yield
+            return
+        with self._timed_region(label):
+            yield
+
+    @contextmanager
+    def _nvtx_range(self, label: str):
+        torch.cuda.nvtx.range_push(label)
+        try:
+            yield
+        finally:
+            torch.cuda.nvtx.range_pop()
+
+    @contextmanager
+    def _timed_region(self, label: str):
         if self._fine_only(label) and not self._fine:
             # Fine-grained per-step sub-region timers add many extra CUDA syncs
             # that perturb the enclosing draft_chain total. Gate them behind
@@ -142,12 +167,25 @@ class SelfSpecProfiler:
         ``VLLM_SELF_SPEC_PROFILE_FINE`` (like the other sub-region timers) so
         the clean draft_chain/verify measurement is undisturbed by default.
         """
-        if not self.enabled or not self._fine:
+        if not self.enabled:
             yield
+            return
+        if not self._fine:
+            if self._nvtx:
+                # Sync-free, so the NVTX range covers host-only regions the
+                # wall-clock timer is gated out of.
+                with self._nvtx_range(label):
+                    yield
+            else:
+                yield
             return
         t0 = time.perf_counter()
         try:
-            yield
+            if self._nvtx:
+                with self._nvtx_range(label):
+                    yield
+            else:
+                yield
         finally:
             self._record(label, time.perf_counter() - t0)
 

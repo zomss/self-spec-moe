@@ -261,7 +261,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_DTYPE: str = ""
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
-    VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH: bool = False
+    VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH: bool = True
     VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD: float = 0.0
     VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL: int = 64
     VLLM_SELF_SPEC_ACCEPT_PROBE_BURST: int = 2
@@ -307,6 +307,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_PROFILE: bool = False
     VLLM_SELF_SPEC_PROFILE_FINE: bool = False
     VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS: bool = False
+    VLLM_SELF_SPEC_PROFILE_NVTX: bool = False
     VLLM_SELF_SPEC_MOE_NUM_DUMP: str = ""
     VLLM_SELF_SPEC_MOE_DUMP_LAYER: int = 0
     VLLM_SELF_SPEC_MOE_FP32_ACCUM: bool = False
@@ -2024,13 +2025,22 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # the longest sequence in the batch: every row's `dropped` is zero, the
     # rewrite is an identity gather, and the compacted view equals the input
     # metadata. Detected from `max_seq_len` (a Python int), so the check never
-    # syncs. Measured on Qwen3-8B: with nothing to trim the window path still
-    # costs ~1.5-2% of draft-chain time at short context
-    # (research/98_selector_demo/results_lever_mechanics.md). Default off --
-    # it changes which tensor the attention metadata points at, so it is
-    # opt-in until A/B'd for bit-identical acceptance on the target box.
+    # syncs.
+    #
+    # Default ON as of X30 (research/98_selector_demo/results_window_overhead.md),
+    # which measured it against a no-window control on h103, two interleaved
+    # repeats: the window cost +0.93 to +1.21% of draft-chain time at short
+    # context where it has nothing to trim, and the fast path removes all but
+    # 0.01-0.10% of that. Acceptance was bit-identical in every arm, and the
+    # 14k negative control never took the path (0/551 calls) because there the
+    # window genuinely trims and pays -39.8%.
+    #
+    # NOTE for anyone comparing against Phase 98's scored cost records: those
+    # were measured with this OFF, so their windowed short-context `d_hat` is
+    # ~1% high relative to what this build now produces. Acceptance records are
+    # unaffected -- the path is acceptance-neutral by construction.
     "VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH": lambda: bool(
-        int(os.getenv("VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH", "0"))
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH", "1"))
     ),
     # Phase 66 shared-KV self-draft: the draft_model proposer's attention
     # layers BIND to the target layers' KV cache tensors instead of
@@ -2357,6 +2367,22 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # region and cost +2.4 ms per engine step (X25). Amendment 2 was approved
     # with a dual-arm requirement, so the legacy instrument stays runnable to
     # produce the registered conservative bound beside the corrected number.
+    # Emit NVTX ranges for every profiler region, for Nsight Systems.
+    #
+    # This is a DIFFERENT instrument from the wall-clock one, not a switch on
+    # it. `region()` brackets itself with two `cuda.synchronize()` calls, which
+    # is why the fine-grained sub-regions had to be gated: eight extra syncs
+    # per step cost +2.4 ms of lost overlap (X25). NVTX needs no sync at all --
+    # nsys attributes GPU work to the enclosing range by correlation -- so the
+    # fine regions become measurable at last, and the per-operation breakdown
+    # covers the whole draft chain rather than just its total.
+    #
+    # Never enable this for a scored campaign: nsys adds per-API overhead, so
+    # the absolute times are inflated. It answers "where does the time go",
+    # not "how much time is there".
+    "VLLM_SELF_SPEC_PROFILE_NVTX": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_PROFILE_NVTX", "0"))
+    ),
     "VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS": lambda: bool(
         int(os.getenv("VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS", "0"))
     ),

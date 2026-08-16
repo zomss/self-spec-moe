@@ -3111,6 +3111,12 @@ class SpecDecodeBaseProposer:
         set. Same-stream ordering makes the in-place buffer rewrite safe
         (data change, not shape change).
         """
+        with _self_spec_profiler().cpu_region("kv_window_rewrite"):
+            return self._apply_draft_kv_window_inner(cad, tokens_drafted)
+
+    def _apply_draft_kv_window_inner(
+        self, cad: CommonAttentionMetadata, tokens_drafted: int = 0
+    ) -> CommonAttentionMetadata:
         bs = cad.num_reqs
         block_size = self.block_size
         n_sink = -(-self._kv_window_sinks // block_size)
