@@ -1,0 +1,373 @@
+{
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 128
+  },
+  "content_seed": 5,
+  "observations": {
+    "R1": {
+      "closure": {
+        "A": 523,
+        "C": 3,
+        "D": 118,
+        "E": 639,
+        "H": 119,
+        "tau_eff": 5.369748
+      },
+      "rows": 119,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 47,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              38,
+              36,
+              32,
+              26,
+              23,
+              21,
+              17,
+              17
+            ],
+            "tau": 5.468085,
+            "tau_hi": 5.468085,
+            "tau_lo": 5.468085,
+            "unarmed_steps": 1,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 70,
+            "clipped_excluded": 1,
+            "pos_accepted": [
+              65,
+              65,
+              43,
+              34,
+              29,
+              29,
+              21,
+              21
+            ],
+            "tau": 5.385714,
+            "tau_hi": 5.385714,
+            "tau_lo": 5.385714,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R4": {
+      "closure": {
+        "A": 2739,
+        "C": 7,
+        "D": 2345,
+        "E": 5085,
+        "H": 2353,
+        "tau_eff": 2.161071
+      },
+      "rows": 2353,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 941,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              495,
+              266,
+              141,
+              75,
+              48,
+              29,
+              13,
+              7
+            ],
+            "tau": 2.141339,
+            "tau_hi": 2.198041,
+            "tau_lo": 2.082121,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 1400,
+            "clipped_excluded": 4,
+            "pos_accepted": [
+              763,
+              381,
+              224,
+              130,
+              78,
+              39,
+              24,
+              13
+            ],
+            "tau": 2.18,
+            "tau_hi": 2.276247,
+            "tau_lo": 2.089911,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R5": {
+      "closure": {
+        "A": 3799,
+        "C": 28,
+        "D": 1287,
+        "E": 5066,
+        "H": 1295,
+        "tau_eff": 3.911969
+      },
+      "rows": 1295,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 605,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              422,
+              312,
+              220,
+              158,
+              110,
+              81,
+              62,
+              46
+            ],
+            "tau": 3.332231,
+            "tau_hi": 3.452055,
+            "tau_lo": 3.226324,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 675,
+            "clipped_excluded": 7,
+            "pos_accepted": [
+              518,
+              419,
+              331,
+              272,
+              240,
+              205,
+              182,
+              165
+            ],
+            "tau": 4.454815,
+            "tau_hi": 5.030303,
+            "tau_lo": 3.847522,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R5cot": {
+      "closure": {
+        "A": 4112,
+        "C": 21,
+        "D": 967,
+        "E": 5066,
+        "H": 975,
+        "tau_eff": 5.195897
+      },
+      "rows": 975,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 379,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              331,
+              268,
+              234,
+              200,
+              177,
+              152,
+              136,
+              121
+            ],
+            "tau": 5.271768,
+            "tau_hi": 5.834808,
+            "tau_lo": 4.584862,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 580,
+            "clipped_excluded": 8,
+            "pos_accepted": [
+              485,
+              408,
+              351,
+              306,
+              269,
+              243,
+              204,
+              178
+            ],
+            "tau": 5.213793,
+            "tau_hi": 5.699433,
+            "tau_lo": 4.844302,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R6": {
+      "closure": {
+        "A": 17475,
+        "C": 95,
+        "D": 3036,
+        "E": 20448,
+        "H": 3068,
+        "tau_eff": 6.664928
+      },
+      "rows": 3068,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 1352,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              1183,
+              1066,
+              968,
+              866,
+              792,
+              725,
+              668,
+              616
+            ],
+            "tau": 6.091716,
+            "tau_hi": 6.422326,
+            "tau_lo": 5.792281,
+            "unarmed_steps": 32,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 1656,
+            "clipped_excluded": 28,
+            "pos_accepted": [
+              1547,
+              1494,
+              1385,
+              1296,
+              1230,
+              1199,
+              1149,
+              1074
+            ],
+            "tau": 7.264493,
+            "tau_hi": 7.866317,
+            "tau_lo": 6.69265,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R8": {
+      "closure": {
+        "A": 8168,
+        "C": 63,
+        "D": 2103,
+        "E": 10224,
+        "H": 2119,
+        "tau_eff": 4.824917
+      },
+      "rows": 2119,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 836,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              710,
+              593,
+              491,
+              405,
+              328,
+              284,
+              247,
+              212
+            ],
+            "tau": 4.911483,
+            "tau_hi": 5.481383,
+            "tau_lo": 4.442641,
+            "unarmed_steps": 16,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 1254,
+            "clipped_excluded": 13,
+            "pos_accepted": [
+              1033,
+              842,
+              707,
+              593,
+              510,
+              432,
+              372,
+              314
+            ],
+            "tau": 4.830144,
+            "tau_hi": 5.243902,
+            "tau_lo": 4.432629,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    }
+  },
+  "package_id": "w98-g98d-acceptance-authorization-v1",
+  "record_type": "w98d2_cell",
+  "schema_version": 1
+}

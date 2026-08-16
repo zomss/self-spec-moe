@@ -1,0 +1,373 @@
+{
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 0,
+    "window": 512
+  },
+  "content_seed": 5,
+  "observations": {
+    "R1": {
+      "closure": {
+        "A": 565,
+        "C": 1,
+        "D": 74,
+        "E": 639,
+        "H": 75,
+        "tau_eff": 8.52
+      },
+      "rows": 75,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 32,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              31,
+              31,
+              30,
+              30,
+              28,
+              27,
+              26,
+              26
+            ],
+            "tau": 8.15625,
+            "tau_hi": 8.15625,
+            "tau_lo": 8.15625,
+            "unarmed_steps": 1,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 41,
+            "clipped_excluded": 1,
+            "pos_accepted": [
+              41,
+              41,
+              41,
+              41,
+              41,
+              41,
+              41,
+              41
+            ],
+            "tau": 9.0,
+            "tau_hi": 9.0,
+            "tau_lo": 9.0,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R4": {
+      "closure": {
+        "A": 3325,
+        "C": 15,
+        "D": 1767,
+        "E": 5085,
+        "H": 1775,
+        "tau_eff": 2.864789
+      },
+      "rows": 1775,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 739,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              489,
+              312,
+              193,
+              125,
+              75,
+              45,
+              30,
+              16
+            ],
+            "tau": 2.738836,
+            "tau_hi": 2.920635,
+            "tau_lo": 2.568182,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 1023,
+            "clipped_excluded": 5,
+            "pos_accepted": [
+              695,
+              464,
+              323,
+              217,
+              147,
+              88,
+              54,
+              32
+            ],
+            "tau": 2.974585,
+            "tau_hi": 3.145511,
+            "tau_lo": 2.810313,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R5": {
+      "closure": {
+        "A": 4347,
+        "C": 27,
+        "D": 738,
+        "E": 5066,
+        "H": 746,
+        "tau_eff": 6.790885
+      },
+      "rows": 746,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 315,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              290,
+              267,
+              234,
+              215,
+              199,
+              182,
+              166,
+              151
+            ],
+            "tau": 6.409524,
+            "tau_hi": 6.672131,
+            "tau_lo": 6.155963,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 416,
+            "clipped_excluded": 7,
+            "pos_accepted": [
+              384,
+              368,
+              342,
+              326,
+              307,
+              297,
+              289,
+              274
+            ],
+            "tau": 7.21875,
+            "tau_hi": 7.809896,
+            "tau_lo": 6.576087,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R5cot": {
+      "closure": {
+        "A": 4465,
+        "C": 37,
+        "D": 630,
+        "E": 5066,
+        "H": 638,
+        "tau_eff": 7.940439
+      },
+      "rows": 638,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 244,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              240,
+              235,
+              233,
+              227,
+              219,
+              213,
+              206,
+              198
+            ],
+            "tau": 8.258197,
+            "tau_hi": 8.476596,
+            "tau_lo": 7.984252,
+            "unarmed_steps": 8,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 378,
+            "clipped_excluded": 8,
+            "pos_accepted": [
+              367,
+              359,
+              347,
+              335,
+              321,
+              308,
+              300,
+              295
+            ],
+            "tau": 7.962963,
+            "tau_hi": 8.206522,
+            "tau_lo": 7.727506,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R6": {
+      "closure": {
+        "A": 18173,
+        "C": 105,
+        "D": 2348,
+        "E": 20448,
+        "H": 2380,
+        "tau_eff": 8.591597
+      },
+      "rows": 2380,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 979,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              965,
+              955,
+              940,
+              923,
+              908,
+              893,
+              873,
+              857
+            ],
+            "tau": 8.470889,
+            "tau_hi": 8.6,
+            "tau_lo": 8.335005,
+            "unarmed_steps": 32,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 1343,
+            "clipped_excluded": 26,
+            "pos_accepted": [
+              1341,
+              1339,
+              1335,
+              1332,
+              1328,
+              1327,
+              1325,
+              1324
+            ],
+            "tau": 8.930752,
+            "tau_hi": 8.978293,
+            "tau_lo": 8.87092,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    },
+    "R8": {
+      "closure": {
+        "A": 8965,
+        "C": 52,
+        "D": 1295,
+        "E": 10224,
+        "H": 1311,
+        "tau_eff": 7.798627
+      },
+      "rows": 1311,
+      "tau_profile": {
+        "buckets": {
+          "0": {
+            "armed_steps": 519,
+            "clipped_excluded": 0,
+            "pos_accepted": [
+              493,
+              482,
+              472,
+              456,
+              445,
+              430,
+              421,
+              405
+            ],
+            "tau": 7.944123,
+            "tau_hi": 8.166667,
+            "tau_lo": 7.73221,
+            "unarmed_steps": 16,
+            "undefined_draws": 0
+          },
+          "1": {
+            "armed_steps": 764,
+            "clipped_excluded": 12,
+            "pos_accepted": [
+              732,
+              712,
+              693,
+              662,
+              651,
+              630,
+              604,
+              581
+            ],
+            "tau": 7.891361,
+            "tau_hi": 8.149457,
+            "tau_lo": 7.616834,
+            "unarmed_steps": 0,
+            "undefined_draws": 0
+          }
+        },
+        "depth": 8,
+        "kmax": 8,
+        "u_edges": [
+          256,
+          1024,
+          3072
+        ]
+      }
+    }
+  },
+  "package_id": "w98-g98d-acceptance-authorization-v1",
+  "record_type": "w98d2_cell",
+  "schema_version": 1
+}
