@@ -427,6 +427,37 @@ term the cost model already struggles with. As levers improve they dominate
 more, which implies the optimal K should FALL as the lever set gets better.
 That is testable against the existing K/OFF ladder.
 
+### 3.7 The baseline every speedup is measured against (`results_offpath_vs_stock.md`)
+
+Stock vLLM with no `speculative_config` against our engine with K pinned to 0,
+profiler and trace disabled in both arms, decode isolated by a two-budget
+slope so prefill cancels:
+
+| regime | batch | stock tok/s | koff-OFF tok/s | our cost |
+| --- | --- | --- | --- | --- |
+| R1 | 1 | 141.60 | 136.58 | +3.68% |
+| R8 | 16 | 2058.30 | 1991.21 | +3.37% |
+| R6 | 32 | 3856.05 | 3704.92 | +4.08% |
+
+**The stack costs 3.71% even when it does not speculate** -- 0.23-0.32 ms/step
+spent walking the speculative path (policy evaluation, `spec_decode_metadata`,
+the spec-shaped runner branch) after deciding not to. Identical stock repeats
+differ 0.37-1.02%; the koff repeats 0.11-0.15%.
+
+So **every speedup in this phase is a ratio to OUR OFF, not to stock vLLM.**
+The armed path carries the same overhead, so it is one multiplicative factor
+and changes no ranking and no verdict -- but the headline must be stated
+against a named baseline:
+
+> D3's **1.436x** over static-OFF is approximately **1.383x** over stock vLLM
+> autoregressive decode.
+
+This is also the phase's clearest engineering item, because unlike the
+orchestration terms above it is not a lever trade-off: a genuine K=0 fast path
+costs acceptance nothing, applies to every OFF step, and is exactly where the
+fail-closed rule steers. At R4 the selector now declines to arm and lands on a
+path 3.7% slower than the stock AR it is falling back to.
+
 ## 4. What this says about the design
 
 1. **The epistemic split is validated.** Cost predicted soundly (47/48, five

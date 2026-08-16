@@ -1,0 +1,549 @@
+{
+  "armed": false,
+  "batch": 32,
+  "capture_window": {
+    "start_step": 40,
+    "stop_step": 80
+  },
+  "combination": "off",
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "nsys": {
+    "kernel_classes": {
+      "attention": 32584096.0,
+      "elementwise": 12405883.0,
+      "gemm": 223186075.0,
+      "other": 8362180.0
+    },
+    "kernels": {
+      "report": "cuda_gpu_kern_sum",
+      "rows": [
+        {
+          "Avg (ns)": "68770.7",
+          "Instances": "1440",
+          "Max (ns)": "71615",
+          "Med (ns)": "68655.5",
+          "Min (ns)": "67136",
+          "Name": "nvjet_sm90_tst_192x32_64x7_2x1_v_bz_TNT",
+          "StdDev (ns)": "802.0",
+          "Time (%)": "35.8",
+          "Total Time (ns)": "99029859"
+        },
+        {
+          "Avg (ns)": "36824.7",
+          "Instances": "1440",
+          "Max (ns)": "38688",
+          "Med (ns)": "36768.0",
+          "Min (ns)": "35647",
+          "Name": "nvjet_sm90_tst_64x32_64x16_2x1_v_bz_splitK_TNT",
+          "StdDev (ns)": "534.5",
+          "Time (%)": "19.2",
+          "Total Time (ns)": "53027551"
+        },
+        {
+          "Avg (ns)": "21305.3",
+          "Instances": "1440",
+          "Max (ns)": "25888",
+          "Med (ns)": "21088.0",
+          "Min (ns)": "20640",
+          "Name": "nvjet_sm90_tst_64x32_64x16_4x1_v_bz_TNT",
+          "StdDev (ns)": "736.1",
+          "Time (%)": "11.1",
+          "Total Time (ns)": "30679668"
+        },
+        {
+          "Avg (ns)": "17987.7",
+          "Instances": "1440",
+          "Max (ns)": "23455",
+          "Med (ns)": "17824.0",
+          "Min (ns)": "16576",
+          "Name": "void cutlass::device_kernel<flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<flash::CollectiveMainloopFwdSm90<(int)2, cute::tuple<cute::C<(int)1>, cute::C<(int)1>, cute::C<(int)1>>, cute::tuple<cute::C<(int)64>, cute::C<(int)128>, cute::C<(int)128>>, (int)128, cutlass::bfloat16_t, float, cutlass::arch::Sm90, (bool)1, (bool)0, (bool)0, (bool)1, (bool)1, (bool)0, (bool)0, (bool)1, (bool)1, (bool)1, (bool)1, (bool)0, cutlass::bfloat16_t, (int)1>, flash::CollectiveEpilogueFwd<cute::tuple<cute::C<(int)64>, cute::C<(int)128>, cute::C<(int)128>>, cute::tuple<cute::C<(int)1>, cute::C<(int)1>, cute::C<(int)1>>, cutlass::bfloat16_t, cutlass::arch::Sm90, (int)128, (bool)1, (bool)1, (bool)1, (bool)0, (int)1>, flash::VarlenDynamicPersistentTileScheduler<(int)64, (int)128, (int)128, (int)128, (bool)1, (bool)1, (bool)1, (bool)1, (bool)0, (bool)1>>>>(T1::Params)",
+          "StdDev (ns)": "816.6",
+          "Time (%)": "9.4",
+          "Total Time (ns)": "25902257"
+        },
+        {
+          "Avg (ns)": "14348.3",
+          "Instances": "1440",
+          "Max (ns)": "15968",
+          "Med (ns)": "14240.0",
+          "Min (ns)": "13696",
+          "Name": "nvjet_sm90_tst_64x16_64x16_1x2_h_bz_TNT",
+          "StdDev (ns)": "362.9",
+          "Time (%)": "7.5",
+          "Total Time (ns)": "20661508"
+        },
+        {
+          "Avg (ns)": "425441.8",
+          "Instances": "40",
+          "Max (ns)": "428319",
+          "Med (ns)": "425342.5",
+          "Min (ns)": "423487",
+          "Name": "nvjet_sm90_tst_384x32_64x4_2x1_v_bz_TNT",
+          "StdDev (ns)": "1051.6",
+          "Time (%)": "6.2",
+          "Total Time (ns)": "17017673"
+        },
+        {
+          "Avg (ns)": "2338.7",
+          "Instances": "1440",
+          "Max (ns)": "3040",
+          "Med (ns)": "2336.0",
+          "Min (ns)": "2144",
+          "Name": "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(const T1 *, const T1 *, T2 *, T2 *, const long *, long, long, long, long, long, int, int, int, const float *, const float *, int)",
+          "StdDev (ns)": "75.8",
+          "Time (%)": "1.2",
+          "Total Time (ns)": "3367767"
+        },
+        {
+          "Avg (ns)": "2248.1",
+          "Instances": "1440",
+          "Max (ns)": "2592",
+          "Med (ns)": "2240.0",
+          "Min (ns)": "2112",
+          "Name": "void cutlass::device_kernel<flash::FlashAttnFwdCombine<cute::tuple<cute::C<(int)8>, cute::C<(int)128>>, (int)5, (int)256, (int)1, (bool)0, (bool)1, cutlass::bfloat16_t, float, cutlass::arch::Sm90>>(T1::Params)",
+          "StdDev (ns)": "60.2",
+          "Time (%)": "1.2",
+          "Total Time (ns)": "3237304"
+        },
+        {
+          "Avg (ns)": "2220.2",
+          "Instances": "1440",
+          "Max (ns)": "2944",
+          "Med (ns)": "2208.0",
+          "Min (ns)": "1920",
+          "Name": "triton_red_fused_fused_add_rms_norm_0",
+          "StdDev (ns)": "133.3",
+          "Time (%)": "1.2",
+          "Total Time (ns)": "3197066"
+        },
+        {
+          "Avg (ns)": "2194.8",
+          "Instances": "1440",
+          "Max (ns)": "2880",
+          "Med (ns)": "2176.0",
+          "Min (ns)": "2048",
+          "Name": "triton_red_fused_fused_add_rms_norm_2",
+          "StdDev (ns)": "94.8",
+          "Time (%)": "1.1",
+          "Total Time (ns)": "3160502"
+        },
+        {
+          "Avg (ns)": "1923.5",
+          "Instances": "1440",
+          "Max (ns)": "2624",
+          "Med (ns)": "1920.0",
+          "Min (ns)": "1824",
+          "Name": "void cublasLt::splitKreduce_kernel<(int)32, (int)16, int, float, __nv_bfloat16, float, __nv_bfloat16, (bool)0, float, __nv_bfloat16, __nv_bfloat16, (bool)1, (bool)0, (bool)0, (bool)0>(cublasLt::cublasSplitKParams<T6>, const T4 *, const T10 *, T9 *, T5 *, const T6 *, const T6 *, const T11 *, const T4 *, T11 *, void *, long, T6 *, int *, T6 *, T6 *, const T6 *, const T6 *, const T6 *, const T6 *, const T6 *)",
+          "StdDev (ns)": "55.1",
+          "Time (%)": "1.0",
+          "Total Time (ns)": "2769816"
+        },
+        {
+          "Avg (ns)": "1886.5",
+          "Instances": "1440",
+          "Max (ns)": "2720",
+          "Med (ns)": "1887.0",
+          "Min (ns)": "1663",
+          "Name": "triton_poi_fused_mul_silu_slice_1",
+          "StdDev (ns)": "90.3",
+          "Time (%)": "1.0",
+          "Total Time (ns)": "2716517"
+        },
+        {
+          "Avg (ns)": "1804.0",
+          "Instances": "1400",
+          "Max (ns)": "2464",
+          "Med (ns)": "1792.0",
+          "Min (ns)": "1696",
+          "Name": "triton_poi_fused_4",
+          "StdDev (ns)": "75.9",
+          "Time (%)": "0.9",
+          "Total Time (ns)": "2525594"
+        },
+        {
+          "Avg (ns)": "1542.1",
+          "Instances": "1400",
+          "Max (ns)": "2144",
+          "Med (ns)": "1536.0",
+          "Min (ns)": "1471",
+          "Name": "triton_red_fused_3",
+          "StdDev (ns)": "60.4",
+          "Time (%)": "0.8",
+          "Total Time (ns)": "2158935"
+        },
+        {
+          "Avg (ns)": "8624.0",
+          "Instances": "160",
+          "Max (ns)": "11040",
+          "Med (ns)": "7968.0",
+          "Min (ns)": "7712",
+          "Name": "void at::native::mbtopk::computeBlockDigitCounts<float, unsigned int, unsigned int, (int)2>(at::cuda::detail::TensorInfo<const T1, T2>, unsigned int, unsigned int *, unsigned int, T2, int, int, unsigned int, T3, T3 *, short *)",
+          "StdDev (ns)": "1203.6",
+          "Time (%)": "0.5",
+          "Total Time (ns)": "1379833"
+        },
+        {
+          "Avg (ns)": "12938.8",
+          "Instances": "80",
+          "Max (ns)": "14400",
+          "Med (ns)": "12960.0",
+          "Min (ns)": "11551",
+          "Name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "StdDev (ns)": "1141.5",
+          "Time (%)": "0.4",
+          "Total Time (ns)": "1035101"
+        },
+        {
+          "Avg (ns)": "21719.9",
+          "Instances": "40",
+          "Max (ns)": "23712",
+          "Med (ns)": "21456.0",
+          "Min (ns)": "19616",
+          "Name": "void at::native::mbtopk::gatherTopK<float, unsigned int, (int)2>(at::cuda::detail::TensorInfo<const T1, T2>, T2, T2, bool, unsigned int, T2, at::cuda::detail::TensorInfo<T1, T2>, T2, at::cuda::detail::TensorInfo<long, T2>, T2, unsigned int, unsigned int, T1 *, unsigned int *, unsigned int *, unsigned int)",
+          "StdDev (ns)": "1039.9",
+          "Time (%)": "0.3",
+          "Total Time (ns)": "868795"
+        },
+        {
+          "Avg (ns)": "16161.5",
+          "Instances": "40",
+          "Max (ns)": "17184",
+          "Med (ns)": "16336.0",
+          "Min (ns)": "14432",
+          "Name": "void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int, long, (int)4, (int)4>>(T3)",
+          "StdDev (ns)": "673.0",
+          "Time (%)": "0.2",
+          "Total Time (ns)": "646462"
+        },
+        {
+          "Avg (ns)": "15480.7",
+          "Instances": "40",
+          "Max (ns)": "17312",
+          "Med (ns)": "15264.0",
+          "Min (ns)": "14848",
+          "Name": "void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<c10::BFloat16, at::native::ArgMaxOps<float>, unsigned int, long, (int)4, (int)4>>(T3)",
+          "StdDev (ns)": "629.1",
+          "Time (%)": "0.2",
+          "Total Time (ns)": "619227"
+        },
+        {
+          "Avg (ns)": "2655.2",
+          "Instances": "160",
+          "Max (ns)": "3008",
+          "Med (ns)": "2656.0",
+          "Min (ns)": "2464",
+          "Name": "void at::native::mbtopk::computeBlockwiseWithinKCounts<unsigned int, float>(T1 *, short *, unsigned int *, unsigned int *, unsigned int, int, bool, unsigned int *, T2 *, unsigned int *, T1 *, unsigned int)",
+          "StdDev (ns)": "95.1",
+          "Time (%)": "0.2",
+          "Total Time (ns)": "424832"
+        },
+        {
+          "Avg (ns)": "2472.8",
+          "Instances": "160",
+          "Max (ns)": "2784",
+          "Med (ns)": "2464.0",
+          "Min (ns)": "2336",
+          "Name": "at::native::mbtopk::computeDigitCumSum(short *, unsigned int *, unsigned int)",
+          "StdDev (ns)": "68.7",
+          "Time (%)": "0.1",
+          "Total Time (ns)": "395648"
+        },
+        {
+          "Avg (ns)": "3410.8",
+          "Instances": "80",
+          "Max (ns)": "3680",
+          "Med (ns)": "3392.0",
+          "Min (ns)": "3200",
+          "Name": "void at_cuda_detail::cub::detail::scan_by_key::DeviceScanByKeyKernel<at_cuda_detail::cub::detail::scan_by_key::policy_hub<thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned int, unsigned int, cuda::std::__4::plus<void>>::Policy1000, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned int *, unsigned int *, at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, (bool)1>, cuda::std::__4::equal_to<void>, cuda::std::__4::plus<void>, at_cuda_detail::cub::NullType, unsigned long long, unsigned int, unsigned int>(T2, T11 *, T3, T4, T5, int, T6, T7, T8, T9)",
+          "StdDev (ns)": "135.9",
+          "Time (%)": "0.1",
+          "Total Time (ns)": "272864"
+        },
+        {
+          "Avg (ns)": "4464.8",
+          "Instances": "40",
+          "Max (ns)": "4608",
+          "Med (ns)": "4464.0",
+          "Min (ns)": "4352",
+          "Name": "void at::native::bitonicSortKVInPlace<(int)2, (int)-1, (int)16, (int)16, float, long, at::native::GTOp<float, (bool)1>, unsigned int>(at::cuda::detail::TensorInfo<T5, T8>, T8, T8, T8, at::cuda::detail::TensorInfo<T6, T8>, T8, T7)",
+          "StdDev (ns)": "68.0",
+          "Time (%)": "0.1",
+          "Total Time (ns)": "178592"
+        },
+        {
+          "Avg (ns)": "1451.7",
+          "Instances": "120",
+          "Max (ns)": "1952",
+          "Med (ns)": "1440.0",
+          "Min (ns)": "1248",
+          "Name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "StdDev (ns)": "140.8",
+          "Time (%)": "0.1",
+          "Total Time (ns)": "174208"
+        },
+        {
+          "Avg (ns)": "3287.2",
+          "Instances": "40",
+          "Max (ns)": "3488",
+          "Med (ns)": "3264.0",
+          "Min (ns)": "3104",
+          "Name": "triton_red_fused__to_copy_embedding_rms_norm_0",
+          "StdDev (ns)": "88.2",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "131488"
+        },
+        {
+          "Avg (ns)": "2688.0",
+          "Instances": "40",
+          "Max (ns)": "2912",
+          "Med (ns)": "2656.0",
+          "Min (ns)": "2528",
+          "Name": "_compute_slot_mapping_kernel",
+          "StdDev (ns)": "93.4",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "107519"
+        },
+        {
+          "Avg (ns)": "2252.0",
+          "Instances": "40",
+          "Max (ns)": "2400",
+          "Med (ns)": "2240.0",
+          "Min (ns)": "2144",
+          "Name": "void at::native::mbtopk::computeBlockwiseKthCounts<unsigned int>(T1 *, short *, unsigned int, unsigned int, unsigned int *)",
+          "StdDev (ns)": "62.6",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "90080"
+        },
+        {
+          "Avg (ns)": "1940.0",
+          "Instances": "40",
+          "Max (ns)": "2464",
+          "Med (ns)": "1952.0",
+          "Min (ns)": "1696",
+          "Name": "triton_poi_fused_2",
+          "StdDev (ns)": "168.8",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "77600"
+        },
+        {
+          "Avg (ns)": "965.6",
+          "Instances": "80",
+          "Max (ns)": "1152",
+          "Med (ns)": "960.0",
+          "Min (ns)": "928",
+          "Name": "void at_cuda_detail::cub::detail::scan_by_key::DeviceScanByKeyInitKernel<at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, (bool)1>, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_300001_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned long long>(T1, T2, cuda::std::__4::iterator_traits<T2, void>::value_type *, T3, int)",
+          "StdDev (ns)": "30.9",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "77248"
+        },
+        {
+          "Avg (ns)": "1919.2",
+          "Instances": "40",
+          "Max (ns)": "2112",
+          "Med (ns)": "1904.0",
+          "Min (ns)": "1888",
+          "Name": "void flash::prepare_varlen_num_blocks_kernel<(int)2, (bool)0>(int, int, int, const int *, const int *, const int *, const int *, const int *, const int *, int, int, int, int, int, cutlass::FastDivmod, cutlass::FastDivmod, int *, int *, int *, int *, int *, bool, bool, bool, int)",
+          "StdDev (ns)": "46.1",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "76768"
+        },
+        {
+          "Avg (ns)": "1905.6",
+          "Instances": "40",
+          "Max (ns)": "2112",
+          "Med (ns)": "1920.0",
+          "Min (ns)": "1792",
+          "Name": "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_kernel_impl<at::native::OpaqueType<(int)4>>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)",
+          "StdDev (ns)": "75.6",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "76224"
+        },
+        {
+          "Avg (ns)": "1540.8",
+          "Instances": "40",
+          "Max (ns)": "1664",
+          "Med (ns)": "1536.0",
+          "Min (ns)": "1504",
+          "Name": "void at::native::vectorized_gather_kernel<(int)16, long>(char *, char *, T2 *, int, long, long, long, long, bool)",
+          "StdDev (ns)": "42.0",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "61632"
+        },
+        {
+          "Avg (ns)": "1486.4",
+          "Instances": "40",
+          "Max (ns)": "1632",
+          "Med (ns)": "1472.0",
+          "Min (ns)": "1440",
+          "Name": "eagle_prepare_next_token_padded_kernel",
+          "StdDev (ns)": "39.7",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "59456"
+        },
+        {
+          "Avg (ns)": "1426.4",
+          "Instances": "40",
+          "Max (ns)": "1632",
+          "Med (ns)": "1408.0",
+          "Min (ns)": "1376",
+          "Name": "triton_red_fused_1",
+          "StdDev (ns)": "62.7",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "57056"
+        },
+        {
+          "Avg (ns)": "1373.6",
+          "Instances": "40",
+          "Max (ns)": "1568",
+          "Med (ns)": "1344.0",
+          "Min (ns)": "1312",
+          "Name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctor_add<long>, std::array<char *, (unsigned long)3>>(int, T2, T3)",
+          "StdDev (ns)": "64.6",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "54944"
+        },
+        {
+          "Avg (ns)": "1296.8",
+          "Instances": "40",
+          "Max (ns)": "1504",
+          "Med (ns)": "1280.0",
+          "Min (ns)": "1184",
+          "Name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "StdDev (ns)": "80.4",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "51872"
+        },
+        {
+          "Avg (ns)": "1158.4",
+          "Instances": "40",
+          "Max (ns)": "1408",
+          "Med (ns)": "1152.0",
+          "Min (ns)": "1120",
+          "Name": "void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<int>, std::array<char *, (unsigned long)3>>(int, T2, T3)",
+          "StdDev (ns)": "44.2",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "46336"
+        },
+        {
+          "Avg (ns)": "1140.8",
+          "Instances": "40",
+          "Max (ns)": "1280",
+          "Med (ns)": "1120.0",
+          "Min (ns)": "1120",
+          "Name": "void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctorOnSelf_add<int>, std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, T1, T2, T4, T5, T6, T7)",
+          "StdDev (ns)": "33.6",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "45632"
+        },
+        {
+          "Avg (ns)": "964.0",
+          "Instances": "40",
+          "Max (ns)": "1088",
+          "Med (ns)": "960.0",
+          "Min (ns)": "928",
+          "Name": "void at::native::unrolled_elementwise_kernel<at::native::FillFunctor<int>, std::array<char *, (unsigned long)1>, (int)4, TrivialOffsetCalculator<(int)0, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, T1, T2, T4, T5, T6, T7)",
+          "StdDev (ns)": "35.6",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "38560"
+        },
+        {
+          "Avg (ns)": "956.0",
+          "Instances": "40",
+          "Max (ns)": "1120",
+          "Med (ns)": "928.0",
+          "Min (ns)": "928",
+          "Name": "void at::native::mbtopk::fill<unsigned int, unsigned int>(T1 *, T1, T2)",
+          "StdDev (ns)": "49.8",
+          "Time (%)": "0.0",
+          "Total Time (ns)": "38240"
+        }
+      ]
+    },
+    "nvtx": {
+      "report": "nvtx_gpu_proj_sum",
+      "rows": [
+        {
+          "Avg GPU Ops": "1.0",
+          "Avg Num Child": "0.0",
+          "Avg Range Lvl": "0.0",
+          "Proj Avg (ns)": "6325911.2",
+          "Proj Max (ns)": "6356588",
+          "Proj Med (ns)": "6322460.0",
+          "Proj Min (ns)": "6304301",
+          "Proj StdDev (ns)": "13169.6",
+          "Range": ":verify",
+          "Range Instances": "40",
+          "Style": "PushPop",
+          "Total GPU Ops": "40",
+          "Total Proj Time (ns)": "253036446",
+          "Total Range Time (ns)": "291005531"
+        },
+        {
+          "Avg GPU Ops": "17.0",
+          "Avg Num Child": "0.0",
+          "Avg Range Lvl": "0.0",
+          "Proj Avg (ns)": "585472.6",
+          "Proj Max (ns)": "1304508",
+          "Proj Med (ns)": "633854.0",
+          "Proj Min (ns)": "370207",
+          "Proj StdDev (ns)": "167832.5",
+          "Range": ":cpu_exec_prepare_inputs",
+          "Range Instances": "40",
+          "Style": "PushPop",
+          "Total GPU Ops": "680",
+          "Total Proj Time (ns)": "23418904",
+          "Total Range Time (ns)": "26863329"
+        },
+        {
+          "Avg GPU Ops": "2.0",
+          "Avg Num Child": "0.0",
+          "Avg Range Lvl": "0.0",
+          "Proj Avg (ns)": "88054.9",
+          "Proj Max (ns)": "130495",
+          "Proj Med (ns)": "97855.5",
+          "Proj Min (ns)": "58432",
+          "Proj StdDev (ns)": "19363.1",
+          "Range": ":cpu_next_input_build",
+          "Range Instances": "40",
+          "Style": "PushPop",
+          "Total GPU Ops": "80",
+          "Total Proj Time (ns)": "3522198",
+          "Total Range Time (ns)": "6303423"
+        },
+        {
+          "Avg GPU Ops": "2.0",
+          "Avg Num Child": "0.0",
+          "Avg Range Lvl": "0.0",
+          "Proj Avg (ns)": "5388.4",
+          "Proj Max (ns)": "5888",
+          "Proj Med (ns)": "5376.0",
+          "Proj Min (ns)": "5088",
+          "Proj StdDev (ns)": "167.6",
+          "Range": "CCCL:cub::DeviceScan::InclusiveSumByKey",
+          "Range Instances": "80",
+          "Style": "PushPop",
+          "Total GPU Ops": "160",
+          "Total Proj Time (ns)": "431071",
+          "Total Range Time (ns)": "1389980"
+        }
+      ]
+    }
+  },
+  "record_type": "w98_nsys_lever",
+  "regime": "R6",
+  "schema_version": 1,
+  "wall_summary": {
+    "verify": {
+      "max_ms": 8.833583910018206,
+      "mean_ms": 6.989490925033967,
+      "min_ms": 6.606175564229488,
+      "n": 620,
+      "n_total": 640,
+      "std_ms": 0.24731364693362617
+    }
+  }
+}

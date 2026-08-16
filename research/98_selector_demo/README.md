@@ -36,6 +36,9 @@ badly implemented or badly suited),
 short-context overhead, measured and removed),
 [`results_nsys_lever_accounting.md`](results_nsys_lever_accounting.md) (the
 Nsight per-operation account: what is expected and what is overhead),
+[`results_offpath_vs_stock.md`](results_offpath_vs_stock.md) (what the stack
+costs when it declines to speculate: **+3.7%**, so every speedup here is a
+ratio to OUR OFF and not to stock vLLM),
 [`results_phase98_summary.md`](results_phase98_summary.md) (consolidated),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).
