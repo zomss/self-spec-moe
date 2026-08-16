@@ -110,3 +110,37 @@ is warmed exactly as h104's was.
 * The workload-mix route recorded (blocking the VERDICT only, not the grid).
 * An h103 lane and a G98-E authorization issued, with the grid frozen
   before the first scored boot.
+
+## Units of the committed prediction map (recorded, not repaired)
+
+Comparing the first grid cells against `d3_predictions.json` shows a
+systematic offset whose structure identifies it immediately:
+
+| regime | batch | measured / predicted |
+| --- | --- | --- |
+| R1 | 1 | 0.77 - 0.90 |
+| R4, R5, R5cot | 8 | 5.7 - 7.2 |
+| R8 | 16 | 12.1 - 14.0 |
+| R6 | 32 | 25.6 - 27.0 |
+
+The ratio is ~0.8 x batch. The map predicts a **per-request** rate,
+`tau / (verify + D)` — tokens per second for ONE stream — while the grid
+measures **aggregate** decode throughput summed over the regime's batch. The
+two differ by exactly the batch factor, with a residual ~0.8 that is genuine
+model error (the per-request prediction is optimistic by ~20%).
+
+**The barrier is unaffected and is NOT rebuilt.** The selector's pick is a
+per-regime argmax, and the batch factor is a single constant per regime, so
+it scales every candidate at that regime identically and cannot reorder
+them. The committed picks and digest `45eddcdf933e0dfb` stand.
+
+Rebuilding the map after seeing measurements is the exact move the barrier
+exists to prevent, so the map is left as committed and this note carries the
+correction. Consequences for reading the record:
+
+* the map's ABSOLUTE values are per-request and are not comparable to the
+  grid's aggregate rates;
+* its RANKING per regime — the only thing D3 consumes — is unaffected;
+* the residual ~0.8 is a real calibration error and belongs in the D3
+  write-up as evidence about the cost model's accuracy, not as a defect of
+  the barrier.
