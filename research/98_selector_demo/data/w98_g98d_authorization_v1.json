@@ -1,0 +1,128 @@
+{
+  "analysis": {
+    "estimator": "w98_accounting request-level percentile bootstrap",
+    "identity": "E + C = A + H",
+    "u_edges_are_a_scored_output": true,
+    "u_edges_provisional": [
+      256,
+      1024,
+      3072
+    ]
+  },
+  "claims": {
+    "D2a": "no admitted composition confirms below the bound minus tolerance",
+    "D2b_note": "the knapsack identity needs per-layer retention over arbitrary skip sets and is a separate stage, not scored here",
+    "D2c": "tau(w, g, u) resolves with interval separation"
+  },
+  "execution_policy": {
+    "create_only": true,
+    "lane": "lane-a",
+    "output_dir": "research/98_selector_demo/data/g98_d",
+    "resumable": "a completed cell is never re-measured"
+  },
+  "gate": "G98-D",
+  "gates": {
+    "measurement_shape_gate": false,
+    "measurement_shape_rationale": "that gate judges draft-chain TIMING shape; acceptance is boot-deterministic and clamp-immune, so it would only reject good acceptance data",
+    "repeat_boot_anchors": false
+  },
+  "package_id": "w98-g98d-acceptance-authorization-v1",
+  "prerequisite": {
+    "gate": "G98-C",
+    "result": "research/98_selector_demo/data/g98_c/round2_result.json",
+    "status": "scored and closed"
+  },
+  "runtime": {
+    "VLLM_DISABLED_KERNELS": "MacheteLinearKernel",
+    "boot_scope": "w98-d2",
+    "draft": "piecewise",
+    "kernel": "Marlin",
+    "kmax": 8,
+    "unconditionally_armed": true
+  },
+  "sampling": {
+    "content_seeds": [
+      4,
+      5
+    ],
+    "measure_tokens": 640,
+    "replication": "over content seeds and requests, not boots",
+    "replication_basis": "acceptance is boot-deterministic: 17/17 requests and 0/210 steps identical across two boots (probe_w98_d2_calibration)",
+    "seed_note": "disjoint from the cost lattice's seeds 2,3; verified overlap 0"
+  },
+  "schema_version": 1,
+  "screen": {
+    "admit_only": true,
+    "bound": "f_set >= prod f_i",
+    "bridge_direction": "eager overestimates; margin applied conservatively",
+    "bridge_width_accepted_tokens": 0.374912,
+    "tolerance": 0.02
+  },
+  "source_artifacts": {
+    "accounting": {
+      "path": "research/98_selector_demo/scripts/w98_accounting.py",
+      "sha256": "3280068a3ce9a99fa62b37113a0ed02a8387296500b101fc71be4923228d5ea4"
+    },
+    "calibration": {
+      "path": "research/98_selector_demo/data/probe_d2_calibration/d2_calibration.json",
+      "sha256": "288dd236f171b56f8063511afc2f993b89f4097e9e4f7bbc033ecf874e1b6fea"
+    },
+    "campaign_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98d_campaign.py",
+      "sha256": "ff6e2383eaa72a61f86704dbcca723fcd17be44ef6e6cfbacbb3c55890273012"
+    },
+    "d2_controls": {
+      "path": "research/98_selector_demo/data/prereg/w98_d2_controls.json",
+      "sha256": "0f7588da4ada90a7b798ac4a3c83bda6f7aea5e41f6e540dd04b0d7bc42aba03"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "6cf417951bb810584b86643233fe1fde2a311f3bef7ab65297317ba1ba373d39"
+    },
+    "prereg_doc": {
+      "path": "research/98_selector_demo/w98_prereg.md",
+      "sha256": "3392e7796017f4b3fec31e6819eb69de876d3f5d4abe46387b6a75c3d263e637"
+    },
+    "prompt_bundle": {
+      "path": "research/98_selector_demo/data/prereg/w98d2_prompt_tokens.jsonl.gz",
+      "sha256": "e0d18da3ea244a7d1e934956d899dfcd9c351f0db29669119a6180490b385244"
+    },
+    "prompt_manifest": {
+      "path": "research/98_selector_demo/data/prereg/w98d2_prompt_manifest.json",
+      "sha256": "eb69f3fb87713c4ac25fe4818d51f10140e6a3a6f073c02271e4ea33ce635de6"
+    },
+    "round1_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98b_round1.py",
+      "sha256": "97670705803b466c608993ba862b1597f333477937604f0282c8e03f3c78f3e9"
+    },
+    "smoke_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98d0_smoke.py",
+      "sha256": "ca81e628facbdbdb80977559aa86d95d34c074531f74ea46d7c3b37d59f0c561"
+    },
+    "stream_bridge": {
+      "path": "research/98_selector_demo/scripts/w98d2_stream.py",
+      "sha256": "ddc6ee6124d4ea140abd23f65fb099c27cd3a454a22b4324a378b83b479d8d08"
+    }
+  },
+  "stages": [
+    {
+      "action": "singles",
+      "count": 8,
+      "id": "S0"
+    },
+    {
+      "action": "commit_screen",
+      "barrier": true,
+      "id": "S1"
+    },
+    {
+      "action": "confirm_admitted",
+      "id": "S2"
+    },
+    {
+      "action": "score_reveal",
+      "id": "S3"
+    }
+  ],
+  "status": "issued"
+}
