@@ -30,6 +30,12 @@ and D3 re-score), [`results_switching_law.md`](results_switching_law.md)
 (when per-regime switching is worth anything, and the axis that would pay),
 [`results_certified_region.md`](results_certified_region.md) (the surrogate's
 recall guarantee),
+[`results_lever_mechanics.md`](results_lever_mechanics.md) (is a weak lever
+badly implemented or badly suited),
+[`results_window_overhead.md`](results_window_overhead.md) (the window's
+short-context overhead, measured and removed),
+[`results_nsys_lever_accounting.md`](results_nsys_lever_accounting.md) (the
+Nsight per-operation account: what is expected and what is overhead),
 [`results_phase98_summary.md`](results_phase98_summary.md) (consolidated),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).

@@ -361,6 +361,72 @@ size the switchover triggers.
 
 ---
 
+### 3.6 Where the draft's time actually goes (`results_nsys_lever_accounting.md`)
+
+Every cost figure above is an aggregate — `d_hat`, a fitted mean. An Nsight
+run with NVTX ranges on every profiler region and per-node CUDA-graph tracing
+decomposes it. Calibration first: nsys `draft_chain` 27.750 ms against the
+wall-clock 27.281 (+1.7%), base kernel time 5.13x the OFF arm's (= 4 draft
+forwards + 1 verify), ~97% of the span is kernel execution.
+
+**The economics, per operation, at batch 1:**
+
+| range | ms |
+| --- | --- |
+| `verify` (target forward, K+1 = 5 tokens) | 5.984 |
+| `draft_forward` (1 token) | **6.237** |
+
+A draft forward costs MORE than a verify forward, because at batch 1 both are
+weight-bound: verifying five tokens costs no more than one. So K=4 buys five
+tokens of verify for four forwards of draft, which is why an unmodified draft
+measures 0.891x. Not subtle — arithmetic.
+
+**What the draft is made of:** GEMM **83.6%**, attention 10.9%, elementwise
+3.6%, other 1.9%. That sets the lever hierarchy before implementation quality
+enters: quantization attacks 84% of the draft, the window 11%.
+
+**Where each lever's promise goes** (bound = physical limit, kernels =
+delivered, model = draft-forward cost):
+
+| combo | bound | kernels | model | kernel gap | fixed gap |
+| --- | --- | --- | --- | --- | --- |
+| quant | 0.3731 | 0.5945 | 0.6383 | **+0.2214** | +0.0438 |
+| skip4 | 0.8889 | 0.8987 | 0.8905 | +0.0098 | -0.0082 |
+| skip8 | 0.7778 | 0.7953 | 0.7809 | +0.0175 | -0.0144 |
+| w1024 | 1.0000 | 0.9998 | 0.9999 | -0.0002 | +0.0001 |
+| w128 | 0.9217 | 1.0069 | 1.0521 | +0.0852 | +0.0452 |
+| composed | 0.3317 | 0.5332 | 0.5887 | +0.2015 | +0.0556 |
+
+* **skip is clean** — within 1.0-1.8% of its bound with every class scaling
+  together. Its ceiling is arithmetic, not implementation.
+* **Marlin is where the money is** — 0.548x on GEMM against a 0.25x
+  weight-bytes bound, i.e. 1.8x not 4x. Whether that is recoverable or just
+  batch-1 tiny-M being latency-bound is unresolved and needs an R6 sweep.
+* **Cost composes multiplicatively to 0.18%** (0.5945 x 0.8987 x 0.9998 =
+  0.5342 predicted against 0.5332 measured) — the cost half of the epistemic
+  split confirmed at kernel granularity, and the exact mirror of acceptance,
+  which D2(a) found constructive and D2(b) found non-additive.
+
+**The fixed floor.** Orchestration is ~3.2 ms/chain whatever the lever, so its
+share climbs 11.5% (base) -> 17.0% (quant) -> 18.4% (composed). Most of it is
+not orchestration at all: `step_sample` is the **lm_head projection**, 1.245 GB
+of bf16 weights read once per draft step at ~0.43 ms, 1.72 ms/chain. Genuine
+host work is ~1.00 ms/step once stock vLLM's own `_prepare_inputs` (0.411 ms,
+present in the OFF arm too) is excluded.
+
+Quantizing the draft's lm_head would recover ~1.28 ms/chain but is **rejected**:
+standard w4a16 recipes exclude `lm_head`, and deviating would make the
+checkpoint non-comparable to published baselines. The remaining ~1.00 ms is
+fragmented across four items, two of which (rejection sampling, spec metadata)
+are the mechanism rather than overhead — a ceiling of ~3% of the armed step,
+and not judged worth a campaign.
+
+**The design consequence is worth more than the shaving.** lm_head and
+orchestration are per-draft-step fixed costs that no lever touches — the `F`
+term the cost model already struggles with. As levers improve they dominate
+more, which implies the optimal K should FALL as the lever set gets better.
+That is testable against the existing K/OFF ladder.
+
 ## 4. What this says about the design
 
 1. **The epistemic split is validated.** Cost predicted soundly (47/48, five
