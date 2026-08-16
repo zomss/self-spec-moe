@@ -17,6 +17,43 @@ The four contributions as stated by the user (2026-07-21):
 | C3 | switching + adaptation system | **CLOSED + FORMALIZED (phase 91)** | E0 toggle table; compiled policy (regret 1-3%, wins 2/3 traces); 113ms pinned swap + live refresh; T12 controller ladder: Thompson bandit built/sim-validated/live-ablated -> deployed argmax necessity-proven as measured optimum; exploration-for-detection finding | per-step = K/OFF + same-layout refresh; cross-kernel = boot-class; kmax-4 grid on Marlin in flight |
 | C4 | non-RL + RL effectiveness | **CLOSED w/ framing discipline** | non-RL: 1.80x/1.90x serving wall, 9/9 regimes, policy trace wins; RL: 1.055x over AR under drift, staleness -45% -> noise, beat-AR recipe + measured anti-patterns | (a) drift EMULATED (calibrated perturbation), not live trainer; (b) demo ran the thinnest cell -- lead with staleness-bound + concentration (+7-33%), not the +5.5% |
 
+## Phase 98 — the two-round selector, independently scored (2026-08-16)
+
+A self-contained demonstration of the two-round design on Qwen3-8B dense,
+preregistered end to end with commitment barriers, on bare metal. NOT a
+re-run of C2/C3's data: fresh lattice, fresh prompt freeze, disjoint content
+seeds, decode currency, equal work. Per-claim records in
+`research/98_selector_demo/`.
+
+| claim | result | evidence for |
+|---|---|---|
+| D1' cost soundness | 47/48 held-out covered (97.9%), median error 0.53%; the sound elimination rule **exercised 5x, correct 5/5** | **C2/C3** — the cost half of the epistemic split, with the rule finally EXERCISED (Round 1 could only report it untested) |
+| D2(a) screen honesty | 6 violations / 132 rows, **all carrying window=128 at short context**; interaction ratio median **above 1 for every lever set**, 1.670 at R4 | **C2** — corroborates P2's corrected direction: composed acceptance EXCEEDS the product, so the bound admits but cannot eliminate |
+| D2(b) knapsack identity | 11/12 controls beaten; product-of-singles ranks **perfectly (rho +1.000) at k=4 and k=8**, then **inverts at k=16** | **C2** — the measurement theorem reproduced on a new lever, model and box, with the non-additivity boundary now LOCATED (between 8 and 16 of 36 layers) |
+| D3 end-to-end | **95.1%** of the omniscient composite, **1.371x** over static-OFF; beats every static by +2% in only **9 of 126 mixes** | **C3** — a clean replacement for the retracted "two-round recovers a win the oracle missed" exhibit, and a price on switching |
+
+**Three results the paper should absorb.**
+
+1. **The value decomposition.** Best single lever 1.20x over OFF; best
+   three-lever composition 1.35x; per-regime selection 1.37x. So
+   **composing is worth +12.5% and switching +1.4%.** C2 is where the value
+   is, and C3's claim should be scoped to "arms correctly and fails closed",
+   not "switching beats statics".
+2. **C1 visible inside ONE model.** The window lever is worth 1.01-1.09x at
+   short context and **1.45-1.52x at 14k**, while quantization is
+   universally on. "No universal lever" does not need the cross-architecture
+   grid to show itself.
+3. **A located failure of fail-closed.** At R4 every lever family loses and
+   the selector armed anyway at **0.76x**. C3 claims a selector that fails
+   closed; this is a measured instance where it did not, with the diagnosis
+   (its predicted margin was the thinnest in the map, 1.03x) and the fix
+   (a margin-keyed refusal) both identified.
+
+**Caveats to carry.** One model, one box; decode currency only (prefill is
+46.6% of wall at R5); equal-weight mix is a convention, with the
+mix-frontier reported alongside; D3's static clause depends on a reading of
+its own preregistration and awaits a ruling.
+
 ## Work items (the task list)
 
 0. ~~[C2] Phase 90 (hierarchical search)~~ DONE 2026-07-24: proxy
