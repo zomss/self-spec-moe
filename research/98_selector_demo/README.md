@@ -1,9 +1,32 @@
 # Phase 98 — two-round selector demonstration
 
-Status: **design registered; no preregistration frozen, no GPU command
-authorized. Phase 97's runtime-switching infrastructure (per-window graphs,
-B1 co-residency, non-destructive skip) is under construction and is NOT a
-dependency of this phase's scored claims.**
+Status (2026-08-15): **D1' and D2(a)/D2(c) are MEASURED AND SCORED; D2(b) is
+blocked on a recorded decision; D3 is not started.** Phase 97's
+runtime-switching infrastructure remains NOT a dependency of this phase's
+scored claims.
+
+| gate | claim | state |
+| --- | --- | --- |
+| G98-A | smoke, both quant paths | closed |
+| G98-B | Round 1 cost | scored and closed; D1 reported NOT EXERCISED |
+| G98-C | Round 2 cost (D1') | **SCORED**: 47/48 covered (97.9%), zero false eliminations with the rule exercised 5x |
+| G98-D0 | acceptance-path smoke | passed |
+| G98-D | acceptance (D2a, D2c) | **SCORED**: D2(a) 6 violations / 132 rows; D2(c) 107/264 pairs separated |
+| — | D2(b) knapsack identity | **BLOCKED**: no registered estimator for per-layer retention |
+| — | D3 end-to-end | not started; gated on amendment 2's dual-arm requirement |
+
+Results: [`results_g98_c.md`](results_g98_c.md) (cost),
+[`results_g98_d.md`](results_g98_d.md) (acceptance),
+[`results_clamp_investigation.md`](results_clamp_investigation.md) (the
+measurement-environment investigation and the box relocation).
+
+**Both campaigns run on h104 (bare metal), GPU 7 / NUMA node 1.** The
+original box was a QEMU/KVM guest whose host-side "clamp" gated 40+ attempts
+without a single accepted cell; sections 10-11 of the clamp document record
+the relocation, the two h104 infrastructure faults fixed en route (a
+compile-cache key poisoned by the per-attempt trace path, and a PTX/driver
+toolchain mismatch that killed every quantized boot), and the localisation of
+the clamp itself to a host-side timekeeping cost.
 
 Source: Phase 96 (`w12_search_spec.md`, `w14_plan.md`, W14/B results, W14/D
 data pending scoring), Phase 97 (shared-KV composition runtime, P4 same-event
@@ -213,8 +236,38 @@ Order 25–35 scored boots total at the observed ~1h/boot cadence, plus smoke.
   compositions that beat static alternatives, and the remaining headroom to
   the omniscient composite quantifies what runtime switching is worth.
 
-## Expected next artifact
+## Engine surface this phase added
 
-`w98_prereg.md` + `data/prereg/` — the frozen D1/D2/D3 matrices, prompt
-manifests with hashes, held-out splits, tolerances, and the G98-0 CPU
-harness with its tests. No GPU work precedes it.
+Additive and scope-gated, so the scopes Rounds 1-2 were measured under do
+not move:
+
+* **`w98-d2` boot scope** (`vllm/v1/spec_decode/koff_runtime.py`) — KMAX = 8
+  unconditional arming, and per-request acceptance rows carrying each
+  request's OWN generated-suffix length. Every other scope keeps the closed
+  K in `{0, 4}`, emits no acceptance rows, and keeps its verbatim error text.
+* **Amendment 2** (`w98_prereg_amendment2_instrument.md`, APPROVED under the
+  dual-arm option) — the profiler no longer syncs inside the region it
+  measures: 12 syncs per step become 4. `VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS=1`
+  keeps the legacy instrument runnable, which is the mechanism D3's
+  registered conservative bound depends on.
+* One upstream fix outside the scope system: step-0 work evidence was gated
+  on the action id being literally K4, so any other armed action arrived as
+  `None`.
+
+## Open items
+
+1. **D2(b) needs a recorded decision before it can run.** The knapsack
+   consumes a per-layer retention vector `r` that the preregistration never
+   specifies a protocol for, and the natural leave-one-out estimator is
+   forbidden by the frozen skip counts `{0, 4, 8, 16}`. Three routes are in
+   [`design_g98d_d2_campaign.md`](design_g98d_d2_campaign.md). Choosing one
+   after seeing D2's acceptance data is what preregistration exists to
+   prevent, so the route is recorded first.
+2. **D3** — not started. Amendment 2 requires its decisive comparison under
+   BOTH instruments, with both numbers reported wherever the result appears.
+3. **The u-bucket boundaries** are still the provisional ones; placing them
+   where `tau(w, g, u)` actually crosses is a scored OUTPUT of G98-D and an
+   analysis step, not a new measurement.
+4. **The clamp verdict** on the original box needs one X29 run there (one
+   clamped burst, one clean burst); the prime suspect is quantified in
+   section 11 of the clamp document.

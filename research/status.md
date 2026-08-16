@@ -34,6 +34,49 @@ thesis, design ladder, and measured-vs-open status are in "Current Positioning" 
 the phase table records the full path. "Historical Record" documents the pre-pivot
 (Phases 00-17) investigation and is superseded by the positioning section.
 
+## Current state — Phase 98, two-round selector (2026-08-15)
+
+> The executive summary above and the phase table below are the **historical
+> rollup through Phase 27** (last revised 2026-06-25). They are not amended
+> here. This section records where the work actually stands; the phases
+> between are documented in their own folders.
+
+Phase 98 demonstrates the two-round selector end to end: Round 1/2 predict
+COST from single-lever profiles and eliminate soundly, Round 2's successor
+measures ACCEPTANCE where it must. Two campaigns are now scored — the first
+scored campaigns this phase has produced.
+
+* **G98-C (Round 2 cost, D1'): SCORED.** 47/48 held-out (cell, regime) pairs
+  covered (**97.9%**), median relative error 0.53%, and all six regimes
+  resolvable — including R5/R5cot, which Round 1 reported NOT RESOLVABLE.
+  The second clause was scored separately: the sound elimination rule
+  `(K+1)/q_lo < 1.015` **fired five times and was correct every time — zero
+  false eliminations, non-vacuously**, where Round 1 had reported the rule
+  NOT EXERCISED for want of a scored surface.
+  `98_selector_demo/results_g98_c.md`.
+* **G98-D (acceptance, D2a/D2c): SCORED.** The product bound
+  `f_set >= prod f_i` is violated in **6 of 132 rows, and every violation
+  carries window = 128** stacked with layer skipping at short context.
+  Composition is otherwise CONSTRUCTIVE — the interaction ratio's median
+  exceeds 1 for every lever set and reaches **1.670 at R4**, because a
+  window that already discards the context removes what layer skipping
+  would have degraded. The failure direction is benign: an over-optimistic
+  screen admits too much and confirmation catches it; it cannot falsely
+  eliminate. D2(c) resolves the u-axis in 107/264 adjacent bucket pairs.
+  `98_selector_demo/results_g98_d.md`.
+* **D2(b) is BLOCKED** on a preregistration decision (no registered
+  estimator for per-layer retention; leave-one-out is forbidden by the
+  frozen skip counts). **D3 is not started.**
+
+**Measurement environment.** Both campaigns run on **h104 (bare metal)**.
+The previous box was a QEMU/KVM guest whose host-side "clamp" — a fixed
++4-5 ms per engine step, invisible to every in-guest instrument — gated 40+
+campaign attempts without a single accepted cell. It is localised, not
+closed: the engine makes **~160k clock reads per batch-1 step**, so a
++40-66 ns per-read slowdown reproduces the whole clamp, making pvclock read
+cost the prime suspect. The verdict needs one probe run on that box.
+`98_selector_demo/results_clamp_investigation.md`.
+
 ## Phase Summary
 
 | Phase | Status | Main Finding |
