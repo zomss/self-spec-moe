@@ -1,0 +1,58 @@
+{
+  "arm": "legacy",
+  "cell": "w4a16-quantized/w256/skip8",
+  "config": {
+    "action": "armed",
+    "quant": "w4a16-quantized",
+    "skip_count": 8,
+    "window": 256
+  },
+  "host": "h103",
+  "observations": {
+    "R1": {
+      "armed_steps": 151,
+      "committed_tokens": 639,
+      "decode_seconds": 4.008359,
+      "decode_tokens_per_s": 159.416841,
+      "steps": 152
+    },
+    "R4": {
+      "armed_steps": 285,
+      "committed_tokens": 5084,
+      "decode_seconds": 9.869823,
+      "decode_tokens_per_s": 515.10548,
+      "steps": 286
+    },
+    "R5": {
+      "armed_steps": 215,
+      "committed_tokens": 5066,
+      "decode_seconds": 7.5505,
+      "decode_tokens_per_s": 670.948968,
+      "steps": 216
+    },
+    "R5cot": {
+      "armed_steps": 165,
+      "committed_tokens": 5066,
+      "decode_seconds": 4.962281,
+      "decode_tokens_per_s": 1020.901547,
+      "steps": 166
+    },
+    "R6": {
+      "armed_steps": 169,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.090176,
+      "decode_tokens_per_s": 4017.150181,
+      "steps": 170
+    },
+    "R8": {
+      "armed_steps": 168,
+      "committed_tokens": 10224,
+      "decode_seconds": 4.803188,
+      "decode_tokens_per_s": 2128.586209,
+      "steps": 169
+    }
+  },
+  "package_id": "w98-g98e-d3-authorization-v1",
+  "record_type": "w98d3_grid_cell",
+  "schema_version": 1
+}
