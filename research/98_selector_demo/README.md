@@ -194,8 +194,18 @@ every static alternative on a declared workload mix.
 | G98-0 | CPU harness: accounting closure, u-binned counter tests, factored-model and knapsack unit tests, manifest freeze | CPU only |
 | G98-A | **PASSED 5/5** (2026-08-11): every boot class initializes, one target-owned KV group, PIECEWISE chain, generates. Quantized draft + shared KV **verified**; lattice stays at 30. Required a new `w98-lattice` boot scope and scope-aware weight proofs. See `results_g98_a.md` | ~5 non-scored boots |
 | G98-B | Round-1 profiles + factored fit; frozen held-out predictions committed before reveal | scored boots per matrix |
-| G98-C | Round-2 singles, screen, confirmations, knapsack + controls | scored boots per matrix |
-| G98-D | end-to-end comparison (D3) | scored boots per matrix |
+| G98-C | **as registered**: Round-2 singles, screen, confirmations, knapsack + controls. **As executed**: the Round-2 COST campaign (D1') — see the drift note | scored boots per matrix |
+| G98-D | **as registered**: end-to-end comparison (D3). **As executed**: the acceptance campaign (D2a/D2c) | scored boots per matrix |
+| G98-E | end-to-end comparison (D3) — the gate this phase's D3 will run under | scored boots per matrix |
+
+**Gate-name drift, recorded.** The gate letters above were registered before
+the Round-2 amendment (`w98r2_prereg.md`) split COST into its own second
+round. That inserted a campaign the original order had no letter for, so the
+executed sequence shifted by one: G98-C became Round-2 cost, G98-D became
+acceptance, and **D3 therefore runs as G98-E**. The letters are relabelled,
+not the claims — D1', D2 and D3 keep their registered content and order, and
+the scored artifacts (`results_g98_c.md`, `results_g98_d.md`) keep the names
+they were committed under rather than being rewritten.
 
 Rules carried from 96/97: preregistration before scored data; frozen prompt
 manifests with hashes; one authorization per GPU attempt; consumed outputs
