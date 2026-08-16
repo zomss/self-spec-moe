@@ -308,3 +308,45 @@ This is surfaced rather than resolved: inventing an estimator for `r` after
 seeing the campaign's acceptance data is exactly the move preregistration
 exists to prevent. Whichever route is taken should be recorded before any
 D2(b) measurement is booted.
+
+## D2(b): route 1 chosen — leave-one-out under a non-scored probe (2026-08-16)
+
+The researcher selected **route 1**: admit skip count 1 under `w98-d2` and
+estimate per-layer retention by leave-one-out. Recorded here BEFORE any
+retention measurement, since choosing an estimator after seeing acceptance
+data is what this discipline exists to prevent.
+
+**The scope change is additive and asymmetric.** `W98_D2_SKIP_COUNTS` adds
+1 to the frozen set, and the boot contract consults it only when the scope
+is `w98-d2`. `w98-lattice` — the scope every scored COST campaign booted
+under — keeps `{0, 4, 8, 16}` exactly, so G98-B, G98-C and G98-E are
+untouched. Four tests pin the asymmetry: count 1 admitted under d2, still
+refused under lattice, the frozen set unchanged, and an unregistered count
+(3) still refused under d2. Relaxed for leave-one-out, not opened up.
+
+**Estimator.** `r_i = tau(skip only layer i) / tau(skip nothing)`, both at
+KMAX=8 on the same regime, from the same position-resolved stream the rest
+of D2 uses. 36 single-layer boots plus the unskipped reference.
+
+**Circularity is designed out, per Phase 84.** That phase retracted a lever
+whose acceptance gate was derived from its own evaluation set, and the rule
+it produced is that profiled artifacts must be built on disjoint data. So:
+
+* `r` is estimated on **content seed 4**;
+* the D2(b) confirmation — knapsack set versus count-matched random and
+  worst controls — is measured on **content seed 5**.
+
+The two are disjoint halves of the D2 bundle, so the sets being compared are
+never chosen using the content they are scored on.
+
+**Order of operations.** Retention probe (non-scored) -> derive the knapsack,
+worst and random sets at counts {4, 8, 16} -> COMMIT those sets with a digest
+-> measure confirmed tau on seed 5 -> score. The commitment barrier sits
+between derivation and confirmation, exactly as the screen barrier does in
+D2(a): the sets must be fixed before the measurement that judges them.
+
+**What stays non-scored.** The retention probe itself claims nothing. It is
+an input to the knapsack, in the same way Round 1's single-lever profiles
+are inputs to a fit whose PREDICTIONS are the claim. D2(b)'s claim remains
+what the preregistration registered: at each surviving count, the knapsack
+set beats its count-matched controls on confirmed tau.

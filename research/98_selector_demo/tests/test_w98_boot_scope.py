@@ -448,3 +448,53 @@ class StepEvidenceScopeTests(unittest.TestCase):
         for scope in (BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE):
             record = self._record(scope, "target-v1")
             self.assertTrue(record["target_matching_weights"])
+
+
+class D2LeaveOneOutTests(unittest.TestCase):
+    """Count 1 exists for D2(b)'s retention probe, and only there."""
+
+    def setUp(self) -> None:
+        # w98-d2 boots at KMAX=8; the shared fixture defaults to the K=4
+        # cost-campaign depth. The K registry resolves the scope from the
+        # ENVIRONMENT while the boot contract takes it from options -- in
+        # production both come from the same env var, so the test sets it
+        # too rather than letting the two sources disagree.
+        import vllm.envs as _envs
+
+        self._envs = _envs
+        self._scope = _envs.VLLM_SELF_SPEC_BOOT_SCOPE
+        _envs.VLLM_SELF_SPEC_BOOT_SCOPE = BOOT_SCOPE_W98_D2
+        self._k = _SpecConfig.num_speculative_tokens
+        _SpecConfig.num_speculative_tokens = 8
+
+    def tearDown(self) -> None:
+        _SpecConfig.num_speculative_tokens = self._k
+        self._envs.VLLM_SELF_SPEC_BOOT_SCOPE = self._scope
+
+    @staticmethod
+    def _d2_validate(**overrides):
+        """w98-d2 also requires an unconditionally armed K=8 schedule."""
+        return validate_boot_config(
+            _VllmConfig(None),
+            _options(boot_scope=BOOT_SCOPE_W98_D2, **overrides),
+            dynamic_k_values=(8,),
+        )
+
+    def test_w98_d2_admits_a_one_layer_skip(self) -> None:
+        self._d2_validate(draft_skip_layers="7")
+
+    def test_w98_lattice_still_refuses_a_one_layer_skip(self) -> None:
+        """Every scored cost campaign booted under this scope."""
+        _SpecConfig.num_speculative_tokens = self._k
+        self._envs.VLLM_SELF_SPEC_BOOT_SCOPE = self._scope
+        with self.assertRaises(KOffRuntimeError) as ctx:
+            _validate(boot_scope=BOOT_SCOPE_W98_LATTICE, draft_skip_layers="7")
+        self.assertIn("skip count must be one of", str(ctx.exception))
+
+    def test_the_frozen_counts_are_unchanged(self) -> None:
+        self.assertEqual(set(W98_SKIP_COUNTS), {0, 4, 8, 16})
+
+    def test_d2_still_refuses_an_unregistered_count(self) -> None:
+        """Relaxed for leave-one-out, not opened up."""
+        with self.assertRaises(KOffRuntimeError):
+            self._d2_validate(draft_skip_layers="1,2,3")

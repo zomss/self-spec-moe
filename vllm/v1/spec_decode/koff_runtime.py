@@ -79,6 +79,13 @@ W98_WINDOWS = frozenset({0, 128, 256, 512, 1024})
 # intercept from a slope at the measured reproducibility; skip16 takes it to
 # 0.556 and moves the fit's weakest independent direction 0.0955 -> 0.1686.
 W98_SKIP_COUNTS = frozenset({0, 4, 8, 16})
+# w98-d2 additionally admits a ONE-layer skip. D2(b)'s knapsack consumes a
+# per-layer retention vector, and the only direct estimator of it is
+# leave-one-out -- which the frozen counts above forbid by construction. The
+# count is admitted for that NON-SCORED retention probe only, and only under
+# the acceptance scope: w98-lattice, which every scored cost campaign booted
+# under, keeps the frozen set unchanged.
+W98_D2_SKIP_COUNTS = frozenset(W98_SKIP_COUNTS | {1})
 W98_WINDOW_SINKS = 16
 
 
@@ -1116,7 +1123,12 @@ def validate_boot_config(
             ),
             (skip_parses, "w98 skip layers must be a comma list of integers"),
             (
-                len(skip_layers) in W98_SKIP_COUNTS,
+                len(skip_layers)
+                in (
+                    W98_D2_SKIP_COUNTS
+                    if options.boot_scope == BOOT_SCOPE_W98_D2
+                    else W98_SKIP_COUNTS
+                ),
                 f"w98 skip count must be one of {sorted(W98_SKIP_COUNTS)}",
             ),
         )
