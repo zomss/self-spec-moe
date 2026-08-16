@@ -46,6 +46,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from probe_w98_nsys_levers import classify_kernel
+
 PHASE = Path(__file__).resolve().parent.parent
 LAYERS = 36
 WINDOW_SINKS = 16
@@ -119,8 +121,7 @@ def account(record: Mapping[str, Any]) -> dict[str, Any]:
         "unattributed_ms": round(total - model - orchestration - window, 4),
         "model_share": round(model / total, 4) if total else None,
         "kernel_classes_ms": {
-            k: round(v / 1e6, 4)
-            for k, v in ((record.get("nsys") or {}).get("kernel_classes") or {}).items()
+            k: round(v / 1e6, 4) for k, v in kernel_classes(record).items()
         },
     }
 
@@ -133,11 +134,15 @@ def expectations(combo: str, cfg: Mapping[str, Any], regime: str) -> dict[str, A
     exp: dict[str, Any] = {"model_scale": 1.0, "attention_scale": 1.0,
                            "gemm_scale": 1.0, "basis": []}
     if skip:
-        exp["model_scale"] *= (LAYERS - skip) / LAYERS
-        exp["attention_scale"] *= (LAYERS - skip) / LAYERS
-        exp["gemm_scale"] *= (LAYERS - skip) / LAYERS
+        # Removing layers scales EVERY class, so it is expressed per class and
+        # NOT also in `model_scale` -- doing both squares the ratio, which is
+        # what made skip4's bound read 0.796 instead of 0.889.
         scale = (LAYERS - skip) / LAYERS
-        exp["basis"].append(f"skip {skip}/{LAYERS} layers -> x{scale:.4f}")
+        exp["attention_scale"] *= scale
+        exp["gemm_scale"] *= scale
+        exp["other_scale"] = exp.get("other_scale", 1.0) * scale
+        exp["elementwise_scale"] = exp.get("elementwise_scale", 1.0) * scale
+        exp["basis"].append(f"skip {skip}/{LAYERS} layers -> all classes x{scale:.4f}")
     if window not in (None, "off", 0):
         ctx = REGIME_CONTEXT.get(regime, 512)
         kept = min(ctx, int(window) + WINDOW_SINKS)
@@ -154,6 +159,50 @@ def expectations(combo: str, cfg: Mapping[str, Any], regime: str) -> dict[str, A
         exp["gemm_scale"] *= 0.25
         exp["basis"].append("w4a16 weights -> gemm x0.25 (optimistic bound)")
     return exp
+
+
+def kernel_classes(record: Mapping[str, Any]) -> dict[str, float]:
+    """Recompute kernel classes from the raw rows, in nanoseconds.
+
+    Deliberately not the `kernel_classes` stored at extraction time: the
+    classifier has been corrected since some records were written (split-K
+    GEMM epilogues were landing in `elementwise`), and recomputing here makes
+    the fix retroactive instead of requiring a re-run.
+    """
+    rows = ((record.get("nsys") or {}).get("kernels") or {}).get("rows") or []
+    out: dict[str, float] = {}
+    for row in rows:
+        name = row.get("Name") or ""
+        raw = row.get("Total Time (ns)")
+        if raw is None:
+            continue
+        try:
+            value = float(str(raw).replace(",", ""))
+        except (TypeError, ValueError):
+            continue
+        bucket = classify_kernel(name)
+        out[bucket] = out.get(bucket, 0.0) + value
+    return out
+
+
+def draft_kernel_ms(
+    record: Mapping[str, Any], off: Mapping[str, Any], steps: int = 40
+) -> dict[str, float]:
+    """Per-step kernel time attributable to the DRAFT, by class.
+
+    An armed step runs K+1 draft forwards plus one verify; the OFF arm runs
+    that same verify and nothing else. Subtracting OFF therefore isolates the
+    draft, which is the only thing a lever changes -- comparing whole-capture
+    totals instead would dilute every ratio by the unchanged verify.
+    """
+    armed = kernel_classes(record)
+    base_off = kernel_classes(off)
+    out: dict[str, float] = {}
+    for key in set(armed) | set(base_off):
+        value = (armed.get(key, 0.0) - base_off.get(key, 0.0)) / 1e6 / steps
+        out[key] = round(value, 4)
+    out["total"] = round(sum(out.values()), 4)
+    return out
 
 
 def main() -> int:
@@ -196,39 +245,93 @@ def main() -> int:
             f"{acc['unattributed_ms']:7.3f}  {acc['model_share']:.3f}"
         )
 
-    if base and base["chain_ms"]:
-        print("\n=== horizontal: measured vs expected, against `base` ===")
-        print(f"{'combo':10s} {'model x':>9s} {'expected':>9s} "
-              f"{'overhead':>9s}   basis")
+    off_rec = records.get("off")
+    if off_rec and base:
+        print("\n=== draft-only GPU kernel time per step (armed minus OFF), ms ===")
+        classes = ("attention", "gemm", "elementwise", "memory", "other", "total")
+        print(f"{'combo':10s}" + "".join(f"{c:>13s}" for c in classes))
+        draft_kernels: dict[str, dict[str, float]] = {}
+        for combo, record in records.items():
+            if combo == "off" or not accounts[combo]["chain_ms"]:
+                continue
+            split = draft_kernel_ms(record, off_rec)
+            draft_kernels[combo] = split
+            print(
+                f"{combo:10s}"
+                + "".join(f"{split.get(c, 0.0):13.3f}" for c in classes)
+            )
+        result["draft_kernel_ms"] = draft_kernels
+        if "base" in draft_kernels:
+            print(f"\n{'combo':10s}" + "".join(f"{c + ' x':>13s}" for c in classes))
+            for combo, split in draft_kernels.items():
+                if combo == "base":
+                    continue
+                ref = draft_kernels["base"]
+                print(
+                    f"{combo:10s}"
+                    + "".join(
+                        f"{(split.get(c, 0.0) / ref[c]):13.4f}"
+                        if ref.get(c)
+                        else f"{'-':>13s}"
+                        for c in classes
+                    )
+                )
+
+    if base and base["chain_ms"] and off_rec and "base" in result.get(
+        "draft_kernel_ms", {}
+    ):
+        ref = result["draft_kernel_ms"]["base"]
+        print("\n=== where the lever's promise goes ===")
+        print("  bound   : what the lever COULD give if its kernels hit the")
+        print("            physical limit (layers removed / KV not read /")
+        print("            weight bytes not loaded)")
+        print("  kernels : what the kernels actually delivered")
+        print("  model   : what the draft FORWARD actually cost")
+        print("  so: kernel gap = kernels - bound (kernel efficiency), and")
+        print("      fixed gap  = model - kernels (per-forward cost that does")
+        print("                   not scale with the work removed)")
+        print()
+        print(f"{'combo':10s} {'bound':>8s} {'kernels':>8s} {'model':>8s} "
+              f"{'kernel gap':>11s} {'fixed gap':>10s}   basis")
         for combo, acc in accounts.items():
             if combo in ("base", "off") or acc["chain_ms"] is None:
                 continue
+            split = result["draft_kernel_ms"].get(combo)
+            if not split:
+                continue
             cfg = records[combo]["config"]
             exp = expectations(combo, cfg, args.regime)
-            measured = acc["model_ms"] / base["model_ms"]
-            expected = exp["model_scale"]
-            # The window acts on attention only, so its model-level expectation
-            # needs the base's own attention share to be meaningful.
-            base_classes = base["kernel_classes_ms"]
-            attn = base_classes.get("attention", 0.0)
-            gemm = base_classes.get("gemm", 0.0)
-            gpu = attn + gemm
-            if gpu:
-                expected = (
-                    attn * exp["attention_scale"] + gemm * exp["gemm_scale"]
-                ) / gpu
-                if exp["model_scale"] != 1.0:
-                    expected *= exp["model_scale"] / 1.0
-            overhead = measured - expected
+            scales = {
+                "attention": exp["attention_scale"],
+                "gemm": exp["gemm_scale"],
+                "elementwise": exp.get("elementwise_scale", 1.0),
+                "other": exp.get("other_scale", 1.0),
+            }
+            total = ref.get("total", 0.0)
+            bound = (
+                sum(
+                    ref.get(k, 0.0) * scales.get(k, 1.0)
+                    for k in ("attention", "gemm", "elementwise", "other")
+                )
+                / total
+                * exp["model_scale"]
+                if total
+                else None
+            )
+            kernels = split["total"] / total if total else None
+            model = acc["model_ms"] / base["model_ms"]
             result["levers"][combo] = {
-                "measured_model_scale": round(measured, 4),
-                "expected_model_scale": round(expected, 4),
-                "overhead": round(overhead, 4),
+                "bound_scale": round(bound, 4) if bound else None,
+                "kernel_scale": round(kernels, 4) if kernels else None,
+                "model_scale": round(model, 4),
+                "kernel_gap": round(kernels - bound, 4) if bound and kernels else None,
+                "fixed_gap": round(model - kernels, 4) if kernels else None,
                 "expectation_basis": exp["basis"],
-                "kernel_classes_ms": acc["kernel_classes_ms"],
+                "draft_kernel_ms": split,
             }
             print(
-                f"{combo:10s} {measured:9.4f} {expected:9.4f} {overhead:+9.4f}   "
+                f"{combo:10s} {bound:8.4f} {kernels:8.4f} {model:8.4f} "
+                f"{kernels - bound:+11.4f} {model - kernels:+10.4f}   "
                 f"{'; '.join(exp['basis'])}"
             )
 

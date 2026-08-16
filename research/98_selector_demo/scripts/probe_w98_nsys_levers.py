@@ -106,6 +106,13 @@ def classify_kernel(name: str) -> str:
     lowered = name.lower()
     if any(k in lowered for k in ("flash", "attention", "attn", "paged")):
         return "attention"
+    # GEMM epilogues before the generic reduce/elementwise patterns:
+    # `cublasLt::splitKreduce_kernel` is the split-K reduction of a GEMM, not
+    # elementwise work, and it is ~0.5 ms/step of the bf16 draft. Marlin does
+    # not use split-K, so mis-bucketing it made the quantized draft look as
+    # though its elementwise work had vanished.
+    if any(k in lowered for k in ("splitkreduce", "cublaslt", "cublas")):
+        return "gemm"
     if any(
         k in lowered
         for k in ("gemm", "cutlass", "marlin", "gemv", "matmul", "sm90", "s16816")

@@ -1,0 +1,233 @@
+{
+  "accounts": {
+    "base": {
+      "armed": true,
+      "chain_ms": 27.7498,
+      "kernel_classes_ms": {
+        "attention": 135.5495,
+        "elementwise": 48.4195,
+        "gemm": 1102.543,
+        "other": 26.5977
+      },
+      "model_ms": 25.1373,
+      "model_share": 0.9059,
+      "orchestration_ms": 3.193,
+      "unattributed_ms": -0.5805,
+      "window_rewrite_ms": 0.0
+    },
+    "off": {
+      "armed": false,
+      "chain_ms": null
+    },
+    "quant": {
+      "armed": true,
+      "chain_ms": 19.15,
+      "kernel_classes_ms": {
+        "attention": 139.385,
+        "elementwise": 15.9917,
+        "gemm": 703.1243,
+        "other": 25.9389
+      },
+      "model_ms": 16.0446,
+      "model_share": 0.8378,
+      "orchestration_ms": 3.2517,
+      "unattributed_ms": -0.1464,
+      "window_rewrite_ms": 0.0
+    },
+    "skip4": {
+      "armed": true,
+      "chain_ms": 25.0275,
+      "kernel_classes_ms": {
+        "attention": 123.6886,
+        "elementwise": 44.829,
+        "gemm": 1013.006,
+        "other": 24.4997
+      },
+      "model_ms": 22.3838,
+      "model_share": 0.8944,
+      "orchestration_ms": 3.2408,
+      "unattributed_ms": -0.5971,
+      "window_rewrite_ms": 0.0
+    },
+    "skip8": {
+      "armed": true,
+      "chain_ms": 22.2924,
+      "kernel_classes_ms": {
+        "attention": 110.9125,
+        "elementwise": 41.235,
+        "gemm": 922.2147,
+        "other": 22.3316
+      },
+      "model_ms": 19.6302,
+      "model_share": 0.8806,
+      "orchestration_ms": 3.2339,
+      "unattributed_ms": -0.5717,
+      "window_rewrite_ms": 0.0
+    },
+    "w1024": {
+      "armed": true,
+      "chain_ms": 27.7565,
+      "kernel_classes_ms": {
+        "attention": 135.4455,
+        "elementwise": 48.3749,
+        "gemm": 1102.5128,
+        "other": 26.5927
+      },
+      "model_ms": 25.1349,
+      "model_share": 0.9056,
+      "orchestration_ms": 3.1823,
+      "unattributed_ms": -0.5607,
+      "window_rewrite_ms": 0.0
+    },
+    "w128": {
+      "armed": true,
+      "chain_ms": 30.0667,
+      "kernel_classes_ms": {
+        "attention": 134.835,
+        "elementwise": 55.1134,
+        "gemm": 1103.6751,
+        "other": 26.7966
+      },
+      "model_ms": 26.447,
+      "model_share": 0.8796,
+      "orchestration_ms": 3.983,
+      "unattributed_ms": -0.8437,
+      "window_rewrite_ms": 0.4805
+    }
+  },
+  "draft_kernel_ms": {
+    "base": {
+      "attention": 2.879,
+      "elementwise": 0.9555,
+      "gemm": 22.0919,
+      "other": 0.504,
+      "total": 26.4304
+    },
+    "quant": {
+      "attention": 2.9749,
+      "elementwise": 0.1448,
+      "gemm": 12.1064,
+      "other": 0.4875,
+      "total": 15.7136
+    },
+    "skip4": {
+      "attention": 2.5825,
+      "elementwise": 0.8657,
+      "gemm": 19.8535,
+      "other": 0.4515,
+      "total": 23.7532
+    },
+    "skip8": {
+      "attention": 2.2631,
+      "elementwise": 0.7759,
+      "gemm": 17.5837,
+      "other": 0.3973,
+      "total": 21.02
+    },
+    "w1024": {
+      "attention": 2.8764,
+      "elementwise": 0.9544,
+      "gemm": 22.0911,
+      "other": 0.5039,
+      "total": 26.4258
+    },
+    "w128": {
+      "attention": 2.8612,
+      "elementwise": 1.1228,
+      "gemm": 22.1202,
+      "other": 0.509,
+      "total": 26.6132
+    }
+  },
+  "levers": {
+    "quant": {
+      "bound_scale": 0.3731,
+      "draft_kernel_ms": {
+        "attention": 2.9749,
+        "elementwise": 0.1448,
+        "gemm": 12.1064,
+        "other": 0.4875,
+        "total": 15.7136
+      },
+      "expectation_basis": [
+        "w4a16 weights -> gemm x0.25 (optimistic bound)"
+      ],
+      "fixed_gap": 0.0438,
+      "kernel_gap": 0.2214,
+      "kernel_scale": 0.5945,
+      "model_scale": 0.6383
+    },
+    "skip4": {
+      "bound_scale": 0.8889,
+      "draft_kernel_ms": {
+        "attention": 2.5825,
+        "elementwise": 0.8657,
+        "gemm": 19.8535,
+        "other": 0.4515,
+        "total": 23.7532
+      },
+      "expectation_basis": [
+        "skip 4/36 layers -> all classes x0.8889"
+      ],
+      "fixed_gap": -0.0082,
+      "kernel_gap": 0.0098,
+      "kernel_scale": 0.8987,
+      "model_scale": 0.8905
+    },
+    "skip8": {
+      "bound_scale": 0.7778,
+      "draft_kernel_ms": {
+        "attention": 2.2631,
+        "elementwise": 0.7759,
+        "gemm": 17.5837,
+        "other": 0.3973,
+        "total": 21.02
+      },
+      "expectation_basis": [
+        "skip 8/36 layers -> all classes x0.7778"
+      ],
+      "fixed_gap": -0.0144,
+      "kernel_gap": 0.0175,
+      "kernel_scale": 0.7953,
+      "model_scale": 0.7809
+    },
+    "w1024": {
+      "bound_scale": 1.0,
+      "draft_kernel_ms": {
+        "attention": 2.8764,
+        "elementwise": 0.9544,
+        "gemm": 22.0911,
+        "other": 0.5039,
+        "total": 26.4258
+      },
+      "expectation_basis": [
+        "window 1024+16 of ctx~512 -> attention x1.0000 (nothing to trim)"
+      ],
+      "fixed_gap": 0.0001,
+      "kernel_gap": -0.0002,
+      "kernel_scale": 0.9998,
+      "model_scale": 0.9999
+    },
+    "w128": {
+      "bound_scale": 0.9217,
+      "draft_kernel_ms": {
+        "attention": 2.8612,
+        "elementwise": 1.1228,
+        "gemm": 22.1202,
+        "other": 0.509,
+        "total": 26.6132
+      },
+      "expectation_basis": [
+        "window 128+16 of ctx~512 -> attention x0.2812"
+      ],
+      "fixed_gap": 0.0452,
+      "kernel_gap": 0.0852,
+      "kernel_scale": 1.0069,
+      "model_scale": 1.0521
+    }
+  },
+  "note": "nsys inflates absolute time; ratios are the currency, not milliseconds",
+  "record_type": "w98_nsys_accounting",
+  "regime": "R1",
+  "schema_version": 1
+}
