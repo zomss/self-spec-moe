@@ -1,6 +1,6 @@
 # Self-MoE-Spec Research Status
 
-Date: 2026-08-15 (executive summary and current state); the phase table and
+Date: 2026-08-16 (current state); 2026-08-15 (executive summary); the phase table and
 all sections from "Phase Summary" downward are the historical rollup last
 revised 2026-06-25 and are NOT amended.
 
@@ -69,10 +69,13 @@ whose gate was circular.
 
 ### Where the work is now
 
-**Phase 98** demonstrates the two-round selector end to end and has produced
-this phase's first two scored campaigns — see "Current state" immediately
-below. **Phase 97**'s composition runtime remains unresolved, and its B0
-value screen is still unscored. The live paper is `paper/` (`c1.md`,
+**Phase 98** demonstrates the two-round selector end to end and has now
+measured EVERY registered claim across four scored campaigns — see "Current
+state" immediately below. Its D3 result also prices the open engineering
+question: per-regime switching beats every static configuration by the
+registered margin in only 7% of workload mixes, so **Phase 97**'s
+composition runtime — still unresolved, its B0 value screen still unscored —
+is buying less than it was assumed to. The live paper is `paper/` (`c1.md`,
 `c2.md`, `c3.md`, `arxiv/`); the open gaps are the hardware axis (measured
 on one box) and C3's draft status.
 
@@ -110,7 +113,7 @@ thesis, design ladder, and measured-vs-open status are in "Current Positioning" 
 the phase table records the full path. "Historical Record" documents the pre-pivot
 (Phases 00-17) investigation and is superseded by the positioning section.
 
-## Current state — Phase 98, two-round selector (2026-08-15)
+## Current state — Phase 98, two-round selector (2026-08-16)
 
 > The executive summary above and the phase table below are the **historical
 > rollup through Phase 27** (last revised 2026-06-25). They are not amended
@@ -119,8 +122,10 @@ the phase table records the full path. "Historical Record" documents the pre-piv
 
 Phase 98 demonstrates the two-round selector end to end: Round 1/2 predict
 COST from single-lever profiles and eliminate soundly, Round 2's successor
-measures ACCEPTANCE where it must. Two campaigns are now scored — the first
-scored campaigns this phase has produced.
+measures ACCEPTANCE where it must, and D3 puts the composed selector against
+the omniscient ceiling and every static alternative. **Every registered
+claim of the phase is now measured** — four scored campaigns, where the
+phase previously had none.
 
 * **G98-C (Round 2 cost, D1'): SCORED.** 47/48 held-out (cell, regime) pairs
   covered (**97.9%**), median relative error 0.53%, and all six regimes
@@ -140,9 +145,39 @@ scored campaigns this phase has produced.
   screen admits too much and confirmation catches it; it cannot falsely
   eliminate. D2(c) resolves the u-axis in 107/264 adjacent bucket pairs.
   `98_selector_demo/results_g98_d.md`.
-* **D2(b) is BLOCKED** on a preregistration decision (no registered
-  estimator for per-layer retention; leave-one-out is forbidden by the
-  frozen skip counts). **D3 is not started.**
+* **D2(b) (knapsack identity): SCORED, fails by one control at one count.**
+  The knapsack beats **11 of 12** count-matched controls, winning decisively
+  at k=4 and k=8 and inverting at k=16. The finding is where it inverts: the
+  knapsack's own objective, the product of per-layer retentions, ranks every
+  arm **exactly right at k=4 and k=8 (Spearman +1.000 at both)** and then
+  fails at the top at k=16, where its predicted-best set (product 0.585, by
+  far the highest) measures tau 1.244 against the frozen set's 2.080. So
+  additive per-layer measurement identifies BAD sets at every count and
+  stops identifying the BEST set once the count is aggressive — **Phase 90's
+  non-additivity theorem reproduced on a new lever, model and box, with the
+  boundary now located between 8 and 16 layers of 36.** Also measured: the
+  first block is worth almost the whole draft (skipping layer 0 alone drops
+  tau 8.083 -> 1.244), and k=16 is outside the lever's usable range for
+  acceptance regardless of which layers are chosen.
+  `98_selector_demo/results_d2b_knapsack.md`.
+* **D3 (end-to-end selector value): SCORED, one clause each way.** On h103,
+  62 boots. The selector reaches **95.1% of the omniscient composite**
+  (94.8% under the legacy instrument), clearing the registered 90% target,
+  and runs **1.371x over static-OFF**. It fails the +2% clause against a
+  single composed static, which it leads by only 1.4% — though it passes
+  against every single-LEVER configuration at 1.141x, and which clause
+  applies turns on a reading of the preregistration. Its one large error is
+  C3-shaped: at R4 speculation loses outright (OFF 684.9 against its armed
+  pick 522.3) and it armed anyway, in the regime whose predicted margin was
+  already the thinnest in the map.
+  `98_selector_demo/results_g98_e.md`.
+* **The frontier is the number that sizes Phase 97.** Across 126 workload
+  mixes the 90% target holds in 112 (89%), but the selector beats every
+  static by +2% in only **9 (7%)**. On almost every mix one well-chosen
+  static configuration lands within 2% of per-regime selection — the Phase-82
+  dwell-time law restated in another currency. Speculation itself clearly
+  pays; SWITCHING between compositions is what looks thin, and that argues
+  for pricing the value case before building more of the runtime engine.
 
 **Measurement environment.** Both campaigns run on **h104 (bare metal)**.
 The previous box was a QEMU/KVM guest whose host-side "clamp" — a fixed

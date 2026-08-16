@@ -12,11 +12,17 @@ scored claims.
 | G98-C | Round 2 cost (D1') | **SCORED**: 47/48 covered (97.9%), zero false eliminations with the rule exercised 5x |
 | G98-D0 | acceptance-path smoke | passed |
 | G98-D | acceptance (D2a, D2c) | **SCORED**: D2(a) 6 violations / 132 rows; D2(c) 107/264 pairs separated |
-| — | D2(b) knapsack identity | **BLOCKED**: no registered estimator for per-layer retention |
-| — | D3 end-to-end | not started; gated on amendment 2's dual-arm requirement |
+| G98-D2b | knapsack identity (D2b) | **SCORED**: 11/12 controls beaten — wins at k=4 and k=8, inverts at k=16 |
+| G98-E | end-to-end selector value (D3) | **SCORED**: 95.1% of omniscient, 1.371x over OFF; ties one composed static |
+
+**Every registered claim of this phase is now measured.** D1' and D2(a)/(c)
+pass; D2(b) and D3 each fail one clause for a located reason rather than a
+diffuse one, and both failures are the informative part.
 
 Results: [`results_g98_c.md`](results_g98_c.md) (cost),
 [`results_g98_d.md`](results_g98_d.md) (acceptance),
+[`results_d2b_knapsack.md`](results_d2b_knapsack.md) (knapsack identity),
+[`results_g98_e.md`](results_g98_e.md) (end-to-end selector value),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).
 
@@ -266,18 +272,25 @@ not move:
 
 ## Open items
 
-1. **D2(b) needs a recorded decision before it can run.** The knapsack
-   consumes a per-layer retention vector `r` that the preregistration never
-   specifies a protocol for, and the natural leave-one-out estimator is
-   forbidden by the frozen skip counts `{0, 4, 8, 16}`. Three routes are in
-   [`design_g98d_d2_campaign.md`](design_g98d_d2_campaign.md). Choosing one
-   after seeing D2's acceptance data is what preregistration exists to
-   prevent, so the route is recorded first.
-2. **D3** — not started. Amendment 2 requires its decisive comparison under
-   BOTH instruments, with both numbers reported wherever the result appears.
+1. **Two clauses failed and are reportable as such, not as gaps.** D2(b)
+   loses one of twelve controls, at k=16 only; D3 leads the best composed
+   static by 1.4% where +2% was required. Both are located and explained in
+   their result documents, and neither is repaired by more measurement —
+   they are what the measurement found.
+2. **D3's static clause depends on a reading of the preregistration.**
+   "Every static single configuration including OFF" passes if *single*
+   means single-LEVER (1.141x) and fails if it means *any one fixed
+   configuration*. The stricter reading is recommended and used as the
+   headline. A researcher ruling would close it.
 3. **The u-bucket boundaries** are still the provisional ones; placing them
    where `tau(w, g, u)` actually crosses is a scored OUTPUT of G98-D and an
    analysis step, not a new measurement.
 4. **The clamp verdict** on the original box needs one X29 run there (one
    clamped burst, one clean burst); the prime suspect is quantified in
    section 11 of the clamp document.
+5. **Phase 97's runtime switching is the open engineering question, and D3
+   now prices it.** The selector beats every static by +2% in only 9 of 126
+   mixes, so per-regime switching buys little over one well-chosen fixed
+   configuration on this workload family. That is the composite gap §D3 says
+   should size G2b/G3/B1, and it argues for measuring the value case before
+   building more of the engine.
