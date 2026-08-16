@@ -1,0 +1,77 @@
+{
+  "accounts": {
+    "base": {
+      "armed": true,
+      "chain_ms": 31.3005,
+      "kernel_classes_ms": {
+        "attention": 268.5343,
+        "elementwise": 68.7571,
+        "gemm": 1144.4044,
+        "other": 44.0556
+      },
+      "model_ms": 28.6108,
+      "model_share": 0.9141,
+      "orchestration_ms": 3.3506,
+      "unattributed_ms": -0.6609,
+      "window_rewrite_ms": 0.0
+    },
+    "off": {
+      "armed": false,
+      "chain_ms": null
+    },
+    "quant": {
+      "armed": true,
+      "chain_ms": 24.1331,
+      "kernel_classes_ms": {
+        "attention": 267.5161,
+        "elementwise": 32.4068,
+        "gemm": 894.8816,
+        "other": 42.5907
+      },
+      "model_ms": 21.3177,
+      "model_share": 0.8833,
+      "orchestration_ms": 3.459,
+      "unattributed_ms": -0.6437,
+      "window_rewrite_ms": 0.0
+    }
+  },
+  "draft_kernel_ms": {
+    "base": {
+      "attention": 5.8988,
+      "elementwise": 1.4088,
+      "gemm": 23.0305,
+      "other": 0.8923,
+      "total": 31.2304
+    },
+    "quant": {
+      "attention": 5.8733,
+      "elementwise": 0.5,
+      "gemm": 16.7924,
+      "other": 0.8557,
+      "total": 24.0214
+    }
+  },
+  "levers": {
+    "quant": {
+      "bound_scale": 0.4469,
+      "draft_kernel_ms": {
+        "attention": 5.8733,
+        "elementwise": 0.5,
+        "gemm": 16.7924,
+        "other": 0.8557,
+        "total": 24.0214
+      },
+      "expectation_basis": [
+        "w4a16 weights -> gemm x0.25 (optimistic bound)"
+      ],
+      "fixed_gap": -0.0241,
+      "kernel_gap": 0.3222,
+      "kernel_scale": 0.7692,
+      "model_scale": 0.7451
+    }
+  },
+  "note": "nsys inflates absolute time; ratios are the currency, not milliseconds",
+  "record_type": "w98_nsys_accounting",
+  "regime": "R6",
+  "schema_version": 1
+}

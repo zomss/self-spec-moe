@@ -117,16 +117,35 @@ nothing to fix in the layer-skip path. This confirms by a fully independent
 route what `results_lever_mechanics.md` measured in wall clock (0.894-0.902
 against an 0.889 ideal).
 
-### quantization carries the largest recoverable overhead, and it is in the kernel
+### quantization's gap is the bound being wrong, NOT a recoverable defect
 
-**+22.1 points**, by far the biggest gap in the table. Marlin delivers
-**0.548x on GEMM against a 0.25x weight-bytes bound** -- 1.8x, not 4x. Had the
-kernel reached its bound the draft forward would cost 0.373x instead of
-0.638x. At batch 1 the GEMM is tiny-M and latency-bound rather than
-bandwidth-bound, which is the likely cause; the 4x bound assumes a purely
-bandwidth-bound decode and is optimistic by construction. Either way this is
-the single largest cost-elimination target in the stack, and it is an order of
-magnitude larger than the window issue that was just fixed.
+**+22.1 points**, by far the biggest number in the table: Marlin delivers
+**0.548x on GEMM against a 0.25x weight-bytes bound** -- 1.8x, not 4x.
+
+> **CORRECTION (same day).** This was first written as "the single largest
+> cost-elimination target in the stack, an order of magnitude larger than the
+> window issue". That is **withdrawn.** The reasoning was that batch 1 is
+> tiny-M and latency-bound, so a larger batch would let Marlin approach its
+> bound. The R6 sweep tests it and finds the opposite:
+>
+> | | R1 (b1) | R6 (b32) |
+> | --- | --- | --- |
+> | GEMM ratio quant/base | 0.5480 | **0.7291** |
+> | Marlin speedup on GEMM | 1.83x | **1.37x** |
+> | gap against the 0.25x bound | +0.2214 | **+0.3222** |
+>
+> The gap WIDENS with batch. w4a16 saves weight BYTES, which pays when the
+> GEMM is weight-bandwidth-bound -- that is M=1. As M grows there is more
+> compute per weight byte, so the traffic saving matters less while the
+> dequantization compute does not go away. **Marlin is at its best at batch
+> 1**, and the 0.25x bound is not reachable at any batch size.
+>
+> So this column measures the distance between an idealised bound and
+> achievable hardware, not a defect. It explains why quantization dominates
+> the lever hierarchy, and it is useless as an optimisation target. It also
+> accounts for a D3 result already in the record: quant-only is 1.36x at R1
+> and 1.24x at R6 -- quantization gets less effective as batch rises, and this
+> is why, at the kernel level.
 
 Attention under quant reads 1.033x -- unchanged, as it must be. That is the
 control that makes the attribution trustworthy.
