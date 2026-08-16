@@ -273,3 +273,38 @@ shows a real interval, which is what every scored D2 cell will look like.
 Only bucket 0 is populated here because the smoke boots generated 96
 tokens; the campaign's longer streams populate the upper u-buckets, whose
 boundaries are a scored OUTPUT of the first run rather than an input.
+
+## D2(b): a specification gap, not a build gap (2026-08-15)
+
+D2(b) claims the knapsack set beats count-matched random and worst controls
+at each surviving count. The controls are frozen
+(`w98_d2_controls.json`, seeds 98001-3) and `w98_knapsack.py` implements
+`knapsack_select`, `top_k_by_retention`, `worst_k_by_retention` and
+`random_k` — but every one of those except `random_k` consumes a **per-layer
+retention vector `r`**, and nothing in the preregistration registers how `r`
+is obtained. It is not measured anywhere in the phase, and no artifact
+carries it.
+
+The natural estimator — leave-one-out, boot with exactly one layer skipped
+and read the acceptance loss — is **forbidden by the frozen lattice**, whose
+skip counts are `{0, 4, 8, 16}`; the boot contract refuses count 1 by
+construction. So D2(b) cannot be run as registered without one of:
+
+1. admitting count 1 under `w98-d2` for a NON-SCORED retention probe (the
+   scope already exists and the counts it admits are its own constant, so
+   this is additive and does not touch the cost campaign's contract); or
+2. registering a different estimator for `r` — e.g. leave-one-out within a
+   count-4 set, or a proxy that never touches acceptance — which is a
+   preregistration decision because it changes what "the knapsack set"
+   means; or
+3. reporting D2(b) as NOT EXERCISED, the way Round 1 reported its
+   elimination rule for want of a scored surface.
+
+Note that the CONTROLS do not need `r` to be honest: `random_k` is seeded
+and independent, and the comparison itself (`bootstrap_paired_delta`) is
+already built and tested. Only the knapsack's own input is missing.
+
+This is surfaced rather than resolved: inventing an estimator for `r` after
+seeing the campaign's acceptance data is exactly the move preregistration
+exists to prevent. Whichever route is taken should be recorded before any
+D2(b) measurement is booted.
