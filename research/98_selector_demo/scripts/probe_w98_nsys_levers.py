@@ -269,6 +269,15 @@ def run_all(output_dir: Path, regime_id: str, only: list[str] | None) -> None:
                     "--capture-range=cudaProfilerApi",
                     "--capture-range-end=stop",
                     "--trace=cuda,nvtx",
+                    # WITHOUT this nsys defaults to graph granularity and
+                    # reports each CUDA-graph replay as ONE entry, so a
+                    # 36-layer forward collapses to a single row: the first
+                    # run showed 200 GEMM instances for 200 forwards, which is
+                    # impossible, and made the quantized draft look as though
+                    # it ran no quantized kernel at all. Per-node is required
+                    # for any per-kernel attribution under piecewise CUDA
+                    # graphs.
+                    "--cuda-graph-trace=node",
                     "--sample=none",
                     "--cuda-memory-usage=false",
                     "--force-overwrite=true",

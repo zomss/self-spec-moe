@@ -1,0 +1,125 @@
+{
+  "all_acceptance_identical": true,
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": 1024
+  },
+  "control": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "record_type": "w98_window_fastpath_summary",
+  "regimes": {
+    "R1": {
+      "acceptance_identical": true,
+      "batch": 1,
+      "committed_per_step_fast": [
+        4.953488
+      ],
+      "committed_per_step_slow": [
+        4.953488
+      ],
+      "draft_chain_ms": {
+        "no_window": 27.280690075846714,
+        "window_fast": 27.30670138988473,
+        "window_slow": 27.560208253391565
+      },
+      "fastpath_gain_pct": -0.92,
+      "fastpath_hit_rate": [
+        1.0,
+        1.0
+      ],
+      "repeats": {
+        "fast": 2,
+        "no_window": 2,
+        "slow": 2
+      },
+      "residual_overhead_pct": 0.095,
+      "total_window_overhead_pct": 1.025
+    },
+    "R5": {
+      "acceptance_identical": true,
+      "batch": 8,
+      "committed_per_step_fast": [
+        34.08
+      ],
+      "committed_per_step_slow": [
+        34.08
+      ],
+      "draft_chain_ms": {
+        "no_window": 49.1464668969539,
+        "window_fast": 29.511502498003132,
+        "window_slow": 29.60073271119115
+      },
+      "fastpath_gain_pct": -0.301,
+      "fastpath_hit_rate": [
+        0.0,
+        0.0
+      ],
+      "repeats": {
+        "fast": 2,
+        "no_window": 2,
+        "slow": 2
+      },
+      "residual_overhead_pct": -39.952,
+      "total_window_overhead_pct": -39.77
+    },
+    "R6": {
+      "acceptance_identical": true,
+      "batch": 32,
+      "committed_per_step_fast": [
+        158.511628
+      ],
+      "committed_per_step_slow": [
+        158.511628
+      ],
+      "draft_chain_ms": {
+        "no_window": 30.96608844918942,
+        "window_fast": 30.983971337864705,
+        "window_slow": 31.253263409839036
+      },
+      "fastpath_gain_pct": -0.862,
+      "fastpath_hit_rate": [
+        1.0,
+        1.0
+      ],
+      "repeats": {
+        "fast": 2,
+        "no_window": 2,
+        "slow": 2
+      },
+      "residual_overhead_pct": 0.058,
+      "total_window_overhead_pct": 0.927
+    },
+    "R8": {
+      "acceptance_identical": true,
+      "batch": 16,
+      "committed_per_step_fast": [
+        79.255814
+      ],
+      "committed_per_step_slow": [
+        79.255814
+      ],
+      "draft_chain_ms": {
+        "no_window": 28.776190854574835,
+        "window_fast": 28.777973623860866,
+        "window_slow": 29.12352677571391
+      },
+      "fastpath_gain_pct": -1.187,
+      "fastpath_hit_rate": [
+        1.0,
+        1.0
+      ],
+      "repeats": {
+        "fast": 2,
+        "no_window": 2,
+        "slow": 2
+      },
+      "residual_overhead_pct": 0.006,
+      "total_window_overhead_pct": 1.207
+    }
+  },
+  "schema_version": 1
+}

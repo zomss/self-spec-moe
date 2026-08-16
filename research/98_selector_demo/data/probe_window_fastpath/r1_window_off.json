@@ -1,0 +1,68 @@
+{
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "fastpath": false,
+  "observations": {
+    "R1": {
+      "acceptance": {
+        "armed_steps": 128,
+        "committed_per_step": 4.953488,
+        "committed_tokens": 639,
+        "steps": 129
+      },
+      "armed_step_count": 128,
+      "batch": 1,
+      "draft_chain_ms": 27.286650818012177,
+      "fastpath_calls": 0,
+      "fastpath_hits": 0,
+      "mean_armed_step_s": 0.03716849224292673
+    },
+    "R5": {
+      "acceptance": {
+        "armed_steps": 129,
+        "committed_per_step": 36.0,
+        "committed_tokens": 5112,
+        "steps": 142
+      },
+      "armed_step_count": 129,
+      "batch": 8,
+      "draft_chain_ms": 49.141229138794266,
+      "fastpath_calls": 0,
+      "fastpath_hits": 0,
+      "mean_armed_step_s": 0.06382953044922315
+    },
+    "R6": {
+      "acceptance": {
+        "armed_steps": 128,
+        "committed_per_step": 158.511628,
+        "committed_tokens": 20448,
+        "steps": 129
+      },
+      "armed_step_count": 128,
+      "batch": 32,
+      "draft_chain_ms": 30.95797727892705,
+      "fastpath_calls": 0,
+      "fastpath_hits": 0,
+      "mean_armed_step_s": 0.04218807118741097
+    },
+    "R8": {
+      "acceptance": {
+        "armed_steps": 128,
+        "committed_per_step": 79.255814,
+        "committed_tokens": 10224,
+        "steps": 129
+      },
+      "armed_step_count": 128,
+      "batch": 16,
+      "draft_chain_ms": 28.769282034572658,
+      "fastpath_calls": 0,
+      "fastpath_hits": 0,
+      "mean_armed_step_s": 0.03851182731159497
+    }
+  },
+  "record_type": "w98_window_fastpath_ab",
+  "schema_version": 1
+}

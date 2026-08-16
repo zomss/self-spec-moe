@@ -1,0 +1,58 @@
+{
+  "accounts": {
+    "base": {
+      "armed": true,
+      "chain_ms": 27.7755,
+      "kernel_classes_ms": {
+        "attention": 114.2594,
+        "elementwise": 6.9422,
+        "gemm": 82.5645,
+        "other": 2.9863
+      },
+      "model_ms": 24.4785,
+      "model_share": 0.8813,
+      "orchestration_ms": 3.197,
+      "unattributed_ms": 0.1,
+      "window_rewrite_ms": 0.0
+    },
+    "off": {
+      "armed": false,
+      "chain_ms": null
+    },
+    "quant": {
+      "armed": true,
+      "chain_ms": 25.7045,
+      "kernel_classes_ms": {
+        "attention": 107.6415,
+        "elementwise": 7.1708,
+        "gemm": 82.9684,
+        "other": 2.9761
+      },
+      "model_ms": 20.6805,
+      "model_share": 0.8045,
+      "orchestration_ms": 3.9374,
+      "unattributed_ms": 1.0866,
+      "window_rewrite_ms": 0.0
+    }
+  },
+  "levers": {
+    "quant": {
+      "expectation_basis": [
+        "w4a16 weights -> gemm x0.25 (optimistic bound)"
+      ],
+      "expected_model_scale": 0.6854,
+      "kernel_classes_ms": {
+        "attention": 107.6415,
+        "elementwise": 7.1708,
+        "gemm": 82.9684,
+        "other": 2.9761
+      },
+      "measured_model_scale": 0.8448,
+      "overhead": 0.1595
+    }
+  },
+  "note": "nsys inflates absolute time; ratios are the currency, not milliseconds",
+  "record_type": "w98_nsys_accounting",
+  "regime": "R1",
+  "schema_version": 1
+}
