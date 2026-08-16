@@ -1,0 +1,551 @@
+{
+  "arms": {
+    "corrected": {
+      "as_measured": {
+        "gain": 1.01376071,
+        "gain_reconstructed": 1.01376071,
+        "identity_residual": 2.220446049250313e-16,
+        "static_cell": "w4a16-quantized/w1024/skip4",
+        "terms": [
+          {
+            "contribution": 0.560322,
+            "excess_contribution": 0.00132,
+            "ratio": 1.002362,
+            "regime": "R1",
+            "selector_rate": 178.2009,
+            "static_rate": 177.781,
+            "time_share": 0.559001
+          },
+          {
+            "contribution": 0.20249,
+            "excess_contribution": 0.011777,
+            "ratio": 1.061755,
+            "regime": "R4",
+            "selector_rate": 522.3278,
+            "static_rate": 491.9477,
+            "time_share": 0.190713
+          },
+          {
+            "contribution": 0.099659,
+            "excess_contribution": 0.000783,
+            "ratio": 1.007915,
+            "regime": "R5",
+            "selector_rate": 1007.4697,
+            "static_rate": 999.5581,
+            "time_share": 0.098876
+          },
+          {
+            "contribution": 0.087513,
+            "excess_contribution": 0.000454,
+            "ratio": 1.005213,
+            "regime": "R5cot",
+            "selector_rate": 1144.2113,
+            "static_rate": 1138.2771,
+            "time_share": 0.08706
+          },
+          {
+            "contribution": 0.022526,
+            "excess_contribution": -0.001175,
+            "ratio": 0.950438,
+            "regime": "R6",
+            "selector_rate": 4202.9558,
+            "static_rate": 4422.127,
+            "time_share": 0.023701
+          },
+          {
+            "contribution": 0.04125,
+            "excess_contribution": 0.000601,
+            "ratio": 1.014787,
+            "regime": "R8",
+            "selector_rate": 2450.5878,
+            "static_rate": 2414.8779,
+            "time_share": 0.040649
+          }
+        ]
+      },
+      "fail_closed": {
+        "gain": 1.06182034,
+        "gain_reconstructed": 1.06182034,
+        "identity_residual": 2.220446049250313e-16,
+        "static_cell": "w4a16-quantized/w1024/skip4",
+        "terms": [
+          {
+            "contribution": 0.586885,
+            "excess_contribution": 0.001383,
+            "ratio": 1.002362,
+            "regime": "R1",
+            "selector_rate": 178.2009,
+            "static_rate": 177.781,
+            "time_share": 0.585502
+          },
+          {
+            "contribution": 0.21209,
+            "excess_contribution": 0.059743,
+            "ratio": 1.392152,
+            "regime": "R4",
+            "selector_rate": 684.8659,
+            "static_rate": 491.9477,
+            "time_share": 0.152347
+          },
+          {
+            "contribution": 0.104383,
+            "excess_contribution": 0.00082,
+            "ratio": 1.007915,
+            "regime": "R5",
+            "selector_rate": 1007.4697,
+            "static_rate": 999.5581,
+            "time_share": 0.103563
+          },
+          {
+            "contribution": 0.091662,
+            "excess_contribution": 0.000475,
+            "ratio": 1.005213,
+            "regime": "R5cot",
+            "selector_rate": 1144.2113,
+            "static_rate": 1138.2771,
+            "time_share": 0.091187
+          },
+          {
+            "contribution": 0.023594,
+            "excess_contribution": -0.00123,
+            "ratio": 0.950438,
+            "regime": "R6",
+            "selector_rate": 4202.9558,
+            "static_rate": 4422.127,
+            "time_share": 0.024825
+          },
+          {
+            "contribution": 0.043206,
+            "excess_contribution": 0.00063,
+            "ratio": 1.014787,
+            "regime": "R8",
+            "selector_rate": 2450.5878,
+            "static_rate": 2414.8779,
+            "time_share": 0.042576
+          }
+        ]
+      },
+      "feasibility_study": {
+        "best_static_feasible_everywhere": "target-matching/w512/skip4",
+        "best_static_feasible_everywhere_rate": 460.5278,
+        "best_static_ignoring_feasibility": "w4a16-quantized/w1024/skip4",
+        "best_static_ignoring_feasibility_rate": 589.5744,
+        "decomposition": {
+          "gain": 1.30498606,
+          "gain_reconstructed": 1.30498606,
+          "identity_residual": 4.440892098500626e-16,
+          "static_cell": "target-matching/w512/skip4",
+          "terms": [
+            {
+              "contribution": 0.751958,
+              "excess_contribution": 0.191172,
+              "ratio": 1.340901,
+              "regime": "R1",
+              "selector_rate": 178.6131,
+              "static_rate": 133.2038,
+              "time_share": 0.560786
+            },
+            {
+              "contribution": 0.22171,
+              "excess_contribution": 0.075457,
+              "ratio": 1.515934,
+              "regime": "R4",
+              "selector_rate": 684.8659,
+              "static_rate": 451.778,
+              "time_share": 0.146253
+            },
+            {
+              "contribution": 0.125116,
+              "excess_contribution": 0.004812,
+              "ratio": 1.039998,
+              "regime": "R5",
+              "selector_rate": 832.589,
+              "static_rate": 800.5679,
+              "time_share": 0.120304
+            },
+            {
+              "contribution": 0.129143,
+              "excess_contribution": 0.019215,
+              "ratio": 1.174795,
+              "regime": "R5cot",
+              "selector_rate": 911.1719,
+              "static_rate": 775.6009,
+              "time_share": 0.109928
+            },
+            {
+              "contribution": 0.025758,
+              "excess_contribution": 0.003866,
+              "ratio": 1.176604,
+              "regime": "R6",
+              "selector_rate": 4575.3955,
+              "static_rate": 3888.6452,
+              "time_share": 0.021892
+            },
+            {
+              "contribution": 0.0513,
+              "excess_contribution": 0.010464,
+              "ratio": 1.25623,
+              "regime": "R8",
+              "selector_rate": 2452.7855,
+              "static_rate": 1952.4969,
+              "time_share": 0.040837
+            }
+          ]
+        },
+        "model": "measured rates with a MODELLED feasibility mask: the quantized draft's separate ~6.1 GB is assumed unaffordable at 14k context. KV pressure was never varied in this phase, so this sizes the effect rather than establishing it.",
+        "note_on_unconstrained": "not deployable across the mix; shown for scale",
+        "pressured_regimes": [
+          "R5",
+          "R5cot"
+        ],
+        "selection_choice": {
+          "R1": "w4a16-quantized/w1024/skip8",
+          "R4": "off",
+          "R5": "target-matching/w512/skip0",
+          "R5cot": "target-matching/w1024/skip4",
+          "R6": "w4a16-quantized/w256/skip4",
+          "R8": "w4a16-quantized/w512/skip4"
+        },
+        "selection_rate": 600.9824,
+        "switching_gain": 1.304986
+      },
+      "omniscient_ceiling": {
+        "gain": 1.06640479,
+        "gain_reconstructed": 1.06640479,
+        "identity_residual": 0.0,
+        "static_cell": "w4a16-quantized/w1024/skip4",
+        "terms": [
+          {
+            "contribution": 0.589419,
+            "excess_contribution": 0.002746,
+            "ratio": 1.004681,
+            "regime": "R1",
+            "selector_rate": 178.6131,
+            "static_rate": 177.781,
+            "time_share": 0.586673
+          },
+          {
+            "contribution": 0.213005,
+            "excess_contribution": 0.060001,
+            "ratio": 1.392152,
+            "regime": "R4",
+            "selector_rate": 684.8659,
+            "static_rate": 491.9477,
+            "time_share": 0.153004
+          },
+          {
+            "contribution": 0.104834,
+            "excess_contribution": 0.001716,
+            "ratio": 1.016641,
+            "regime": "R5",
+            "selector_rate": 1016.1919,
+            "static_rate": 999.5581,
+            "time_share": 0.103118
+          },
+          {
+            "contribution": 0.092058,
+            "excess_contribution": 0.000477,
+            "ratio": 1.005213,
+            "regime": "R5cot",
+            "selector_rate": 1144.2113,
+            "static_rate": 1138.2771,
+            "time_share": 0.091581
+          },
+          {
+            "contribution": 0.023696,
+            "excess_contribution": 0.000794,
+            "ratio": 1.034659,
+            "regime": "R6",
+            "selector_rate": 4575.3955,
+            "static_rate": 4422.127,
+            "time_share": 0.022902
+          },
+          {
+            "contribution": 0.043392,
+            "excess_contribution": 0.000671,
+            "ratio": 1.015698,
+            "regime": "R8",
+            "selector_rate": 2452.7855,
+            "static_rate": 2414.8779,
+            "time_share": 0.042722
+          }
+        ]
+      }
+    },
+    "legacy": {
+      "as_measured": {
+        "gain": 1.01783586,
+        "gain_reconstructed": 1.01783586,
+        "identity_residual": 0.0,
+        "static_cell": "w4a16-quantized/w512/skip4",
+        "terms": [
+          {
+            "contribution": 0.565916,
+            "excess_contribution": 0.001622,
+            "ratio": 1.002875,
+            "regime": "R1",
+            "selector_rate": 167.8466,
+            "static_rate": 167.3654,
+            "time_share": 0.564293
+          },
+          {
+            "contribution": 0.204666,
+            "excess_contribution": 0.01789,
+            "ratio": 1.095785,
+            "regime": "R4",
+            "selector_rate": 507.105,
+            "static_rate": 462.7779,
+            "time_share": 0.186775
+          },
+          {
+            "contribution": 0.098248,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R5",
+            "selector_rate": 964.0349,
+            "static_rate": 964.0349,
+            "time_share": 0.098248
+          },
+          {
+            "contribution": 0.086412,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R5cot",
+            "selector_rate": 1096.0879,
+            "static_rate": 1096.0879,
+            "time_share": 0.086412
+          },
+          {
+            "contribution": 0.022247,
+            "excess_contribution": -0.001385,
+            "ratio": 0.941376,
+            "regime": "R6",
+            "selector_rate": 4007.8368,
+            "static_rate": 4257.4228,
+            "time_share": 0.023632
+          },
+          {
+            "contribution": 0.040348,
+            "excess_contribution": -0.000291,
+            "ratio": 0.992832,
+            "regime": "R8",
+            "selector_rate": 2330.6391,
+            "static_rate": 2347.4658,
+            "time_share": 0.040639
+          }
+        ]
+      },
+      "fail_closed": {
+        "gain": 1.06940704,
+        "gain_reconstructed": 1.06940704,
+        "identity_residual": 2.220446049250313e-16,
+        "static_cell": "w4a16-quantized/w512/skip4",
+        "terms": [
+          {
+            "contribution": 0.594589,
+            "excess_contribution": 0.001705,
+            "ratio": 1.002875,
+            "regime": "R1",
+            "selector_rate": 167.8466,
+            "static_rate": 167.3654,
+            "time_share": 0.592885
+          },
+          {
+            "contribution": 0.215036,
+            "excess_contribution": 0.069464,
+            "ratio": 1.477183,
+            "regime": "R4",
+            "selector_rate": 683.6076,
+            "static_rate": 462.7779,
+            "time_share": 0.145571
+          },
+          {
+            "contribution": 0.103226,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R5",
+            "selector_rate": 964.0349,
+            "static_rate": 964.0349,
+            "time_share": 0.103226
+          },
+          {
+            "contribution": 0.09079,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R5cot",
+            "selector_rate": 1096.0879,
+            "static_rate": 1096.0879,
+            "time_share": 0.09079
+          },
+          {
+            "contribution": 0.023374,
+            "excess_contribution": -0.001456,
+            "ratio": 0.941376,
+            "regime": "R6",
+            "selector_rate": 4007.8368,
+            "static_rate": 4257.4228,
+            "time_share": 0.02483
+          },
+          {
+            "contribution": 0.042392,
+            "excess_contribution": -0.000306,
+            "ratio": 0.992832,
+            "regime": "R8",
+            "selector_rate": 2330.6391,
+            "static_rate": 2347.4658,
+            "time_share": 0.042698
+          }
+        ]
+      },
+      "feasibility_study": {
+        "best_static_feasible_everywhere": "target-matching/woff/skip0",
+        "best_static_feasible_everywhere_rate": 459.8765,
+        "best_static_ignoring_feasibility": "w4a16-quantized/w512/skip4",
+        "best_static_ignoring_feasibility_rate": 558.3301,
+        "decomposition": {
+          "gain": 1.24936126,
+          "gain_reconstructed": 1.24936126,
+          "identity_residual": 2.220446049250313e-16,
+          "static_cell": "target-matching/woff/skip0",
+          "terms": [
+            {
+              "contribution": 0.718711,
+              "excess_contribution": 0.148198,
+              "ratio": 1.259764,
+              "regime": "R1",
+              "selector_rate": 167.8466,
+              "static_rate": 133.2366,
+              "time_share": 0.570513
+            },
+            {
+              "contribution": 0.13933,
+              "excess_contribution": 0.0,
+              "ratio": 1.0,
+              "regime": "R4",
+              "selector_rate": 687.2789,
+              "static_rate": 687.2789,
+              "time_share": 0.13933
+            },
+            {
+              "contribution": 0.158753,
+              "excess_contribution": 0.040512,
+              "ratio": 1.342623,
+              "regime": "R5",
+              "selector_rate": 809.8596,
+              "static_rate": 603.1923,
+              "time_share": 0.118241
+            },
+            {
+              "contribution": 0.158515,
+              "excess_contribution": 0.049732,
+              "ratio": 1.457162,
+              "regime": "R5cot",
+              "selector_rate": 880.2688,
+              "static_rate": 604.0982,
+              "time_share": 0.108783
+            },
+            {
+              "contribution": 0.025905,
+              "excess_contribution": 0.003565,
+              "ratio": 1.159585,
+              "regime": "R6",
+              "selector_rate": 4286.3736,
+              "static_rate": 3696.4712,
+              "time_share": 0.02234
+            },
+            {
+              "contribution": 0.048146,
+              "excess_contribution": 0.007354,
+              "ratio": 1.180278,
+              "regime": "R8",
+              "selector_rate": 2347.4658,
+              "static_rate": 1988.9088,
+              "time_share": 0.040792
+            }
+          ]
+        },
+        "model": "measured rates with a MODELLED feasibility mask: the quantized draft's separate ~6.1 GB is assumed unaffordable at 14k context. KV pressure was never varied in this phase, so this sizes the effect rather than establishing it.",
+        "note_on_unconstrained": "not deployable across the mix; shown for scale",
+        "pressured_regimes": [
+          "R5",
+          "R5cot"
+        ],
+        "selection_choice": {
+          "R1": "w4a16-quantized/woff/skip4",
+          "R4": "target-matching/woff/skip0",
+          "R5": "target-matching/w1024/skip0",
+          "R5cot": "target-matching/w1024/skip4",
+          "R6": "w4a16-quantized/woff/skip4",
+          "R8": "w4a16-quantized/w512/skip4"
+        },
+        "selection_rate": 574.5519,
+        "switching_gain": 1.249361
+      },
+      "omniscient_ceiling": {
+        "gain": 1.07408965,
+        "gain_reconstructed": 1.07408965,
+        "identity_residual": 4.440892098500626e-16,
+        "static_cell": "w4a16-quantized/w512/skip4",
+        "terms": [
+          {
+            "contribution": 0.597193,
+            "excess_contribution": 0.001712,
+            "ratio": 1.002875,
+            "regime": "R1",
+            "selector_rate": 167.8466,
+            "static_rate": 167.3654,
+            "time_share": 0.595481
+          },
+          {
+            "contribution": 0.215977,
+            "excess_contribution": 0.070549,
+            "ratio": 1.485116,
+            "regime": "R4",
+            "selector_rate": 687.2789,
+            "static_rate": 462.7779,
+            "time_share": 0.145428
+          },
+          {
+            "contribution": 0.103678,
+            "excess_contribution": 0.00167,
+            "ratio": 1.016368,
+            "regime": "R5",
+            "selector_rate": 979.8146,
+            "static_rate": 964.0349,
+            "time_share": 0.102009
+          },
+          {
+            "contribution": 0.091187,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R5cot",
+            "selector_rate": 1096.0879,
+            "static_rate": 1096.0879,
+            "time_share": 0.091187
+          },
+          {
+            "contribution": 0.023477,
+            "excess_contribution": 0.000159,
+            "ratio": 1.0068,
+            "regime": "R6",
+            "selector_rate": 4286.3736,
+            "static_rate": 4257.4228,
+            "time_share": 0.023318
+          },
+          {
+            "contribution": 0.042578,
+            "excess_contribution": 0.0,
+            "ratio": 1.0,
+            "regime": "R8",
+            "selector_rate": 2347.4658,
+            "static_rate": 2347.4658,
+            "time_share": 0.042578
+          }
+        ]
+      }
+    }
+  },
+  "identity": "gain = sum_R t_R * (rate_sel(R)/rate_static(R)), t_R = time share",
+  "record_type": "w98d3_switching_law",
+  "schema_version": 1
+}

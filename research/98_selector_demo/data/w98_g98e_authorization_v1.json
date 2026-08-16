@@ -1,0 +1,110 @@
+{
+  "arms": {
+    "amendment": "w98_prereg_amendment2_instrument.md, APPROVED (C)",
+    "names": [
+      "corrected",
+      "legacy"
+    ],
+    "reporting_rule": "both numbers appear wherever the D3 result appears; a dual-arm run is not licence to quote the kinder arm"
+  },
+  "currency": {
+    "decode_only": true,
+    "measure": "committed tokens / summed decode step seconds",
+    "wall_clock_forbidden": "phase 96 I1 retracted a claim to currency mixing; prefill is 46.6% of wall at R5"
+  },
+  "equal_work": {
+    "ignore_eos": true,
+    "max_tokens": 640,
+    "rationale": "natural EOS drains the spec and AR arms asymmetrically; phase 96 re-measurement moved one MoE cell from 1.288 to 0.954"
+  },
+  "execution_policy": {
+    "create_only": true,
+    "host": "h103",
+    "lane": {
+      "block_ids": [
+        1,
+        2,
+        3
+      ],
+      "cache_root": "/tmp/v-sukmincho-w98/vllm-cache/lane-a",
+      "cpu_affinity": "96-111",
+      "lane_id": "lane-a",
+      "physical_gpu_index": 7,
+      "physical_gpu_uuid": "GPU-6da30cbb-5974-e66f-a406-389946903db7"
+    },
+    "output_dir": "research/98_selector_demo/data/g98_e",
+    "resumable": "a completed (configuration, arm) cell is never re-measured"
+  },
+  "gate": "G98-E",
+  "gate_note": "D3 runs as G98-E: the registered letters predate the Round-2 amendment, which shifted the executed sequence by one",
+  "grid": {
+    "configurations": 31,
+    "mix_independent": true,
+    "mix_note": "selector, omniscient and every static single are aggregations of this grid; the mix is applied at scoring, never at measurement"
+  },
+  "package_id": "w98-g98e-d3-authorization-v1",
+  "prerequisite": {
+    "acceptance": "research/98_selector_demo/data/g98_d/d2_result.json",
+    "cost": "research/98_selector_demo/data/g98_c/round2_result.json"
+  },
+  "runtime": {
+    "boot_scope": "w98-lattice",
+    "draft": "piecewise",
+    "k_values": [
+      0,
+      4
+    ],
+    "kernel": "Marlin",
+    "ladder": "live K/OFF over the registered schedule",
+    "off_is_a_cell": true
+  },
+  "schema_version": 1,
+  "source_artifacts": {
+    "d2_result": {
+      "path": "research/98_selector_demo/data/g98_d/d2_result.json",
+      "sha256": "34a46337337337f23be4109aeb6f3c58bd032f2ecc5f703c639b4873a54f404c"
+    },
+    "d3_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98e_d3.py",
+      "sha256": "77fb558b1d99db47e6d5d35151c94ad5b405d108aebbeea299ce5d6093f538aa"
+    },
+    "koff_runtime": {
+      "path": "vllm/v1/spec_decode/koff_runtime.py",
+      "sha256": "6cf417951bb810584b86643233fe1fde2a311f3bef7ab65297317ba1ba373d39"
+    },
+    "prereg_doc": {
+      "path": "research/98_selector_demo/w98_prereg.md",
+      "sha256": "3392e7796017f4b3fec31e6819eb69de876d3f5d4abe46387b6a75c3d263e637"
+    },
+    "prereg_matrix": {
+      "path": "research/98_selector_demo/data/prereg/w98_prereg_matrix.json",
+      "sha256": "b54689fa2adb9b8f05ecaa4e289b36261588f7147719ae1485ee5f2b4451f503"
+    },
+    "prompt_bundle": {
+      "path": "research/98_selector_demo/data/prereg/w98_prompt_tokens.jsonl.gz",
+      "sha256": "1610786757f4c613b6358cb95c735b04461b4d070d2bb0bdcb8bbf6b5a5c8c22"
+    },
+    "prompt_manifest": {
+      "path": "research/98_selector_demo/data/prereg/w98_prompt_manifest.json",
+      "sha256": "ad109a34fc7a174f4609047a7663a78f0fa30b59e88aeb9d3ebbd6f9434fff98"
+    },
+    "round1_runner": {
+      "path": "research/98_selector_demo/scripts/run_w98_g98b_round1.py",
+      "sha256": "97670705803b466c608993ba862b1597f333477937604f0282c8e03f3c78f3e9"
+    },
+    "round2_result": {
+      "path": "research/98_selector_demo/data/g98_c/round2_result.json",
+      "sha256": "531ea390f34ca2d75c4d31741ade4276ac83c5dd77d39c21e820ed95506f1d24"
+    }
+  },
+  "status": "issued",
+  "targets": {
+    "lcb_rule_over_statics": 0.02,
+    "omniscient_fraction": 0.9
+  },
+  "workload_mix": {
+    "also_reported": "the mix frontier (which mixes clear the 90% target)",
+    "decided": "2026-08-15, before any D3 boot",
+    "registered": "equal weight over the six regimes"
+  }
+}

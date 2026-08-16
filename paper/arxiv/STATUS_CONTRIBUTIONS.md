@@ -31,28 +31,56 @@ seeds, decode currency, equal work. Per-claim records in
 | D2(a) screen honesty | 6 violations / 132 rows, **all carrying window=128 at short context**; interaction ratio median **above 1 for every lever set**, 1.670 at R4 | **C2** — corroborates P2's corrected direction: composed acceptance EXCEEDS the product, so the bound admits but cannot eliminate |
 | D2(b) knapsack identity | 11/12 controls beaten; product-of-singles ranks **perfectly (rho +1.000) at k=4 and k=8**, then **inverts at k=16** | **C2** — the measurement theorem reproduced on a new lever, model and box, with the non-additivity boundary now LOCATED (between 8 and 16 of 36 layers) |
 | D3 end-to-end | **95.1%** of the omniscient composite, **1.371x** over static-OFF; beats every static by +2% in only **9 of 126 mixes** | **C3** — a clean replacement for the retracted "two-round recovers a win the oracle missed" exhibit, and a price on switching |
+| D3 re-scored, fail-closed | **99.6%** of omniscient, **1.436x** over static-OFF, **+6.2%** over the best static, on **102 of 126 mixes** | **C3** — the claim "arms correctly and fails closed" now measured rather than asserted; the failing static clause passes |
+| surrogate recall | **recall@4 = 12/12**, confirm-1 regret <= **2.0%**; damage budget certifies bound tightness (rho **+0.875**) but NOT ranking | **C2** — the search's ordering carries a stated guarantee at a stated shortlist size, which is what answers "yours is a heuristic, KnapSpec's is a solver" |
 
 **Three results the paper should absorb.**
 
-1. **The value decomposition.** Best single lever 1.20x over OFF; best
-   three-lever composition 1.35x; per-regime selection 1.37x. So
-   **composing is worth +12.5% and switching +1.4%.** C2 is where the value
-   is, and C3's claim should be scoped to "arms correctly and fails closed",
-   not "switching beats statics".
+1. **The value decomposition, and an exact law for the switching term.**
+   Best single lever 1.20x over OFF; best three-lever composition 1.35x;
+   per-regime selection **1.44x** once the selector can decline. So
+   **composing is worth +12.5% and switching +6.2%.** (An earlier reading of
+   this record put switching at +1.4%; that was net of a 24% self-inflicted
+   regression at R4 and is withdrawn.) C3's claim should still be scoped to
+   "arms correctly and fails closed" — that is now the *measured* headline,
+   not a fallback.
+
+   The switching term obeys an exact identity under time-weighted
+   aggregation: `gain = sum_R t_R * (rate_sel(R)/rate_static(R))` with `t_R`
+   the **time** share. Switching therefore pays only where slow regimes have
+   distinctive optima, and this grid never has both at once — R1 carries 59%
+   of the time and contributes +0.14%. The fail-closed selector already
+   captures 93% of all switching value the grid contains, so the ceiling is
+   a property of the measured regimes, not of the design.
 2. **C1 visible inside ONE model.** The window lever is worth 1.01-1.09x at
    short context and **1.45-1.52x at 14k**, while quantization is
    universally on. "No universal lever" does not need the cross-architecture
    grid to show itself.
-3. **A located failure of fail-closed.** At R4 every lever family loses and
-   the selector armed anyway at **0.76x**. C3 claims a selector that fails
-   closed; this is a measured instance where it did not, with the diagnosis
-   (its predicted margin was the thinnest in the map, 1.03x) and the fix
-   (a margin-keyed refusal) both identified.
+3. **A located failure of fail-closed, and its repair.** At R4 every lever
+   family loses and the selector armed anyway at **0.76x** — its predicted
+   margin was the thinnest in the map (1.03x), so the signal was present and
+   unread. Arming only when the margin's lower confidence bound clears unity
+   — both error terms estimated from pre-D3 data — fires at exactly that one
+   regime and takes the selector to **99.6% of omniscient**. C3 gets to
+   claim a fail-closed selector because one was built and scored, and the
+   paper gets the predict/fail/correct loop on its most damaging miss.
+
+4. **The search's guarantee is recall, not top-1.** No rule ranks the argmax
+   first reliably — 75-100% top-1 miss for every rule including ours, this
+   record's own result. The defensible claim is that the *shortlist contains
+   the optimum*: **recall@4 = 12/12** with confirm-1 regret bounded at a
+   measured 2.0%. A registered attempt to do better — a damage budget
+   gating where the surrogate is valid — was **refuted**, and what survived
+   is that the budget certifies the product bound's *tightness*
+   (rho +0.875, bound always in the sound direction). This is the honest
+   answer to "KnapSpec has a solver and you have a hunch".
 
 **Caveats to carry.** One model, one box; decode currency only (prefill is
 46.6% of wall at R5); equal-weight mix is a convention, with the
-mix-frontier reported alongside; D3's static clause depends on a reading of
-its own preregistration and awaits a ruling.
+mix-frontier reported alongside; the fail-closed rule is post-hoc with a
+pre-D3-data-only derivation (two invariance checks stand in for a barrier);
+the 1.305x mixed-feasibility figure is modelled over measured rates, not
+measured; recall@4 rests on 12 groups (95% lower bound 0.78).
 
 ## Work items (the task list)
 

@@ -164,6 +164,60 @@ turns on a reading: "every static single configuration including OFF" passes
 if *single* means single-LEVER and fails if it means *any one fixed
 configuration*. The stricter reading is used as the headline.
 
+### 2.6 D3 re-scored with a fail-closed rule (`results_d3_failclosed.md`)
+
+The one large miss above is a missing capability, not a mis-ranking: the
+selector had no way to decline. Adding one — arm only when the lower
+confidence bound on the predicted margin over OFF clears unity, with both
+error terms estimated from pre-D3 data (`sigma_tau` 0.0195 from G98-D's
+seed-4/seed-5 pairs, `sigma_cost` 0.0123 from D1' held-out rows) — fires at
+exactly one regime, R4, and changes the verdict:
+
+| clause | as measured | fail-closed |
+| --- | --- | --- |
+| fraction of omniscient | 95.1% | **99.6%** |
+| over static-OFF | 1.371x | **1.436x** |
+| over best static | 1.014x | **1.062x** |
+| beats every static by +2% | FAIL | **PASS** |
+| mixes meeting 90% | 112/126 | **126/126** |
+| mixes beating every static | **9/126 (7%)** | **102/126 (81%)** |
+
+Both instrument arms agree. **The clause that was awaiting a ruling now
+passes on the strict reading**, so the ambiguity is moot.
+
+This is a post-hoc rule with a pre-D3-data-only derivation, not a
+preregistered one, and is labelled as such. In place of a barrier it carries
+two invariance checks: the decision is identical for any bare threshold in
+(1.026, 1.180) and for any confidence level `z` in (1.10, 7.06) — the
+conventional 1.645 sits far from both edges.
+
+### 2.7 The surrogate's foundation (`results_certified_region.md`)
+
+A registered hypothesis — that a damage budget `D = sum -log(retention_i)`,
+computable from singles, gates where the product surrogate ranks correctly —
+was **refuted**: restricted to a damage band, rank correlation is flat
+(0.84-0.95) and shortlist recall is perfect in every band including the
+worst. There is no validity region because the surrogate never leaves
+validity.
+
+What the budget does certify is the **bound's tightness**: `rho(D, |log
+error|) = +0.875` over 264 composed observations, with the signed error
+positive in every band (the product stays a lower bound) and rising
+monotonically from +0.6% at `D < 0.3` to +60.7% at `D > 1.6`. The error is
+systematic rather than noise, which is why the ordering survives it.
+
+And the ordering carries a guarantee of the shape the search actually
+consumes — not top-1 correctness, but shortlist recall:
+
+| | recall@1 | recall@2 | recall@3 | **recall@4** | top-1 regret mean / max |
+| --- | --- | --- | --- | --- | --- |
+| `tau_eff` | 8/12 | 10/12 | 11/12 | **12/12** | 0.32% / 1.99% |
+| `tau_k4` | 8/12 | 10/12 | 11/12 | **12/12** | 0.22% / 1.86% |
+
+So: measure 7 singles, order 22 compositions by the product, confirm the top
+4 — the optimum was inside the confirmed set in 12 of 12 groups, and a
+collapse to confirm-1 costs at most a measured 2.0%.
+
 ---
 
 ## 3. Performance
@@ -179,9 +233,11 @@ configuration*. The stricter reading is used as the headline.
 | R8 | 16 | short | 1807.7 | 2450.6 | **1.36x** | 2452.8 | 1.36x |
 | R6 | 32 | short | 3448.4 | 4203.0 | **1.22x** | 4575.4 | 1.33x |
 
-**Aggregate 1.371x over OFF at 95.1% of the omniscient ceiling.** Long
-context is where the design pays — 1.76x and 1.98x at 14k — which vindicates
-the Phase 58/62 redirect toward the KV-bound regime.
+**Aggregate 1.371x over OFF at 95.1% of the omniscient ceiling** as
+originally scored; **1.436x at 99.6%** once the selector declines at R4
+(section 2.6), where the row above becomes 684.9 / 1.00x. Long context is
+where the design pays — 1.76x and 1.98x at 14k — which vindicates the Phase
+58/62 redirect toward the KV-bound regime.
 
 ### 3.2 The value ladder — what each step is worth
 
@@ -203,10 +259,45 @@ This is the phase's most decision-relevant table:
   over OFF and ~1.30x over a median static.
 * **Composing is worth a lot.** 3-lever composition beats the best single
   lever by **+12.5%** (1.35x vs 1.20x); the selector beats it by 1.141x.
-* **Per-regime switching is worth almost nothing — +1.4%** over the best
-  single fixed configuration (597.7 vs 589.6), inside the +2% margin.
+* **Per-regime switching is worth +6.2%** over the best single fixed
+  configuration once the selector can decline (626.0 vs 589.6). The +1.4%
+  originally reported here was net of a self-inflicted 24% regression at R4
+  (section 2.6).
 * **Window and skip are worthless alone** (1.01x, 1.02x) and valuable in
   composition. Only quantization carries standalone value.
+
+### 3.2b Why switching is worth +6.2% and not more (`results_switching_law.md`)
+
+With time-weighted aggregation the gain over any fixed configuration is
+EXACTLY `sum_R t_R * (rate_sel(R)/rate_static(R))`, where `t_R` is the
+selector's **time** share — verified to machine precision on both arms.
+Because time share is inversely proportional to a regime's own throughput,
+**slow regimes dominate**, and the decomposition is stark:
+
+| regime | time share | ratio | excess contribution |
+| --- | --- | --- | --- |
+| **R1** (b1, short) | **0.5855** | 1.0024 | **+0.0014** |
+| **R4** (b8, 8k) | 0.1523 | **1.3922** | **+0.0597** |
+| R5 / R5cot / R6 / R8 | 0.2622 | ~1.00 | +0.0007 |
+
+One regime carries 59% of the time budget and contributes +0.14%, because at
+batch 1 every quantized configuration performs within 0.3% of every other.
+The omniscient ceiling over the same static is 1.0664x, so the fail-closed
+selector already captures **93% of all switching value this grid contains**.
+The limitation is the grid, not the selector.
+
+Switching therefore requires a regime that is simultaneously **time-dominant**
+and **optimum-distinctive**. This grid has each property separately and never
+together — which is a fact about the six regimes measured, not about
+switching.
+
+The axis that would supply both is **mixed feasibility**: the quantized draft
+is a separate ~6.1 GB resident, so under KV pressure it is not deployable at
+all, and no single static can serve the mix. Scoring that on the measured
+grid with 14k regimes modelled as unable to host the draft gives a switching
+gain of **1.305x** (legacy 1.249x) — 5x the uniform-feasibility figure. The
+rates are measured; the feasibility mask is modelled, so this sizes the
+effect rather than establishing it.
 
 ### 3.3 Does the lever vary by regime? Yes — the window does
 
@@ -275,16 +366,22 @@ size the switchover triggers.
 1. **The epistemic split is validated.** Cost predicted soundly (47/48, five
    correct eliminations); acceptance had to be measured, and every attempt
    to shortcut it failed in a locatable way (D2b's k=16 inversion).
-2. **Composition is the value, not switching.** +12.5% from composing
-   levers; +1.4% from choosing per regime. Across 126 workload mixes the
-   selector beats every static by the registered margin in only **9 (7%)**.
-3. **The design's biggest defect is not knowing when to stop.** At R4 every
-   lever family loses and the selector armed anyway, at **0.76x** — a 24%
-   regression that a fail-closed rule keyed on thin predicted margin
-   (R4's predicted margin was the thinnest in the map at 1.03x) would
-   convert to 1.00x. That single fix is worth more than the entire
-   per-regime switching advantage.
-4. **Long context is the operating regime.** 1.76-1.98x at 14k against
+2. **Composition is the larger value; switching is real but bounded.**
+   +12.5% from composing levers; **+6.2%** from choosing per regime, on
+   **81%** of the 126 mixes. The originally reported +1.4% / 7% was an
+   artifact of the missing fail-closed rule.
+3. **Knowing when to stop was the design's biggest defect, and it is fixed.**
+   At R4 every lever family loses and the selector armed anyway at **0.76x**;
+   a rule keyed on the predicted margin's lower confidence bound declines
+   there and nowhere else, taking the selector to **99.6% of omniscient**.
+   That single fix was worth more than the entire per-regime switching
+   advantage it was masking.
+4. **The search has a stated guarantee, not just an ordering hunch.** Not
+   top-1 correctness — no rule has that — but **recall@4 = 12/12** with
+   confirm-1 regret bounded at a measured 2.0%, plus a certified error bar
+   on the product bound (`rho(damage, error) = +0.875`, bound always in the
+   sound direction).
+5. **Long context is the operating regime.** 1.76-1.98x at 14k against
    1.22-1.42x at short context, and the memory-constrained fallback also
    holds up only there.
 
@@ -298,9 +395,15 @@ size the switchover triggers.
   46.6% of wall at R5 — so end-user speedups are lower than these figures.
 * **Equal-weight mix is a convention, not a workload.** The frontier is
   reported alongside precisely because the verdict moves with the mix.
-* **D3's static clause is ambiguous** in the preregistration and awaits a
-  ruling; it decides pass or fail.
+* **The fail-closed rule is post-hoc.** Its error terms and threshold come
+  only from pre-D3 data, but the D3 outcome was known when it was written
+  and no barrier can be retrofitted; two invariance checks stand in for one
+  (section 2.6).
 * **KV pressure and content breadth are unmeasured axes** (sections 3.4-3.5).
+  The 1.305x mixed-feasibility figure is a modelled estimate over measured
+  rates, not a measurement.
+* **The recall@4 guarantee rests on 12 groups** — point estimate 1.00,
+  one-sided 95% lower bound 0.78 — on one lattice.
 * **The measurement environment cost a week.** The original box was a
   QEMU/KVM guest whose host-side clamp gated 40+ campaign attempts without a
   single accepted cell; work moved to bare metal, and the clamp is localised
@@ -310,14 +413,23 @@ size the switchover triggers.
 
 ## 6. Open questions for discussion
 
-1. **Does the fail-closed rule get built?** It is the single highest-value
-   fix (+24% at R4) and it is a C3-shaped property the phase already argues
-   for elsewhere.
-2. **Does Phase 97's runtime switching get finished?** D3 prices it: 7% of
-   mixes clear the bar. The engineering may be better spent on the
-   fail-closed rule and on breadth.
-3. **Is the static clause read strictly or loosely?** It decides whether D3
-   passes.
-4. **Which unmeasured axis is worth a campaign next** — KV pressure (a
-   well-posed sweep, given the 22% gap), content breadth, or a second
-   model column?
+1. ~~Does the fail-closed rule get built?~~ **DONE 2026-08-16**
+   (`results_d3_failclosed.md`): 95.1% -> 99.6% of omniscient, and the
+   failing static clause now passes.
+2. ~~Is the static clause read strictly or loosely?~~ **MOOT** — the strict
+   reading passes under the fail-closed rule.
+3. **Does Phase 97's runtime switching get finished?** The re-scored price
+   is **81% of mixes**, not 7%, so the argument against building it has
+   been withdrawn. The remaining question is engineering cost against the
+   +6.2%, and whether the mixed-feasibility case (1.305x modelled) is the
+   real justification.
+4. **The next campaign should be KV pressure**, per
+   `results_switching_law.md`: it is the only axis that is well-posed,
+   predicted to move the headline by 5x rather than a few percent, and tests
+   the claim the paper actually needs — that a serving system must switch
+   because its lever set is not uniformly affordable. Registered prediction
+   to commit before it runs: **per-regime selection beats the best
+   uniformly-feasible static by >= 1.20x** under KV pressure.
+5. **Does the recall@4 shortlist size hold on a wider lattice?** It is
+   measured on 22 compositions in 12 groups, not derived; the scaling is
+   unknown.

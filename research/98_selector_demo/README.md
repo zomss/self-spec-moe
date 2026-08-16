@@ -1,9 +1,10 @@
 # Phase 98 — two-round selector demonstration
 
-Status (2026-08-15): **D1' and D2(a)/D2(c) are MEASURED AND SCORED; D2(b) is
-blocked on a recorded decision; D3 is not started.** Phase 97's
+Status (2026-08-16): **every registered claim is measured and scored, and
+D3 has been re-scored under a fail-closed rule.** Phase 97's
 runtime-switching infrastructure remains NOT a dependency of this phase's
-scored claims.
+scored claims — but the D3 re-score has withdrawn the argument against
+building it (81% of mixes, not 7%).
 
 | gate | claim | state |
 | --- | --- | --- |
@@ -14,17 +15,27 @@ scored claims.
 | G98-D | acceptance (D2a, D2c) | **SCORED**: D2(a) 6 violations / 132 rows; D2(c) 107/264 pairs separated |
 | G98-D2b | knapsack identity (D2b) | **SCORED**: 11/12 controls beaten — wins at k=4 and k=8, inverts at k=16 |
 | G98-E | end-to-end selector value (D3) | **SCORED**: 95.1% of omniscient, 1.371x over OFF; ties one composed static |
+| — | D3 re-scored, fail-closed rule (analysis) | **99.6% of omniscient, 1.436x over OFF; beats every static (+6.2%) on 81% of mixes** |
 
 **Every registered claim of this phase is now measured.** D1' and D2(a)/(c)
-pass; D2(b) and D3 each fail one clause for a located reason rather than a
-diffuse one, and both failures are the informative part.
+pass; D2(b) fails one clause for a located reason. D3's static clause failed
+as originally scored and **passes** once the selector can decline to arm.
 
 Results: [`results_g98_c.md`](results_g98_c.md) (cost),
 [`results_g98_d.md`](results_g98_d.md) (acceptance),
 [`results_d2b_knapsack.md`](results_d2b_knapsack.md) (knapsack identity),
 [`results_g98_e.md`](results_g98_e.md) (end-to-end selector value),
+[`results_d3_failclosed.md`](results_d3_failclosed.md) (the fail-closed rule
+and D3 re-score), [`results_switching_law.md`](results_switching_law.md)
+(when per-regime switching is worth anything, and the axis that would pay),
+[`results_certified_region.md`](results_certified_region.md) (the surrogate's
+recall guarantee),
+[`results_phase98_summary.md`](results_phase98_summary.md) (consolidated),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).
+
+The last three are **analysis over already-measured grids**, not new
+campaigns; each names its script and record file.
 
 **Both campaigns run on h104 (bare metal), GPU 7 / NUMA node 1.** The
 original box was a QEMU/KVM guest whose host-side "clamp" gated 40+ attempts
@@ -272,25 +283,31 @@ not move:
 
 ## Open items
 
-1. **Two clauses failed and are reportable as such, not as gaps.** D2(b)
-   loses one of twelve controls, at k=16 only; D3 leads the best composed
-   static by 1.4% where +2% was required. Both are located and explained in
-   their result documents, and neither is repaired by more measurement —
-   they are what the measurement found.
-2. **D3's static clause depends on a reading of the preregistration.**
-   "Every static single configuration including OFF" passes if *single*
-   means single-LEVER (1.141x) and fails if it means *any one fixed
-   configuration*. The stricter reading is recommended and used as the
-   headline. A researcher ruling would close it.
+1. **One clause remains failed and is reportable as such.** D2(b) loses one
+   of twelve controls, at k=16 only — located, explained, and not repaired
+   by more measurement. D3's failure has been repaired: it was a missing
+   capability (the selector could not decline), not a mis-ranking.
+2. ~~D3's static clause depends on a reading of the preregistration.~~
+   **MOOT.** Under the fail-closed rule the selector beats every one of the
+   31 statics by 6.2%, so the strict reading passes and no ruling is needed.
+   The rule is post-hoc with a pre-D3-data-only derivation; see
+   [`results_d3_failclosed.md`](results_d3_failclosed.md) for the invariance
+   checks offered in place of a commitment barrier.
 3. **The u-bucket boundaries** are still the provisional ones; placing them
    where `tau(w, g, u)` actually crosses is a scored OUTPUT of G98-D and an
    analysis step, not a new measurement.
 4. **The clamp verdict** on the original box needs one X29 run there (one
    clamped burst, one clean burst); the prime suspect is quantified in
    section 11 of the clamp document.
-5. **Phase 97's runtime switching is the open engineering question, and D3
-   now prices it.** The selector beats every static by +2% in only 9 of 126
-   mixes, so per-regime switching buys little over one well-chosen fixed
-   configuration on this workload family. That is the composite gap §D3 says
-   should size G2b/G3/B1, and it argues for measuring the value case before
-   building more of the engine.
+5. **Phase 97's runtime switching is the open engineering question, and the
+   re-scored price is 81% of mixes, not 7%.** The original figure was an
+   artifact of the missing fail-closed rule and the argument it supported
+   has been withdrawn. What remains is a cost question against +6.2%, and
+   the observation in [`results_switching_law.md`](results_switching_law.md)
+   that the strongest case for switching is not regimes preferring different
+   levers but the lever set being **unaffordable** in some of them —
+   modelled at 1.305x.
+6. **The next campaign is KV pressure.** It is the only unmeasured axis that
+   is well-posed, predicted to move the headline 5x, and tests the claim the
+   paper needs. Registered prediction to commit before it runs: per-regime
+   selection beats the best uniformly-feasible static by **>= 1.20x**.

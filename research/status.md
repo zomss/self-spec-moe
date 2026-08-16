@@ -71,13 +71,15 @@ whose gate was circular.
 
 **Phase 98** demonstrates the two-round selector end to end and has now
 measured EVERY registered claim across four scored campaigns — see "Current
-state" immediately below. Its D3 result also prices the open engineering
-question: per-regime switching beats every static configuration by the
-registered margin in only 7% of workload mixes, so **Phase 97**'s
-composition runtime — still unresolved, its B0 value screen still unscored —
-is buying less than it was assumed to. The live paper is `paper/` (`c1.md`,
-`c2.md`, `c3.md`, `arxiv/`); the open gaps are the hardware axis (measured
-on one box) and C3's draft status.
+state" immediately below. Its D3 result was then **re-scored under a
+fail-closed rule** (2026-08-16): the selector reaches 99.6% of the
+omniscient composite and beats every static on **81% of workload mixes**,
+not 7%. The earlier 7% figure was an artifact of the selector having no way
+to decline, and the argument it supported — that **Phase 97**'s composition
+runtime is buying less than assumed — is withdrawn. The live paper is
+`paper/` (`c1.md`, `c2.md`, `c3.md`, `arxiv/`); the open gaps are the
+hardware axis (measured on one box), KV pressure (the registered next
+campaign), and C3's draft status.
 
 ---
 
@@ -171,13 +173,39 @@ phase previously had none.
   pick 522.3) and it armed anyway, in the regime whose predicted margin was
   already the thinnest in the map.
   `98_selector_demo/results_g98_e.md`.
-* **The frontier is the number that sizes Phase 97.** Across 126 workload
-  mixes the 90% target holds in 112 (89%), but the selector beats every
-  static by +2% in only **9 (7%)**. On almost every mix one well-chosen
-  static configuration lands within 2% of per-regime selection — the Phase-82
-  dwell-time law restated in another currency. Speculation itself clearly
-  pays; SWITCHING between compositions is what looks thin, and that argues
-  for pricing the value case before building more of the runtime engine.
+* **D3 re-scored with a fail-closed rule: the failing clause passes.**
+  Arming only when the lower confidence bound on the predicted margin over
+  OFF clears unity — both error terms taken from data predating the D3 grid
+  (acceptance seed-spread 0.0195 from G98-D's seed-4/5 pairs, cost 0.0123
+  from D1' held-out rows) — declines at exactly one regime, R4. Result:
+  **99.6% of omniscient** (both instrument arms), **1.436x over static-OFF**,
+  **+6.2% over the best static**, and the +2% clause now beaten against all
+  31 statics. Post-hoc rule with a pre-D3-data-only derivation; the decision
+  is invariant for any threshold in (1.026, 1.180) and any `z` in
+  (1.10, 7.06). `98_selector_demo/results_d3_failclosed.md`.
+* **The frontier moves with it: 9/126 -> 102/126 mixes (7% -> 81%)**, and
+  the 90% target now holds in 126/126. The earlier reading — that one
+  well-chosen static lands within 2% of per-regime selection on almost every
+  mix — was an artifact of the missing rule, and is withdrawn.
+* **Why switching is worth +6.2% and not more, exactly.** Under
+  time-weighted aggregation the gain over any fixed configuration is the
+  identity `sum_R t_R * (rate_sel(R)/rate_static(R))` with `t_R` the
+  selector's TIME share (verified to machine precision). R1 carries **59% of
+  the time budget and contributes +0.14%** — at batch 1 every quantized
+  configuration is within 0.3% of every other — while R4 supplies the whole
+  gain off 15%. The omniscient switcher reaches 1.0664x, so the selector
+  captures **93% of all switching value the grid contains**: the ceiling is
+  the measured regime span, not the design. The axis that would raise it is
+  **mixed feasibility** — the w4a16 draft is a separate ~6.1 GB resident, so
+  under KV pressure no single static can serve the mix; modelled at
+  **1.305x**. `98_selector_demo/results_switching_law.md`.
+* **The search's guarantee, for C2.** A registered hypothesis — that a
+  damage budget computable from singles gates where the product surrogate is
+  valid — was **REFUTED** (rank correlation flat across damage bands). What
+  holds instead is a shortlist guarantee: **recall@4 = 12/12** with confirm-1
+  regret bounded at a measured 2.0%, plus a certified error bar on the bound
+  (`rho(damage, |error|) = +0.875`, always in the sound direction).
+  `98_selector_demo/results_certified_region.md`.
 
 **Measurement environment.** Both campaigns run on **h104 (bare metal)**.
 The previous box was a QEMU/KVM guest whose host-side "clamp" — a fixed
