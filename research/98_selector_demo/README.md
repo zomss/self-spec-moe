@@ -307,7 +307,17 @@ not move:
    that the strongest case for switching is not regimes preferring different
    levers but the lever set being **unaffordable** in some of them —
    modelled at 1.305x.
-6. **The next campaign is KV pressure.** It is the only unmeasured axis that
-   is well-posed, predicted to move the headline 5x, and tests the claim the
-   paper needs. Registered prediction to commit before it runs: per-regime
-   selection beats the best uniformly-feasible static by **>= 1.20x**.
+6. **The next campaign is KV pressure — now `research/99_kv_pressure/`.**
+   Its preflight has already corrected the design: the draft costs a
+   measured **44,096 KV tokens (~6.5 GB)**, and at batch 8 the feasibility
+   crossover sits beyond Qwen3-8B's context limit, so the obvious sweep
+   would have returned a null that looked like a refutation. The campaign
+   runs at batch >= 16. Registered prediction: per-regime selection beats the
+   best uniformly-feasible static by **>= 1.20x**.
+7. **The u-axis instrument has never been fed.** Its bucket edges are
+   [256, 1024, 3072] and every boot ran 640 tokens, so two of four buckets
+   are permanently empty. Within the measured span acceptance moves with
+   position (up to +16.3%) but the configuration ranking does not (rho +0.82
+   to +0.97, argmax stable in all six regimes) —
+   `scripts/analyze_w98_position_axis.py`. Phase 99's long outputs are what
+   would populate it.

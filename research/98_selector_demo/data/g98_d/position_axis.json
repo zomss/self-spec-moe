@@ -1,0 +1,78 @@
+{
+  "argmax_moves_in_regimes": 0,
+  "note": "buckets beyond the first two are empty: every boot ran a 640-token budget against edges built for 3072+",
+  "populated_buckets": [
+    "0",
+    "1"
+  ],
+  "record_type": "w98_position_axis",
+  "regimes": {
+    "R1": {
+      "argmax_bucket0": "target-matching/w1024/skip0",
+      "argmax_bucket1": "target-matching/w1024/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": 2.6873,
+      "rank_spearman": 0.815181,
+      "tau_bucket0": 7.21727,
+      "tau_bucket1": 7.411221
+    },
+    "R4": {
+      "argmax_bucket0": "target-matching/woff/skip0",
+      "argmax_bucket1": "target-matching/woff/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": 3.6861,
+      "rank_spearman": 0.974194,
+      "tau_bucket0": 2.848229,
+      "tau_bucket1": 2.953218
+    },
+    "R5": {
+      "argmax_bucket0": "target-matching/woff/skip0",
+      "argmax_bucket1": "target-matching/woff/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": 16.2725,
+      "rank_spearman": 0.899444,
+      "tau_bucket0": 5.142839,
+      "tau_bucket1": 5.979707
+    },
+    "R5cot": {
+      "argmax_bucket0": "target-matching/woff/skip0",
+      "argmax_bucket1": "target-matching/woff/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": -2.1352,
+      "rank_spearman": 0.940378,
+      "tau_bucket0": 6.981563,
+      "tau_bucket1": 6.83249
+    },
+    "R6": {
+      "argmax_bucket0": "target-matching/w1024/skip0",
+      "argmax_bucket1": "target-matching/w1024/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": 11.3903,
+      "rank_spearman": 0.867513,
+      "tau_bucket0": 7.549403,
+      "tau_bucket1": 8.409306
+    },
+    "R8": {
+      "argmax_bucket0": "target-matching/w1024/skip0",
+      "argmax_bucket1": "target-matching/w1024/skip0",
+      "argmax_moves": false,
+      "cells": 30,
+      "delta_pct": -1.9626,
+      "rank_spearman": 0.953017,
+      "tau_bucket0": 6.755414,
+      "tau_bucket1": 6.622831
+    }
+  },
+  "schema_version": 1,
+  "u_edges": [
+    256,
+    1024,
+    3072
+  ],
+  "verdict": "acceptance moves with position but the RANKING does not: no within-request switching opportunity is visible below u=640"
+}

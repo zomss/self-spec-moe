@@ -120,3 +120,14 @@ Registered prediction, to be committed before that campaign runs: **at KV
 working-set sizes where the quantized draft cannot be resident, per-regime
 selection beats the best uniformly-feasible static by >= 1.20x**, against
 this record's modelled 1.305x.
+
+**That campaign is `research/99_kv_pressure/`**, and its preflight has
+already corrected the design. Measuring vLLM's own KV accounting on the
+campaign lane: 400,400 tokens available without the draft, 356,304 with it,
+so the draft costs **44,096 KV tokens (~6.5 GB)** — within 1% of the
+closed-form estimate. But the crossover at batch 8 sits at ~44.5k tokens per
+sequence, **beyond Qwen3-8B's 40960 context limit**: the obvious design of
+holding batch 8 and lengthening the output can never put the draft under
+pressure, and would have returned a null that looked like a refutation. The
+campaign runs at batch >= 16, where `16 x (14336 + 8192) = 360,448` tokens
+straddles the line exactly — feasible without the draft, not with it.

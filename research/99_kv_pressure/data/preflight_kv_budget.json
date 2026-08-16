@@ -1,0 +1,64 @@
+{
+  "crossover": {
+    "kv_tokens_with_draft": 356304,
+    "kv_tokens_without_draft": 400400,
+    "per_batch": {
+      "16": {
+        "seq_len_with_draft": 22269,
+        "seq_len_without_draft": 25025
+      },
+      "32": {
+        "seq_len_with_draft": 11134,
+        "seq_len_without_draft": 12512
+      },
+      "64": {
+        "seq_len_with_draft": 5567,
+        "seq_len_without_draft": 6256
+      },
+      "8": {
+        "seq_len_with_draft": 44538,
+        "seq_len_without_draft": 50050
+      }
+    }
+  },
+  "draft_cost_kv_tokens": 44096,
+  "host": "h104.prometheus.msr",
+  "lane": {
+    "cache_root": "/tmp/v-sukmincho-w99/vllm-cache/lane-a",
+    "cpu_affinity": "96-111",
+    "physical_gpu_index": 7,
+    "physical_gpu_uuid": "GPU-7a8308d6-2a78-2929-99f2-11d2f11a45f3"
+  },
+  "probes": [
+    {
+      "block_size": 16,
+      "kv_tokens": 400400,
+      "label": "no_draft",
+      "num_gpu_blocks": 25025,
+      "ok": true,
+      "spec": {
+        "draft": null,
+        "gpu_memory_utilization": 0.9,
+        "max_model_len": 24576,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 32
+      }
+    },
+    {
+      "block_size": 16,
+      "kv_tokens": 356304,
+      "label": "w4a16_draft",
+      "num_gpu_blocks": 22269,
+      "ok": true,
+      "spec": {
+        "draft": "/h/v-sukmincho/ckpts/Qwen3-8B-W4A16-INT4",
+        "gpu_memory_utilization": 0.9,
+        "max_model_len": 24576,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 32
+      }
+    }
+  ],
+  "record_type": "w99_preflight_kv_budget",
+  "schema_version": 1
+}
