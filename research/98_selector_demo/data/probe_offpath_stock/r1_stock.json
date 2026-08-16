@@ -1,0 +1,34 @@
+{
+  "arm": "stock",
+  "cell": null,
+  "observations": {
+    "R1": {
+      "batch": 1,
+      "decode_tokens_per_s": 141.8616,
+      "implied_prefill_s": 0.001798,
+      "per_decode_step_s": 0.007049126,
+      "seconds_hi": 4.062094,
+      "seconds_lo": 0.452942
+    },
+    "R6": {
+      "batch": 32,
+      "decode_tokens_per_s": 3867.286,
+      "implied_prefill_s": 0.01963,
+      "per_decode_step_s": 0.008274537,
+      "seconds_hi": 4.785763,
+      "seconds_lo": 0.5492
+    },
+    "R8": {
+      "batch": 16,
+      "decode_tokens_per_s": 2068.714,
+      "implied_prefill_s": 0.007887,
+      "per_decode_step_s": 0.007734274,
+      "seconds_hi": 4.462829,
+      "seconds_lo": 0.502881
+    }
+  },
+  "record_type": "w98_offpath_vs_stock",
+  "schema_version": 1,
+  "tokens_hi": 576,
+  "tokens_lo": 64
+}

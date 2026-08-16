@@ -1,0 +1,38 @@
+{
+  "arm": "koff_off",
+  "cell": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "observations": {
+    "R1": {
+      "batch": 1,
+      "decode_tokens_per_s": 136.4855,
+      "implied_prefill_s": 0.002038,
+      "per_decode_step_s": 0.007326783,
+      "seconds_hi": 4.222265,
+      "seconds_lo": 0.470952
+    },
+    "R6": {
+      "batch": 32,
+      "decode_tokens_per_s": 3702.8518,
+      "implied_prefill_s": 0.017866,
+      "per_decode_step_s": 0.008641988,
+      "seconds_hi": 4.995651,
+      "seconds_lo": 0.570954
+    },
+    "R8": {
+      "batch": 16,
+      "decode_tokens_per_s": 1990.0623,
+      "implied_prefill_s": 0.00739,
+      "per_decode_step_s": 0.008039949,
+      "seconds_hi": 4.6384,
+      "seconds_lo": 0.521946
+    }
+  },
+  "record_type": "w98_offpath_vs_stock",
+  "schema_version": 1,
+  "tokens_hi": 576,
+  "tokens_lo": 64
+}
