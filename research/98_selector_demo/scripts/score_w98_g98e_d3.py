@@ -64,10 +64,28 @@ def aggregate(
     cell_for_regime: Mapping[str, str],
     weights: Mapping[str, float],
 ) -> float:
-    """Weighted decode rate of a per-regime assignment."""
-    return sum(
-        weights[regime] * grid[cell_for_regime[regime]][regime] for regime in weights
-    )
+    """Aggregate decode throughput of a per-regime assignment.
+
+    TIME-WEIGHTED, not an arithmetic mean of rates. To emit a token share
+    `v_R` from each regime the run spends `v_R / rate_R` of its time there,
+    so the throughput of the mix is `1 / sum(v_R / rate_R)`.
+
+    Averaging rates arithmetically would be a straightforward error here, not
+    a stylistic one: measured OFF rates span 125 tok/s at R1 (batch 1) to
+    3448 at R6 (batch 32), so an arithmetic mean is dominated by the
+    high-batch regimes and corresponds to no workload anyone runs. At equal
+    weight the two differ by ~7x, and the D3 verdict would follow whichever
+    was chosen.
+    """
+    seconds = 0.0
+    for regime, share in weights.items():
+        if share <= 0:
+            continue
+        rate = grid[cell_for_regime[regime]][regime]
+        if rate <= 0:
+            raise ValueError(f"non-positive rate for {regime}")
+        seconds += share / rate
+    return 0.0 if seconds <= 0 else 1.0 / seconds
 
 
 def omniscient_choice(
