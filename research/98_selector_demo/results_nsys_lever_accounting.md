@@ -86,6 +86,27 @@ work removed.
 | skip8 | 0.7778 | 0.7953 | 0.7809 | **+0.0175** | -0.0144 |
 | w1024 | 1.0000 | 0.9998 | 0.9999 | -0.0002 | +0.0001 |
 | w128 | 0.9217 | 1.0069 | 1.0521 | +0.0852 | +0.0452 |
+| composed (`w4a16/w512/skip4`) | 0.3317 | 0.5332 | 0.5887 | +0.2015 | +0.0556 |
+
+### cost composes multiplicatively, to 0.2%
+
+The composed cell is the check that the parts add up, and they do:
+
+| | predicted product of singles | measured | error |
+| --- | --- | --- | --- |
+| **kernel time** | 0.5945 x 0.8987 x 0.9998 = **0.5342** | **0.5332** | **-0.18%** |
+| model time | 0.6383 x 0.8905 x 0.9999 = 0.5683 | 0.5887 | +3.58% |
+
+**GPU kernel time under composition is the product of the singles to within
+0.2%.** That is the cost half of the phase's epistemic split, confirmed at
+kernel granularity rather than inferred from a fit -- and it stands in exact
+contrast to acceptance, where D2(a) measured composition to be *constructive*
+(interaction ratio above 1 for every lever set, 1.670 at R4) and D2(b) found
+the product's ranking inverting at k=16.
+
+The model-time residual, +3.6%, is the fixed per-forward cost that no lever
+scales: multiply three levers together and the orchestration each one failed
+to shrink is still there once.
 
 ### skip is clean; its ceiling is arithmetic
 
@@ -131,11 +152,19 @@ context.
 ## The floor no lever touches
 
 Orchestration (`step0_*`, `step_*`, `chain_setup`, `cpu_*`) is ~3.2 ms/chain
-regardless of lever: base 3.193, quant 3.252, skip4 3.241, w1024 3.182. As a
-share it therefore RISES as levers work -- **11.5% of the chain at base,
-17.0% under quant** -- so the better the lever, the more this dominates. At
-~0.8 ms per draft forward it is the second-largest target after the Marlin
-gap, and unlike the levers it is pure overhead: it buys no acceptance.
+regardless of lever, and its SHARE therefore rises as levers work:
+
+| combo | chain ms | orchestration ms | share |
+| --- | --- | --- | --- |
+| base | 27.750 | 3.193 | 11.5% |
+| skip8 | 22.292 | 3.234 | 14.5% |
+| quant | 19.150 | 3.252 | 17.0% |
+| **composed** | 17.983 | 3.306 | **18.4%** |
+
+The better the lever set, the more this dominates -- nearly a fifth of the
+composed chain. At ~0.8 ms per draft forward it is the second-largest target
+after the Marlin gap, and unlike the levers it is pure overhead: it buys no
+acceptance. It is also the whole of the +3.6% composition residual above.
 
 ## What nearly went wrong
 

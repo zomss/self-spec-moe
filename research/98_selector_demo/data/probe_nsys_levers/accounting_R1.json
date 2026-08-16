@@ -15,6 +15,21 @@
       "unattributed_ms": -0.5805,
       "window_rewrite_ms": 0.0
     },
+    "composed": {
+      "armed": true,
+      "chain_ms": 17.9827,
+      "kernel_classes_ms": {
+        "attention": 123.7281,
+        "elementwise": 16.0627,
+        "gemm": 655.2877,
+        "other": 24.5112
+      },
+      "model_ms": 14.7994,
+      "model_share": 0.823,
+      "orchestration_ms": 3.3062,
+      "unattributed_ms": -0.1229,
+      "window_rewrite_ms": 0.0
+    },
     "off": {
       "armed": false,
       "chain_ms": null
@@ -103,6 +118,13 @@
       "other": 0.504,
       "total": 26.4304
     },
+    "composed": {
+      "attention": 2.5835,
+      "elementwise": 0.1466,
+      "gemm": 10.9105,
+      "other": 0.4518,
+      "total": 14.0924
+    },
     "quant": {
       "attention": 2.9749,
       "elementwise": 0.1448,
@@ -140,6 +162,25 @@
     }
   },
   "levers": {
+    "composed": {
+      "bound_scale": 0.3317,
+      "draft_kernel_ms": {
+        "attention": 2.5835,
+        "elementwise": 0.1466,
+        "gemm": 10.9105,
+        "other": 0.4518,
+        "total": 14.0924
+      },
+      "expectation_basis": [
+        "skip 4/36 layers -> all classes x0.8889",
+        "window 512+16 of ctx~512 -> attention x1.0000 (nothing to trim)",
+        "w4a16 weights -> gemm x0.25 (optimistic bound)"
+      ],
+      "fixed_gap": 0.0556,
+      "kernel_gap": 0.2015,
+      "kernel_scale": 0.5332,
+      "model_scale": 0.5887
+    },
     "quant": {
       "bound_scale": 0.3731,
       "draft_kernel_ms": {
