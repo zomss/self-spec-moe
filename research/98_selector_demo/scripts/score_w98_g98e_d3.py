@@ -115,11 +115,30 @@ def selector_choice(
     out = {}
     for regime in regimes:
         candidates = [c for c in grid if regime in predicted.get(c, {})]
+        # No silent fallback. Falling back to the measured argmax here would
+        # hand the selector the omniscient answer and report a perfect score
+        # -- the exact artifact this comparison exists to avoid -- so a
+        # prediction map that does not cover a regime is an error, loudly.
         if not candidates:
-            out[regime] = max(grid, key=lambda cell: grid[cell][regime])
-            continue
+            raise ValueError(
+                f"prediction map covers no cell for regime {regime!r}; "
+                "refusing to substitute the measured optimum"
+            )
         out[regime] = max(candidates, key=lambda cell: predicted[cell][regime])
     return out
+
+
+def load_predictions(path: Path) -> dict[str, dict[str, float]]:
+    """Read the committed barrier and return its cell -> regime -> rate map.
+
+    The file is a record, not a bare map; reading it whole silently produces
+    empty per-cell lookups and therefore a vacuous 100% score.
+    """
+    record = json.loads(Path(path).read_text())
+    inner = record.get("predicted_decode_tokens_per_s")
+    if not isinstance(inner, dict) or not inner:
+        raise ValueError(f"{path} carries no predicted_decode_tokens_per_s map")
+    return inner
 
 
 def score_arm(
@@ -215,7 +234,7 @@ def main() -> int:
     grid = load_grid(args.grid_dir)
     if not grid:
         raise SystemExit(f"no grid cells under {args.grid_dir}")
-    predicted = json.loads(args.predicted.read_text()) if args.predicted else None
+    predicted = load_predictions(args.predicted) if args.predicted else None
 
     arms: dict[str, Any] = {}
     for arm, by_cell in sorted(grid.items()):
@@ -234,7 +253,9 @@ def main() -> int:
         "mix": "equal weight over the six regimes (registered 2026-08-15)",
         "omniscient_target": OMNISCIENT_TARGET,
         "lcb_margin": LCB_MARGIN,
-        "selector_pick_source": "predicted map" if predicted else "MEASURED (vacuous)",
+        "selector_pick_source": (
+            "committed prediction barrier" if predicted else "MEASURED (vacuous)"
+        ),
         "arms": arms,
     }
     text = json.dumps(record, indent=2, sort_keys=True) + "\n"
