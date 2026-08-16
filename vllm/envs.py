@@ -261,6 +261,7 @@ if TYPE_CHECKING:
     VLLM_SELF_SPEC_DRAFT_KV_WINDOW: int = 0
     VLLM_SELF_SPEC_DRAFT_KV_DTYPE: str = ""
     VLLM_SELF_SPEC_DRAFT_KV_SINKS: int = 16
+    VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH: bool = False
     VLLM_SELF_SPEC_ACCEPT_OFF_THRESHOLD: float = 0.0
     VLLM_SELF_SPEC_ACCEPT_PROBE_INTERVAL: int = 64
     VLLM_SELF_SPEC_ACCEPT_PROBE_BURST: int = 2
@@ -2019,6 +2020,18 @@ environment_variables: dict[str, Callable[[], Any]] = {
     "VLLM_SELF_SPEC_DRAFT_KV_SINKS": lambda: int(
         os.getenv("VLLM_SELF_SPEC_DRAFT_KV_SINKS", "16")
     ),
+    # Skip the draft KV-window page rewrite when sinks + window already cover
+    # the longest sequence in the batch: every row's `dropped` is zero, the
+    # rewrite is an identity gather, and the compacted view equals the input
+    # metadata. Detected from `max_seq_len` (a Python int), so the check never
+    # syncs. Measured on Qwen3-8B: with nothing to trim the window path still
+    # costs ~1.5-2% of draft-chain time at short context
+    # (research/98_selector_demo/results_lever_mechanics.md). Default off --
+    # it changes which tensor the attention metadata points at, so it is
+    # opt-in until A/B'd for bit-identical acceptance on the target box.
+    "VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH": lambda: bool(
+        int(os.getenv("VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH", "0"))
+    ),
     # Phase 66 shared-KV self-draft: the draft_model proposer's attention
     # layers BIND to the target layers' KV cache tensors instead of
     # registering their own (draft KV rode the same block tables already;
@@ -2634,6 +2647,11 @@ def compile_factors() -> dict[str, object]:
         # Output artifact path; cannot affect compiled code. Hashing it keys
         # the cache on the trace filename, so per-run trace paths recompile.
         "VLLM_SELF_SPEC_KOFF_TRACE",
+        # Python-side attention-metadata construction only; the compiled
+        # graphs are identical either way. Hashing it would make the A/B arms
+        # miss each other's cache and pay a cold compile, which is exactly the
+        # confound this flag exists to measure around.
+        "VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH",
         "VLLM_RPC_BASE_PATH",
         "VLLM_USE_MODELSCOPE",
         "VLLM_RINGBUFFER_WARNING_INTERVAL",

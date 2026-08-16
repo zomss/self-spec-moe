@@ -71,6 +71,20 @@ from vllm.v1.worker.utils import AttentionGroup
 
 logger = init_logger(__name__)
 
+# Phase 98: draft KV-window fast-path accounting, module level so an A/B probe
+# can tell "the fast path changed nothing" from "the fast path never fired".
+# See VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH and _apply_draft_kv_window.
+_WINDOW_FASTPATH_STATS: dict[str, int] = {"calls": 0, "hits": 0}
+
+
+def window_fastpath_stats() -> dict[str, int]:
+    """Snapshot of the draft KV-window fast-path counters."""
+    return dict(_WINDOW_FASTPATH_STATS)
+
+
+def reset_window_fastpath_stats() -> None:
+    _WINDOW_FASTPATH_STATS.update(calls=0, hits=0)
+
 
 def _observe_chain_runtime_mode(mode: str) -> None:
     """Report the chain's dispatched cudagraph mode to the P4 recorder.
@@ -387,6 +401,9 @@ class SpecDecodeBaseProposer:
         self._kv_window_warned = False
         self._kv_window_debug = bool(os.environ.get("W7_KV_WINDOW_DEBUG"))
         self._kv_window_calls = 0
+        # Phase 98: skip the page rewrite when it provably does nothing. See
+        # _apply_draft_kv_window and envs.py. Opt-in until A/B'd.
+        self._window_fastpath = envs.VLLM_SELF_SPEC_DRAFT_WINDOW_FASTPATH
         # Phase 69: window-scratchpad FULL-CG draft chain attention. Each chain
         # step gathers the sinks+window KV into a FIXED-shape dense scratchpad
         # and runs a masked SDPA-style attention (CUDA-graph-capturable) instead
@@ -3098,6 +3115,22 @@ class SpecDecodeBaseProposer:
         block_size = self.block_size
         n_sink = -(-self._kv_window_sinks // block_size)
         n_last = -(-(self._kv_window + tokens_drafted) // block_size)
+        # Fast path: when sinks + window already cover the LONGEST sequence,
+        # every row's `dropped` is zero, the gather below is the identity, and
+        # the returned view equals `cad` field for field -- which is also
+        # exactly what the window-disabled path passes down, so this returns a
+        # shape the rest of the stack already handles. `max_seq_len` is a
+        # Python int, so the test costs nothing and never syncs. The rewrite is
+        # otherwise ~14 kernel launches plus a dataclass replace PER DRAFT
+        # STEP, which at short context buys nothing: measured 1.5-2% of
+        # draft-chain time with no KV to trim.
+        if self._window_fastpath:
+            _WINDOW_FASTPATH_STATS["calls"] += 1
+            if cad.max_seq_len <= (n_sink + n_last) * block_size:
+                # Counted so an A/B that shows no change can be told apart
+                # from one where the fast path never fired.
+                _WINDOW_FASTPATH_STATS["hits"] += 1
+                return cad
         src_bt = cad.block_table_tensor
         n_cols = src_bt.shape[1]
         # Phase 93 IMA fix: the buffers are read by CAPTURED graphs through
