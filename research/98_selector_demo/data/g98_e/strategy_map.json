@@ -1,0 +1,240 @@
+{
+  "arms": {
+    "corrected": {
+      "global_static": "w4a16-quantized/w1024/skip4",
+      "per_regime": {
+        "R1": {
+          "batch": 1,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/w1024/skip8",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.004681
+        },
+        "R4": {
+          "batch": 8,
+          "input_context": "8k",
+          "own_optimum": "off",
+          "own_optimum_is_quantized": false,
+          "vs_best_quantized": 1.281701,
+          "vs_global_static": 1.392152
+        },
+        "R5": {
+          "batch": 8,
+          "input_context": "14k",
+          "own_optimum": "w4a16-quantized/w1024/skip0",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.016641
+        },
+        "R5cot": {
+          "batch": 8,
+          "input_context": "14k",
+          "own_optimum": "w4a16-quantized/w512/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.005213
+        },
+        "R6": {
+          "batch": 32,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/w256/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.034659
+        },
+        "R8": {
+          "batch": 16,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/w512/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.015698
+        }
+      },
+      "transfer": {
+        "matrix": {
+          "R1": {
+            "R1": 1.0,
+            "R4": 0.685714,
+            "R5": 0.836138,
+            "R5cot": 0.920039,
+            "R6": 0.907104,
+            "R8": 0.928959
+          },
+          "R4": {
+            "R1": 0.701313,
+            "R4": 1.0,
+            "R5": 0.563703,
+            "R5cot": 0.504903,
+            "R6": 0.753676,
+            "R8": 0.737001
+          },
+          "R5": {
+            "R1": 0.907527,
+            "R4": 0.705768,
+            "R5": 1.0,
+            "R5cot": 0.952991,
+            "R6": 0.944176,
+            "R8": 0.949776
+          },
+          "R5cot": {
+            "R1": 0.952728,
+            "R4": 0.720465,
+            "R5": 0.991417,
+            "R5cot": 1.0,
+            "R6": 0.969605,
+            "R8": 1.0
+          },
+          "R6": {
+            "R1": 0.947529,
+            "R4": 0.716828,
+            "R5": 0.947829,
+            "R5cot": 0.951635,
+            "R6": 1.0,
+            "R8": 0.923985
+          },
+          "R8": {
+            "R1": 0.952728,
+            "R4": 0.720465,
+            "R5": 0.991417,
+            "R5cot": 1.0,
+            "R6": 0.969605,
+            "R8": 1.0
+          }
+        },
+        "regimes_whose_optimum_is_off": [
+          "R4"
+        ],
+        "worst_off_diagonal": 0.504903,
+        "worst_off_diagonal_excluding_off_regimes": 0.836138,
+        "worst_off_diagonal_pair": [
+          "R4",
+          "R5cot"
+        ],
+        "worst_pair_excluding_off_regimes": [
+          "R1",
+          "R5"
+        ]
+      }
+    },
+    "legacy": {
+      "global_static": "w4a16-quantized/w512/skip4",
+      "per_regime": {
+        "R1": {
+          "batch": 1,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/woff/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.002875
+        },
+        "R4": {
+          "batch": 8,
+          "input_context": "8k",
+          "own_optimum": "target-matching/woff/skip0",
+          "own_optimum_is_quantized": false,
+          "vs_best_quantized": 1.218121,
+          "vs_global_static": 1.485116
+        },
+        "R5": {
+          "batch": 8,
+          "input_context": "14k",
+          "own_optimum": "w4a16-quantized/w512/skip0",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.016368
+        },
+        "R5cot": {
+          "batch": 8,
+          "input_context": "14k",
+          "own_optimum": "w4a16-quantized/w512/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.0
+        },
+        "R6": {
+          "batch": 32,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/woff/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.0068
+        },
+        "R8": {
+          "batch": 16,
+          "input_context": "short",
+          "own_optimum": "w4a16-quantized/w512/skip4",
+          "own_optimum_is_quantized": true,
+          "vs_best_quantized": 1.0,
+          "vs_global_static": 1.0
+        }
+      },
+      "transfer": {
+        "matrix": {
+          "R1": {
+            "R1": 1.0,
+            "R4": 0.801824,
+            "R5": 0.650965,
+            "R5cot": 0.651344,
+            "R6": 1.0,
+            "R8": 0.992832
+          },
+          "R4": {
+            "R1": 0.7938,
+            "R4": 1.0,
+            "R5": 0.615619,
+            "R5cot": 0.55114,
+            "R6": 0.862377,
+            "R8": 0.847258
+          },
+          "R5": {
+            "R1": 0.954752,
+            "R4": 0.67748,
+            "R5": 1.0,
+            "R5cot": 0.96004,
+            "R6": 0.954681,
+            "R8": 0.941345
+          },
+          "R5cot": {
+            "R1": 0.997133,
+            "R4": 0.673348,
+            "R5": 0.983895,
+            "R5cot": 1.0,
+            "R6": 0.993246,
+            "R8": 1.0
+          },
+          "R6": {
+            "R1": 1.0,
+            "R4": 0.801824,
+            "R5": 0.650965,
+            "R5cot": 0.651344,
+            "R6": 1.0,
+            "R8": 0.992832
+          },
+          "R8": {
+            "R1": 0.997133,
+            "R4": 0.673348,
+            "R5": 0.983895,
+            "R5cot": 1.0,
+            "R6": 0.993246,
+            "R8": 1.0
+          }
+        },
+        "regimes_whose_optimum_is_off": [],
+        "worst_off_diagonal": 0.55114,
+        "worst_off_diagonal_excluding_off_regimes": 0.55114,
+        "worst_off_diagonal_pair": [
+          "R4",
+          "R5cot"
+        ],
+        "worst_pair_excluding_off_regimes": [
+          "R4",
+          "R5cot"
+        ]
+      }
+    }
+  },
+  "record_type": "w98_strategy_map",
+  "schema_version": 1
+}
