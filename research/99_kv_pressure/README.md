@@ -67,17 +67,21 @@ its outputs, never puts the draft under pressure, and would have produced a
 null result that looked like a refutation of the hypothesis rather than a
 mis-designed campaign. The phase runs at **batch >= 16**.
 
-### The straddle cell
+### The straddle cell runs — measured, not assumed
 
 ```
 batch 16 x (14336 input + 8192 output) = 360,448 KV tokens
-    exceeds the with-draft capacity     (356,304)
-    fits    the no-draft   capacity     (400,400)
+    vs the with-draft capacity          357,120  -> 100.9%, over the line
+    vs the no-draft   capacity          400,400  ->  90.0%, fits
 ```
 
-This is the design point: a cell that is feasible for `target-matching`
-levers and infeasible for the quantized draft, on the same box at the same
-memory setting.
+Run with the draft resident: **16/16 sequences completed, 131,072 tokens in
+188.8 s (694 tok/s wall), `equal_work_ok` true** — every sequence emitted
+exactly 8192 tokens under `ignore_eos`. So the cell degrades rather than
+thrashing, and the campaign's central risk is retired.
+
+(That run drove plain `speculative_config` at K=4, not the phase's K/OFF
+policy, so 694 tok/s is a feasibility check and not a scored rate.)
 
 ### The effect is lost concurrency, not a crash
 
@@ -87,6 +91,19 @@ admits fewer sequences concurrently and queues the rest. So the draft's
 therefore of the achievable batch, spent on draft weights instead of
 requests**. That is a more realistic and more damaging failure than a crash,
 and it is what the campaign measures.
+
+### What the measurement then corrected: the window is narrow
+
+The feasible-without / infeasible-with band is only **12.1% wide**
+(357,120 -> 400,400). The first draft of this matrix put its two "draft
+infeasible" cells at 360,448 — **0.9% past the line**, a crossing so thin it
+would have measured scheduler noise rather than lever economics. Cells have
+to sit near the TOP of the window to apply real pressure while still fitting
+without the draft.
+
+Two independent boots reported 356,304 and 357,120 KV tokens (0.23% apart),
+so the campaign takes the **lower** figure as the line and re-reads capacity
+per boot rather than assuming it.
 
 ## Objective
 
@@ -112,14 +129,27 @@ line — and determine where that line falls.
 Sweep the KV working set across the measured crossover by varying batch and
 total sequence length, at fixed content:
 
-| cell | batch | input | output | total KV tokens | side of the line |
-| --- | --- | --- | --- | --- | --- |
-| P1 | 16 | 14336 | 2048 | 261,888 | both feasible |
-| P2 | 16 | 14336 | 4096 | 294,912 | both feasible |
-| P3 | 16 | 14336 | 6144 | 327,680 | both feasible, near |
-| **P4** | **16** | **14336** | **8192** | **360,448** | **draft infeasible** |
-| P5 | 32 | 8192 | 2048 | 327,680 | both feasible, near |
-| **P6** | **32** | **8192** | **3072** | **360,448** | **draft infeasible** |
+A **dose-response ladder** across the line, stated as a fraction of the
+with-draft capacity (357,120) so the pressure is explicit:
+
+| cell | batch | input | output | total KV | % of draft cap | % of free cap | side |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| P1 | 16 | 14336 | 2048 | 262,144 | 73.4% | 65.5% | both feasible |
+| P2 | 16 | 14336 | 4096 | 294,912 | 82.6% | 73.7% | both feasible |
+| P3 | 16 | 14336 | 6144 | 327,680 | 91.8% | 81.8% | both, near |
+| P4 | 16 | 14336 | 8192 | 360,448 | **100.9%** | 90.0% | just over — the marginal control |
+| **P5** | **16** | **14336** | **10240** | **393,216** | **110.1%** | **98.2%** | **draft infeasible** |
+| **P6** | **32** | **8192** | **4096** | **393,216** | **110.1%** | **98.2%** | **draft infeasible** |
+
+P4 is retained deliberately as the **marginal control**: if a 0.9% crossing
+produces a 0.9%-scale effect and a 10% crossing produces a large one, the
+mechanism is KV pressure. If P4 already shows a large effect, something other
+than capacity is driving it and the campaign has found a confound.
+
+P5 and P6 carry **identical total KV at different (batch, length) shapes** —
+P5 at the `max_model_len` ceiling, P6 with sequence length less than half of
+it. Agreement between them attributes the effect to pressure; disagreement
+attributes it to batch, which is a different claim.
 
 Each cell runs the Phase 98 lattice restricted to what fits: all 30 composed
 configurations plus OFF where the draft is affordable, and the 15
@@ -149,12 +179,16 @@ express.
 Registered before the first scored boot, with a commitment barrier and
 digest per the Phase 98 protocol:
 
-* **W99-1 (primary).** On a mix spanning P2 and P4, per-regime selection
+* **W99-1 (primary).** On a mix spanning P2 and P5, per-regime selection
   beats the best **uniformly-feasible** static by **>= 1.20x** in decode
   currency. Phase 98's modelled estimate was 1.305x.
 * **W99-2.** The measured feasibility crossover falls within **+/-10%** of
   356,304 KV tokens, i.e. the budget model transfers from the preflight to
   the campaign.
+* **W99-4 (dose response).** The selector's advantage over the best
+  uniformly-feasible static is **monotone non-decreasing** across
+  P1 -> P2 -> P3 -> P4 -> P5, and P5 and P6 agree within **5%**. This is the
+  control that separates KV pressure from batch and from scheduler noise.
 * **W99-3 (secondary, exploratory).** The per-regime argmax changes at least
   once **within** a request at 14336 input / 8192 output, scored per
   position window.
@@ -182,11 +216,16 @@ arms.
 
 ## Risks
 
-* **The straddle cell may thrash rather than degrade.** If vLLM preempts
-  aggressively at 360,448 tokens the measured rate may reflect scheduler
-  behaviour more than lever economics. The preflight's largest-cell run is
-  the check; if it thrashes, the cell moves down to a smaller excess.
+* ~~The straddle cell may thrash rather than degrade.~~ **RETIRED by the
+  preflight**: 16/16 sequences completed at exactly 8192 tokens each, 694
+  tok/s wall, no preemption pathology.
+* **The window is narrow (12.1%), so cell placement is delicate.** P5/P6 sit
+  at 98.2% of the no-draft capacity — if the campaign's actual boots report
+  slightly less capacity than the preflight, those cells stop fitting on the
+  feasible side too and measure nothing. Capacity is therefore re-read per
+  boot and a cell that does not fit is recorded as such rather than scored.
 * **Raising `max_model_len` to 24576 changes the run contract**, so Phase
   98's cost fits do not transfer directly and the phase carries its own
-  anchors.
+  anchors. P5 sits exactly at that ceiling with no headroom; P6 is its
+  same-pressure alternative at less than half the sequence length.
 * **One box, one model** — unchanged from Phase 98 and not addressed here.

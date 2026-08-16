@@ -29,6 +29,27 @@
     "physical_gpu_index": 7,
     "physical_gpu_uuid": "GPU-7a8308d6-2a78-2929-99f2-11d2f11a45f3"
   },
+  "largest_cell": {
+    "block_size": 16,
+    "equal_work_ok": true,
+    "generated_sequences": 16,
+    "generated_tokens": 131072,
+    "kv_tokens": 357120,
+    "label": "largest_cell",
+    "num_gpu_blocks": 22320,
+    "ok": true,
+    "spec": {
+      "draft": "/h/v-sukmincho/ckpts/Qwen3-8B-W4A16-INT4",
+      "generate_tokens": 8192,
+      "gpu_memory_utilization": 0.9,
+      "max_model_len": 24576,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 16,
+      "prompt_tokens": 14336
+    },
+    "tokens_per_s_wall": 694.21,
+    "wall_seconds": 188.807
+  },
   "probes": [
     {
       "block_size": 16,

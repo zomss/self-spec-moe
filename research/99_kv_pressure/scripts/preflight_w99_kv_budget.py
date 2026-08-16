@@ -97,17 +97,29 @@ out = {
 }
 
 if spec.get("generate_tokens"):
+    import time
     from vllm import SamplingParams
-    prompt_ids = [[1000 + (i % 5000) for i in range(spec["prompt_tokens"])]
-                  for _ in range(spec["max_num_seqs"])]
+    prompts = [
+        {"prompt_token_ids": [1000 + ((i + s) % 5000)
+                              for i in range(spec["prompt_tokens"])]}
+        for s in range(spec["max_num_seqs"])
+    ]
+    started = time.perf_counter()
     result = llm.generate(
-        prompt_token_ids=prompt_ids,
-        sampling_params=SamplingParams(
+        prompts,
+        SamplingParams(
             temperature=0.0, max_tokens=spec["generate_tokens"], ignore_eos=True
         ),
     )
+    elapsed = time.perf_counter() - started
+    generated = sum(len(o.outputs[0].token_ids) for o in result)
     out["generated_sequences"] = len(result)
-    out["generated_tokens"] = sum(len(o.outputs[0].token_ids) for o in result)
+    out["generated_tokens"] = generated
+    out["wall_seconds"] = round(elapsed, 3)
+    out["tokens_per_s_wall"] = round(generated / elapsed, 2) if elapsed else None
+    out["equal_work_ok"] = all(
+        len(o.outputs[0].token_ids) == spec["generate_tokens"] for o in result
+    )
 
 print("PREFLIGHT_RESULT " + json.dumps(out))
 '''
@@ -169,6 +181,11 @@ def main() -> int:
         action="store_true",
         help="also generate on the largest candidate cell",
     )
+    parser.add_argument(
+        "--only-largest",
+        action="store_true",
+        help="re-run only the cell probe, merging into the recorded budget",
+    )
     args = parser.parse_args()
 
     target = resolve_target()
@@ -179,6 +196,30 @@ def main() -> int:
         "max_num_seqs": args.max_num_seqs,
         "gpu_memory_utilization": GPU_MEMORY_UTILIZATION,
     }
+
+    if args.only_largest:
+        # Re-run just the cell probe and merge into the recorded budget, so a
+        # fixed cell probe does not re-pay for two boots already scored.
+        record = json.loads(args.out.read_text())
+        cell = {
+            **base,
+            "draft": QUANT_CKPT,
+            "max_num_seqs": 16,
+            "prompt_tokens": 14336,
+            "generate_tokens": 8192,
+        }
+        print("[probe] largest candidate cell: batch 16, 14336 in, 8192 out ...",
+              flush=True)
+        result = probe(cell, args.timeout * 2)
+        result["label"] = "largest_cell"
+        result["spec"] = {k: v for k, v in cell.items() if k != "target"}
+        record["largest_cell"] = result
+        args.out.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+        print(json.dumps({k: v for k, v in result.items() if k != "tail"}, indent=1))
+        if result.get("tail"):
+            print(result["tail"])
+        print(f"\nwrote {args.out}")
+        return 0
 
     probes: list[dict[str, Any]] = []
     for label, draft in (("no_draft", None), ("w4a16_draft", QUANT_CKPT)):
