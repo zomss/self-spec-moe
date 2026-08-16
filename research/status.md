@@ -1,8 +1,84 @@
 # Self-MoE-Spec Research Status
 
-Date: 2026-06-25
+Date: 2026-08-15 (executive summary and current state); the phase table and
+all sections from "Phase Summary" downward are the historical rollup last
+revised 2026-06-25 and are NOT amended.
 
-## Executive Summary
+## Executive Summary (2026-08-15)
+
+**The project has pivoted three times. The name is now a historical
+artifact: the work is neither MoE-specific nor about communication.**
+
+The current thesis is **"No Universal Draft"** (Phase 79 onward): for
+**training-free, distribution-preserving self-speculative decoding**, the
+optimal draft lever is **keyed to the deployment** — architecture x scale x
+kernel realization x regime (batch x context x content) x hardware — and
+choosing wrong costs **30-60%**. Four lever classes are in scope (weight
+quantization, KV window, layer skip, KV-cache quantization); trained
+drafters, relaxed acceptance, and tree width are explicitly out.
+
+Four contributions, all CLOSED or near it (`paper/arxiv/STATUS_CONTRIBUTIONS.md`):
+
+* **C1 — there is no single lever.** Five distinct surfaces across
+  architectures. Dense reaches **1.91x** (b32/16k, W4+win512 K6 on the
+  floor-free chain, delivering ~100% of its registered roofline) and
+  **2.77x** at b16/32k. But **MLA loses under every lever — 0.56x at an
+  acceptance of 5.9/6**, a pure cost loss at near-perfect acceptance — and
+  MoE tops out at 1.15x, where the composition that wins on dense scores
+  0.63x. One global lever across a mixed fleet leaves **+39.1%** on the
+  table.
+* **C2 — search, as a measured theorem.** Acceptance importance **cannot be
+  scored, only measured**: five proxy classes were falsified, with angular
+  importance actually *inverted* (rho = -0.768). What survives is a bounded
+  measurement budget — cost O(#levers + #confirmations), ~21 boots, **~1.5%
+  of exhaustive**, 2-4 GPU-hours to onboard a new column — reaching regret
+  **0.46-1.61%** against an oracle.
+* **C3 — a switching system that fails closed.** It arms where measurement
+  says it pays and refuses where it cannot know, which is why MLA and MoE
+  come out gated rather than forced.
+* **C4 — demonstrated on both** ordinary serving (**1.80x** wall aggregate,
+  1.90x at b16 on reasoning shapes) and RL rollout.
+
+### What was retracted on the way here
+
+The previous summary described a **communication-bound MoE** thesis with a
+"validated ~1.2-1.3x single-node PCIe speedup". **That is retracted.** The
+number came from a *forced-PCIe emulation*; on real two-node fabric the same
+system measures **0.29-0.49x** — a large loss (Phases 52, 53, 61). The
+companion belief that "the bigger win lives inter-node" was **falsified**:
+cutting to one NIC per node changed the step by only 5-25% at 236B, because
+the decode all-to-all is latency- and overhead-bound, not
+wire-bandwidth-bound, on 400G-class NICs. **World A is closed as a method on
+real hardware of this class** (Phase 61), and `research/paper_outline.md`
+and `research/FINAL_REPORT.md` describe that superseded paper.
+
+The redirect came from re-reading the literature (Phase 58): the negative
+was regime-specific, and **long context** — KV-bound at any batch — was the
+untested win regime. That produced window-KV drafting (Phase 62: per-token
+acceptance **0.957 at W=512, a 30x KV read reduction**) and the lever-vs-regime
+contradiction (Phase 75) that became C1.
+
+**Numbers predating August 2026 should be read with care.** Phase 96 found
+that under natural EOS the speculative and autoregressive arms drain
+asymmetrically, contaminating any e2e ratio at batch > 1 on heavy-tailed
+regimes; re-measuring under equal work moved MoE from 8/33 wins to 5/33 (one
+cell 1.288 -> 0.954). Three further defects were fixed in the same phase — an
+autotune boot lottery worth 40% run-to-run, a decode-vs-wall currency
+mismatch, and a compile-cache key collision — and Phase 84 retracted a lever
+whose gate was circular.
+
+### Where the work is now
+
+**Phase 98** demonstrates the two-round selector end to end and has produced
+this phase's first two scored campaigns — see "Current state" immediately
+below. **Phase 97**'s composition runtime remains unresolved, and its B0
+value screen is still unscored. The live paper is `paper/` (`c1.md`,
+`c2.md`, `c3.md`, `arxiv/`); the open gaps are the hardware axis (measured
+on one box) and C3's draft status.
+
+---
+
+### Historical framing (superseded, retained for the record)
 
 **The project pivoted at Phase 18.** The original naive design --
 

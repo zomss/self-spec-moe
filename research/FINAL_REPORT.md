@@ -1,5 +1,13 @@
 # Self-MoE-Spec: Final Research Report
 
+> **SUPERSEDED (2026-08-15).** This report covers Phases 00-15 and describes
+> the communication-bound thesis, which was falsified on real two-node
+> hardware at Phase 61 (measured 0.29-0.49x, not a win). The project's
+> current thesis is "No Universal Draft" -- see the executive summary in
+> [`status.md`](status.md) and the live paper in `paper/`. Retained as a
+> record of the pre-Phase-58 investigation.
+
+
 Date: 2026-06-24
 Scope: Phases 00-15. Status log: [`status.md`](status.md).
 

@@ -1,5 +1,12 @@
 # Paper outline: Communication-Aware Speculative Decoding for MoE Serving
 
+> **SUPERSEDED (2026-08-15).** This outlines the World A / World B
+> communication-bound paper, which no longer exists: the thesis was
+> falsified at Phase 61 and the project redirected to long-context lever
+> selection at Phase 58. The live paper is `paper/` (`c1.md`, `c2.md`,
+> `c3.md`, `arxiv/DIRECTION.md`). See [`status.md`](status.md).
+
+
 Working title (pick one):
 - **"Speculative Decoding is Communication-Bound on Mixture-of-Experts: Comm-Free Drafts and Comm-Aware Trees"**
 - "Communication-Aware Speculative Decoding for MoE Expert-Parallel Serving"
