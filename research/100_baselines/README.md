@@ -143,6 +143,16 @@ they are C4 filler, which no baseline paper uses; Stage B is built on
 Each reproduced with ITS OWN selection rule and ITS OWN depth policy, not
 forced onto our lattice. A baseline bent to our harness is not a baseline.
 
+### Stage D — final evaluation grid (`final_eval_design.md`)
+
+The scoring protocol, decided 2026-08-16: length-quadrant cells
+LI (GovReport 16K) / LO (AIME24/25, natural long CoT) / LIO (BookSum) /
+SS control (GSM8K), **EOS respected** (no `ignore_eos` in scored numbers;
+losslessness at T=0 preserves equal work and adds a cross-arm
+output-identity gate), batch sweep {1,8,16} long / {1,8,32,64} short,
+clamped by measured KV feasibility (b32 infeasible on long cells). P1–P5
+remain the separate fidelity block under each baseline's own protocol.
+
 ## Decision criteria
 
 To be registered with a digest barrier before the first scored boot.
