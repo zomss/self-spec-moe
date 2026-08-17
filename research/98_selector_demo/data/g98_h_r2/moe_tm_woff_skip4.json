@@ -1,0 +1,27 @@
+{
+  "cell": "moe_tm_woff_skip4",
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 4,
+    "window": "off"
+  },
+  "observations": {
+    "R1": {
+      "armed_steps": 135,
+      "committed_tokens": 639,
+      "decode_seconds": 7.272347,
+      "decode_tokens_per_s": 87.867091,
+      "steps": 136
+    },
+    "R6": {
+      "armed_steps": 139,
+      "committed_tokens": 20448,
+      "decode_seconds": 8.678785,
+      "decode_tokens_per_s": 2356.090042,
+      "steps": 140
+    }
+  },
+  "record_type": "w98_moe_breadth_cell",
+  "schema_version": 1,
+  "target": "Qwen3-30B-A3B"
+}
