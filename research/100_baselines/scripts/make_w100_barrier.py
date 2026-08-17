@@ -17,6 +17,7 @@ PHASE = Path(__file__).resolve().parent.parent
 
 PINNED = [
     "w100_prereg.md",
+    "w100_prereg_amendment1.md",
     "final_eval_design.md",
     "README.md",
     "dataset_map.md",
@@ -42,8 +43,11 @@ def main() -> None:
         "\n".join(f"{k}  {v}" for k, v in sorted(files.items())).encode()
     ).hexdigest()[:16]
     barrier = {
-        "barrier_id": "w100-final-grid-barrier-v1",
-        "registered_date": "2026-08-16",
+        "barrier_id": "w100-final-grid-barrier-v2",
+        "supersedes": "w100-final-grid-barrier-v1 (digest c90a0b8200eddd98,"
+                      " commit 4157ee777); amendment 1 rescopes the identity"
+                      " gate and the LO metric, nothing else",
+        "registered_date": "2026-08-17",
         "digest": combined,
         "files": files,
         "rule": ("no scored boot before the commit carrying this file; "

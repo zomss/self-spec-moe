@@ -1,6 +1,6 @@
 {
- "barrier_id": "w100-final-grid-barrier-v1",
- "digest": "c90a0b8200eddd98",
+ "barrier_id": "w100-final-grid-barrier-v2",
+ "digest": "efac8380220c2373",
  "files": {
   "README.md": "2f5f8a47de1b40ecbbd34f1b677c8b45d63c62a92facfb469ebf221262a31b60",
   "baseline_survey.md": "374974174ca136ae7dda094979918a670025bdd38dad333161ebdcaebdec9e85",
@@ -14,9 +14,11 @@
   "scripts/generate_w100_prompt_manifest.py": "0b942c9eca227ad03499a57b5819d90e899fb27e5782cdfb78fb3bf5ba99d59c",
   "scripts/run_w100_pilot.py": "28232acd37549f6e140f1f08af6bcfb9e8ccb26340729507f3c83439802c2eba",
   "scripts/w100_eval_datasets.py": "9657d957b4265d5f2caf7b877175d9c23ba500a732083abbb59f578687b3639e",
-  "scripts/w100_protocol.py": "e3e5e2e5a7cf1435e3586bc5eca26ba37a1d9dd9c20d4c69e54f4e32ffd4247b",
-  "w100_prereg.md": "a9d968facea08e45994c51948089a9471ff7def84f6d6d7eb1995f6a3d1dc620"
+  "scripts/w100_protocol.py": "3fbdfdf5ddb4cb6245f3a814e7f1691bfea044d11a241d2312c7c596ad1438a7",
+  "w100_prereg.md": "a9d968facea08e45994c51948089a9471ff7def84f6d6d7eb1995f6a3d1dc620",
+  "w100_prereg_amendment1.md": "1cc2222f7b0e59734fbe4f8605a4a6a3fec714d55f055b4c3e17862e6b8a29a6"
  },
- "registered_date": "2026-08-16",
- "rule": "no scored boot before the commit carrying this file; changes to pinned artifacts require a superseding barrier"
+ "registered_date": "2026-08-17",
+ "rule": "no scored boot before the commit carrying this file; changes to pinned artifacts require a superseding barrier",
+ "supersedes": "w100-final-grid-barrier-v1 (digest c90a0b8200eddd98, commit 4157ee777); amendment 1 rescopes the identity gate and the LO metric, nothing else"
 }
