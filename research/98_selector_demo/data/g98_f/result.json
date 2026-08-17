@@ -1,0 +1,138 @@
+{
+  "arms": {
+    "corrected": {
+      "baseline_frac_of_omniscient": 0.9506340535282983,
+      "baseline_selector": 597.6873294472537,
+      "best_static": "w4a16-quantized/w1024/skip4",
+      "best_static_rate": 589.5743693021954,
+      "failclosed_frac_of_omniscient": 0.9957010212499808,
+      "failclosed_over_baseline": 1.047407272603391,
+      "failclosed_over_best_static": 1.0618203371813728,
+      "failclosed_over_off": 1.436006685154885,
+      "failclosed_selector": 626.0220556059523,
+      "omniscient": 628.7249307227366,
+      "per_regime": {
+        "R1": {
+          "baseline_pick": "w4a16-quantized/woff/skip4",
+          "baseline_rate": 178.200912,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip4",
+          "failclosed_rate": 178.200912,
+          "omniscient_rate": 178.613101
+        },
+        "R4": {
+          "baseline_pick": "w4a16-quantized/woff/skip0",
+          "baseline_rate": 522.327754,
+          "changed": true,
+          "failclosed_pick": "off",
+          "failclosed_rate": 684.865866,
+          "omniscient_rate": 684.865866
+        },
+        "R5": {
+          "baseline_pick": "w4a16-quantized/w512/skip4",
+          "baseline_rate": 1007.469658,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/w512/skip4",
+          "failclosed_rate": 1007.469658,
+          "omniscient_rate": 1016.191908
+        },
+        "R5cot": {
+          "baseline_pick": "w4a16-quantized/w512/skip4",
+          "baseline_rate": 1144.211261,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/w512/skip4",
+          "failclosed_rate": 1144.211261,
+          "omniscient_rate": 1144.211261
+        },
+        "R6": {
+          "baseline_pick": "w4a16-quantized/woff/skip8",
+          "baseline_rate": 4202.955837,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip8",
+          "failclosed_rate": 4202.955837,
+          "omniscient_rate": 4575.395467
+        },
+        "R8": {
+          "baseline_pick": "w4a16-quantized/woff/skip4",
+          "baseline_rate": 2450.58777,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip4",
+          "failclosed_rate": 2450.58777,
+          "omniscient_rate": 2452.785519
+        }
+      },
+      "static_off": 435.9464771840048
+    },
+    "legacy": {
+      "baseline_frac_of_omniscient": 0.947626549345272,
+      "baseline_selector": 568.2884196838291,
+      "best_static": "w4a16-quantized/w512/skip4",
+      "best_static_rate": 558.3301191617,
+      "failclosed_frac_of_omniscient": 0.9956403982443273,
+      "failclosed_over_baseline": 1.0506674796439892,
+      "failclosed_over_best_static": 1.0694070427663085,
+      "failclosed_over_off": 1.3771787592627798,
+      "failclosed_selector": 597.0821616200743,
+      "omniscient": 599.6965999701753,
+      "per_regime": {
+        "R1": {
+          "baseline_pick": "w4a16-quantized/woff/skip4",
+          "baseline_rate": 167.846618,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip4",
+          "failclosed_rate": 167.846618,
+          "omniscient_rate": 167.846618
+        },
+        "R4": {
+          "baseline_pick": "w4a16-quantized/woff/skip0",
+          "baseline_rate": 507.104987,
+          "changed": true,
+          "failclosed_pick": "off",
+          "failclosed_rate": 683.607644,
+          "omniscient_rate": 687.278945
+        },
+        "R5": {
+          "baseline_pick": "w4a16-quantized/w512/skip4",
+          "baseline_rate": 964.034858,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/w512/skip4",
+          "failclosed_rate": 964.034858,
+          "omniscient_rate": 979.814621
+        },
+        "R5cot": {
+          "baseline_pick": "w4a16-quantized/w512/skip4",
+          "baseline_rate": 1096.087885,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/w512/skip4",
+          "failclosed_rate": 1096.087885,
+          "omniscient_rate": 1096.087885
+        },
+        "R6": {
+          "baseline_pick": "w4a16-quantized/woff/skip8",
+          "baseline_rate": 4007.836819,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip8",
+          "failclosed_rate": 4007.836819,
+          "omniscient_rate": 4286.373629
+        },
+        "R8": {
+          "baseline_pick": "w4a16-quantized/woff/skip4",
+          "baseline_rate": 2330.639104,
+          "changed": false,
+          "failclosed_pick": "w4a16-quantized/woff/skip4",
+          "failclosed_rate": 2330.639104,
+          "omniscient_rate": 2347.465798
+        }
+      },
+      "static_off": 433.5545822240967
+    }
+  },
+  "commitment_digest": "bea15a46d26c8b84569ebd093b03d47975f6a29aa16dd7edfa739ab3728740c8",
+  "firing_set": [
+    "R4"
+  ],
+  "in_sample": true,
+  "in_sample_note": "the rule was written after observing R4 in this grid; these figures are the consequence of a pre-committed rule, not independent confirmation",
+  "record_type": "w98_failclosed_result",
+  "schema_version": 1
+}

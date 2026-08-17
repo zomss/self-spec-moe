@@ -1,0 +1,39 @@
+{
+  "cell": "off",
+  "config": {
+    "action": "off",
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "gpu": 0,
+  "host_load": {
+    "cache_load_s": 2.364,
+    "capture_s": 8.0,
+    "compile_cached": true,
+    "compile_s": null,
+    "full_it_s": 9.27,
+    "piecewise_it_s": 6.33,
+    "reason": "gate is calibrated for piecewise, boot ran unknown",
+    "runtime": "unknown",
+    "verdict": "not_applicable"
+  },
+  "observations": {
+    "R1": {
+      "armed_steps": 0,
+      "committed_tokens": 639,
+      "decode_seconds": 5.585326,
+      "decode_tokens_per_s": 114.406939,
+      "steps": 639
+    },
+    "R4": {
+      "armed_steps": 0,
+      "committed_tokens": 5084,
+      "decode_seconds": 7.910913,
+      "decode_tokens_per_s": 642.656518,
+      "steps": 639
+    }
+  },
+  "record_type": "w98_failclosed_validation_boot",
+  "schema_version": 1
+}

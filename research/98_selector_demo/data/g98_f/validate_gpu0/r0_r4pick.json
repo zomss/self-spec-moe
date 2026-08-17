@@ -1,0 +1,39 @@
+{
+  "cell": "r4pick",
+  "config": {
+    "action": "armed",
+    "quant": "w4a16-quantized",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "gpu": 0,
+  "host_load": {
+    "cache_load_s": null,
+    "capture_s": 9.0,
+    "compile_cached": false,
+    "compile_s": 11.54,
+    "full_it_s": 10.58,
+    "piecewise_it_s": 6.74,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "observations": {
+    "R1": {
+      "armed_steps": 132,
+      "committed_tokens": 639,
+      "decode_seconds": 4.138377,
+      "decode_tokens_per_s": 154.408355,
+      "steps": 133
+    },
+    "R4": {
+      "armed_steps": 157,
+      "committed_tokens": 5084,
+      "decode_seconds": 7.043994,
+      "decode_tokens_per_s": 721.74957,
+      "steps": 158
+    }
+  },
+  "record_type": "w98_failclosed_validation_boot",
+  "schema_version": 1
+}

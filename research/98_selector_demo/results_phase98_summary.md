@@ -284,6 +284,16 @@ size the switchover triggers.
    (R4's predicted margin was the thinnest in the map at 1.03x) would
    convert to 1.00x. That single fix is worth more than the entire
    per-regime switching advantage.
+
+   > **Superseded pending replication (2026-08-17, `results_g98_f.md`).**
+   > The rule was built and committed; validating it on independent
+   > hardware measured R4 at **1.13x**, not 0.76x, with the R1 control
+   > reproducing h103 to 1%. Six lines of evidence point at h103's R4
+   > armed column rather than at the configuration. The rule stands as
+   > code and its principle holds — R4's margin spans 0.76-1.13 across
+   > boxes, which is what its wide envelope predicted — but the 24%
+   > regression, and hence this item's value, is unconfirmed until
+   > h103's R4 cells are replicated.
 4. **Long context is the operating regime.** 1.76-1.98x at 14k against
    1.22-1.42x at short context, and the memory-constrained fallback also
    holds up only there.

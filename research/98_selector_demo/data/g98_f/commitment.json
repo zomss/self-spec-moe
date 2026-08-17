@@ -1,0 +1,86 @@
+{
+  "committed_before_scoring": true,
+  "decisions": {
+    "R1": {
+      "armed": true,
+      "best_armed": "w4a16-quantized/woff/skip4",
+      "choice": "w4a16-quantized/woff/skip4",
+      "margin": 1.334805,
+      "regime": "R1",
+      "rule_fired": false,
+      "threshold": 0.025367,
+      "threshold_source": "envelope"
+    },
+    "R4": {
+      "armed": false,
+      "best_armed": "w4a16-quantized/woff/skip0",
+      "choice": "off",
+      "margin": 1.026437,
+      "regime": "R4",
+      "rule_fired": true,
+      "threshold": 0.072406,
+      "threshold_source": "envelope"
+    },
+    "R5": {
+      "armed": true,
+      "best_armed": "w4a16-quantized/w512/skip4",
+      "choice": "w4a16-quantized/w512/skip4",
+      "margin": 1.631586,
+      "regime": "R5",
+      "rule_fired": false,
+      "threshold": 0.136212,
+      "threshold_source": "envelope"
+    },
+    "R5cot": {
+      "armed": true,
+      "best_armed": "w4a16-quantized/w512/skip4",
+      "choice": "w4a16-quantized/w512/skip4",
+      "margin": 1.80518,
+      "regime": "R5cot",
+      "rule_fired": false,
+      "threshold": 0.095613,
+      "threshold_source": "envelope"
+    },
+    "R6": {
+      "armed": true,
+      "best_armed": "w4a16-quantized/woff/skip8",
+      "choice": "w4a16-quantized/woff/skip8",
+      "margin": 1.228224,
+      "regime": "R6",
+      "rule_fired": false,
+      "threshold": 0.032257,
+      "threshold_source": "envelope"
+    },
+    "R8": {
+      "armed": true,
+      "best_armed": "w4a16-quantized/woff/skip4",
+      "choice": "w4a16-quantized/woff/skip4",
+      "margin": 1.179634,
+      "regime": "R8",
+      "rule_fired": false,
+      "threshold": 0.017385,
+      "threshold_source": "envelope"
+    }
+  },
+  "digest": "bea15a46d26c8b84569ebd093b03d47975f6a29aa16dd7edfa739ab3728740c8",
+  "envelopes": {
+    "R1": 0.025367,
+    "R4": 0.072406,
+    "R5": 0.136212,
+    "R5cot": 0.095613,
+    "R6": 0.032257,
+    "R8": 0.017385
+  },
+  "epsilon_arm": 0.015,
+  "firing_set": [
+    "R4"
+  ],
+  "inputs": {
+    "envelopes": "data/g98_c/d1p_fits.json (G98-C, closed)",
+    "note": "both inputs predate this rule; neither is measured D3 grid data",
+    "prediction_map": "data/g98_e/d3_predictions.json (D3 barrier)"
+  },
+  "record_type": "w98_failclosed_commitment",
+  "rule": "arm iff (predicted margin over OFF) - 1 > max(EPSILON_ARM, envelope)",
+  "schema_version": 1
+}

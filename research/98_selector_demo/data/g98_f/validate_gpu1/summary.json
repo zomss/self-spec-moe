@@ -1,0 +1,69 @@
+{
+  "R1": {
+    "armed": 163.805,
+    "armed_over_off": 1.427556756285677,
+    "off": 114.745,
+    "rule_says": "arm"
+  },
+  "R4": {
+    "armed": 726.8299999999999,
+    "armed_over_off": 1.1312265083305448,
+    "off": 642.515,
+    "rule_says": "park"
+  },
+  "boots": {
+    "r0_off": {
+      "decode_tokens_per_s": {
+        "R1": 114.42,
+        "R4": 641.26
+      },
+      "host_load": "not_applicable",
+      "status": "ok"
+    },
+    "r0_r1pick": {
+      "decode_tokens_per_s": {
+        "R1": 162.73,
+        "R4": 711.06
+      },
+      "host_load": "quiet",
+      "status": "ok"
+    },
+    "r0_r4pick": {
+      "decode_tokens_per_s": {
+        "R1": 150.48,
+        "R4": 730.8
+      },
+      "host_load": "quiet",
+      "status": "ok"
+    },
+    "r1_off": {
+      "decode_tokens_per_s": {
+        "R1": 115.07,
+        "R4": 643.77
+      },
+      "host_load": "not_applicable",
+      "status": "ok"
+    },
+    "r1_r1pick": {
+      "decode_tokens_per_s": {
+        "R1": 164.88,
+        "R4": 717.74
+      },
+      "host_load": "quiet",
+      "status": "ok"
+    },
+    "r1_r4pick": {
+      "decode_tokens_per_s": {
+        "R1": 158.29,
+        "R4": 722.86
+      },
+      "host_load": "quiet",
+      "status": "ok"
+    }
+  },
+  "premise_1_r4_armed_loses": false,
+  "premise_2_r1_armed_wins": true,
+  "record_type": "w98_failclosed_validation",
+  "schema_version": 1,
+  "verdict": "PREMISE1_REFUTED_ARMED_WINS_AT_R4"
+}
