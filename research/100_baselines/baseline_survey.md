@@ -14,6 +14,19 @@ number is cited in a paper draft.
 
 ---
 
+## Scope decision (2026-08-16, after the survey)
+
+**Main baseline set = families A, B, C only** — layer-skip, KV-sparsity
+draft, quantized draft — the three that compete lever-for-lever with our
+selector's search space. Family D (model-free drafters: PLD/ngram, suffix)
+is **deferred by decision**: it is a drafter *replacement*, not a lever
+composition, so it answers a different question than the one this phase
+scores. The enumeration below is kept as the record; family D's entries
+remain cite-level and can be revisited after the main comparison lands
+(they are one vLLM flag each, so nothing is lost by deferring). B3'a, which
+used PLD as a fidelity anchor, is withdrawn with it — B3' now carries two
+clauses (`README.md`).
+
 ## Two findings that correct the README
 
 ### 1. Sub-block granularity is the family default, not a KnapSpec innovation
@@ -164,31 +177,34 @@ Notes:
 
 ---
 
-## Threat ranking, updated
+## Threat ranking (within the scoped families)
 
 1. **MagicDec** — top not because it beats us but because at the lever level
    it *is* us. The reviewer question is "isn't your window lever just
    MagicDec?", and the answer has to be measured, not argued: a MagicDec
    fixed-budget row in every long-context cell, with the selector's value
    shown as composition and regime-switching *on top of* it.
-2. **PLD / n-gram** — zero engine work, claims 2–4x on the two regimes where
-   our composed number is weakest. The cheapest experiment in the phase and
-   the most dangerous to skip.
-3. **KnapSpec** — strongest published pure-skip form; the phase namesake;
+2. **KnapSpec** — strongest published pure-skip form; the phase namesake;
    needs Stage A.
-4. **Self-SD** — same Stage A machinery, and it is the family origin; a
+3. **Self-SD** — same Stage A machinery, and it is the family origin; a
    faithful KnapSpec reproduction that cannot also reproduce Self-SD is
    suspect.
-5. **SWIFT / CLaSp** — SWIFT is the cheapest calibration point; CLaSp tests
+4. **SWIFT / CLaSp** — SWIFT is the cheapest calibration point; CLaSp tests
    Phase 90's falsification end to end.
-6. **QuantSpec** — closest to our composition thesis; heavy; may remain
-   cite-only but must be engaged precisely.
+5. **QuantSpec** — closest to our composition thesis; heavy; may remain
+   cite-only but must be engaged precisely. Our own w4a16 arm is the
+   quantized-draft family's representative in the comparison table; QSpec
+   stays border-excluded (quantized verify path).
+
+*(PLD / n-gram was #2 before the scope decision; deferred, see above. Its
+2–4x claim on input-grounded tasks — exactly R4/R5 — is still the sharpest
+deferred threat on record.)*
 
 ## Reproduction cost
 
 | tier | baselines | what it takes |
 | --- | --- | --- |
-| free | ngram, suffix, (EAGLE-3 anchor) | vLLM config flags |
+| free (deferred with family D) | ngram, suffix, (EAGLE-3 anchor) | vLLM config flags |
 | already ours | MagicDec fixed-budget | a cell of our window lattice, reported under their protocol |
 | medium | Self-SD, KnapSpec | Stage A sub-block masks + their offline optimizers (BO / knapsack); static sets, CUDA-graph friendly |
 | hard | SWIFT, CLaSp, ConfLayers | run-time skip-set changes collide with compiled draft paths — eager fallback or per-set graph capture; fidelity vs engine-perf tension must be documented per baseline |
@@ -200,18 +216,17 @@ B3 ("DEL lands below 1.0x") dies with finding 2. Proposed replacement —
 **directional anchors** that are robust to the scale and hardware gaps we
 cannot close:
 
-* **B3'a** — PLD spikes on input-grounded regimes (R4/R5) and is ~neutral on
-  closed-book short regimes (R1/R6), per its own claim.
-* **B3'b** — MagicDec-style fixed budget wins at long-context/batched cells
+* **B3'a** — MagicDec-style fixed budget wins at long-context/batched cells
   and loses at short-context batch-1, per their bottleneck analysis (and per
   our own measured activation threshold).
-* **B3'c** — each reproduced skip method lands within, or *explainably*
+* **B3'b** — each reproduced skip method lands within, or *explainably*
   below, its own paper's reported band — "explainably" meaning the deviation
   is attributed to a measured mechanism (e.g., the 8B draft-loses-8–11%
   floor from `98/results_lever_mechanics.md`), not hand-waved.
 
-All three to be registered with the phase digest barrier before the first
-scored boot.
+*(An earlier draft carried a PLD clause; withdrawn with the scope decision
+above.)* Both to be registered with the phase digest barrier before the
+first scored boot.
 
 ## What this survey does NOT settle
 

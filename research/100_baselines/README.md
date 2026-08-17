@@ -65,30 +65,40 @@ but only for whole-layer granularity.
 ## Baselines in scope
 
 Full field, per-method details, and reproduction-cost tiers:
-**`baseline_survey.md`** (record of 2026-08-16). Threat order after the
-survey — ordered by how much they threaten our claims, not by ease:
+**`baseline_survey.md`** (record of 2026-08-16).
+
+**Scope decision (2026-08-16):** the main baseline set is the three families
+that compete lever-for-lever with our search space — **layer-skip,
+KV-sparsity draft, quantized draft**. Model-free drafters (PLD/ngram,
+suffix) are drafter *replacements*, not lever compositions, and are
+**deferred** — cite-level for now, revisitable at one vLLM flag each.
+
+Threat order — by how much they threaten our claims, not by ease:
 
 1. **MagicDec** (2408.11049, ICLR 2025) — StreamingLLM sinks+window
    self-draft with a fixed KV budget. **At the lever level it is our window
    lever**; the reviewer question "isn't your window lever just MagicDec?"
    must be answered by a measured row, not argument. Runnable in our engine
    today as a fixed cell of the window lattice under their protocol.
-2. **Prompt lookup / n-gram** (in vLLM, `method="ngram"`) — claims 2–4x on
-   input-grounded tasks, i.e. exactly R4/R5. Zero engine work; the cheapest
-   experiment in the phase and the most dangerous to skip.
-3. **KnapSpec** (2602.20217, ICML 2026) — the skip lever's strongest form.
+2. **KnapSpec** (2602.20217, ICML 2026) — the skip lever's strongest form.
    Published 1.47x on Llama3.1-70B/GovReport against DEL 0.87x, SWIFT 1.33x,
    CLaSp 1.22x. Needs Stage A.
-4. **Self-SD / Draft&Verify** (2309.08168, ACL 2024) — the family origin,
+3. **Self-SD / Draft&Verify** (2309.08168, ACL 2024) — the family origin,
    sub-block granularity, offline Bayesian optimization. Same Stage A
    machinery as KnapSpec; a KnapSpec reproduction that cannot also
    reproduce Self-SD is suspect.
-5. **SWIFT** (2410.06916, ICLR 2025) — closest shape to our current skip
+4. **SWIFT** (2410.06916, ICLR 2025) — closest shape to our current skip
    arm; cheapest calibration point. Faithful version adds its online
    re-optimization interval.
-6. **CLaSp** (2505.24196, ACL 2025) — cosine-driven dynamic layer selection;
+5. **CLaSp** (2505.24196, ACL 2025) — cosine-driven dynamic layer selection;
    the proxy class Phase 90 falsified. Reproducing it tests that
    falsification end to end rather than by correlation.
+6. **Quantized-draft family** — our w4a16 arm is itself this family's
+   representative. QuantSpec (2502.10424, ICML 2025) is the closest
+   published composition (4-bit weights + quantized KV draft) but needs
+   kernels we do not have — cite-level unless promoted; QSpec stays
+   border-excluded (its verify path is quantized, so it is not
+   distribution-preserving against an FP16 target).
 
 **DEL is excluded.** The survey established it requires LayerSkip-trained
 checkpoints (its own paper: 2.16–2.62x *on those checkpoints*); KnapSpec's
@@ -137,12 +147,13 @@ To be registered with a digest barrier before the first scored boot.
   restated.*
 * **B3'** directional fidelity anchors (replaces the original B3, which
   rested on DEL and died with its exclusion — `baseline_survey.md`):
-  (a) PLD spikes on input-grounded R4/R5 and is ~neutral on closed-book
-  R1/R6; (b) MagicDec-style fixed budget wins at long-context/batched cells
-  and loses at short-context batch-1; (c) each reproduced skip method lands
+  (a) MagicDec-style fixed budget wins at long-context/batched cells and
+  loses at short-context batch-1, per their bottleneck analysis and our own
+  measured activation threshold; (b) each reproduced skip method lands
   within, or *explainably* below, its own paper's reported band, where
   "explainably" means attributed to a measured mechanism such as the 8B
-  draft-loses-8–11% floor.
+  draft-loses-8–11% floor. (An earlier PLD clause was withdrawn with the
+  family-D scope decision.)
 * **B4** our composed selector against the best reproduced baseline, at 8B,
   reported against stock AR.
 
