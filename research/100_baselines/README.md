@@ -26,6 +26,13 @@ Their Figure 3 shows the payoff: **skipped Attention blocks rise with context
 length while MLP selections stay roughly constant.** Attention cost scales
 with context, MLP does not, and their optimiser exploits that asymmetry.
 
+The survey (`baseline_survey.md`) sharpened this: sub-block granularity is
+**the family default since Self-SD (2309.08168, ACL 2024)**, whose search
+space is already per-sublayer (2L binary variables under Bayesian
+optimization). Our whole-layer skip diverges from the original 2023 method,
+not merely from KnapSpec — and Stage A therefore unlocks Self-SD and
+KnapSpec at once.
+
 Our engine cannot express that configuration —
 `VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS` removes attention and MLP together. So
 Phase 98 did not run their method on a weaker lever; **it ran a different
@@ -57,20 +64,36 @@ but only for whole-layer granularity.
 
 ## Baselines in scope
 
-Ordered by how much they threaten our claims, not by ease.
+Full field, per-method details, and reproduction-cost tiers:
+**`baseline_survey.md`** (record of 2026-08-16). Threat order after the
+survey — ordered by how much they threaten our claims, not by ease:
 
-1. **KnapSpec** (2602.20217) — the skip lever's strongest form. Published
-   1.47x on Llama3.1-70B/GovReport against DEL 0.87x, SWIFT 1.33x,
-   CLaSp 1.22x.
-2. **SWIFT** — contiguous/middle-block skip. Our current skip arm is
-   SWIFT-shaped, so this is close to already-reproduced and is the cheapest
-   calibration point.
-3. **CLaSp** — cosine-driven dynamic layer selection; the proxy class Phase 90
-   falsified. Reproducing it tests that falsification end to end rather than
-   by correlation.
-4. **DEL** — depth/exit adaptation. Scores **0.87x** in their own table, i.e.
-   below AR, which makes it a useful sanity anchor: a faithful reproduction
-   should also land below 1.0.
+1. **MagicDec** (2408.11049, ICLR 2025) — StreamingLLM sinks+window
+   self-draft with a fixed KV budget. **At the lever level it is our window
+   lever**; the reviewer question "isn't your window lever just MagicDec?"
+   must be answered by a measured row, not argument. Runnable in our engine
+   today as a fixed cell of the window lattice under their protocol.
+2. **Prompt lookup / n-gram** (in vLLM, `method="ngram"`) — claims 2–4x on
+   input-grounded tasks, i.e. exactly R4/R5. Zero engine work; the cheapest
+   experiment in the phase and the most dangerous to skip.
+3. **KnapSpec** (2602.20217, ICML 2026) — the skip lever's strongest form.
+   Published 1.47x on Llama3.1-70B/GovReport against DEL 0.87x, SWIFT 1.33x,
+   CLaSp 1.22x. Needs Stage A.
+4. **Self-SD / Draft&Verify** (2309.08168, ACL 2024) — the family origin,
+   sub-block granularity, offline Bayesian optimization. Same Stage A
+   machinery as KnapSpec; a KnapSpec reproduction that cannot also
+   reproduce Self-SD is suspect.
+5. **SWIFT** (2410.06916, ICLR 2025) — closest shape to our current skip
+   arm; cheapest calibration point. Faithful version adds its online
+   re-optimization interval.
+6. **CLaSp** (2505.24196, ACL 2025) — cosine-driven dynamic layer selection;
+   the proxy class Phase 90 falsified. Reproducing it tests that
+   falsification end to end rather than by correlation.
+
+**DEL is excluded.** The survey established it requires LayerSkip-trained
+checkpoints (its own paper: 2.16–2.62x *on those checkpoints*); KnapSpec's
+0.87x is early exit on a stock model. It cannot be run under our
+training-free constraint and cannot anchor fidelity (see B3').
 
 ## Assumptions
 
@@ -112,8 +135,14 @@ To be registered with a digest barrier before the first scored boot.
   cost budget. *If this fails, Phase 98's skip conclusion generalises; if it
   passes, that conclusion is scoped to whole-layer granularity and must be
   restated.*
-* **B3** DEL lands below 1.0x, as in their own table — the anchor that the
-  reproductions are faithful rather than uniformly flattering to us.
+* **B3'** directional fidelity anchors (replaces the original B3, which
+  rested on DEL and died with its exclusion — `baseline_survey.md`):
+  (a) PLD spikes on input-grounded R4/R5 and is ~neutral on closed-book
+  R1/R6; (b) MagicDec-style fixed budget wins at long-context/batched cells
+  and loses at short-context batch-1; (c) each reproduced skip method lands
+  within, or *explainably* below, its own paper's reported band, where
+  "explainably" means attributed to a measured mechanism such as the 8B
+  draft-loses-8–11% floor.
 * **B4** our composed selector against the best reproduced baseline, at 8B,
   reported against stock AR.
 
@@ -123,9 +152,12 @@ To be registered with a digest barrier before the first scored boot.
   finding is narrower than written and several documents need restating.
   Registering it before measuring is the point.
 * **Reproduction fidelity is the whole risk.** A baseline that underperforms
-  because we implemented it badly is worse than no comparison. B3 exists
+  because we implemented it badly is worse than no comparison. B3' exists
   precisely to catch flattering-to-us errors, and each baseline's own numbers
-  on its own reported cell should be checked where the hardware allows.
+  on its own reported cell should be checked where the hardware allows. The
+  DEL discrepancy (0.87x in KnapSpec's table vs 2.16–2.62x in DEL's own
+  paper — a ~2.7x disagreement between two published venues) is the measure
+  of how badly this can go when a reproduction silently changes the setup.
 * **The 70B headline is not reproducible here.** Their 1.47x is a 70B cell; at
   8B the draft/verify economics differ (Phase 98 measured a draft forward
   costing MORE than a verify forward at batch 1). Comparisons must not imply
@@ -141,5 +173,8 @@ is the first thing a reviewer checks.
 
 ## Expected next artifact
 
-`design_subblock_skip.md` (the engine change and its verification), then
+`baseline_survey.md` — **done, 2026-08-16.** Next:
+`design_subblock_skip.md` (the engine change and its verification; before
+freezing it, resolve the survey's open item on SWIFT/CLaSp/ConfLayers
+granularity so one mask implementation serves the whole family), then
 `results_b1_mask_fidelity.md`.
