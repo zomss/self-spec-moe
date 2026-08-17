@@ -53,6 +53,12 @@ our composed selector is defensible — including the ones that would beat us.
 | 4 | **scale** | Qwen3-8B | headline on Llama3.1-70B | hardware-bound |
 | 5 | value proxy | measured LOO retention | cosine similarity of hidden states | ours is stronger |
 
+Gap (4) is narrower than this table states for one column: KnapSpec's
+reasoning experiments run **Qwen3-8B itself** on AIME24/25 and MMLU-Pro
+(`dataset_map.md`), so a same-model, same-task head-to-head exists with no
+scale excuse in either direction. The 70B claim applies to their
+summarization column only.
+
 (1) and (2) compound, and are the reason to expect a different answer. Our own
 Nsight account measures **attention at 10.9% of the draft at batch 1, short
 context**, rising to 18.9% at batch 32 — so preferentially skipping attention
@@ -128,7 +134,9 @@ already reports for that regime.
 ### Stage B — a long-context regime
 
 16K input matching GovReport's average, where the attention/MLP asymmetry
-exists. Phase 98's R5/R5cot are 14K and the closest existing cells.
+exists. Phase 98's R5/R5cot are 14K and the closest existing cells — but
+they are C4 filler, which no baseline paper uses; Stage B is built on
+**real GovReport** (and PG-19 for the KV family), per `dataset_map.md`.
 
 ### Stage C — the baselines, each on its own terms
 
@@ -184,8 +192,8 @@ is the first thing a reviewer checks.
 
 ## Expected next artifact
 
-`baseline_survey.md` — **done, 2026-08-16.** Next:
-`design_subblock_skip.md` (the engine change and its verification; before
-freezing it, resolve the survey's open item on SWIFT/CLaSp/ConfLayers
-granularity so one mask implementation serves the whole family), then
-`results_b1_mask_fidelity.md`.
+`baseline_survey.md` — **done, 2026-08-16.**
+`dataset_map.md` — **done, 2026-08-16**; settles the granularity open item
+(Self-SD/SWIFT/KnapSpec sub-block, CLaSp whole-layer) and proposes the
+five-block evaluation grid P1–P5. Next: `design_subblock_skip.md` (the
+engine change and its verification), then `results_b1_mask_fidelity.md`.

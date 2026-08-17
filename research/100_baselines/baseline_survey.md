@@ -82,8 +82,8 @@ Consequences:
 | method | source | granularity | selection rule | own reported speedup |
 | --- | --- | --- | --- | --- |
 | **Self-SD / Draft&Verify** | [2309.08168](https://arxiv.org/abs/2309.08168), ACL 2024 | sub-block (verified) | offline Bayesian opt, ~1000 iters | up to 1.99x (LLaMA-2 family) |
-| **SWIFT** | [2410.06916](https://arxiv.org/abs/2410.06916), ICLR 2025, [code](https://github.com/hemingkx/SWIFT) | layer-level (unverified) | on-the-fly optimization phase, then confidence-aware inference | 1.3–1.6x |
-| **CLaSp** | [2505.24196](https://arxiv.org/abs/2505.24196), ACL 2025 | whole layer (unverified) | DP on hidden-state cosine, re-selected after each verification | 1.3–1.7x (Llama3 series) |
+| **SWIFT** | [2410.06916](https://arxiv.org/abs/2410.06916), ICLR 2025, [code](https://github.com/hemingkx/SWIFT) | **sub-block (verified)** | on-the-fly optimization phase, then confidence-aware inference | 1.3–1.6x |
+| **CLaSp** | [2505.24196](https://arxiv.org/abs/2505.24196), ACL 2025 | **whole layer (verified)** | DP on hidden-state cosine, re-selected after each verification | 1.3–1.7x (Llama3 series) |
 | **KnapSpec** | [2602.20217](https://arxiv.org/abs/2602.20217), ICML 2026 | sub-block (verified, prior session) | knapsack with per-block latency weights | up to 1.47x (L3.1-70B, GovReport) |
 | **ConfLayers** | [2604.14612](https://arxiv.org/abs/2604.14612), 2026-04, no venue found | sub-block signals (unverified) | adaptive confidence threshold, iterative | not extracted — unverified |
 
@@ -230,9 +230,11 @@ first scored boot.
 
 ## What this survey does NOT settle
 
-* SWIFT/CLaSp/ConfLayers skip granularity — marked unverified above; read
-  the method sections before Stage A design freezes, since if any of them is
-  sub-block too, one mask implementation serves five baselines.
+* ~~SWIFT/CLaSp skip granularity~~ — **settled 2026-08-16**
+  (`dataset_map.md`): SWIFT is sub-block, CLaSp is whole-layer. One Stage A
+  mask implementation serves Self-SD/SWIFT/KnapSpec; CLaSp needs only the
+  existing whole-layer mask plus dynamic reselection. ConfLayers granularity
+  remains unverified (out of main scope).
 * Suffix/Lookahead paper ids and numbers — re-verify before citing.
 * Whether an EAGLE-3 head exists for Qwen3-8B.
 * How KnapSpec actually ran DEL on Llama3.1-70B (no public 70B LayerSkip
