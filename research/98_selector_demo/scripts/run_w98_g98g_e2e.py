@@ -456,6 +456,13 @@ def h103_omniscient() -> dict[str, str]:
     return d3score.omniscient_choice(grid, d3score.regimes_of(grid))
 
 
+def cell_key(cfg: Mapping[str, Any]) -> str:
+    """The grid's name for a configuration."""
+    if cfg.get("action") == d3.OFF_KEY:
+        return d3.OFF_KEY
+    return g98c._config_key({k: v for k, v in cfg.items() if k != "action"})
+
+
 def confirm_cells(output_dir: Path) -> list[str]:
     """The cells worth measuring: what the search proposes, plus rivals.
 
@@ -467,6 +474,15 @@ def confirm_cells(output_dir: Path) -> list[str]:
     dropping the claim it cannot support here, the share of omniscient over
     all 31 cells.
     """
+    if os.environ.get("W98_G98G_FULL_GRID") == "1":
+        # Armed-vs-armed rankings survive this box's state changes: repeat
+        # boots of an armed cell agree to ~1% across rounds while the OFF
+        # cell moves 9-16%, because a fixed per-step host delay is huge
+        # against an 8 ms parked step and modest against a 40 ms armed one.
+        # So the full grid is measurable here for the ranking claims, which
+        # is what the selector is judged on, and OFF-relative figures are
+        # the ones that must carry a band.
+        return sorted({cell_key(cfg) for cfg in d3.grid_configs()})
     predicted = _load(output_dir / PREDICTIONS_NAME)["predicted_decode_tokens_per_s"]
     chosen: set[str] = {d3.OFF_KEY}
     for regime in BATCH_BY_REGIME:
