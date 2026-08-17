@@ -71,6 +71,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 import run_w98_g98b_round1 as r1  # noqa: E402
 import run_w98_g98c_round2 as g98c  # noqa: E402
 import run_w98_g98e_d3 as d3  # noqa: E402
+import score_w98_g98e_d3 as d3score  # noqa: E402
 import w98_host_load as hostload  # noqa: E402
 from w98r2_cost_model import R2CostModel, combined_envelope  # noqa: E402
 
@@ -440,11 +441,176 @@ def measure(mode: str, cfg: Mapping[str, Any], trace: Path, out: Path) -> None:
     )
 
 
+# --- stage 4b: reduced confirmation ---------------------------------------
+
+CONFIRM_DIR = "confirm"
+CONFIRM_TOP_N = 2
+BATCH_BY_REGIME = {"R1": 1, "R8": 16, "R6": 32, "R4": 8, "R5": 8, "R5cot": 8}
+
+
+def h103_omniscient() -> dict[str, str]:
+    """Best measured cell per regime on h103, as a transferred hypothesis."""
+    grid = d3score.load_grid(DATA / "g98_e" / "grid").get("corrected", {})
+    if not grid:
+        return {}
+    return d3score.omniscient_choice(grid, d3score.regimes_of(grid))
+
+
+def confirm_cells(output_dir: Path) -> list[str]:
+    """The cells worth measuring: what the search proposes, plus rivals.
+
+    A 31-cell grid compares cells ACROSS boots, and on a box that changes
+    state between boots that is precisely how a phantom result is made
+    (G98-F). This measures a small candidate set instead, interleaved and
+    replicated, which supports the claim that actually matters -- did the
+    search pick the best of what it proposed, and was arming right -- while
+    dropping the claim it cannot support here, the share of omniscient over
+    all 31 cells.
+    """
+    predicted = _load(output_dir / PREDICTIONS_NAME)["predicted_decode_tokens_per_s"]
+    chosen: set[str] = {d3.OFF_KEY}
+    for regime in BATCH_BY_REGIME:
+        armed = {
+            cell: rates[regime]
+            for cell, rates in predicted.items()
+            if cell != d3.OFF_KEY and regime in rates
+        }
+        for cell in sorted(armed, key=armed.__getitem__, reverse=True)[:CONFIRM_TOP_N]:
+            chosen.add(cell)
+    chosen.update(c for c in h103_omniscient().values() if c in predicted)
+    return sorted(chosen)
+
+
+def _cfg_for_cell(cell: str) -> dict[str, Any]:
+    for cfg in d3.grid_configs():
+        key = (
+            d3.OFF_KEY
+            if cfg.get("action") == d3.OFF_KEY
+            else g98c._config_key({k: v for k, v in cfg.items() if k != "action"})
+        )
+        if key == cell:
+            return cfg
+    raise G98GError(f"cell {cell!r} is not in the registered grid")
+
+
+def run_confirm(output_dir: Path, gpu: int, rounds: int = 2) -> None:
+    lane = bind_box(gpu)
+    cells = confirm_cells(output_dir)
+    lane_id = lane["lane_id"]
+    print(f"[g98g] confirm: {len(cells)} cells x {rounds} rounds on {lane_id}")
+    for index in range(rounds):
+        order = cells if index % 2 == 0 else list(reversed(cells))
+        stage = output_dir / CONFIRM_DIR / lane["lane_id"] / f"r{index}"
+        traces = output_dir / "traces" / CONFIRM_DIR / lane["lane_id"] / f"r{index}"
+        stage.mkdir(parents=True, exist_ok=True)
+        traces.mkdir(parents=True, exist_ok=True)
+        Path(lane["cache_root"]).mkdir(parents=True, exist_ok=True)
+        for cell in order:
+            _boot(_cfg_for_cell(cell), stage, traces, lane, gpu, "grid")
+
+
+def score_confirm(output_dir: Path) -> dict[str, Any]:
+    """Did the search pick the best of what it proposed, and was arming right?"""
+    predicted = _load(output_dir / PREDICTIONS_NAME)["predicted_decode_tokens_per_s"]
+    rates: dict[tuple[str, str], list[float]] = {}
+    tau_real: dict[tuple[str, str], list[float]] = {}
+    boots = 0
+    for path in sorted((output_dir / CONFIRM_DIR).rglob("*.json")):
+        if path.name.endswith(".telemetry.json") or path.name == "summary.json":
+            continue
+        record = _load(path)
+        if "observations" not in record:
+            continue
+        boots += 1
+        cell = record.get("cell")
+        for regime, obs in record["observations"].items():
+            if obs.get("decode_tokens_per_s"):
+                rates.setdefault((cell, regime), []).append(obs["decode_tokens_per_s"])
+            armed = obs.get("armed_steps") or 0
+            if armed and regime in BATCH_BY_REGIME:
+                tau_real.setdefault((cell, regime), []).append(
+                    obs["committed_tokens"] / (armed * BATCH_BY_REGIME[regime])
+                )
+    mean = {k: statistics.mean(v) for k, v in rates.items()}
+    measured_cells = sorted({c for c, _ in mean})
+    per_regime: dict[str, Any] = {}
+    for regime in BATCH_BY_REGIME:
+        present = [c for c in measured_cells if (c, regime) in mean]
+        if not present or d3.OFF_KEY not in present:
+            continue
+        armed_present = [c for c in present if c != d3.OFF_KEY]
+        if not armed_present:
+            continue
+        pick = max(
+            (c for c in predicted if c != d3.OFF_KEY and regime in predicted[c]),
+            key=lambda c: predicted[c][regime],
+        )
+        best = max(present, key=lambda c: mean[(c, regime)])
+        off = mean[(d3.OFF_KEY, regime)]
+        per_regime[regime] = {
+            "selector_pick": pick,
+            "pick_measured": mean.get((pick, regime)),
+            "best_in_set": best,
+            "best_measured": mean[(best, regime)],
+            "regret_vs_best_in_set": (
+                mean[(best, regime)] / mean[(pick, regime)] - 1.0
+                if (pick, regime) in mean
+                else None
+            ),
+            "pick_over_off": (
+                mean[(pick, regime)] / off if (pick, regime) in mean else None
+            ),
+            "best_over_off": mean[(best, regime)] / off,
+            "picked_the_winner": best == pick,
+            "cells_measured": len(present),
+        }
+    transfer = []
+    for (cell, regime), values in sorted(tau_real.items()):
+        detail = _load(D3_PREDICTIONS)["detail"].get(cell, {}).get(regime)
+        if detail and detail.get("tau_hat_at_k4"):
+            transfer.append(
+                {
+                    "cell": cell,
+                    "regime": regime,
+                    "realized_tau": round(statistics.mean(values), 4),
+                    "transferred_tau": detail["tau_hat_at_k4"],
+                    "ratio": round(
+                        statistics.mean(values) / detail["tau_hat_at_k4"], 4
+                    ),
+                }
+            )
+    ratios = [t["ratio"] for t in transfer]
+    return {
+        "schema_version": 1,
+        "record_type": "w98g_confirm_result",
+        "scope": (
+            "reduced: the search's own candidate set, interleaved and replicated. "
+            "Does NOT support a share-of-omniscient claim over all 31 cells."
+        ),
+        "boots": boots,
+        "per_regime": per_regime,
+        "picked_the_winner": sum(
+            1 for v in per_regime.values() if v["picked_the_winner"]
+        ),
+        "regimes_scored": len(per_regime),
+        "acceptance_transfer": {
+            "pairs": len(transfer),
+            "median_ratio": round(statistics.median(ratios), 4) if ratios else None,
+            "min_ratio": round(min(ratios), 4) if ratios else None,
+            "max_ratio": round(max(ratios), 4) if ratios else None,
+            "rows": transfer,
+        },
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--stage", choices=("cost", "commit", "grid", "all"), default="all"
+        "--stage",
+        choices=("cost", "commit", "grid", "confirm", "score", "all"),
+        default="all",
     )
+    parser.add_argument("--rounds", type=int, default=2)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--output-dir", type=Path, default=OUT)
     parser.add_argument("--measure", help=argparse.SUPPRESS)
@@ -486,8 +652,21 @@ def main() -> int:
         )
         record = commit(output_dir, fitted)
         print(f"[g98g] committed predictions, digest {record['digest'][:12]}")
-    if args.stage in ("grid", "all"):
+    if args.stage == "grid":
         run_grid(output_dir, args.gpu)
+    if args.stage in ("confirm", "all"):
+        run_confirm(output_dir, args.gpu, args.rounds)
+    if args.stage in ("score", "all"):
+        result = score_confirm(output_dir)
+        (output_dir / "confirm_result.json").write_text(
+            json.dumps(result, indent=2, sort_keys=True) + "\n"
+        )
+        print(json.dumps(result["per_regime"], indent=2, sort_keys=True))
+        print(
+            f"picked the winner in {result['picked_the_winner']}/"
+            f"{result['regimes_scored']} regimes; acceptance transfer median "
+            f"ratio {result['acceptance_transfer']['median_ratio']}"
+        )
     return 0
 
 
