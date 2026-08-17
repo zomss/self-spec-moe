@@ -72,6 +72,7 @@ import run_w98_g98b_round1 as r1  # noqa: E402
 import run_w98_g98c_round2 as g98c  # noqa: E402
 import run_w98_g98e_d3 as d3  # noqa: E402
 import score_w98_g98e_d3 as d3score  # noqa: E402
+import w98_artifacts as artifacts  # noqa: E402
 import w98_host_load as hostload  # noqa: E402
 from w98r2_cost_model import R2CostModel, combined_envelope  # noqa: E402
 
@@ -152,19 +153,8 @@ def cost_configs() -> list[dict[str, Any]]:
 
 
 def _slug(cfg: Mapping[str, Any]) -> str:
-    """Filename stem for one boot.
-
-    Must key on the ACTION as well as the levers: OFF and the unlevered armed
-    cell (`target-matching/woff/skip0`) carry identical lever values and
-    differ only in whether the draft is armed. Naming by levers alone made
-    them collide, and because a completed boot is skipped rather than
-    overwritten, the armed cell was silently dropped from the first full
-    grid -- 30 cells measured where 31 were reported.
-    """
-    clean = {k: v for k, v in cfg.items() if not k.startswith("_")}
-    key = cell_key(clean) if "action" in clean else g98c._config_key(clean)
-    slug = key.replace("/", "_")
-    return f"{slug}__r{cfg['_repeat']}" if "_repeat" in cfg else slug
+    """Filename stem, delegated so identity has exactly one definition."""
+    return artifacts.slug(cfg, repeat=cfg.get("_repeat"))
 
 
 def _boot(
@@ -178,7 +168,10 @@ def _boot(
     """Run one measuring child, gated and recorded."""
     name = _slug(cfg)
     target = stage_dir / f"{name}.json"
-    if target.exists():
+    if artifacts.claim(target, cfg):
+        # Present AND proven to be this configuration. A file holding a
+        # different cell raises rather than being skipped, which is how the
+        # original grid lost a boot.
         return
     clean = {k: v for k, v in cfg.items() if not k.startswith("_")}
     lo, hi = lane["cpu_affinity"].split("-")
@@ -432,17 +425,9 @@ def measure(mode: str, cfg: Mapping[str, Any], trace: Path, out: Path) -> None:
         observations = d3.measure_config(dict(cfg), trace)
     out.write_text(
         json.dumps(
-            {
-                "schema_version": 1,
-                "record_type": f"w98g_{mode}_cell",
-                "config": dict(cfg),
-                "cell": g98c._config_key(
-                    {k: v for k, v in cfg.items() if k != "action"}
-                )
-                if cfg.get("action") != d3.OFF_KEY
-                else d3.OFF_KEY,
-                "observations": observations,
-            },
+            artifacts.envelope(
+                cfg, f"w98g_{mode}_cell", {"observations": observations}
+            ),
             indent=2,
             sort_keys=True,
         )
@@ -467,10 +452,8 @@ def h103_omniscient() -> dict[str, str]:
 
 
 def cell_key(cfg: Mapping[str, Any]) -> str:
-    """The grid's name for a configuration."""
-    if cfg.get("action") == d3.OFF_KEY:
-        return d3.OFF_KEY
-    return g98c._config_key({k: v for k, v in cfg.items() if k != "action"})
+    """Canonical identity of a configuration."""
+    return artifacts.cell_key(cfg)
 
 
 def confirm_cells(output_dir: Path) -> list[str]:
@@ -522,6 +505,10 @@ def _cfg_for_cell(cell: str) -> dict[str, Any]:
 def run_confirm(output_dir: Path, gpu: int, rounds: int = 2) -> None:
     lane = bind_box(gpu)
     cells = confirm_cells(output_dir)
+    # Prove the naming is injective BEFORE any GPU time is spent. The grid
+    # that lost a cell would have failed here instead of in the data.
+    configs = [_cfg_for_cell(c) for c in cells]
+    artifacts.plan(configs)
     lane_id = lane["lane_id"]
     print(f"[g98g] confirm: {len(cells)} cells x {rounds} rounds on {lane_id}")
     for index in range(rounds):
@@ -533,6 +520,15 @@ def run_confirm(output_dir: Path, gpu: int, rounds: int = 2) -> None:
         Path(lane["cache_root"]).mkdir(parents=True, exist_ok=True)
         for cell in order:
             _boot(_cfg_for_cell(cell), stage, traces, lane, gpu, "grid")
+    report = artifacts.audit(
+        [output_dir / CONFIRM_DIR / lane_id / f"r{index}" for index in range(rounds)],
+        configs,
+        replicates=rounds,
+    )
+    (output_dir / "artifact_audit.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n"
+    )
+    print(f"[g98g] artifact audit ok={report['ok']} records={report['records']}")
 
 
 def score_confirm(output_dir: Path) -> dict[str, Any]:
