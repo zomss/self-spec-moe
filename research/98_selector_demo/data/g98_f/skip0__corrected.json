@@ -1,0 +1,76 @@
+{
+  "arm": "corrected",
+  "armed": true,
+  "cell": "skip0",
+  "content_seeds": [
+    2,
+    3
+  ],
+  "observations": {
+    "R1": {
+      "armed_steps": 128,
+      "batch": 1,
+      "committed_per_step": 4.953488,
+      "committed_tokens": 639,
+      "decode_seconds": 4.983711,
+      "decode_tokens_per_s": 128.217707,
+      "draft_chain_ms": 27.385592768225102,
+      "steps": 129
+    },
+    "R4": {
+      "armed_steps": 132,
+      "batch": 8,
+      "committed_per_step": 38.225564,
+      "committed_tokens": 5084,
+      "decode_seconds": 7.15462,
+      "decode_tokens_per_s": 710.589819,
+      "draft_chain_ms": 40.784994935600366,
+      "steps": 133
+    },
+    "R5": {
+      "armed_steps": 129,
+      "batch": 8,
+      "committed_per_step": 38.969231,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.285998,
+      "decode_tokens_per_s": 611.392855,
+      "draft_chain_ms": 49.075494630431585,
+      "steps": 130
+    },
+    "R5cot": {
+      "armed_steps": 129,
+      "batch": 8,
+      "committed_per_step": 38.969231,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.27754,
+      "decode_tokens_per_s": 612.017605,
+      "draft_chain_ms": 48.98515261117031,
+      "steps": 130
+    },
+    "R6": {
+      "armed_steps": 128,
+      "batch": 32,
+      "committed_per_step": 158.511628,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.485385,
+      "decode_tokens_per_s": 3727.723509,
+      "draft_chain_ms": 31.095543197022938,
+      "steps": 129
+    },
+    "R8": {
+      "armed_steps": 128,
+      "batch": 16,
+      "committed_per_step": 79.255814,
+      "committed_tokens": 10224,
+      "decode_seconds": 4.978621,
+      "decode_tokens_per_s": 2053.58067,
+      "draft_chain_ms": 28.813492092346653,
+      "steps": 129
+    }
+  },
+  "record_type": "w98f_skipset_cell",
+  "schema_version": 1,
+  "seed_note": "the cost lattice's seeds; DISJOINT from the seed-4/5 retention data the knapsack sets were chosen from",
+  "skip_count": 0,
+  "skip_layers": ""
+}

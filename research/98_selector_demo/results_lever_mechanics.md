@@ -55,14 +55,33 @@ that uplift:
 | frozen set (as evaluated) | 0.900 | 0.703 | 0.784 | 0.938 | **1.036** | 0.867 | **1 / 6** |
 | knapsack set (estimate) | **1.086** | 0.848 | 0.945 | **1.131** | **1.249** | **1.045** | **4 / 6** |
 
-That is a qualitative change, not a marginal one: skip goes from "worthless
-alone" to a lever that beats no-speculation in four of six regimes. The
-phase's own conclusion that "window and skip are worthless alone" is
-therefore **an artifact of the operating point**, and is withdrawn for skip.
-
 *Estimate, not measurement.* The +20.6% factor was measured on one regime's
 retention probe and is applied uniformly here; the direction is measured,
 the per-regime magnitude is not.
+
+> **MEASURED, AND THE ESTIMATE WAS WRONG (G98-F, `results_g98_f_skipsets.md`).**
+> This section originally read that the estimate above was "a qualitative
+> change, not a marginal one", that skip goes from worthless alone to beating
+> no-speculation in four of six regimes, and that "window and skip are
+> worthless alone" was therefore an artifact of the operating point and
+> **withdrawn for skip**. That withdrawal is **reversed**.
+>
+> G98-F measured the knapsack sets out of sample. Two things came out:
+>
+> * **The acceptance uplift is real and it TRANSFERS.** Sets chosen from R8
+>   seed-4 retention beat the frozen sets in **5 of 6** regimes on seeds 2-3
+>   -- R4 +16.9%, R8 +15.2%, R5 +11.0%, R1 +8.1%, R5cot +7.4%, R6 -6.2% --
+>   at unchanged cost. The knapsack sets should replace the frozen ones as the
+>   skip baseline.
+> * **It does not make skip a standalone lever.** Knapsack skip-8 beats OFF in
+>   **2 of 6** regimes, not the estimated 4; the frozen set manages 3. Better
+>   acceptance is not enough, because skip-8 still costs ~79% of a base draft
+>   that itself loses to OFF at 0.891x.
+>
+> The error was extrapolating a single-regime factor uniformly and recomputing
+> speedup from the FITTED cost map rather than measuring. **"Skip is worthless
+> alone" largely stands**; what the knapsack sets buy is bigger wins where
+> skip already won (R5cot 1.050 -> 1.135, R8 1.024 -> 1.174), not new ones.
 
 ## Window: physics first, then a small real overhead
 
@@ -128,12 +147,16 @@ Our skip-*alone* is weaker than theirs; our composition is stronger.
 
 ## Recommended action
 
-**Re-run the skip cells with knapsack-chosen layer sets.** The per-layer
-retention data already exists (D2(b)'s 36 leave-one-out boots), so the sets
-cost no new measurement to choose — only the cells themselves need
-re-booting. Two claims in the record change if the estimate holds:
+**Re-run the skip cells with knapsack-chosen layer sets.** ~~Two claims in the
+record change if the estimate holds.~~ **DONE (G98-F).** Of the two claims
+predicted to change, one did and one did not:
 
-* "window and skip are worthless alone" becomes false for skip;
-* the value decomposition's "composing is worth +12.5% over the best single
-  lever" is measured against a single-lever baseline that was handicapped,
-  so the composition premium is currently overstated.
+* ~~"window and skip are worthless alone" becomes false for skip~~ — **NO.**
+  Knapsack skip-8 beats OFF in 2 of 6 regimes against the frozen set's 3. The
+  claim stands.
+* **the composition premium IS overstated** — confirmed in direction. The
+  single-lever skip baseline was handicapped by ~7-17% of acceptance in five
+  of six regimes, so "+12.5% over the best single lever" is measured against
+  a depressed single. The correction is small in absolute terms, because
+  quantization and not skip is the best single lever, but the value
+  decomposition should be recomputed on the knapsack baseline.

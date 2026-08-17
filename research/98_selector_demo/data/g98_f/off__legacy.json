@@ -1,0 +1,76 @@
+{
+  "arm": "legacy",
+  "armed": false,
+  "cell": "off",
+  "content_seeds": [
+    2,
+    3
+  ],
+  "observations": {
+    "R1": {
+      "armed_steps": 0,
+      "batch": 1,
+      "committed_per_step": 1.0,
+      "committed_tokens": 639,
+      "decode_seconds": 5.140127,
+      "decode_tokens_per_s": 124.315987,
+      "draft_chain_ms": null,
+      "steps": 639
+    },
+    "R4": {
+      "armed_steps": 0,
+      "batch": 8,
+      "committed_per_step": 7.956182,
+      "committed_tokens": 5084,
+      "decode_seconds": 7.475919,
+      "decode_tokens_per_s": 680.050156,
+      "draft_chain_ms": null,
+      "steps": 639
+    },
+    "R5": {
+      "armed_steps": 0,
+      "batch": 8,
+      "committed_per_step": 7.928013,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.759391,
+      "decode_tokens_per_s": 578.350677,
+      "draft_chain_ms": null,
+      "steps": 639
+    },
+    "R5cot": {
+      "armed_steps": 0,
+      "batch": 8,
+      "committed_per_step": 7.928013,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.792163,
+      "decode_tokens_per_s": 576.19494,
+      "draft_chain_ms": null,
+      "steps": 639
+    },
+    "R6": {
+      "armed_steps": 0,
+      "batch": 32,
+      "committed_per_step": 32.0,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.943579,
+      "decode_tokens_per_s": 3440.351086,
+      "draft_chain_ms": null,
+      "steps": 639
+    },
+    "R8": {
+      "armed_steps": 0,
+      "batch": 16,
+      "committed_per_step": 16.0,
+      "committed_tokens": 10224,
+      "decode_seconds": 5.622618,
+      "decode_tokens_per_s": 1818.370076,
+      "draft_chain_ms": null,
+      "steps": 639
+    }
+  },
+  "record_type": "w98f_skipset_cell",
+  "schema_version": 1,
+  "seed_note": "the cost lattice's seeds; DISJOINT from the seed-4/5 retention data the knapsack sets were chosen from",
+  "skip_count": 0,
+  "skip_layers": ""
+}
