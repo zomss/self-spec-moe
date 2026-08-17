@@ -566,6 +566,601 @@
    "cap_fraction": 0.0,
    "lo_ctx_ratio": 1.1251,
    "score": 0.8786
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "base",
+   "wall_ratio": 0.7156,
+   "per_token_ratio": 0.7431,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": 0.0384,
+    "pos_fraction": 0.4839,
+    "identical": 1,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0312,
+    "implied_flip_rate_per_token": 0.005124
+   },
+   "score": 0.7156
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "base",
+   "wall_ratio": 0.7767,
+   "per_token_ratio": 0.8057,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": 0.0373,
+    "pos_fraction": 0.625,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.7767
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "base",
+   "wall_ratio": 0.8061,
+   "per_token_ratio": 0.9584,
+   "cap_fraction": 0.1562,
+   "gate_3a": {
+    "verdict": "FAIL",
+    "reason": "LO: 83% of length deltas share a sign: one-sided shift, not tie-flip jitter"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 1.0968,
+   "score": 0.9447
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "knap8",
+   "wall_ratio": 0.7527,
+   "per_token_ratio": 0.772,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": 0.0256,
+    "pos_fraction": 0.5806,
+    "identical": 1,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0312,
+    "implied_flip_rate_per_token": 0.005124
+   },
+   "score": 0.7527
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "knap8",
+   "wall_ratio": 0.7341,
+   "per_token_ratio": 0.7386,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": 0.0063,
+    "pos_fraction": 0.4375,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.7341
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "knap8",
+   "wall_ratio": 0.8852,
+   "per_token_ratio": 1.0517,
+   "cap_fraction": 0.2188,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 32,
+    "mean_rel_delta": 0.1882,
+    "pos_fraction": 0.7241,
+    "identical": 3,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 1.149,
+   "score": 1.0287
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "magicdec512",
+   "wall_ratio": 0.7539,
+   "per_token_ratio": 0.7678,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": 0.0184,
+    "pos_fraction": 0.5161,
+    "identical": 1,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.7539
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "magicdec512",
+   "wall_ratio": 0.9165,
+   "per_token_ratio": 0.9316,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": 0.0165,
+    "pos_fraction": 0.5625,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.9165
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "magicdec512",
+   "wall_ratio": 1.203,
+   "per_token_ratio": 1.1815,
+   "cap_fraction": 0.0938,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 32,
+    "mean_rel_delta": -0.0178,
+    "pos_fraction": 0.6774,
+    "identical": 1,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 0.9495,
+   "score": 1.1905
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "off",
+   "wall_ratio": 0.9844,
+   "per_token_ratio": 0.9703,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": -0.0144,
+    "pos_fraction": 0.4643,
+    "identical": 4,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0938,
+    "implied_flip_rate_per_token": 0.003503
+   },
+   "score": 0.9844
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "off",
+   "wall_ratio": 1.0008,
+   "per_token_ratio": 0.9817,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": -0.0192,
+    "pos_fraction": 0.3636,
+    "identical": 10,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.25,
+    "implied_flip_rate_per_token": 0.001134
+   },
+   "score": 1.0008
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "off",
+   "wall_ratio": 1.0033,
+   "per_token_ratio": 0.956,
+   "cap_fraction": 0.0312,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 32,
+    "mean_rel_delta": -0.0471,
+    "pos_fraction": 0.5357,
+    "identical": 4,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0938,
+    "implied_flip_rate_per_token": 0.00016
+   },
+   "lo_ctx_ratio": 0.936,
+   "score": 0.9653
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "w1024",
+   "wall_ratio": 0.7482,
+   "per_token_ratio": 0.7562,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": 0.0108,
+    "pos_fraction": 0.4839,
+    "identical": 1,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0312,
+    "implied_flip_rate_per_token": 0.005124
+   },
+   "score": 0.7482
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "w1024",
+   "wall_ratio": 0.9362,
+   "per_token_ratio": 0.9236,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": -0.0135,
+    "pos_fraction": 0.4375,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.9362
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "w1024",
+   "wall_ratio": 1.2818,
+   "per_token_ratio": 1.2644,
+   "cap_fraction": 0.0938,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 32,
+    "mean_rel_delta": -0.0136,
+    "pos_fraction": 0.5938,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 0.9663,
+   "score": 1.2708
+  },
+  {
+   "cell": "LI",
+   "batch": 16,
+   "arm": "w4a16",
+   "wall_ratio": 0.6151,
+   "per_token_ratio": 0.6263,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LI",
+    "n": 32,
+    "mean_rel_delta": 0.0183,
+    "pos_fraction": 0.5625,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.6151
+  },
+  {
+   "cell": "LIO",
+   "batch": 16,
+   "arm": "w4a16",
+   "wall_ratio": 0.6798,
+   "per_token_ratio": 0.6794,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "LIO",
+    "n": 32,
+    "mean_rel_delta": -0.0006,
+    "pos_fraction": 0.4375,
+    "identical": 0,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "score": 0.6798
+  },
+  {
+   "cell": "LO",
+   "batch": 16,
+   "arm": "w4a16",
+   "wall_ratio": 0.9352,
+   "per_token_ratio": 1.0283,
+   "cap_fraction": 0.1562,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 32,
+    "mean_rel_delta": 0.0996,
+    "pos_fraction": 0.6,
+    "identical": 2,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 1.0967,
+   "score": 1.0136
+  },
+  {
+   "cell": "SS",
+   "batch": 32,
+   "arm": "base",
+   "wall_ratio": 0.7779,
+   "per_token_ratio": 0.7811,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "SS",
+    "n": 64,
+    "mean_rel_delta": 0.0041,
+    "pos_fraction": 0.6364,
+    "identical": 53,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.7969,
+    "implied_flip_rate_per_token": 0.001425
+   },
+   "score": 0.7779
+  },
+  {
+   "cell": "LO",
+   "batch": 32,
+   "arm": "base",
+   "wall_ratio": 1.0959,
+   "per_token_ratio": 1.042,
+   "cap_fraction": 0.1167,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 60,
+    "mean_rel_delta": -0.0492,
+    "pos_fraction": 0.4182,
+    "identical": 5,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0167,
+    "implied_flip_rate_per_token": 0.000235
+   },
+   "lo_ctx_ratio": 0.9164,
+   "score": 1.0552
+  },
+  {
+   "cell": "SS",
+   "batch": 32,
+   "arm": "knap8",
+   "wall_ratio": 0.5854,
+   "per_token_ratio": 0.5774,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "SS",
+    "n": 64,
+    "mean_rel_delta": -0.0137,
+    "pos_fraction": 0.3333,
+    "identical": 49,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.75,
+    "implied_flip_rate_per_token": 0.001805
+   },
+   "score": 0.5854
+  },
+  {
+   "cell": "LO",
+   "batch": 32,
+   "arm": "knap8",
+   "wall_ratio": 1.19,
+   "per_token_ratio": 1.1393,
+   "cap_fraction": 0.15,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 60,
+    "mean_rel_delta": -0.0426,
+    "pos_fraction": 0.5192,
+    "identical": 8,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0333,
+    "implied_flip_rate_per_token": 0.000195
+   },
+   "lo_ctx_ratio": 0.9176,
+   "score": 1.1536
+  },
+  {
+   "cell": "SS",
+   "batch": 32,
+   "arm": "off",
+   "wall_ratio": 0.819,
+   "per_token_ratio": 0.8216,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "SS",
+    "n": 64,
+    "mean_rel_delta": 0.0031,
+    "pos_fraction": 0.7,
+    "identical": 54,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.8281,
+    "implied_flip_rate_per_token": 0.001184
+   },
+   "score": 0.819
+  },
+  {
+   "cell": "LO",
+   "batch": 32,
+   "arm": "off",
+   "wall_ratio": 1.0358,
+   "per_token_ratio": 1.0052,
+   "cap_fraction": 0.15,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 60,
+    "mean_rel_delta": -0.0295,
+    "pos_fraction": 0.5472,
+    "identical": 7,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0333,
+    "implied_flip_rate_per_token": 0.000195
+   },
+   "lo_ctx_ratio": 0.941,
+   "score": 1.0142
+  },
+  {
+   "cell": "SS",
+   "batch": 32,
+   "arm": "w1024",
+   "wall_ratio": 0.5616,
+   "per_token_ratio": 0.5579,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "SS",
+    "n": 64,
+    "mean_rel_delta": -0.0066,
+    "pos_fraction": 0.4783,
+    "identical": 41,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.625,
+    "implied_flip_rate_per_token": 0.002948
+   },
+   "score": 0.5616
+  },
+  {
+   "cell": "LO",
+   "batch": 32,
+   "arm": "w1024",
+   "wall_ratio": 1.408,
+   "per_token_ratio": 1.4839,
+   "cap_fraction": 0.2,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 60,
+    "mean_rel_delta": 0.0539,
+    "pos_fraction": 0.5385,
+    "identical": 8,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0,
+    "implied_flip_rate_per_token": null
+   },
+   "lo_ctx_ratio": 1.0003,
+   "score": 1.4838
+  },
+  {
+   "cell": "SS",
+   "batch": 32,
+   "arm": "w4a16",
+   "wall_ratio": 0.5892,
+   "per_token_ratio": 0.588,
+   "cap_fraction": 0.0,
+   "gate_3a": {
+    "cell": "SS",
+    "n": 64,
+    "mean_rel_delta": -0.0021,
+    "pos_fraction": 0.4,
+    "identical": 49,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.7031,
+    "implied_flip_rate_per_token": 0.00221
+   },
+   "score": 0.5892
+  },
+  {
+   "cell": "LO",
+   "batch": 32,
+   "arm": "w4a16",
+   "wall_ratio": 1.1437,
+   "per_token_ratio": 1.0741,
+   "cap_fraction": 0.1333,
+   "gate_3a": {
+    "cell": "LO",
+    "n": 60,
+    "mean_rel_delta": -0.0609,
+    "pos_fraction": 0.451,
+    "identical": 9,
+    "verdict": "pass"
+   },
+   "gate_3b": {
+    "identical_fraction": 0.0333,
+    "implied_flip_rate_per_token": 0.000195
+   },
+   "lo_ctx_ratio": 0.9032,
+   "score": 1.0899
   }
  ]
 }
