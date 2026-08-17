@@ -159,9 +159,16 @@ paired; T=0 determinism makes paired small-n exact rather than noisy.
 - [x] pilot run -> measured length distributions -> final n, caps, batch
       clamps (2026-08-16, this document's measured sections)
 - [x] loaders with pinned revisions (`scripts/w100_eval_datasets.py`)
-- [ ] HF dataset ids + revisions pinned (GovReport, BookSum, AIME24/25, GSM8K)
-- [ ] T=0 cross-arm output-identity gate wired as a hard failure
-- [ ] cap-hit fraction reporting + >10% re-run rule
-- [ ] dual-protocol fork registered: this grid (ours) vs P1–P5 (theirs)
-- [ ] host-load `measurement_verdict` wired inline (G98-F lesson, not post-hoc)
-- [ ] digest barrier committed, then boots
+- [x] HF dataset ids + revisions pinned AND prompts frozen to
+      `data/registration/w100_prompts.jsonl.gz` + manifest
+      (`scripts/generate_w100_prompt_manifest.py`)
+- [x] T=0 cross-arm output-identity gate wired as a hard failure
+      (`w100_protocol.identity_gate`)
+- [x] cap-hit fraction reporting + >10% re-run rule with the registered
+      LO exemption (`w100_protocol.cap_rule`)
+- [x] dual-protocol fork registered (`w100_prereg.md`)
+- [x] host-load gates inline (G98-F lesson): `w100_protocol.boot_gate`
+      + `measurement_gate` (phase-98 limbs re-fed from the SS batch
+      sweep; spread limb to recalibrate on first clean boots)
+- [x] digest barrier: `data/registration/w100_barrier.json`
+      (`scripts/make_w100_barrier.py`), committed before any scored boot
