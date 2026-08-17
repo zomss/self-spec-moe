@@ -1,0 +1,66 @@
+{
+  "burnin_tokens": 256,
+  "cell": "w4a16-quantized/w1024/skip8",
+  "observed": {
+    "armed_steps": 72,
+    "committed_tokens": 8160,
+    "decode_seconds": 2.44017,
+    "decode_tokens_per_s": 3344.02956,
+    "steps": 73
+  },
+  "per_regime": {
+    "R1": {
+      "armed_steps": 67,
+      "committed_tokens": 255,
+      "decode_seconds": 1.871376,
+      "decode_tokens_per_s": 136.263352,
+      "steps": 68
+    },
+    "R4": {
+      "armed_steps": 120,
+      "committed_tokens": 2012,
+      "decode_seconds": 3.787535,
+      "decode_tokens_per_s": 531.21616,
+      "steps": 121
+    },
+    "R5": {
+      "armed_steps": 87,
+      "committed_tokens": 1994,
+      "decode_seconds": 2.924863,
+      "decode_tokens_per_s": 681.741292,
+      "steps": 88
+    },
+    "R5cot": {
+      "armed_steps": 68,
+      "committed_tokens": 1994,
+      "decode_seconds": 2.288733,
+      "decode_tokens_per_s": 871.224516,
+      "steps": 69
+    },
+    "R6": {
+      "armed_steps": 72,
+      "committed_tokens": 8160,
+      "decode_seconds": 2.44017,
+      "decode_tokens_per_s": 3344.02956,
+      "steps": 73
+    },
+    "R8": {
+      "armed_steps": 71,
+      "committed_tokens": 4080,
+      "decode_seconds": 2.081336,
+      "decode_tokens_per_s": 1960.279334,
+      "steps": 72
+    }
+  },
+  "record_type": "w98_r6_burnin",
+  "schema_version": 1,
+  "tau_burnin": 3.5416666666666665,
+  "tau_burnin_by_regime": {
+    "R1": 3.8059701492537314,
+    "R4": 2.095833333333333,
+    "R5": 2.8649425287356323,
+    "R5cot": 3.6654411764705883,
+    "R6": 3.5416666666666665,
+    "R8": 3.591549295774648
+  }
+}
