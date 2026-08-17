@@ -49,7 +49,7 @@ length distributions reported alongside rates.
 | cell | dataset | input | output (natural) | cap | batch sweep | T |
 | --- | --- | --- | --- | --- | --- | --- |
 | **LI** | GovReport | ~16K | ~0.3–1K (summary) | 2K | 1 / 8 / 16 | 0 |
-| **LO** | AIME 2024+2025 | ~0.1–0.5K | ~5–25K (thinking CoT) | 32K | 1 / 8 / 16 | 0 primary, 1 secondary |
+| **LO** | AIME 2024+2025 | ~0.1–0.5K | ~5–25K (thinking CoT) | 32K | 1 / 8 / 16 / 32 | 0 primary, 1 secondary |
 | **LIO** | BookSum (chapter, length-filtered ≥8K) | ~8–16K | ~1–2K (long summary) | 4K | 1 / 8 / 16 | 0 |
 | **SS** | GSM8K, "answer concisely" | ~0.3K | ~0.1–0.3K | 1K | 1 / 8 / 32 / 64 | 0 |
 
@@ -71,24 +71,64 @@ Dataset notes:
   b64. CNN/DM single-article stays in fidelity block P4, not here, to
   avoid duplication.
 
-## Batch feasibility (computed, to be verified by preflight)
+## Batch feasibility — MEASURED (pilot of 2026-08-16)
 
-Qwen3-8B KV = 144 KB/token BF16 (36 layers x 8 KV heads x 128 dim x 2).
-H100 80GB minus ~16GB weights minus overhead => **~60GB KV budget**.
+Pilot: `scripts/run_w100_pilot.py` on h104 lane GPU 7, stock decode,
+seed 0; record `data/pilot/pilot_lengths.json`; analysis
+`scripts/analyze_w100_pilot.py` -> `data/pilot/pilot_feasibility.json`.
 
-| cell (in+out) | b8 | b16 | b32 |
-| --- | --- | --- | --- |
-| LI ~16.6K | 18 GB | 37 GB | **73 GB — infeasible** |
-| LO ~15K | 17 GB | 33 GB | **66 GB — infeasible** |
-| LIO ~13.5K | 15 GB | 30 GB | 59 GB — marginal, excluded |
-| SS ~0.6K | 0.6 GB | — | 2.4 GB (b64: 4.9 GB) |
+**Measured natural lengths** (output tokens, EOS respected):
 
-So the long cells stop at b16 — a physical constraint of 8B-on-one-H100,
-recorded rather than hidden. Draft-side KV (window/skip arms) adds on top
-of this; `99_kv_pressure/scripts/preflight_w99_kv_budget.py` is the
-instrument to verify per-arm headroom before the barrier is registered.
-Numbers above use expected natural lengths; the pilot run replaces them
-with measured length distributions.
+| cell | n | median | p95 | max | cap hits | cell wall |
+| --- | --- | --- | --- | --- | --- | --- |
+| LI | 16 | 771 | 999 | 999 | 0 | 29 s |
+| LO (T=0) | 16 | 9,567 | 32,768 | 32,768 | **2/16** | 356 s |
+| LO (T=1) | 8 | 14,334 | 31,936 | 31,936 | 0 | 277 s |
+| LIO | 16 | 1,257 | 1,459 | 1,459 | 0 | 40 s |
+| SS | 32 | 153 | 350 | 444 | 0 | 5 s |
+
+**Feasibility is drain-aware, and that changes the clamps.** The design
+draft used a static bound (p95 length x batch held simultaneously),
+which contradicts the protocol itself: with EOS respected, requests
+finish raggedly and FREE their KV, so the binding quantity is peak
+concurrent KV over the drain, simulated from measured lengths
+(`analyze_w100_pilot.py`). Against a ~55.6 GB pool:
+
+| cell | b8 | b16 | b32 | b64 | clamp |
+| --- | --- | --- | --- | --- | --- |
+| LI | 16 GB | 34 GB | **68 GB** | — | **{1, 8, 16}** |
+| LO | 10 GB | 13 GB | 26 GB | **53 GB — marginal, excluded** | **{1, 8, 16, 32}** |
+| LIO | 14 GB | 33 GB | **66 GB** | — | **{1, 8, 16}** |
+| SS | 0.1 GB | 0.4 GB | 0.6 GB | 1.3 GB | **{1, 8, 32, 64}** |
+
+The static model was right where prompts dominate (LI/LIO: all prompts
+co-resident from admission) and wrong where outputs dominate (**LO
+extends to b32** — tiny prompts, ragged drain). Draft-side KV
+(window/skip arms) adds on top; verify per-arm headroom with
+`99_kv_pressure/scripts/preflight_w99_kv_budget.py` before registration.
+
+### LO cap policy (pilot amendment)
+
+LO's 2/16 T=0 cap-hits exceed the 10% raise-and-rerun rule, but the cap
+is NOT raised, for three registered reasons: (1) **KnapSpec parity** —
+32K is their own AIME generation budget, so matching it is the point of
+the cell; (2) the cap sits near Qwen3-8B's native 40,960 anyway; (3) at
+T=0 cap-hits are **arm-invariant** — losslessness means every arm
+generates the same greedy stream and caps at the same step, so capped
+requests contribute exactly equal work and no arm comparison is biased.
+LO is therefore exempted from the 10% rule; cap-hit fraction is reported
+with every LO number. The T=1 arm finished 8/8 under the cap (median
+14.3K), consistent with the T=0 cap-hits being greedy-thinking
+repetition loops rather than genuine 32K reasoning — to be confirmed by
+inspecting the capped outputs at analysis time, not blocking.
+
+### Per-cell n (pilot amendment)
+
+The draft's flat "n = 4 x max batch" is unaffordable at LO (128 requests
+x ~12K tokens at b1 is ~8 h per arm). Replaced with per-(cell, batch)
+**n = max(16, 2b)**, with nested prompt sets (the b=32 set contains the
+b=16 set, etc.) so every arm sees identical prompts and comparisons are
+paired; T=0 determinism makes paired small-n exact rather than noisy.
 
 ## Metric
 
@@ -116,7 +156,9 @@ with measured length distributions.
 
 ## Registration checklist (before first scored boot)
 
-- [ ] pilot run -> measured length distributions -> final n, caps, batch clamps
+- [x] pilot run -> measured length distributions -> final n, caps, batch
+      clamps (2026-08-16, this document's measured sections)
+- [x] loaders with pinned revisions (`scripts/w100_eval_datasets.py`)
 - [ ] HF dataset ids + revisions pinned (GovReport, BookSum, AIME24/25, GSM8K)
 - [ ] T=0 cross-arm output-identity gate wired as a hard failure
 - [ ] cap-hit fraction reporting + >10% re-run rule

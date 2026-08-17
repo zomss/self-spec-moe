@@ -149,9 +149,12 @@ The scoring protocol, decided 2026-08-16: length-quadrant cells
 LI (GovReport 16K) / LO (AIME24/25, natural long CoT) / LIO (BookSum) /
 SS control (GSM8K), **EOS respected** (no `ignore_eos` in scored numbers;
 losslessness at T=0 preserves equal work and adds a cross-arm
-output-identity gate), batch sweep {1,8,16} long / {1,8,32,64} short,
-clamped by measured KV feasibility (b32 infeasible on long cells). P1–P5
-remain the separate fidelity block under each baseline's own protocol.
+output-identity gate), batch sweeps clamped by **measured, drain-aware**
+KV feasibility from the 2026-08-16 pilot: LI/LIO {1,8,16} (co-resident
+long prompts make b32 infeasible), LO {1,8,16,32} (ragged drain frees
+KV), SS {1,8,32,64}. Loaders: `scripts/w100_eval_datasets.py` (pinned
+revisions); pilot record `data/pilot/`. P1–P5 remain the separate
+fidelity block under each baseline's own protocol.
 
 ## Decision criteria
 
