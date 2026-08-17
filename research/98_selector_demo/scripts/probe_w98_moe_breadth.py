@@ -64,8 +64,23 @@ MOE_TARGET = (
 )
 # Lower than the dense campaign's: a 60 GB target leaves little headroom, and
 # an OOM at capture wastes a four-minute boot.
-MOE_GPU_UTIL = 0.92
+MOE_GPU_UTIL = float(os.environ.get("W98_MOE_GPU_UTIL", "0.92"))
 REGIMES = tuple(os.environ.get("W98_MOE_REGIMES", "R1,R6").split(","))
+# Tensor parallelism, which is what makes the QUANT axis testable at all: the
+# 61 GB target and its 15 GB W4A16 draft cannot share one 80 GB device, but
+# across two they are comfortable. This fork has never run TP>1 -- a prior
+# attempt failed to start (`w98_cotenant_load.py`) and the self-spec proposer
+# carries no tensor-parallel logic -- so TP is smoke-tested before anything
+# is measured under it, and TP=1 with shared weights remains the fallback.
+MOE_TP = int(os.environ.get("W98_MOE_TP", "1"))
+# Physical devices for the child. Overrides the single-GPU lane pin, which
+# cannot express a multi-device engine.
+MOE_DEVICES = os.environ.get("W98_MOE_DEVICES", "")
+MOE_CPUS = os.environ.get("W98_MOE_CPUS", "96-111")
+MOE_DRAFTS = {
+    "target-matching": None,  # shares the target's weights
+    "w4a16-quantized": "/data/smcho/ckpts/Qwen3-30B-A3B-W4A16-INT4-sym",
+}
 # Single-lever cells first (they identify the model), then composed cells the
 # fit never saw. Held-out cells vary two axes at once, as D1' requires.
 FIT_CELLS = [
@@ -74,9 +89,14 @@ FIT_CELLS = [
     {"quant": "target-matching", "window": 1024, "skip_count": 0},
     {"quant": "target-matching", "window": "off", "skip_count": 4},
     {"quant": "target-matching", "window": "off", "skip_count": 8},
+    # The quant arm, which TP=2 makes reachable: without it the keep*W
+    # column is collinear with keep and only a four-parameter reduction is
+    # identifiable. With it the registered five-parameter model can be fitted
+    # on a sparse architecture for the first time.
+    {"quant": "w4a16-quantized", "window": "off", "skip_count": 0},
 ]
 HELDOUT_CELLS = [
-    {"quant": "target-matching", "window": 256, "skip_count": 4},
+    {"quant": "w4a16-quantized", "window": 256, "skip_count": 4},
     {"quant": "target-matching", "window": 1024, "skip_count": 8},
 ]
 
@@ -87,19 +107,39 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _slug(cfg: dict[str, Any]) -> str:
-    window = cfg["window"]
-    return f"moe_w{window}_skip{cfg['skip_count']}"
+    """Filename stem, keyed on ALL THREE lever axes.
+
+    Naming by window and skip alone made the two quant arms of the same
+    lever point collide, and a completed boot is skipped rather than
+    overwritten, so the quantized cell was dropped without a trace. The same
+    bug class cost the dense grid a cell (`run_w98_g98g_e2e._slug`); it is
+    worth spelling out that a slug must carry every axis that distinguishes
+    two configurations, not merely the ones that usually differ.
+    """
+    quant = "q4" if cfg["quant"] == "w4a16-quantized" else "tm"
+    return f"moe_{quant}_w{cfg['window']}_skip{cfg['skip_count']}"
 
 
 def _engine_args(cfg: dict[str, Any]):
-    """Round-1 engine arguments, retargeted at the MoE and shared weights."""
+    """Round-1 engine arguments, retargeted at the MoE."""
     args = r1._engine_args(cfg)
+    draft = MOE_DRAFTS[cfg["quant"]] or MOE_TARGET
+    _require(Path(draft).exists(), f"draft missing: {draft}")
     args.model = MOE_TARGET
     args.speculative_config = {
         **args.speculative_config,
-        "model": MOE_TARGET,
+        "model": draft,
         "num_speculative_tokens": 4,
+        # vLLM requires the draft to match the target's parallelism; Round 1
+        # pins this to 1 because the dense campaign is single-GPU, and
+        # leaving it there is what made the first TP attempt fail to start.
+        "draft_tensor_parallel_size": MOE_TP,
     }
+    args.tensor_parallel_size = MOE_TP
+    # The first TP=2 boot loaded the model and then died with an illegal
+    # memory access inside custom_all_reduce. NCCL's all-reduce is the
+    # standard fallback for that failure and costs a little latency.
+    args.disable_custom_all_reduce = MOE_TP > 1
     args.gpu_memory_utilization = MOE_GPU_UTIL
     return args
 
@@ -150,7 +190,7 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
 
 def run_all(output_dir: Path, gpu: int, cells: list[dict[str, Any]]) -> None:
     lane = g98g.bind_box(gpu)
-    lo, hi = lane["cpu_affinity"].split("-")
+    lo, hi = (MOE_CPUS if MOE_DEVICES else lane["cpu_affinity"]).split("-")
     affinity = sorted(range(int(lo), int(hi) + 1))
     Path(lane["cache_root"]).mkdir(parents=True, exist_ok=True)
     traces = output_dir / "traces"
@@ -164,6 +204,10 @@ def run_all(output_dir: Path, gpu: int, cells: list[dict[str, Any]]) -> None:
         if trace.exists():
             trace.unlink()
         env = matrix._boot_child_environment(r1.boot_environment(cfg, trace))
+        if MOE_DEVICES:
+            # A multi-device engine cannot be expressed by the single-GPU
+            # lane pin, so the devices are named explicitly here.
+            env["CUDA_VISIBLE_DEVICES"] = MOE_DEVICES
         log = output_dir / f"{name}.log"
         with log.open("w", encoding="utf-8") as handle:
             completed = subprocess.run(

@@ -152,7 +152,17 @@ def cost_configs() -> list[dict[str, Any]]:
 
 
 def _slug(cfg: Mapping[str, Any]) -> str:
-    key = g98c._config_key({k: v for k, v in cfg.items() if not k.startswith("_")})
+    """Filename stem for one boot.
+
+    Must key on the ACTION as well as the levers: OFF and the unlevered armed
+    cell (`target-matching/woff/skip0`) carry identical lever values and
+    differ only in whether the draft is armed. Naming by levers alone made
+    them collide, and because a completed boot is skipped rather than
+    overwritten, the armed cell was silently dropped from the first full
+    grid -- 30 cells measured where 31 were reported.
+    """
+    clean = {k: v for k, v in cfg.items() if not k.startswith("_")}
+    key = cell_key(clean) if "action" in clean else g98c._config_key(clean)
     slug = key.replace("/", "_")
     return f"{slug}__r{cfg['_repeat']}" if "_repeat" in cfg else slug
 
