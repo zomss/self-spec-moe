@@ -1,0 +1,76 @@
+{
+  "arm": "legacy",
+  "armed": true,
+  "cell": "skip4_frozen",
+  "content_seeds": [
+    2,
+    3
+  ],
+  "observations": {
+    "R1": {
+      "armed_steps": 130,
+      "batch": 1,
+      "committed_per_step": 4.877863,
+      "committed_tokens": 639,
+      "decode_seconds": 7.0434,
+      "decode_tokens_per_s": 90.723227,
+      "draft_chain_ms": 25.945247604033433,
+      "steps": 131
+    },
+    "R4": {
+      "armed_steps": 158,
+      "batch": 8,
+      "committed_per_step": 31.974843,
+      "committed_tokens": 5084,
+      "decode_seconds": 8.954944,
+      "decode_tokens_per_s": 567.731086,
+      "draft_chain_ms": 37.124969333195864,
+      "steps": 159
+    },
+    "R5": {
+      "armed_steps": 150,
+      "batch": 8,
+      "committed_per_step": 33.549669,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.866619,
+      "decode_tokens_per_s": 571.356438,
+      "draft_chain_ms": 44.1162797608164,
+      "steps": 151
+    },
+    "R5cot": {
+      "armed_steps": 137,
+      "batch": 8,
+      "committed_per_step": 36.710145,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.152879,
+      "decode_tokens_per_s": 621.375561,
+      "draft_chain_ms": 44.47257644654709,
+      "steps": 138
+    },
+    "R6": {
+      "armed_steps": 135,
+      "batch": 32,
+      "committed_per_step": 150.352941,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.741886,
+      "decode_tokens_per_s": 3561.199184,
+      "draft_chain_ms": 28.805259109378373,
+      "steps": 136
+    },
+    "R8": {
+      "armed_steps": 139,
+      "batch": 16,
+      "committed_per_step": 73.028571,
+      "committed_tokens": 10224,
+      "decode_seconds": 5.197122,
+      "decode_tokens_per_s": 1967.242687,
+      "draft_chain_ms": 26.935059519018978,
+      "steps": 140
+    }
+  },
+  "record_type": "w98f_skipset_cell",
+  "schema_version": 1,
+  "seed_note": "the cost lattice's seeds; DISJOINT from the seed-4/5 retention data the knapsack sets were chosen from",
+  "skip_count": 4,
+  "skip_layers": "2,4,7,16"
+}

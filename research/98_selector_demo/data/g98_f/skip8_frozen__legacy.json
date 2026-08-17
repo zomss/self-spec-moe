@@ -1,0 +1,76 @@
+{
+  "arm": "legacy",
+  "armed": true,
+  "cell": "skip8_frozen",
+  "content_seeds": [
+    2,
+    3
+  ],
+  "observations": {
+    "R1": {
+      "armed_steps": 146,
+      "batch": 1,
+      "committed_per_step": 4.346939,
+      "committed_tokens": 639,
+      "decode_seconds": 7.417837,
+      "decode_tokens_per_s": 86.143706,
+      "draft_chain_ms": 22.85885248758544,
+      "steps": 147
+    },
+    "R4": {
+      "armed_steps": 220,
+      "batch": 8,
+      "committed_per_step": 23.004525,
+      "committed_tokens": 5084,
+      "decode_seconds": 10.902804,
+      "decode_tokens_per_s": 466.30208,
+      "draft_chain_ms": 32.293961374135456,
+      "steps": 221
+    },
+    "R5": {
+      "armed_steps": 201,
+      "batch": 8,
+      "committed_per_step": 25.079208,
+      "committed_tokens": 5066,
+      "decode_seconds": 10.670469,
+      "decode_tokens_per_s": 474.768251,
+      "draft_chain_ms": 38.40041273672666,
+      "steps": 202
+    },
+    "R5cot": {
+      "armed_steps": 158,
+      "batch": 8,
+      "committed_per_step": 31.861635,
+      "committed_tokens": 5066,
+      "decode_seconds": 8.512023,
+      "decode_tokens_per_s": 595.158189,
+      "draft_chain_ms": 39.04779126412041,
+      "steps": 159
+    },
+    "R6": {
+      "armed_steps": 151,
+      "batch": 32,
+      "committed_per_step": 134.526316,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.783933,
+      "decode_tokens_per_s": 3535.310492,
+      "draft_chain_ms": 25.352428113392584,
+      "steps": 152
+    },
+    "R8": {
+      "armed_steps": 166,
+      "batch": 16,
+      "committed_per_step": 61.221557,
+      "committed_tokens": 10224,
+      "decode_seconds": 5.619417,
+      "decode_tokens_per_s": 1819.405681,
+      "draft_chain_ms": 23.90093736502589,
+      "steps": 167
+    }
+  },
+  "record_type": "w98f_skipset_cell",
+  "schema_version": 1,
+  "seed_note": "the cost lattice's seeds; DISJOINT from the seed-4/5 retention data the knapsack sets were chosen from",
+  "skip_count": 8,
+  "skip_layers": "2,4,7,11,16,20,25,30"
+}
