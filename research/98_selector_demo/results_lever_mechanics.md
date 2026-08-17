@@ -154,9 +154,11 @@ predicted to change, one did and one did not:
 * ~~"window and skip are worthless alone" becomes false for skip~~ — **NO.**
   Knapsack skip-8 beats OFF in 2 of 6 regimes against the frozen set's 3. The
   claim stands.
-* **the composition premium IS overstated** — confirmed in direction. The
-  single-lever skip baseline was handicapped by ~7-17% of acceptance in five
-  of six regimes, so "+12.5% over the best single lever" is measured against
-  a depressed single. The correction is small in absolute terms, because
-  quantization and not skip is the best single lever, but the value
-  decomposition should be recomputed on the knapsack baseline.
+* ~~the composition premium IS overstated~~ — **NO, and the direction was
+  backwards too.** The +12.5% is `composed 1.35x / best single 1.20x`; the
+  best single is **quantization**, which no layer set touches. The winning
+  composition is `w4a16-quantized/w1024/skip4`, using count **4** — and at
+  count 4 the knapsack set is not better (R1 -0.75%, R4 +0.63%, R5 -3.18%,
+  R5cot 0.00%, R6 -4.26%, R8 -1.41%). The knapsack sets improve skip at k=8
+  only, and neither term of the decomposition depends on k=8. **The premium
+  stands at +12.5% and needs no recomputation.**

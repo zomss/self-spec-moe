@@ -102,14 +102,31 @@ times the fitted route produced a plausible number that measurement
 contradicted — which is, in fairness, this phase's own thesis about
 acceptance applied to itself.
 
-## What still changes
+## What does NOT change: the value decomposition
 
-The surviving consequence from that section: the single-lever skip baseline
-was handicapped by 7-17% of acceptance in five of six regimes, so the value
-decomposition's "**composing is worth +12.5% over the best single lever**" is
-measured against a depressed single and should be recomputed on the knapsack
-baseline. The correction will be small — quantization, not skip, is the best
-single lever — but it should be made.
+`results_lever_mechanics.md` predicted a second consequence — that the value
+decomposition's "**composing is worth +12.5% over the best single lever**" was
+measured against a handicapped skip single and so was overstated. **That is
+also wrong, and in the stated direction it is backwards.**
+
+Three facts settle it:
+
+* the +12.5% is `composed 1.35x / best single 1.20x`, and the best single is
+  **quantization**, which no layer set touches;
+* the winning composition is `w4a16-quantized/w1024/**skip4**` — it uses count
+  **4**, not 8;
+* and at count 4 the knapsack set is not better. Measured here:
+  R1 -0.75%, R4 +0.63%, R5 -3.18%, R5cot 0.00%, R6 -4.26%, R8 -1.41%.
+
+So the knapsack sets improve skip at **k=8 only**, and neither term of the
+value decomposition depends on k=8. The premium stands at +12.5% and needs no
+recomputation.
+
+This also confirms D2(b)'s own reading from the other side: it found the
+frozen k=4 set already near-optimal (differing from the knapsack by one layer
+and 0.099 tokens) and only the k=8 set meaningfully improvable. The
+out-of-sample measurement agrees — the k=4 edge does not survive, and at R8,
+where it was selected, it inverts to -1.41%.
 
 ## Limitations
 
