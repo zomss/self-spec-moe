@@ -57,6 +57,31 @@ acceptance transfer is optimistic by +16-17% for deep-skip cells against
 at 10.59% and is worth ~0.23% of the aggregate, because R6 carries 2.2% of
 the time in a token-weighted mix.
 
+## Replication on the rebuilt artifact layer
+
+The grid was run a second time, end to end, on top of `w98_artifacts`
+(`data/g98_g_grid2`): plan validated before any boot, resume verified against
+record content, coverage counted from the records. It **self-audited clean**
+— 31 cells, 62 records, two replicates each, zero identity mismatches — which
+is the first time the coverage claim is checked rather than asserted.
+
+| | grid 1 | grid 2 |
+| --- | --- | --- |
+| selector / omniscient | 0.9820 | **0.9839** |
+| selector / OFF | 1.415x | 1.426x |
+| selector | 572.8 tok/s | 578.6 tok/s (+1.01%) |
+
+Per-regime regret reproduces: 1.76→1.84 (R1), 1.30→0.80 (R4), 3.33→1.62 (R5),
+0.00→0.00 (R5cot), **10.59→10.99 (R6)**, 0.22→0.00 (R8). The omniscient cell
+is identical in five regimes; at R8 it moves between `w512/skip4` and
+`woff/skip4`, which is exactly the pair whose measured regret is 0.22% and
+0.00% — two cells inside each other's noise, so which one is "best" is a coin
+flip and costs nothing.
+
+**Two independent 62-boot grids agree on the headline to 0.2 percentage
+points**, and the R6 miss reproduces at both. The result is not an artifact of
+one run.
+
 ## A bug this run exposed, worth recording
 
 The first pass reported "31 cells" while measuring **30**. `_slug` named

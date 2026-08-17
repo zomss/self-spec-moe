@@ -1,0 +1,67 @@
+{
+  "cell": "target-matching/w512/skip8",
+  "config": {
+    "action": "armed",
+    "quant": "target-matching",
+    "skip_count": 8,
+    "window": 512
+  },
+  "host_load": {
+    "cache_load_s": 2.114,
+    "capture_s": 8.0,
+    "compile_cached": true,
+    "compile_s": null,
+    "full_it_s": 11.76,
+    "piecewise_it_s": 7.98,
+    "reason": null,
+    "runtime": "piecewise",
+    "verdict": "quiet"
+  },
+  "lane": "lane-a",
+  "observations": {
+    "R1": {
+      "armed_steps": 146,
+      "committed_tokens": 639,
+      "decode_seconds": 4.756357,
+      "decode_tokens_per_s": 134.346509,
+      "steps": 147
+    },
+    "R4": {
+      "armed_steps": 286,
+      "committed_tokens": 5084,
+      "decode_seconds": 10.723152,
+      "decode_tokens_per_s": 474.114315,
+      "steps": 287
+    },
+    "R5": {
+      "armed_steps": 195,
+      "committed_tokens": 5066,
+      "decode_seconds": 7.610688,
+      "decode_tokens_per_s": 665.642863,
+      "steps": 196
+    },
+    "R5cot": {
+      "armed_steps": 164,
+      "committed_tokens": 5066,
+      "decode_seconds": 6.385666,
+      "decode_tokens_per_s": 793.339338,
+      "steps": 165
+    },
+    "R6": {
+      "armed_steps": 160,
+      "committed_tokens": 20448,
+      "decode_seconds": 5.935244,
+      "decode_tokens_per_s": 3445.182796,
+      "steps": 161
+    },
+    "R8": {
+      "armed_steps": 164,
+      "committed_tokens": 10224,
+      "decode_seconds": 5.701609,
+      "decode_tokens_per_s": 1793.178121,
+      "steps": 165
+    }
+  },
+  "record_type": "w98g_grid_cell",
+  "schema_version": 1
+}
