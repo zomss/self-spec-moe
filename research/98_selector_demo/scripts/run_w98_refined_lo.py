@@ -296,7 +296,18 @@ def run_all(output_dir: Path, gpu: int) -> None:
         trace = traces / f"{artifacts.slug(cfg)}.jsonl"
         if trace.exists():
             trace.unlink()
-        if cfg.get("action") == "stock":
+        # Scored runs should carry no instrument. The region profiler's inner
+        # syncs cost +2.4 ms/step (amendment 2) and the koff trace writes a
+        # JSON line per step, and BOTH are paid by our runtime and by neither
+        # stock nor a deployment -- so leaving them on charges every armed arm
+        # and `off` a cost the baseline never pays. Phase 100's campaign
+        # runner turns both off for exactly this reason.
+        if os.environ.get("W98_LO_NOINSTRUMENT") == "1":
+            base = d3.boot_environment(cfg, trace, "corrected")
+            base["VLLM_SELF_SPEC_PROFILE"] = "0"
+            base.pop("VLLM_SELF_SPEC_KOFF_TRACE", None)
+            env = matrix._boot_child_environment(base)
+        elif cfg.get("action") == "stock":
             base = d3.boot_environment(cfg, trace, "corrected")
             env = matrix._boot_child_environment(
                 {k: v for k, v in base.items() if not k.startswith("VLLM_SELF_SPEC")}

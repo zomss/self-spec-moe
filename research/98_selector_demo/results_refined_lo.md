@@ -2410,3 +2410,103 @@ by −4% to −15%, which no envelope in the map could certify as positive.
 * **One box, and the tax is box-dependent** (6.7-7.5% on h103 against
   11-31% here). Cells whose margin is inside that difference — LI b8 at
   0.959 — could plausibly change sign on bare metal.
+
+---
+
+## 32. The instrument was on our side of every comparison
+
+Section 31 concluded that half the refined grid should not arm, from
+best-arm-versus-stock figures of 0.959 (LI b8), 0.848 (SS b8) and 1.061
+(LIO b8). Asked to check whether any of the engine tax was removable, the
+first place to look was what our boots pay that stock does not.
+
+`run_w98_g98b_round1.boot_environment` sets **`VLLM_SELF_SPEC_PROFILE=1`** and
+a **`VLLM_SELF_SPEC_KOFF_TRACE`** path on every boot it builds — `off` and
+every armed arm alike. The stock arm added in section 30 has neither, because
+it was constructed by stripping all `VLLM_SELF_SPEC*` variables. Amendment 2
+measured the profiler's inner syncs at **+2.4 ms/step**, and the trace writes
+a JSON line per step on top of that. Phase 100's own campaign runner turns
+both off and says why: *"Profiler and koff trace OFF -- wall clock is the
+score and the instrument costs +2.4 ms/step."*
+
+So every armed number in sections 29-31 was measured against a baseline that
+did not pay the instrument.
+
+### Re-measured with the instrument off
+
+Same cells, same arms, same protocol, `VLLM_SELF_SPEC_PROFILE=0` and no trace:
+
+| cell | arm | instrument ON | **OFF** | gain |
+| --- | --- | --- | --- | --- |
+| **LI** | `woff/skip4` | 0.9592 | **1.0632** | +10.8% |
+| | `w1024/skip4` | 0.9125 | **1.0574** | +15.9% |
+| | `woff/skip0` | 0.9529 | **1.0034** | +5.3% |
+| | `off` | 0.8304 | **0.9154** | +10.2% |
+| **LIO** | `w1024/skip4` | 1.0609 | **1.2323** | +16.2% |
+| | `woff/skip0` | 0.9741 | **1.0381** | +6.6% |
+| | `off` | 0.7786 | **0.9301** | +19.5% |
+| **SS** | `woff/skip4` | 0.8482 | **1.0545** | +24.3% |
+| | `w1024/skip4` | 0.8237 | **1.0471** | +27.1% |
+| | `woff/skip0` | 0.7915 | **1.0112** | +27.8% |
+| | `off` | 0.6913 | **0.7513** | +8.7% |
+
+**Section 31's park verdicts are withdrawn.** With the instrument removed,
+**every cell wins**: LI 1.063, LIO 1.232, SS 1.055. There is no firing set on
+this grid after all — which is where section 29 started, though for a reason
+neither section had.
+
+### The confirmation that the diagnosis is right
+
+The engine tax, `off` against stock:
+
+| cell | instrument ON | **OFF** | Campaign 1 (h103) |
+| --- | --- | --- | --- |
+| LI | 0.8304 | **0.9154** | 0.933 |
+| LIO | 0.7786 | **0.9301** | 0.925 |
+
+**Instrument-free, our tax matches h103's to within 2%** — 0.915 against
+0.933, 0.930 against 0.925 — where instrumented it was off by 10-15 points.
+Two campaigns on different boxes now agree on the parked overhead, which is
+what a correct diagnosis of an instrument artifact should produce, and it was
+not a fit: nothing here was tuned to make those numbers meet.
+
+SS is the exception and keeps a **24.9%** tax. Its sequences are short, so a
+fixed per-step overhead is amortised over the fewest tokens of any cell. That
+is the constant term behaving exactly as a constant term should.
+
+### What survives, and what does not
+
+* **The armed discrepancy with h103 shrinks but does not close.** Their `w4a16`
+  at LI b8 scores 0.708 against our comparable `woff/skip0` at 1.0034 — a
+  factor of **1.42**, down from section 29's 1.51 but still large. The
+  instrument explains the *tax* term completely and the *armed* gap only
+  partly.
+* **Section 31's structural findings stand**: the window lever's sign still
+  flips between LI and LIO, arming with the wrong lever is still worse than
+  parking, and the engine tax is still cell-dependent. Only the park/arm
+  verdicts move.
+* **Section 30 stands entirely.** Measuring against stock rather than `off`
+  was necessary and remains so; it was the *instrumented* stock comparison
+  that was wrong, not the choice of baseline.
+
+### The pattern, which is the durable part
+
+This is the **third** time in this record a comparison was contaminated by
+something one side paid and the other did not:
+
+| section | what one side paid | size |
+| --- | --- | --- |
+| 21, 25 | different generation lengths under natural EOS | up to 22 points |
+| 30 | the runtime's own overhead, via an `off` denominator | 17-22 points |
+| **32** | **the measurement instrument** | **5-28 points** |
+
+Each was found by the same question — *what does this baseline pay that the
+other does not?* — and each reversed a published conclusion. The question is
+cheap and should be asked before any cross-arm number is recorded, not after
+it is contradicted.
+
+### Scope
+
+Single boots per arm at three cells, batch 8, quantized family. LI b16, LIO
+b16 and LO have not been re-measured instrument-free, and their section-31
+numbers should be read as instrumented until they are.
