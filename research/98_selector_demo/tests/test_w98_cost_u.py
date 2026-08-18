@@ -170,3 +170,49 @@ def test_empty_lengths_is_an_error():
         integrated_with_drain(
             FIT, UNWINDOWED, FLAT_TAU, EDGES, 120, [], 10e-3, 1e-3, KVB, fit_batch=8
         )
+
+
+# --- window-aware attention ---
+
+from w98_cost_u import draft_cost_windowed, kv_cost_factor  # noqa: E402
+
+
+def test_gamma_one_recovers_the_linear_model():
+    """The extension must contain the model it extends."""
+    for positions in (128, 512, 17_000):
+        assert kv_cost_factor(positions, 1.0, 14_000) == pytest.approx(1.0)
+    linear = draft_cost(FIT, WINDOWED, 20_000, KVB)
+    same = draft_cost_windowed(FIT, WINDOWED, 20_000, KVB, gamma=1.0)
+    assert same == pytest.approx(linear)
+
+
+def test_superlinearity_makes_short_working_sets_disproportionately_cheap():
+    assert kv_cost_factor(528, 1.2, 14_000) < 1.0
+    assert kv_cost_factor(17_000, 1.2, 14_000) > 1.0
+
+
+def test_gamma_above_one_widens_the_window_advantage():
+    """Exactly the residual it exists to explain."""
+    ctx = 17_000
+
+    def gap(gamma):
+        unw = draft_cost_windowed(FIT, UNWINDOWED, ctx, KVB, gamma=gamma)
+        win = draft_cost_windowed(FIT, WINDOWED, ctx, KVB, gamma=gamma)
+        return unw / win
+
+    assert gap(1.2) > gap(1.0)
+
+
+def test_reference_anchors_the_parameterisation():
+    """At p_ref the factor is 1 for any gamma, so gamma redistributes."""
+    for gamma in (0.9, 1.0, 1.3):
+        assert kv_cost_factor(14_000, gamma, 14_000) == pytest.approx(1.0)
+
+
+def test_zero_positions_costs_nothing():
+    assert kv_cost_factor(0, 1.2, 14_000) == 0.0
+
+
+def test_bad_reference_is_an_error():
+    with pytest.raises(CostCurveError, match="reference"):
+        kv_cost_factor(100, 1.2, 0)

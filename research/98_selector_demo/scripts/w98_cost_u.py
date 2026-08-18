@@ -204,6 +204,15 @@ def linear_verify(v_fixed: float, v_per_token: float):
 # (C1's structural finding): the shared term is divided by fewer requests.
 
 
+def kv_cost_factor(positions: float, gamma: float, p_ref: float) -> float:
+    """Superlinearity multiplier on the KV term. 1.0 when gamma == 1."""
+    _require(positions >= 0, "positions must be non-negative")
+    _require(p_ref > 0, "reference position count must be positive")
+    if positions <= 0:
+        return 0.0
+    return (positions / p_ref) ** (gamma - 1.0)
+
+
 def survival(gen_lengths: Sequence[float], u: float) -> int:
     """Requests still generating at position `u`.
 
@@ -220,6 +229,8 @@ def split_cost(
     context: float,
     kv_bytes_per_token: float,
     fit_batch: float,
+    gamma: float = 1.0,
+    p_ref: float = 14_000.0,
 ) -> tuple[float, float]:
     """Draft cost per step, split into (batch-shared, per-request) parts.
 
@@ -240,7 +251,8 @@ def split_cost(
         )
         + fit["F"]
     )
-    kv = kv_positions(cfg["window"], context) * kv_bytes_per_token
+    positions = kv_positions(cfg["window"], context)
+    kv = positions * kv_bytes_per_token * kv_cost_factor(positions, gamma, p_ref)
     per_request = keep * kv * fit["kappa_kv"] / fit_batch
     return shared, per_request
 
@@ -257,6 +269,8 @@ def integrated_with_drain(
     kv_bytes_per_token: float,
     fit_batch: float,
     segment: int = SEGMENT,
+    gamma: float = 1.0,
+    p_ref: float = 14_000.0,
 ) -> dict[str, float]:
     """Per-token time over a run whose batch decays as requests finish.
 
@@ -290,7 +304,7 @@ def integrated_with_drain(
             tau = tau_at(centre)
             _require(tau > 0, f"no acceptance at u={centre}")
             shared, per_request = split_cost(
-                fit, cfg, context, kv_bytes_per_token, fit_batch
+                fit, cfg, context, kv_bytes_per_token, fit_batch, gamma, p_ref
             )
             step = (verify_shared + shared) + active * (
                 verify_per_request + per_request
@@ -305,3 +319,56 @@ def integrated_with_drain(
         "tokens_per_s": total_tokens / total_time,
         "mean_active_batch": total_tokens / horizon,
     }
+
+
+# --- window-aware attention -----------------------------------------------
+#
+# `results_refined_lo.md` left one residual: `w512/skip4` measured 1.408x
+# against a predicted 1.250x, the window saving ~11% more than the model
+# credits. The obvious repair -- add an attention term scaling with KV
+# positions -- does NOT work, and the reason is worth stating: attention
+# bytes and attention flops are both linear in positions, so such a term is
+# exactly collinear with the KV-bytes term already present and nothing in a
+# linear fit can separate them.
+#
+# A window can only save MORE than a linear model credits if cost grows
+# SUPERLINEARLY with positions. That is physically ordinary -- a 512-position
+# working set is resident in cache while a 17000-position one streams from
+# HBM, so the per-byte cost is not the same constant in the two regimes.
+#
+# One parameter expresses it, with the current model as the gamma = 1 case:
+#
+#     kv_cost(p) = kappa_kv * bytes(p) * (p / p_ref) ** (gamma - 1)
+#
+# gamma > 1 makes long contexts disproportionately expensive, which is the
+# same statement as a short window being disproportionately cheap. It is NOT
+# fitted to the single residual above: one point cannot identify a curve, and
+# fitting it to that point would be the overfit this phase keeps refusing.
+# `probe_w98_window_sweep` measures the shape instead.
+
+
+def draft_cost_windowed(
+    fit: Mapping[str, float],
+    cfg: Mapping[str, Any],
+    context: float,
+    kv_bytes_per_token: float,
+    gamma: float = 1.0,
+    p_ref: float = 14_000.0,
+) -> float:
+    """Draft cost with a superlinear KV term.
+
+    `p_ref` anchors the parameterisation at the context the fit was taken at,
+    so gamma only redistributes cost between short and long working sets
+    instead of rescaling everything.
+    """
+    keep = float(cfg["keep_frac"])
+    windowed = 1.0 if cfg["window"] not in ("off", 0, None) else 0.0
+    positions = kv_positions(cfg["window"], context)
+    kv = positions * kv_bytes_per_token * kv_cost_factor(positions, gamma, p_ref)
+    layer = (
+        float(cfg["weight_bytes"]) * fit["kappa_w"]
+        + kv * fit["kappa_kv"]
+        + fit["c_layer"]
+        + fit["f_win"] * windowed
+    )
+    return keep * layer + fit["F"]

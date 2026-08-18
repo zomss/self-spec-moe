@@ -1,0 +1,91 @@
+{
+  "content_cell": "LO",
+  "record_type": "w98_long_u_summary",
+  "rows": [
+    {
+      "config": {
+        "quant": "target-matching",
+        "skip_count": 4,
+        "window": 1024
+      },
+      "content_cell": "LO",
+      "tau": {
+        "0": {
+          "armed_steps": 283,
+          "tau_k4": 4.583
+        },
+        "1": {
+          "armed_steps": 833,
+          "tau_k4": 4.5414
+        },
+        "2": {
+          "armed_steps": 2367,
+          "tau_k4": 4.3773
+        },
+        "3": {
+          "armed_steps": 5869,
+          "tau_k4": 4.3462
+        }
+      }
+    },
+    {
+      "config": {
+        "quant": "target-matching",
+        "skip_count": 4,
+        "window": 128
+      },
+      "content_cell": "LO",
+      "tau": {
+        "0": {
+          "armed_steps": 333,
+          "tau_k4": 4.0571
+        },
+        "1": {
+          "armed_steps": 1079,
+          "tau_k4": 3.8906
+        },
+        "2": {
+          "armed_steps": 2944,
+          "tau_k4": 3.7935
+        },
+        "3": {
+          "armed_steps": 7324,
+          "tau_k4": 3.7717
+        }
+      }
+    },
+    {
+      "config": {
+        "quant": "target-matching",
+        "skip_count": 4,
+        "window": 256
+      },
+      "content_cell": "LO",
+      "tau": {
+        "0": {
+          "armed_steps": 293,
+          "tau_k4": 4.4403
+        },
+        "1": {
+          "armed_steps": 979,
+          "tau_k4": 4.1359
+        },
+        "2": {
+          "armed_steps": 2744,
+          "tau_k4": 3.9617
+        },
+        "3": {
+          "armed_steps": 7005,
+          "tau_k4": 3.9225
+        }
+      }
+    }
+  ],
+  "schema_version": 1,
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

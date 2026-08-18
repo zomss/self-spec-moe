@@ -92,6 +92,22 @@ ARMS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Window sweep at fixed skip, to IDENTIFY the superlinearity of the KV term.
+# One residual cannot fix a curve; three more window sizes traced against the
+# unwindowed arm can, because they vary KV positions with everything else
+# held constant.
+SWEEP: dict[str, dict[str, Any]] = {
+    f"w{w}skip4": {
+        "action": "armed",
+        "quant": "target-matching",
+        "window": w,
+        "skip_count": 4,
+    }
+    for w in (128, 256, 1024)
+}
+if os.environ.get("W98_LO_SWEEP") == "1":
+    ARMS = dict(SWEEP)
+
 
 def _require(condition: bool, message: str) -> None:
     if not condition:

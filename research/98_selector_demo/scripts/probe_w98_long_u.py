@@ -69,6 +69,15 @@ CONFIGS = [
     {"quant": "target-matching", "window": "off", "skip_count": 8},
     {"quant": "target-matching", "window": 512, "skip_count": 4},
 ]
+if os.environ.get("W98_LONGU_WINDOWS") == "1":
+    # The window sweep's acceptance curves. The LO throughput sweep showed
+    # cost is NOT monotone in window size -- w128 and w256 measure slower
+    # than w512 -- which no KV-bytes model produces. Acceptance is the only
+    # candidate, and it was measured for w512 alone.
+    CONFIGS = [
+        {"quant": "target-matching", "window": w, "skip_count": 4}
+        for w in (128, 256, 1024)
+    ]
 
 
 def _require(condition: bool, message: str) -> None:

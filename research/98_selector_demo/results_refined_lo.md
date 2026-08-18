@@ -228,3 +228,71 @@ the drain dominates, context growth is second, and acceptance's u-dependence
 matters for *which* arm wins rather than for the level. None of them is
 visible in a short-generation regime, which is why the R-regimes never
 exposed them and the refined grid did.
+
+---
+
+## 9. The window-aware attention term: implemented, measured, and refuted
+
+Section 7 left `w512/skip4` under-predicted by 11% and proposed a
+window-aware attention term. Two things had to be faced before fitting one.
+
+**A term scaling with KV positions is not identifiable.** Attention bytes and
+attention flops are both linear in positions, so such a term is exactly
+collinear with the KV-bytes term already in the model. The window can only
+save *more* than a linear model credits if cost grows **superlinearly** with
+positions — physically ordinary, since a 512-position working set is cache
+resident while a 17000-position one streams from HBM. That is one parameter,
+with the current model as its `gamma = 1` case:
+
+```text
+kv_cost(p) = kappa_kv * bytes(p) * (p / p_ref) ** (gamma - 1)
+```
+
+**One residual cannot identify a curve.** So instead of fitting gamma to the
+single arm that motivated it, the shape was measured: a five-point window
+sweep at fixed skip on the LO cell, plus acceptance curves for every window.
+
+### What the sweep measured
+
+| window | per-token | vs off | tau at u<256 | tau at 3K–8K |
+| --- | --- | --- | --- | --- |
+| off | 2.803 ms | 1.023x | 4.553 | 4.709 |
+| 128 | 2.666 ms | 1.076x | 4.057 | **3.772** |
+| 256 | 2.641 ms | 1.086x | 4.440 | 3.922 |
+| 512 | 2.037 ms | 1.408x | 4.553 | 4.266 |
+| **1024** | **1.943 ms** | **1.476x** | 4.583 | 4.346 |
+
+**Throughput is not monotone in window size.** A KV-bytes model says tighter
+windows are strictly cheaper, so w128 should win; it measures 27% *worse*
+than w1024. The acceptance columns say why: acceptance falls monotonically as
+the window tightens, and its decay with generation length steepens — by the
+3K–8K bucket the penalty against no window is 7.7% at w1024, 9.4% at w512,
+16.7% at w256 and 19.9% at w128.
+
+So **the window lever has an interior optimum**, at 1024 or beyond for this
+cell, and it is invisible to any model that prices windows by bytes alone.
+
+### The verdict on gamma
+
+Refitted over the five arms with each window's own measured acceptance:
+
+| gamma | 1.00 | 1.10 | 1.20 | 1.30 | 1.40 | 1.50 |
+| --- | --- | --- | --- | --- | --- | --- |
+| mean error | **0.1209** | 0.1216 | 0.1220 | 0.1222 | 0.1223 | 0.1222 |
+
+**gamma = 1 is best, and raising it monotonically hurts.** The data does not
+support a superlinear KV term; the residual is not attention non-linearity.
+The term ships with `gamma = 1.0` as its default — a no-op that reproduces
+the existing model exactly — and the record says it was measured and not
+adopted rather than left as an untested option.
+
+The remaining ~12% is most likely in the cost coefficients themselves:
+`kappa_kv` is inherited from an R5cot fit taken at a fixed 14K context and
+batch 8, and nothing here re-fits it on the refined cells. That, not another
+functional form, is what would close the gap.
+
+**A bug found in my own fitting**: the first gamma sweep returned an
+identical error for every value, which is impossible if the parameter is
+live. `integrated_with_drain` reaches cost through `split_cost`, not
+`draft_cost`, so gamma never entered the computation. The insensitivity is
+what exposed it; the numbers above come from the corrected path.

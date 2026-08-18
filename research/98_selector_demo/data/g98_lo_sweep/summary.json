@@ -1,0 +1,48 @@
+{
+  "arms": {
+    "target-matching/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 514.6,
+      "total_out_tokens": 124042,
+      "wall_s": 241.045
+    },
+    "target-matching/w128/skip4": {
+      "cap_hits": 3,
+      "tokens_per_s": 375.114,
+      "total_out_tokens": 159170,
+      "wall_s": 424.324
+    },
+    "target-matching/w256/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 378.664,
+      "total_out_tokens": 109013,
+      "wall_s": 287.888
+    }
+  },
+  "batch": 8,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-0",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-1",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-2",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-3",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-4",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-5",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-6",
+      "target-matching/w128/skip4 diverges from target-matching/w1024/skip4 on LO-7",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-0",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-1",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-2",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-3",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-4",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-5",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-6",
+      "target-matching/w256/skip4 diverges from target-matching/w1024/skip4 on LO-7"
+    ],
+    "ok": false,
+    "reference": "target-matching/w1024/skip4"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
