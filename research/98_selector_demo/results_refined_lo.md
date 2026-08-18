@@ -1076,3 +1076,90 @@ deployed at another only for arms whose batch response the model tracks**, and
 current picks are windowed, this is a bounded risk today and a blocking one
 the moment deep skip enters the candidate set — which section 15 showed it
 should.
+
+---
+
+## 19. Fixing the batch-scaling error: a real defect repaired, the shape not
+
+Section 18 attributed the batch-scaling error to a shape the model cannot
+express. Before accepting that, two cheaper explanations were checked and
+both died, and then the assumption underneath was measured rather than
+reasoned about.
+
+**The batch-16 caveat was wrong.** Section 18 flagged that point as
+untrustworthy on suspicion of cap hits and KV pressure. The traces say
+otherwise: **zero preemptions and zero recomputed tokens in all fourteen
+runs**, and KV peaks at 12,827 blocks against the 22,190 registered — 58%.
+Under the registered context-corrected currency the peak is *sharper*, not
+softer:
+
+| batch | `woff/skip8` | `w1024/skip4` |
+| --- | --- | --- |
+| 2 | 0.778 | 1.352 |
+| 4 | 1.322 | 1.549 |
+| 8 | **1.562** | 1.565 |
+| 16 | 1.294 | 1.600 |
+
+The non-monotonicity is real machine behaviour and the caveat is withdrawn.
+
+**gamma was not it either.** The predictor had been running at `gamma = 1.0`
+while section 13 measured 1.25 across three cells. Applying it moves the
+batch-16 error from +34.0% to +32.8%. Sixth refutation.
+
+### The defect, measured
+
+Every cost arm in this phase ran at batch 8, so the draft chain's split into
+batch-shared and batch-proportional parts was never identified — `split_cost`
+divides a batch-8 coefficient by 8, which is an assumption, and section 18
+had just caught the identical assumption in verify. The profiler reports the
+draft chain per step, so sweeping batch measures it:
+
+| batch | 2 | 4 | 8 | 16 |
+| --- | --- | --- | --- | --- |
+| measured `draft_chain_ms` | 18.481 | 19.182 | 22.655 | 27.382 |
+| model | 20.45 | 21.10 | 22.40 | 25.00 |
+
+**The model's batch slope is half the truth.** Refitting with batch in the
+design — the KV column carrying per-step rather than per-sequence bytes —
+gives a per-request coefficient **1.94x larger**, and `f_win` returns to a
+physical **+2.68 ms** from the zero that non-negativity had pinned it to.
+That last point matters beyond this section: section 14's negative-window
+pathology was the same misattributed split seen from another angle.
+
+### What the repair buys
+
+| batch | arm | before | after | measured |
+| --- | --- | --- | --- | --- |
+| 2 | `woff/skip8` | +2.3% | **+17.9%** | 0.939 |
+| 4 | `woff/skip8` | −12.0% | **−4.3%** | 1.296 |
+| 8 | `woff/skip8` | −19.4% | −19.7% | 1.540 |
+| 16 | `woff/skip8` | **+34.0%** | **+0.7%** | 1.402 |
+| | **mean over 8 points** | **0.1069** | **0.0729** | |
+
+**Mean error across the sweep falls by a third and the blowup is gone** —
+batch 16 from +34.0% to +0.7%. The repair is a measurement, not a fit to the
+target: the coefficient came from the draft chain's own profiler trace, and
+the throughput predictions were not consulted in deriving it.
+
+### What it does not buy, stated plainly
+
+It does not fix the thing section 18 named. The predicted sequence is
+1.107, 1.240, 1.237, 1.411 — monotone — against a measured 0.939, 1.296,
+1.540, 1.402 that **peaks at batch 8**. A model whose every term is either
+`1/B` or flat cannot produce an interior maximum at any coefficients, so this
+was never a fit that could succeed. The repair moved error from batch 16 to
+batch 2 and left batch 8 untouched at −19.7%.
+
+Nor does it change the ranking. At batch 8 over all seven arms the mean error
+improves 0.0823 → 0.0792 and `skip8` is still predicted fifth against a
+measured second.
+
+**So: one real defect found and repaired, and the shape error survives it.**
+The remaining signature is specific enough to be worth stating for whoever
+takes it next — the model is right at batch 16, 20% low at batch 8, and 18%
+high at batch 2, on the arm with the lowest acceptance and the deepest KV
+reads. That is a term that peaks with batch, and the natural candidate is the
+one the sweep was too coarse to see: the armed verify processes `B x (K+1)`
+query positions against the parked path's `B x 1`, so it meets any
+compute-bound knee at a fifth of the batch. Testing that needs the verify
+measured against batch on its own, which this sweep did not isolate.

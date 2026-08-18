@@ -63,7 +63,12 @@ def score(directories: list[Path]) -> dict[str, Any]:
         for path in sorted(Path(directory).glob("*.json")):
             if path.name == "summary.json":
                 continue
-            record = artifacts.read(path)
+            try:
+                record = artifacts.read(path)
+            except artifacts.ArtifactError:
+                continue  # derived records share the directory
+            if record.get("record_type") != "w98_refined_lo":
+                continue
             if record["cell"] in records:
                 raise RuntimeError(f"{path}: {record['cell']} measured twice")
             records[record["cell"]] = record

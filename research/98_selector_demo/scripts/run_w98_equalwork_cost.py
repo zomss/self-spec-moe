@@ -72,6 +72,25 @@ SKIPS = (0, 4, 8)
 KEEP = {0: 1.0, 4: 32 / 36, 8: 28 / 36}
 
 
+def _filtered(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Restrict to named cells, for sweeps that vary batch instead of levers.
+
+    Measuring how `draft_chain_ms` and `verify_ms` scale with batch needs one
+    arm at many batches, not many arms at one -- the linear-in-batch step
+    model is the assumption under test, and it is the same assumption for
+    every arm.
+    """
+    wanted = os.environ.get("W98_EW_ARMS")
+    if not wanted:
+        return configs
+    keep = set(wanted.split(","))
+    out = [c for c in configs if artifacts.cell_key(c) in keep]
+    missing = keep - {artifacts.cell_key(c) for c in out}
+    if missing:
+        raise SystemExit(f"unknown arms requested: {sorted(missing)}")
+    return out
+
+
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise RuntimeError(message)
@@ -202,7 +221,7 @@ def run_all(output_dir: Path, gpu: int) -> None:
     Path(lane["cache_root"]).mkdir(parents=True, exist_ok=True)
     traces = output_dir / "traces"
     traces.mkdir(parents=True, exist_ok=True)
-    planned = arms()
+    planned = _filtered(arms())
     artifacts.plan(planned)
     for cfg in planned:
         name = artifacts.slug(cfg)

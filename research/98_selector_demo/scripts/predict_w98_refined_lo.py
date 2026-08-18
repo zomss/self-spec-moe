@@ -49,24 +49,42 @@ W_LAYER_BYTES = {"target-matching": 13.892e9, "w4a16-quantized": 3.581e9}
 OFF_KEY = "off"
 
 
-def fit_cost(directory: Path) -> dict[str, float]:
-    """Per-family draft-cost coefficients, constrained physical."""
+def fit_cost(directories: list[Path] | Path, batched: bool = False) -> dict[str, float]:
+    """Per-family draft-cost coefficients, constrained physical.
+
+    With `batched`, the KV column carries per-STEP bytes (`keep * kv * B`)
+    rather than per-sequence bytes, so `kappa_kv` comes out as a true
+    per-request coefficient. That distinction is invisible in a design where
+    every arm shares one batch -- which every cost arm in this phase did --
+    and it is exactly the defect section 18 found in the verify split: a
+    shared/per-request division that was assumed at the fitting batch rather
+    than measured. Measured directly, the draft chain's batch slope is twice
+    what dividing a batch-8 fit by 8 implies.
+    """
     import numpy as np
     from scipy.optimize import nnls
 
+    if isinstance(directories, Path):
+        directories = [directories]
     rows, targets = [], []
-    for path in sorted(Path(directory).glob("*.json")):
-        if path.name == "summary.json":
-            continue
-        record = artifacts.read(path)
-        cfg = record["config"]
-        keep = float(record["keep_frac"])
-        windowed = 0.0 if cfg["window"] in ("off", 0, None) else 1.0
-        kv = mean_kv_positions(
-            cfg["window"], float(record["prompt_tokens"]), float(record["gen_tokens"])
-        )
-        rows.append([keep, keep * windowed, keep * kv * KV_BYTES_PER_TOKEN, 1.0])
-        targets.append(float(record["draft_chain_ms"]) / 1000.0)
+    for directory in directories:
+        for path in sorted(Path(directory).glob("*.json")):
+            if path.name == "summary.json":
+                continue
+            record = artifacts.read(path)
+            cfg = record["config"]
+            keep = float(record["keep_frac"])
+            windowed = 0.0 if cfg["window"] in ("off", 0, None) else 1.0
+            kv = mean_kv_positions(
+                cfg["window"],
+                float(record["prompt_tokens"]),
+                float(record["gen_tokens"]),
+            )
+            scale = float(record["batch"]) if batched else 1.0
+            rows.append(
+                [keep, keep * windowed, keep * kv * KV_BYTES_PER_TOKEN * scale, 1.0]
+            )
+            targets.append(float(record["draft_chain_ms"]) / 1000.0)
     design, target = np.array(rows), np.array(targets)
     beta, _ = nnls(design, target)
     residual = abs((design @ beta) / target - 1.0)
@@ -81,6 +99,7 @@ def fit_cost(directory: Path) -> dict[str, float]:
         "F": float(beta[3]),
         "fit_mean_residual": float(residual.mean()),
         "fit_arms": len(targets),
+        "kappa_kv_is_per_request": batched,
     }
 
 
@@ -207,7 +226,9 @@ def predict(
             shared,
             per_request,
             KV_BYTES_PER_TOKEN,
-            fit_batch=float(record["batch"]),
+            fit_batch=1.0
+            if fit.get("kappa_kv_is_per_request")
+            else float(record["batch"]),
             gamma=gamma,
         )
         measured = off_per_token / (record["wall_s"] / record["total_out_tokens"])
@@ -232,7 +253,13 @@ def ranking(rows: dict[str, Any], key: str) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--equalwork", type=Path, required=True)
+    parser.add_argument("--equalwork", required=True, help="comma-separated")
+    parser.add_argument(
+        "--batched-fit",
+        action="store_true",
+        help="treat the KV column as per-step, which needs batch to vary "
+        "across the equal-work directories given",
+    )
     parser.add_argument("--runs", required=True, help="comma-separated directories")
     parser.add_argument("--curves", required=True, help="comma-separated directories")
     parser.add_argument(
@@ -257,7 +284,9 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    fit = fit_cost(args.equalwork)
+    fit = fit_cost(
+        [Path(p) for p in args.equalwork.split(",")], batched=args.batched_fit
+    )
     runs = load_runs([Path(p) for p in args.runs.split(",")])
     source = args.acceptance_from or args.curves
     curves = load_curves(
