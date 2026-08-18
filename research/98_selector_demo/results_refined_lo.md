@@ -1253,3 +1253,104 @@ skip by 43% at batch 2 and tying at batch 8 — rests on measurements whose
 context profiles differ by a factor of two across batches, so the *magnitude*
 of that crossover should be treated as provisional even though its direction
 matches Campaign 1 independently.
+
+---
+
+## 21. The fixed-length sweep: most of the residual was the workload
+
+Sections 17-20 chased a 19% error on `woff/skip8` through six refuted
+explanations. This section is the seventh test and the one that lands, and it
+was prompted by an observation from outside the analysis: greedy sampling
+does not make the arms emit the same tokens, and requests that stop earlier
+change the cost being modelled.
+
+Both halves check out. Every scored runner uses `temperature=0.0` and
+`seed=0`, and **every armed arm still diverges from the parked one on 8 of 8
+requests**, with output totals spanning 0.871-1.000 of OFF's. Greedy fixes
+the rule for choosing a token, not the logits it chooses from; batch-composition
+numerics flip near-tie argmaxes and EOS lands elsewhere. Under natural EOS
+that divergence moves where each request *stops*, and generation length drives
+the drain, which section 7 showed is a first-order term. So each arm was being
+predicted against a different workload.
+
+Twelve boots with `ignore_eos` and a 16,384-token budget — chosen to bracket
+the natural-EOS realized mean of 15,061-19,273 — make the workload identical
+by construction. Every arm at every batch emitted exactly `16384 * B` tokens,
+zero cap hits.
+
+### The contamination, measured
+
+| batch | arm | natural EOS | **fixed length** | inflation |
+| --- | --- | --- | --- | --- |
+| 2 | `woff/skip8` | 0.939 | **1.159** | **−19.0%** |
+| 4 | `woff/skip8` | 1.296 | 1.290 | +0.5% |
+| 8 | `woff/skip8` | 1.540 | **1.277** | **+20.6%** |
+| 16 | `woff/skip8` | 1.402 | 1.186 | +18.2% |
+| 2 | `w1024/skip4` | 1.339 | 1.380 | −2.9% |
+| 4 | `w1024/skip4` | 1.516 | 1.369 | +10.7% |
+| 8 | `w1024/skip4` | 1.552 | 1.544 | +0.5% |
+| 16 | `w1024/skip4` | 1.607 | **1.689** | −4.9% |
+
+**The confound is not an offset — it swings from −19.0% to +20.6% on one
+arm.** A 40-point range, larger than the effect it was contaminating. At
+batch 2 `skip8` had generated 18,584 tokens per request against OFF's 9,876:
+nearly twice the work at far deeper context, and the per-token ratio charged
+it for that.
+
+### Two earlier conclusions are wrong
+
+**Section 18's switching case does not survive.** It reported the window arm
+beating deep skip by 43% at batch 2 and *tying* at batch 8, and called that
+the phase's strongest switching evidence. At equal work there is no
+crossover: `w1024/skip4` leads at **every** batch — by 19.1%, 6.1%, 20.9% and
+42.4% — and its lead is widest where section 18 said the arms tied. The
+"crossover" was the workload difference. Campaign 1's batch crossover is
+independent evidence and stands; ours does not.
+
+**Section 18's shape error is real but four times smaller.** At equal work
+`skip8` still peaks in the interior — 1.159, **1.290**, 1.277, 1.186, peaking
+at batch 4 and falling 8.1% by batch 16 — so a model monotone in batch still
+cannot express it. But the amplitude is an 11% rise and an 8% fall, not the
+64% rise section 18 reported. Section 20's verdict that the peak might not be
+a batch property at all is now settled: it is one, and it is minor.
+
+### The model was never as wrong as it looked
+
+Predicting the fixed-length runs, everything else unchanged:
+
+| batch | `skip8` predicted | measured | error | `w1024` error |
+| --- | --- | --- | --- | --- |
+| 2 | 1.347 | 1.159 | **+16.2%** | −2.3% |
+| 4 | 1.295 | 1.290 | **+0.4%** | +1.2% |
+| 8 | 1.232 | 1.277 | **−3.5%** | −4.9% |
+| 16 | 1.145 | 1.186 | −3.4% | −6.8% |
+| | **mean** | | **4.84%** | (3.37% excluding batch 2) |
+
+**Mean error falls from 7.28% to 4.84%, and the error that drove sections
+17-20 — `skip8` at batch 8 — collapses from −19.7% to −3.5%.** Six
+hypotheses were refuted because the thing being explained was mostly not
+model error. The model's inputs were sound, its structure was adequate, and
+the residual was the workload moving underneath it.
+
+What remains is small and specific: `skip8` at batch 2 is over-predicted by
+16.2%, and the model has `skip8` monotone *decreasing* (1.347, 1.295, 1.232,
+1.145) where measurement rises then falls. It gets the fall right and the
+rise wrong.
+
+### The methodological point, which is the durable part
+
+The phase already knew to calibrate with equal work and score with natural
+EOS. What it had not done was apply that discipline to an *analysis*: sections
+18-20 compared arms across batches using scored runs, where the workload is a
+free variable. Any comparison that holds the machine fixed and lets the
+workload move is measuring both.
+
+A consequence for the selector, which is new and should be registered: **the
+generation-length distribution is a required input, not a cell label.** It
+drives the drain, it differs per arm through numerics the selector does not
+control, and on AIME it spans 4,721-32,768 tokens — a 7x range within one
+cell. A selector deployed on a different long-output workload needs that
+distribution. The good news measured in the same pass: predictions fed the
+*parked* arm's lengths — which a selector can actually obtain — score
+**0.0435** against **0.0792** for each arm's own realized lengths, so the
+input a deployment can supply is the better one.

@@ -58,6 +58,9 @@ CAP = 32_768  # the registered Phase-100 cap for LO
 # the resulting unregistered width ("permits only K=0 or K=4, got K=2").
 MAX_MODEL_LEN = 40_960
 BATCH = int(os.environ.get("W98_LO_BATCH", "8"))
+# Fixed-length mode: generation budget in tokens, EOS ignored. Zero keeps the
+# scored protocol's natural EOS.
+FIXED_TOKENS = int(os.environ.get("W98_LO_FIXED", "0"))
 # The arms whose tau(u) curves are measured, plus the parked reference.
 ARMS: dict[str, dict[str, Any]] = {
     "off": {
@@ -163,7 +166,21 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
                 f"{CELL}-{index}",
                 {"prompt_token_ids": tokens},
                 # Natural EOS: the cap is a safety net, not a budget.
-                SamplingParams(temperature=0.0, max_tokens=CAP),
+                # Under W98_LO_FIXED the cap becomes the budget and EOS is
+                # ignored, which is how a batch sweep separates batch from
+                # context. At T=0 the arms still do not emit identical tokens
+                # -- batch-composition numerics flip near-tie argmaxes, so
+                # every armed arm diverges from the parked one on 8 of 8
+                # requests -- and under natural EOS that divergence moves
+                # where each request STOPS. Generation length then varies by
+                # arm and by batch, and it drives the drain term, which is
+                # first order. Fixing the length makes the workload identical
+                # by construction so a batch effect can be read as one.
+                SamplingParams(
+                    temperature=0.0,
+                    max_tokens=FIXED_TOKENS or CAP,
+                    ignore_eos=bool(FIXED_TOKENS),
+                ),
             )
         started = time.perf_counter()
         while engine.has_unfinished_requests():
@@ -193,6 +210,8 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
                     "content_cell": CELL,
                     "batch": BATCH,
                     "cap": CAP,
+                    "fixed_tokens": FIXED_TOKENS,
+                    "stopping_rule": "fixed" if FIXED_TOKENS else "natural_eos",
                     "wall_s": round(wall, 3),
                     "total_out_tokens": total,
                     "tokens_per_s": round(total / wall, 3),

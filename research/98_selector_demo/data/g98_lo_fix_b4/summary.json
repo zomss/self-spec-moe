@@ -1,0 +1,40 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 365.772,
+      "total_out_tokens": 65536,
+      "wall_s": 179.172
+    },
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 500.854,
+      "total_out_tokens": 65536,
+      "wall_s": 130.849
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 471.936,
+      "total_out_tokens": 65536,
+      "wall_s": 138.866
+    }
+  },
+  "batch": 4,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-0",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-1",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-2",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-3",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-0",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-1",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-2",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-3"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
