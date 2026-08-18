@@ -1632,3 +1632,143 @@ What it does not deliver is a **bytes** model of the window, in either
 family. The price of the honest form is that it predicts only at windows that
 were measured, per family. Given that the response is not monotone in bytes,
 that price is not a limitation of the form — it is the finding.
+
+---
+
+## 25. Step 1: at equal work the lattice does not reorder at all
+
+Section 15 reported Spearman **+0.286** between the two draft weight
+versions' rankings of the same seven configurations — against **+0.902** for
+a change of task — and concluded that the weight version reorders the lever
+lattice more than the workload does. Section 17 then found the prediction
+ranking `skip8` fifth where the cell measured it second, and sections 18-20
+spent five refuted hypotheses on that error.
+
+All of it was measured under **natural EOS**, where each arm emits a
+different number of tokens: 104,530 to 159,170 against the parked arm's
+134,139. Section 21 established that a comparison holding the machine fixed
+while the workload moves is measuring both, and retired two conclusions
+drawn that way — but it only had two arms. This re-takes all seven, in both
+families, at equal work.
+
+Sixteen boots, `ignore_eos`, 16,384 tokens per request, batch 8, same
+prompts, same cell.
+
+### The gates first
+
+| | |
+| --- | --- |
+| tokens emitted, every arm, both families | **131,072** (identical) |
+| cap hits | **0** |
+| context-ratio deviation from the parked arm | **0.000000** |
+| the two families' own parked boots | 1.606 vs 1.594 ms/token (**0.753%**) |
+
+With identical generation lengths the Campaign-1 context correction becomes
+a common factor, so raw and corrected rankings coincide and `score_vs_off`
+can be read directly as a ranking.
+
+### The result
+
+| arm | bf16 | w4a16 |
+| --- | --- | --- |
+| `w1024/skip4` | **1.3225** | **1.5678** |
+| `w512/skip4` | 1.2890 | 1.4701 |
+| `w256/skip4` | 1.2551 | 1.4082 |
+| `w128/skip4` | 1.1776 | 1.3689 |
+| `woff/skip4` | 1.1619 | 1.3581 |
+| `woff/skip0` | 1.1415 | 1.3526 |
+| `woff/skip8` | 1.0312 | 1.2796 |
+
+**Spearman +1.000 (p = 0), against +0.286 under natural EOS.** The two
+families rank the seven arms **identically** — and the order is clean:
+monotone in window size, then skip4 over skip0 over skip8.
+
+**Section 15's central claim is refuted.** Changing the draft's weight
+version does not reorder the lever lattice. The reorder was the workload.
+
+### `skip8` does not flip
+
+Section 15's most striking number was `woff/skip8` moving from the only
+sub-parity arm in the bf16 family (0.914) to the second-best quantized arm
+(1.562). At equal work it is **last in both families** and above parity in
+both (1.0312, 1.2796). Nothing flips.
+
+The reason is visible in the contamination, which is signed by arm *and* by
+family and spans 33 points:
+
+| arm | bf16 natural | bf16 equal | inflation | w4a16 natural | w4a16 equal | inflation |
+| --- | --- | --- | --- | --- | --- | --- |
+| `w1024/skip4` | 1.4960 | 1.3225 | +13.12% | 1.5651 | 1.5678 | −0.17% |
+| `w512/skip4` | 1.4213 | 1.2890 | +10.26% | 1.5087 | 1.4701 | +2.63% |
+| `w256/skip4` | 1.1127 | 1.2551 | −11.35% | 1.3322 | 1.4082 | −5.40% |
+| `w128/skip4` | 1.0506 | 1.1776 | −10.78% | 1.3011 | 1.3689 | −4.95% |
+| `woff/skip4` | 1.0424 | 1.1619 | −10.28% | 1.4426 | 1.3581 | +6.22% |
+| `woff/skip0` | 1.0524 | 1.1415 | −7.81% | 1.4486 | 1.3526 | +7.10% |
+| `woff/skip8` | 0.9141 | 1.0312 | −11.36% | **1.5617** | 1.2796 | **+22.05%** |
+
+The largest single contamination in the table, **+22.05%**, sits on exactly
+the arm whose behaviour drove section 15's flip, section 17's misranking and
+five refuted hypotheses in sections 18-20.
+
+**A second finding, which is methodological and transfers.** Every number in
+those columns is already **context-corrected** under Campaign 1's amendment
+1 (`CTX_SHARE = 0.15`). The correction is not enough at this cell's
+magnitudes: with arms emitting 104K to 159K tokens, a 15% context share
+leaves up to 22 points of length confound standing. **At LO lengths the
+registered correction does not substitute for equal work.**
+
+### The prediction, re-scored
+
+The same model, the same coefficients, the same u-curves — only the workload
+held fixed:
+
+| | mean abs error, natural EOS | **equal work** |
+| --- | --- | --- |
+| `target-matching` | 0.0683 | **0.0218** |
+| `w4a16-quantized` | 0.0823 | **0.0366** |
+
+and `woff/skip8` in the quantized family, the residual that drove sections
+17-20, goes from **−19.4%** to **+5.6%**.
+
+Ranking, per family:
+
+* **bf16 is right** up to one adjacent pair — `w128/skip4` and `woff/skip4`
+  are predicted 1.169 against 1.173, a 0.3% gap this box cannot resolve;
+* **the quantized family is still wrong**, but no longer diffusely. The
+  model over-predicts the two **unwindowed** arms (+7.6%, +4.5%) while
+  getting the windowed ones to within 2% (`w256` +0.4%, `w128` −1.9%), so it
+  ranks `woff/skip4` and `woff/skip0` above `w256` and `w128` where
+  measurement puts them below.
+
+That residual lands exactly on the term section 24 independently showed is
+unphysical in that family: the quantized window offsets, fitted where the
+window axis had saturated, with `f_win` and `kappa_kv` both negative. Two
+sections reached the same defect from opposite directions.
+
+### What this does to the plan
+
+Step 1 was registered with a branch: Spearman toward +0.9 means section 15's
+crack is a correctness matter rather than a live selector risk; near +0.3
+means the quant-axis model is the phase's main open defect. **It returned
++1.000**, so the branch resolves to the first reading, and Step 2 shrinks
+accordingly.
+
+What survives, and should not be over-corrected away:
+
+* **section 24's cost finding stands** — the same window over identical KV
+  traffic saves 4.544 ms in the bf16 draft and 2.823 in the quantized one —
+  and it now has a sharper consequence than section 15 gave it: it is the
+  *remaining* ranking error in the quantized family, worth two rank places,
+  not a reordering of the whole lattice;
+* **the top pick is `w1024/skip4` in both families under both protocols.**
+  That is why the 31-cell selector scored 0.982 without ever having been
+  checked across weight versions;
+* **natural EOS is still what a deployment sees.** These numbers do not say
+  the natural-EOS measurements were wrong; they say the *cause* is the
+  generation-length distribution, not the weight version. The selector must
+  still cope with it — as section 21 registered, by taking the length
+  distribution as an input — but it must not model it as a quant effect.
+
+**Scope.** One cell, one batch, single boots. Equal work is the calibration
+protocol; the scored protocol keeps natural EOS. The claim here is about the
+lattice's structure and the model, not about deployed throughput.

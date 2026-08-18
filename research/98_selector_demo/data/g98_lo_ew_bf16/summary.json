@@ -1,0 +1,118 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 622.472,
+      "total_out_tokens": 131072,
+      "wall_s": 210.567
+    },
+    "target-matching/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 823.218,
+      "total_out_tokens": 131072,
+      "wall_s": 159.219
+    },
+    "target-matching/w128/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 733.04,
+      "total_out_tokens": 131072,
+      "wall_s": 178.806
+    },
+    "target-matching/w256/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 781.279,
+      "total_out_tokens": 131072,
+      "wall_s": 167.766
+    },
+    "target-matching/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 802.34,
+      "total_out_tokens": 131072,
+      "wall_s": 163.362
+    },
+    "target-matching/woff/skip0": {
+      "cap_hits": 0,
+      "tokens_per_s": 710.537,
+      "total_out_tokens": 131072,
+      "wall_s": 184.469
+    },
+    "target-matching/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 723.235,
+      "total_out_tokens": 131072,
+      "wall_s": 181.23
+    },
+    "target-matching/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 641.87,
+      "total_out_tokens": 131072,
+      "wall_s": 204.203
+    }
+  },
+  "batch": 8,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "target-matching/w1024/skip4 diverges from off on LO-0",
+      "target-matching/w1024/skip4 diverges from off on LO-1",
+      "target-matching/w1024/skip4 diverges from off on LO-2",
+      "target-matching/w1024/skip4 diverges from off on LO-3",
+      "target-matching/w1024/skip4 diverges from off on LO-4",
+      "target-matching/w1024/skip4 diverges from off on LO-5",
+      "target-matching/w1024/skip4 diverges from off on LO-6",
+      "target-matching/w1024/skip4 diverges from off on LO-7",
+      "target-matching/w128/skip4 diverges from off on LO-0",
+      "target-matching/w128/skip4 diverges from off on LO-1",
+      "target-matching/w128/skip4 diverges from off on LO-2",
+      "target-matching/w128/skip4 diverges from off on LO-3",
+      "target-matching/w128/skip4 diverges from off on LO-4",
+      "target-matching/w128/skip4 diverges from off on LO-5",
+      "target-matching/w128/skip4 diverges from off on LO-6",
+      "target-matching/w128/skip4 diverges from off on LO-7",
+      "target-matching/w256/skip4 diverges from off on LO-0",
+      "target-matching/w256/skip4 diverges from off on LO-1",
+      "target-matching/w256/skip4 diverges from off on LO-2",
+      "target-matching/w256/skip4 diverges from off on LO-3",
+      "target-matching/w256/skip4 diverges from off on LO-4",
+      "target-matching/w256/skip4 diverges from off on LO-5",
+      "target-matching/w256/skip4 diverges from off on LO-6",
+      "target-matching/w256/skip4 diverges from off on LO-7",
+      "target-matching/w512/skip4 diverges from off on LO-0",
+      "target-matching/w512/skip4 diverges from off on LO-1",
+      "target-matching/w512/skip4 diverges from off on LO-2",
+      "target-matching/w512/skip4 diverges from off on LO-3",
+      "target-matching/w512/skip4 diverges from off on LO-4",
+      "target-matching/w512/skip4 diverges from off on LO-5",
+      "target-matching/w512/skip4 diverges from off on LO-6",
+      "target-matching/w512/skip4 diverges from off on LO-7",
+      "target-matching/woff/skip0 diverges from off on LO-0",
+      "target-matching/woff/skip0 diverges from off on LO-1",
+      "target-matching/woff/skip0 diverges from off on LO-2",
+      "target-matching/woff/skip0 diverges from off on LO-3",
+      "target-matching/woff/skip0 diverges from off on LO-4",
+      "target-matching/woff/skip0 diverges from off on LO-5",
+      "target-matching/woff/skip0 diverges from off on LO-6",
+      "target-matching/woff/skip0 diverges from off on LO-7",
+      "target-matching/woff/skip4 diverges from off on LO-0",
+      "target-matching/woff/skip4 diverges from off on LO-1",
+      "target-matching/woff/skip4 diverges from off on LO-2",
+      "target-matching/woff/skip4 diverges from off on LO-3",
+      "target-matching/woff/skip4 diverges from off on LO-4",
+      "target-matching/woff/skip4 diverges from off on LO-5",
+      "target-matching/woff/skip4 diverges from off on LO-6",
+      "target-matching/woff/skip4 diverges from off on LO-7",
+      "target-matching/woff/skip8 diverges from off on LO-0",
+      "target-matching/woff/skip8 diverges from off on LO-1",
+      "target-matching/woff/skip8 diverges from off on LO-2",
+      "target-matching/woff/skip8 diverges from off on LO-3",
+      "target-matching/woff/skip8 diverges from off on LO-4",
+      "target-matching/woff/skip8 diverges from off on LO-5",
+      "target-matching/woff/skip8 diverges from off on LO-6",
+      "target-matching/woff/skip8 diverges from off on LO-7"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

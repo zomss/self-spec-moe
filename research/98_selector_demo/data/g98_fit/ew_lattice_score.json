@@ -1,0 +1,456 @@
+{
+  "contamination": {
+    "target-matching": {
+      "w1024/skip4": {
+        "equal_work": 1.3225,
+        "inflation_pct": 13.12,
+        "natural_eos": 1.496
+      },
+      "w128/skip4": {
+        "equal_work": 1.1776,
+        "inflation_pct": -10.78,
+        "natural_eos": 1.0506
+      },
+      "w256/skip4": {
+        "equal_work": 1.2551,
+        "inflation_pct": -11.35,
+        "natural_eos": 1.1127
+      },
+      "w512/skip4": {
+        "equal_work": 1.289,
+        "inflation_pct": 10.26,
+        "natural_eos": 1.4213
+      },
+      "woff/skip0": {
+        "equal_work": 1.1415,
+        "inflation_pct": -7.81,
+        "natural_eos": 1.0524
+      },
+      "woff/skip4": {
+        "equal_work": 1.1619,
+        "inflation_pct": -10.28,
+        "natural_eos": 1.0424
+      },
+      "woff/skip8": {
+        "equal_work": 1.0312,
+        "inflation_pct": -11.36,
+        "natural_eos": 0.9141
+      }
+    },
+    "w4a16-quantized": {
+      "w1024/skip4": {
+        "equal_work": 1.5678,
+        "inflation_pct": -0.17,
+        "natural_eos": 1.5651
+      },
+      "w128/skip4": {
+        "equal_work": 1.3689,
+        "inflation_pct": -4.95,
+        "natural_eos": 1.3011
+      },
+      "w256/skip4": {
+        "equal_work": 1.4082,
+        "inflation_pct": -5.4,
+        "natural_eos": 1.3322
+      },
+      "w512/skip4": {
+        "equal_work": 1.4701,
+        "inflation_pct": 2.63,
+        "natural_eos": 1.5087
+      },
+      "woff/skip0": {
+        "equal_work": 1.3526,
+        "inflation_pct": 7.1,
+        "natural_eos": 1.4486
+      },
+      "woff/skip4": {
+        "equal_work": 1.3581,
+        "inflation_pct": 6.22,
+        "natural_eos": 1.4426
+      },
+      "woff/skip8": {
+        "equal_work": 1.2796,
+        "inflation_pct": 22.05,
+        "natural_eos": 1.5617
+      }
+    }
+  },
+  "protocols": {
+    "equal_work": {
+      "denominator_check": {
+        "families_comparable": true,
+        "note": "OFF on this box carries a 9-16% round-to-round band; this is the measured gap between the two families' own parked boots",
+        "reference_per_token_ms": [
+          1.606,
+          1.594
+        ],
+        "reference_spread_pct": 0.753
+      },
+      "family_rank_correlation": {
+        "arms": [
+          "w1024/skip4",
+          "w128/skip4",
+          "w256/skip4",
+          "w512/skip4",
+          "woff/skip0",
+          "woff/skip4",
+          "woff/skip8"
+        ],
+        "n": 7,
+        "p_value": 0.0,
+        "spearman": 1.0
+      },
+      "gates": {
+        "target-matching": {
+          "cap_hits": {},
+          "identical_work": true,
+          "max_context_ratio_deviation": 0.0,
+          "ok": true,
+          "token_counts": [
+            131072
+          ]
+        },
+        "w4a16-quantized": {
+          "cap_hits": {},
+          "identical_work": true,
+          "max_context_ratio_deviation": 0.0,
+          "ok": true,
+          "token_counts": [
+            131072
+          ]
+        }
+      },
+      "target-matching": {
+        "arms": {
+          "off": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.606,
+            "score_vs_off": 1.0,
+            "tokens_per_s": 622.472,
+            "total_out_tokens": 131072
+          },
+          "target-matching/w1024/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.215,
+            "score_vs_off": 1.3225,
+            "tokens_per_s": 823.218,
+            "total_out_tokens": 131072
+          },
+          "target-matching/w128/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.364,
+            "score_vs_off": 1.1776,
+            "tokens_per_s": 733.04,
+            "total_out_tokens": 131072
+          },
+          "target-matching/w256/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.28,
+            "score_vs_off": 1.2551,
+            "tokens_per_s": 781.279,
+            "total_out_tokens": 131072
+          },
+          "target-matching/w512/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.246,
+            "score_vs_off": 1.289,
+            "tokens_per_s": 802.34,
+            "total_out_tokens": 131072
+          },
+          "target-matching/woff/skip0": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.407,
+            "score_vs_off": 1.1415,
+            "tokens_per_s": 710.537,
+            "total_out_tokens": 131072
+          },
+          "target-matching/woff/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.383,
+            "score_vs_off": 1.1619,
+            "tokens_per_s": 723.235,
+            "total_out_tokens": 131072
+          },
+          "target-matching/woff/skip8": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.558,
+            "score_vs_off": 1.0312,
+            "tokens_per_s": 641.87,
+            "total_out_tokens": 131072
+          }
+        },
+        "batch": 8,
+        "ctx_share": 0.15,
+        "directories": [
+          "/data/smcho/self-spec-moe/research/98_selector_demo/data/g98_lo_ew_bf16"
+        ],
+        "record_type": "w98_refined_lo_score",
+        "reference_per_token_ms": 1.606,
+        "reference_tokens_per_s": 622.472
+      },
+      "w4a16-quantized": {
+        "arms": {
+          "off": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.594,
+            "score_vs_off": 1.0,
+            "tokens_per_s": 627.178,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/w1024/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.017,
+            "score_vs_off": 1.5678,
+            "tokens_per_s": 983.293,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/w128/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.165,
+            "score_vs_off": 1.3689,
+            "tokens_per_s": 858.562,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/w256/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.132,
+            "score_vs_off": 1.4082,
+            "tokens_per_s": 883.212,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/w512/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.085,
+            "score_vs_off": 1.4701,
+            "tokens_per_s": 922.004,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/woff/skip0": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.179,
+            "score_vs_off": 1.3526,
+            "tokens_per_s": 848.349,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/woff/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.174,
+            "score_vs_off": 1.3581,
+            "tokens_per_s": 851.74,
+            "total_out_tokens": 131072
+          },
+          "w4a16-quantized/woff/skip8": {
+            "cap_hits": 0,
+            "context_ratio": 1.0,
+            "per_token_ms": 1.246,
+            "score_vs_off": 1.2796,
+            "tokens_per_s": 802.566,
+            "total_out_tokens": 131072
+          }
+        },
+        "batch": 8,
+        "ctx_share": 0.15,
+        "directories": [
+          "/data/smcho/self-spec-moe/research/98_selector_demo/data/g98_lo_ew_q4"
+        ],
+        "record_type": "w98_refined_lo_score",
+        "reference_per_token_ms": 1.594,
+        "reference_tokens_per_s": 627.178
+      }
+    },
+    "natural_eos": {
+      "denominator_check": {
+        "families_comparable": true,
+        "note": "OFF on this box carries a 9-16% round-to-round band; this is the measured gap between the two families' own parked boots",
+        "reference_per_token_ms": [
+          2.868,
+          2.87
+        ],
+        "reference_spread_pct": 0.07
+      },
+      "family_rank_correlation": {
+        "arms": [
+          "w1024/skip4",
+          "w128/skip4",
+          "w256/skip4",
+          "w512/skip4",
+          "woff/skip0",
+          "woff/skip4",
+          "woff/skip8"
+        ],
+        "n": 7,
+        "p_value": 0.5345,
+        "spearman": 0.2857
+      },
+      "target-matching": {
+        "arms": {
+          "off": {
+            "cap_hits": 1,
+            "context_ratio": 1.0,
+            "per_token_ms": 2.868,
+            "score_vs_off": 1.0,
+            "tokens_per_s": 348.63,
+            "total_out_tokens": 134139
+          },
+          "target-matching/w1024/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 0.9111,
+            "per_token_ms": 1.943,
+            "score_vs_off": 1.496,
+            "tokens_per_s": 514.6,
+            "total_out_tokens": 124042
+          },
+          "target-matching/w128/skip4": {
+            "cap_hits": 3,
+            "context_ratio": 1.1608,
+            "per_token_ms": 2.666,
+            "score_vs_off": 1.0506,
+            "tokens_per_s": 375.114,
+            "total_out_tokens": 159170
+          },
+          "target-matching/w256/skip4": {
+            "cap_hits": 0,
+            "context_ratio": 0.8408,
+            "per_token_ms": 2.641,
+            "score_vs_off": 1.1127,
+            "tokens_per_s": 378.664,
+            "total_out_tokens": 109013
+          },
+          "target-matching/w512/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.9397,
+            "per_token_ms": 2.037,
+            "score_vs_off": 1.4213,
+            "tokens_per_s": 491.021,
+            "total_out_tokens": 127838
+          },
+          "target-matching/woff/skip0": {
+            "cap_hits": 1,
+            "context_ratio": 0.8834,
+            "per_token_ms": 2.774,
+            "score_vs_off": 1.0524,
+            "tokens_per_s": 360.467,
+            "total_out_tokens": 113537
+          },
+          "target-matching/woff/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.8787,
+            "per_token_ms": 2.803,
+            "score_vs_off": 1.0424,
+            "tokens_per_s": 356.788,
+            "total_out_tokens": 113730
+          },
+          "target-matching/woff/skip8": {
+            "cap_hits": 1,
+            "context_ratio": 0.874,
+            "per_token_ms": 3.198,
+            "score_vs_off": 0.9141,
+            "tokens_per_s": 312.665,
+            "total_out_tokens": 104530
+          }
+        },
+        "batch": 8,
+        "ctx_share": 0.15,
+        "directories": [
+          "/data/smcho/self-spec-moe/research/98_selector_demo/data/g98_lo_b8",
+          "/data/smcho/self-spec-moe/research/98_selector_demo/data/g98_lo_sweep"
+        ],
+        "record_type": "w98_refined_lo_score",
+        "reference_per_token_ms": 2.868,
+        "reference_tokens_per_s": 348.63
+      },
+      "w4a16-quantized": {
+        "arms": {
+          "off": {
+            "cap_hits": 1,
+            "context_ratio": 1.0,
+            "per_token_ms": 2.87,
+            "score_vs_off": 1.0,
+            "tokens_per_s": 348.443,
+            "total_out_tokens": 134139
+          },
+          "w4a16-quantized/w1024/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.9429,
+            "per_token_ms": 1.85,
+            "score_vs_off": 1.5651,
+            "tokens_per_s": 540.675,
+            "total_out_tokens": 130536
+          },
+          "w4a16-quantized/w128/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.9085,
+            "per_token_ms": 2.236,
+            "score_vs_off": 1.3011,
+            "tokens_per_s": 447.152,
+            "total_out_tokens": 124799
+          },
+          "w4a16-quantized/w256/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.869,
+            "per_token_ms": 2.198,
+            "score_vs_off": 1.3322,
+            "tokens_per_s": 455.06,
+            "total_out_tokens": 116780
+          },
+          "w4a16-quantized/w512/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.9017,
+            "per_token_ms": 1.931,
+            "score_vs_off": 1.5087,
+            "tokens_per_s": 517.947,
+            "total_out_tokens": 123205
+          },
+          "w4a16-quantized/woff/skip0": {
+            "cap_hits": 1,
+            "context_ratio": 0.9275,
+            "per_token_ms": 2.003,
+            "score_vs_off": 1.4486,
+            "tokens_per_s": 499.265,
+            "total_out_tokens": 128393
+          },
+          "w4a16-quantized/woff/skip4": {
+            "cap_hits": 1,
+            "context_ratio": 0.9209,
+            "per_token_ms": 2.013,
+            "score_vs_off": 1.4426,
+            "tokens_per_s": 496.709,
+            "total_out_tokens": 130590
+          },
+          "w4a16-quantized/woff/skip8": {
+            "cap_hits": 1,
+            "context_ratio": 0.9081,
+            "per_token_ms": 1.863,
+            "score_vs_off": 1.5617,
+            "tokens_per_s": 536.677,
+            "total_out_tokens": 120488
+          }
+        },
+        "batch": 8,
+        "ctx_share": 0.15,
+        "directories": [
+          "/data/smcho/self-spec-moe/research/98_selector_demo/data/g98_lo_q4"
+        ],
+        "record_type": "w98_refined_lo_score",
+        "reference_per_token_ms": 2.87,
+        "reference_tokens_per_s": 348.443
+      }
+    }
+  },
+  "record_type": "w98_ew_lattice_score"
+}
