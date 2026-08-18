@@ -41,6 +41,7 @@ from typing import Any
 # ignored.
 AXES = ("action", "quant", "window", "skip_count")
 OFF_ACTION = "off"
+STOCK_ACTION = "stock"
 IDENTITY_FIELD = "cell"
 CONFIG_FIELD = "config"
 
@@ -76,11 +77,14 @@ def cell_key(cfg: Mapping[str, Any]) -> str:
 
     The arming action is part of the identity, not decoration: OFF and the
     unlevered armed cell carry identical levers and are different
-    measurements.
+    measurements. STOCK is a third such case -- plain vLLM, no speculative
+    config and no self-spec environment -- and it names itself for the same
+    reason, so it can never share a file with the armed cell whose lever
+    settings it happens to match.
     """
     clean = canonical(cfg)
-    if clean.get("action") == OFF_ACTION:
-        return OFF_ACTION
+    if clean.get("action") in (OFF_ACTION, STOCK_ACTION):
+        return str(clean["action"])
     window = clean.get("window", "off")
     window = "woff" if window == "off" else f"w{window}"
     return f"{clean.get('quant')}/{window}/skip{clean.get('skip_count')}"

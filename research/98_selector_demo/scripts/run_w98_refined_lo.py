@@ -70,6 +70,18 @@ FIXED_TOKENS = int(os.environ.get("W98_LO_FIXED", "0"))
 REPLICATE = os.environ.get("W98_LO_REPLICATE") == "1"
 # The arms whose tau(u) curves are measured, plus the parked reference.
 ARMS: dict[str, dict[str, Any]] = {
+    # Plain vLLM: no speculative_config and no self-spec environment at all,
+    # which is Campaign 1's denominator. `off` is NOT this -- it is our
+    # runtime with the K schedule pinned to 0, so the gap between them is the
+    # engine overhead our arms must also pay. Section 29 measured against
+    # `off` and had to borrow Campaign 1's stock-to-off factor from another
+    # box; this arm removes that borrowing.
+    "stock": {
+        "action": "stock",
+        "quant": "target-matching",
+        "window": "off",
+        "skip_count": 0,
+    },
     "off": {
         "action": "off",
         "quant": "target-matching",
@@ -178,8 +190,24 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     """One arm on the LO cell under natural EOS."""
     from vllm import LLMEngine, SamplingParams
 
-    args = d3._engine_args(cfg)
-    args.max_model_len = MAX_MODEL_LEN
+    if cfg.get("action") == "stock":
+        from vllm import EngineArgs
+
+        args = EngineArgs(
+            model=r1._engine_args({"quant": "target-matching"}).model,
+            max_model_len=MAX_MODEL_LEN,
+            max_num_seqs=BATCH,
+            max_num_batched_tokens=8192,
+            enable_chunked_prefill=True,
+            gpu_memory_utilization=0.90,
+            enable_prefix_caching=False,
+            enforce_eager=False,
+            seed=0,
+            disable_log_stats=True,
+        )
+    else:
+        args = d3._engine_args(cfg)
+        args.max_model_len = MAX_MODEL_LEN
     engine = LLMEngine.from_engine_args(args)
     outputs: dict[str, list[int]] = {}
     try:
@@ -268,9 +296,15 @@ def run_all(output_dir: Path, gpu: int) -> None:
         trace = traces / f"{artifacts.slug(cfg)}.jsonl"
         if trace.exists():
             trace.unlink()
-        env = matrix._boot_child_environment(
-            d3.boot_environment(cfg, trace, "corrected")
-        )
+        if cfg.get("action") == "stock":
+            base = d3.boot_environment(cfg, trace, "corrected")
+            env = matrix._boot_child_environment(
+                {k: v for k, v in base.items() if not k.startswith("VLLM_SELF_SPEC")}
+            )
+        else:
+            env = matrix._boot_child_environment(
+                d3.boot_environment(cfg, trace, "corrected")
+            )
         log = output_dir / f"{artifacts.slug(cfg)}.log"
         with log.open("w", encoding="utf-8") as handle:
             completed = subprocess.run(

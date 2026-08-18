@@ -6,6 +6,12 @@
       "total_out_tokens": 5427,
       "wall_s": 16.258
     },
+    "stock": {
+      "cap_hits": 0,
+      "tokens_per_s": 398.994,
+      "total_out_tokens": 5458,
+      "wall_s": 13.679
+    },
     "w4a16-quantized/w1024/skip4": {
       "cap_hits": 0,
       "tokens_per_s": 365.171,
@@ -35,6 +41,11 @@
   "content_cell": "LI",
   "divergence_gate": {
     "mismatches": [
+      "stock diverges from off on LI-0",
+      "stock diverges from off on LI-2",
+      "stock diverges from off on LI-3",
+      "stock diverges from off on LI-6",
+      "stock diverges from off on LI-7",
       "w4a16-quantized/w1024/skip4 diverges from off on LI-0",
       "w4a16-quantized/w1024/skip4 diverges from off on LI-2",
       "w4a16-quantized/w1024/skip4 diverges from off on LI-3",

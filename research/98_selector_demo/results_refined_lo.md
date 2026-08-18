@@ -2223,3 +2223,90 @@ two-boot replicate on a clean box reversed the sign.
 
 The consequence for the plan is that step 3 closes without the deliverable it
 was scoped for, and the next step is the refined evaluation itself.
+
+---
+
+## 30. The stock arm: section 29's conclusion was drawn against the wrong baseline
+
+Section 29 concluded that "on this box the fail-closed rule has no firing set
+on the refined grid", from armed-versus-**OFF** ratios of 1.07-1.16 at LI and
+1.25-1.36 at LIO. It also listed, as its first recorded limit, that *beating
+OFF is not beating stock* and that the stock-to-off factor had been borrowed
+from another box.
+
+That borrowed factor was the thing that mattered. This measures it here.
+
+### The stock arm
+
+Added to `run_w98_refined_lo.py`: plain vLLM, no `speculative_config`, every
+`VLLM_SELF_SPEC*` variable stripped from the boot. `w98_artifacts.cell_key`
+now names `stock` after itself for the same reason it already named `off` —
+same levers, different measurement — so it cannot share a file with the
+unlevered armed cell. Two boots per cell.
+
+| | LI | LIO |
+| --- | --- | --- |
+| stock | 402.8 / 399.0 tok/s | 481.2 / 481.2 tok/s |
+| **`off` vs stock** | **0.830 / 0.837** | **0.779 / 0.781** |
+| Campaign 1's `off` vs stock (h103) | 0.933 | 0.925 |
+
+**Our runtime, with speculation parked, costs 17% at LI and 22% at LIO on
+this box** — against 6.7% and 7.5% on h103. That is a fixed per-step host
+tax, which is what the box's clamp is, and our runtime does more host work
+per step than stock. It is also 2-3x the tax the borrowed factor assumed.
+
+### Against stock, LI still loses
+
+| cell | arm | boot 1 | boot 2 |
+| --- | --- | --- | --- |
+| **LI** | `woff/skip4` | **0.959** | **0.968** |
+| | `woff/skip0` | 0.953 | 0.961 |
+| | `w1024/skip4` | 0.913 | 0.915 |
+| | `w512/skip4` | 0.892 | 0.908 |
+| **LIO** | `w1024/skip4` | **1.061** | **1.052** |
+| | `w512/skip4` | 1.054 | 1.045 |
+| | `woff/skip4` | 0.982 | 0.982 |
+| | `woff/skip0` | 0.974 | 0.974 |
+
+**Section 29's conclusion is wrong and is corrected here.** Against the
+deployment baseline:
+
+* **LI is lost by every arm** (0.892-0.968). Campaign 1's finding that "LI is
+  lost by every draft arm" **reproduces in sign**; its magnitude does not
+  (0.62-0.78 there against 0.89-0.97 here).
+* **LIO is won only by the windowed arms** (1.045-1.061), while the
+  unwindowed ones lose (0.974-0.982).
+
+So the fail-closed rule **does** have a firing set on this grid — LI — and
+section 29's "every cell wants to arm" was an artifact of measuring against
+`off` rather than against stock.
+
+What section 29 got right stands: its armed-versus-`off` ratios reproduce to
+1.2%, and the 1.5x discrepancy with h103's *armed* column is real. What it
+got wrong is that `off` is not the baseline a deployment compares against,
+and on this box the gap between `off` and stock is three times what the
+borrowed factor said.
+
+### The selector's job, visible for the first time on this grid
+
+LIO is the cleanest demonstration the phase has produced of why lever
+selection matters rather than lever *presence*: at one cell, one batch, the
+windowed arms clear stock by 5-6% and the unwindowed arms fall below it. The
+same three levers separate winning from losing. That is the selector's
+premise measured directly, and it needed the stock arm to be visible at all.
+
+### Two notes on the measurement
+
+**The engine tax is the headline number for honesty.** Every armed result in
+this record is a ratio against `off`, and `off` costs 17-22% here. A reader
+comparing to a stock deployment must apply that factor, and it is
+box-dependent: 6.7-7.5% on bare metal, 17-22% on this clamped guest. Our
+arms are therefore *understated* here relative to what h103 would show — but
+that is an inference from two h103 numbers, not something this box can claim.
+
+**Stock is not bit-deterministic across boots either.** At LI it emitted
+5,653 tokens then 5,458 — 3.5% apart, greedy, same prompts, no speculation at
+all. LIO reproduced exactly (9,792 both). Same mechanism as section 22:
+batch composition changes reduction order and flips near-tie argmaxes. It is
+worth recording that this is not a property of speculative decoding; it is a
+property of batched inference.
