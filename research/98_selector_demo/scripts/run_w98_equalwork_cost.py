@@ -98,7 +98,12 @@ def arms() -> list[dict[str, Any]]:
                 "skip_count": s,
             }
             for w in ("off", 256, 1024)
-            for s in (0, 4)
+            # skip8 added after the fact: the first pass measured keeps 1.0
+            # and 0.889 only, so the quantized skip8 arm's cost was reached by
+            # extrapolating keep past its calibration -- and that arm is the
+            # one the refined LO cell measures second-best while the model
+            # ranks it fifth.
+            for s in (0, 4, 8)
         ]
     if CELL != "LO":
         return [

@@ -1,0 +1,74 @@
+{
+  "acceptance_from": "research/98_selector_demo/data/g98_longu,research/98_selector_demo/data/g98_longu_windows",
+  "arms": {
+    "w1024/skip4": {
+      "measured": 1.4761,
+      "predicted": 1.4228,
+      "relative_error": -0.0361
+    },
+    "w128/skip4": {
+      "measured": 1.076,
+      "predicted": 1.2782,
+      "relative_error": 0.1879
+    },
+    "w256/skip4": {
+      "measured": 1.0862,
+      "predicted": 1.0724,
+      "relative_error": -0.0127
+    },
+    "w512/skip4": {
+      "measured": 1.4084,
+      "predicted": 1.1811,
+      "relative_error": -0.1614
+    },
+    "woff/skip0": {
+      "measured": 1.034,
+      "predicted": 1.0307,
+      "relative_error": -0.0031
+    },
+    "woff/skip4": {
+      "measured": 1.0234,
+      "predicted": 1.057,
+      "relative_error": 0.0328
+    },
+    "woff/skip8": {
+      "measured": 0.8968,
+      "predicted": 0.9364,
+      "relative_error": 0.0441
+    }
+  },
+  "cost_fit": {
+    "F": 0.0037905195751508996,
+    "c_layer": 0.026355620585297685,
+    "f_win": 0.0015103250768770209,
+    "fit_arms": 10,
+    "fit_mean_residual": 0.003450540928665291,
+    "kappa_kv": 1.035374850136093e-11,
+    "kappa_w": 0.0
+  },
+  "gamma": 1.0,
+  "k_deployed": 4,
+  "mean_abs_error": 0.0683,
+  "measured_ranking": [
+    "w1024/skip4",
+    "w512/skip4",
+    "w256/skip4",
+    "w128/skip4",
+    "woff/skip0",
+    "woff/skip4",
+    "woff/skip8"
+  ],
+  "predicted_ranking": [
+    "w1024/skip4",
+    "w128/skip4",
+    "w512/skip4",
+    "w256/skip4",
+    "woff/skip4",
+    "woff/skip0",
+    "woff/skip8"
+  ],
+  "quant": "target-matching",
+  "record_type": "w98_refined_lo_prediction",
+  "verify_per_request_ms": 0.9826,
+  "verify_shared_ms": 7.7195
+}

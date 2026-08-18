@@ -887,3 +887,92 @@ last measured bucket forward — conservative for both trends, since unwindowed
 acceptance is still rising and windowed still falling at the edge. Depth 8
 here against K=4 in the scored runs; the curves are used as ratios, not
 levels.
+
+---
+
+## 17. Feeding it all back: the prediction, and four refuted explanations
+
+Sections 14 and 16 supplied the two inputs the quantized family was missing —
+cost coefficients and u-resolved acceptance. This assembles them into the
+drain-integrated prediction of section 7 and scores it, now as a script
+(`predict_w98_refined_lo.py`) rather than the ad-hoc analysis section 12 used.
+
+Two corrections the script makes explicit. Acceptance is **re-derived at the
+deployed depth**: the curves are measured at depth 8 while the scored runs
+speculate at K=4, so a depth-8 tau of 7.9 is not a token count any scored step
+could commit; it is recomputed from `pos_accepted`, which is exact rather than
+approximate, since position *i* is reached only if every earlier position was
+accepted. And the comparison is against the **raw** per-token ratio, not the
+context-corrected score: Campaign 1's correction removes context growth from a
+model-free comparison, and this model integrates context growth explicitly, so
+correcting the measurement too would charge it twice. (That resolves a
+discrepancy in this record: section 2's table is context-corrected, section
+12's "measured" column is not. Both are right for their purpose.)
+
+**Control first.** On the bf16 family the script returns mean absolute error
+**0.0683** against section 12's hand-computed **0.0675** — the pipeline is a
+faithful reimplementation, and now a reproducible one.
+
+### The quantized family
+
+| arm | predicted | measured | error |
+| --- | --- | --- | --- |
+| `w1024/skip4` | 1.437 | **1.552** | −7.4% |
+| `woff/skip8` | 1.241 | **1.540** | **−19.4%** |
+| `w512/skip4` | 1.346 | 1.486 | −9.4% |
+| `woff/skip0` | 1.365 | 1.433 | −4.7% |
+| `woff/skip4` | 1.432 | 1.425 | +0.4% |
+| `w256/skip4` | 1.186 | 1.306 | −9.2% |
+| `w128/skip4` | 1.194 | 1.283 | −6.9% |
+| **mean abs error** | **0.0823** | | |
+
+**The top pick is right** — `w1024/skip4`, as measured. But `skip8` is
+predicted fifth where the cell measures it second, which is section 15's
+misranking surviving every input this phase has added.
+
+### Four explanations, tested and refuted
+
+Each was plausible, each was cheap to test, and none survives.
+
+| hypothesis | test | result |
+| --- | --- | --- |
+| Acceptance enters as a scalar rather than u-resolved (section 16's claim) | pool below 1K, carry flat | skip8 7th → 5th; mean error 0.0775 → 0.0823, **worse** |
+| Acceptance measured on the wrong weight version | predict quantized arms with bf16 curves | mean error **0.0551**, *better*; ranking identical |
+| `skip8`'s cost extrapolated past its calibration | measured the 3 missing quantized skip8 cost arms | error −18.6% → **−19.4%** |
+| The u-curve under-states acceptance past 8K by carrying forward | substitute each arm's realized acceptance | error −19.4% → −15.4%, mean 0.0823 → 0.0555; **rank unchanged** |
+
+And both inputs check out on their own terms:
+
+* the u-curves predict the acceptance the scored runs actually realized to
+  within **5%** at every one of seven arms (skip8: 3.981 predicted against
+  4.200 realized, −5.2%);
+* the cost fit reproduces skip8's **measured** draft chain to **1.1%**
+  (22.655 ms, now measured rather than extrapolated).
+
+So the two inputs are individually accurate to 1–5%, and their composition is
+19% wrong on one arm. **The remaining error is in the model's structure, not
+in its measurements**, and it concentrates on the arm with the lowest
+acceptance — the one that takes the most steps, and therefore pays the
+box's fixed per-step clamp the most times. That is a suggestion, not a
+finding: it was not tested, and the four things that were tested all failed.
+
+### Correcting section 16
+
+Section 16 concluded that the misranking is "the selector reading acceptance
+at a generation length the workload never occupies". That is **too strong**,
+and the first row of the table above is the refutation. Moving from the
+pooled scalar to the u-resolved curve does move `skip8` from last to fifth,
+so the mechanism is real and signed as described — but it recovers two
+places out of five, and leaves the mean error slightly worse. Acceptance was
+part of the story and is not the story. The section stands as written with
+this correction appended, on the same principle as section 13's: it was right
+about its data and wrong about its reach.
+
+### What would settle it
+
+The four refutations narrow the search to the composition — the verify split,
+the drain integral, or the clamp's per-step constant, none of which section 7
+calibrated against anything but the parked arm. The cheapest discriminator is
+a batch sweep: every one of those terms scales differently with batch, while
+cost and acceptance are already pinned. That is the next measurement, and it
+is also the one the refined grid was built to demand.
