@@ -1508,3 +1508,127 @@ amounts of work:
 Section 15 stands as written with this correction appended, on the same
 principle as sections 13 and 16: it was right about its data and wrong about
 its reach.
+
+---
+
+## 24. Step 0a: the per-family fit, and what the equal-work design cannot say
+
+Section 14 fitted both weight versions onto one surface, with the family
+entering through a single byte column `W_layer * kappa_w`, and refuted it:
+`f_win` went negative. The implied fix is to stop sharing a surface — Round 1
+never needed one, it needs composed cells predicted from singles — so this
+fits each family on its own points. No GPU: `g98_equalwork` (10 arms, bf16)
+and `g98_equalwork_q4` (9 arms) were already measured.
+
+The fix does not work, and why it does not is more useful than the fix would
+have been.
+
+### The per-family fit, in the registered form
+
+| | `A` | `f_win` | `kappa_kv` | `F` | mean abs residual | physical |
+| --- | --- | --- | --- | --- | --- | --- |
+| `target-matching` | 26.36 ms | **+1.51 ms** | **+1.035e−11** | 3.79 ms | **0.345%** | yes |
+| `w4a16-quantized` | 20.72 ms | **−4.56 ms** | **−2.96e−12** | 7.80 ms | 0.523% | **no** |
+
+**Correcting section 14's attribution.** The negative `f_win` was reported as
+what happens when the fit is forced across weight versions. It is not: it is
+present **within the quantized family alone**, on nine of its own arms. Under
+a non-negativity constraint the quantized fit is physical and 2.6x worse
+(`f_win` pinned to 0, residual 0.523% -> 1.338%). Fitting per family, which
+is what section 14's refutation implies, does not remove the defect.
+
+### The cause: the window term is not a bytes integral
+
+The quantized family's own equal-work draft chains, at `keep = 1`:
+
+| window | `target-matching` | `w4a16-quantized` |
+| --- | --- | --- |
+| off | 36.844 ms | 26.659 ms |
+| 1024 | 33.073 ms | **23.513 ms** |
+| 256 | **32.033 ms** | 24.026 ms |
+
+bf16 is ordered by bytes — the tighter window is cheaper. The quantized
+family inverts: the **wider** window measures cheaper. No model with a
+positive per-byte coefficient can produce that, so the fit produces a
+negative one.
+
+Refitting with a free per-window offset — `D = keep*(A + g_w) + F`, `g_off`
+fixed at 0, which assumes nothing about bytes — separates what is resolved
+from what is not:
+
+| | `g256` | `g512` | `g1024` | mad | cond |
+| --- | --- | --- | --- | --- | --- |
+| `target-matching` | **−4.544** ± 0.151 | −4.296 ± 0.215 | **−3.454** ± 0.151 | 0.315% | 21.8 |
+| `w4a16-quantized` | −2.823 ± 0.165 | — | −3.138 ± 0.165 | 0.523% | 20.8 |
+
+* bf16 is ordered by bytes and the `512 -> 1024` step is **resolved**
+  (−0.842 ± 0.215); `256 -> 512` is not (−0.248 ± 0.215).
+* the quantized inversion is **NOT resolved**: `g256 − g1024 = 0.315 ±
+  0.165`, 1.9 sigma. The quantized family's window-*size* axis is flat within
+  the resolution this design has.
+
+**So this is an identifiability finding, not a physics one.** Forced onto an
+axis carrying no resolved signal, the bytes form has nothing to fit but
+noise, and it reports that noise as a negative `kappa_kv`. The corroborating
+number is the same in both families: the `f_win`/`kappa_kv` correlation is
+**−0.956**, because with three window levels that both saturate against an
+8K context the indicator column and the bytes column are nearly the same
+column. Only their *net* per-window effect is identified — in either family.
+
+### One thing the offsets do resolve, and it matters
+
+The same window over the same context moves the same KV bytes in both
+families — shared target KV, identical attention work. If the window's saving
+were a KV-bytes effect it would be the same number of milliseconds in both.
+It is not:
+
+```text
+g256:   -4.544 (bf16)  vs  -2.823 (w4a16)   difference 1.721 +/- 0.224  (7.7 sigma)
+```
+
+**Windowing saves 38% less in the quantized draft, on identical KV traffic.**
+That is section 14's interaction, arriving from an independent direction and
+now resolved rather than inferred — and it is a second, cleaner refutation of
+the pure-bytes account that section 14 argued against on bandwidth grounds.
+
+### `F` contradicts a registered claim, and this design cannot adjudicate it
+
+The registered model has `F` quant-independent **by construction**: `lm_head`
+and embeddings stay bf16 in both drafts. Measured per family:
+
+```text
+F(bf16)  = 3.801 +/- 0.544 ms
+F(w4a16) = 7.797 +/- 0.592 ms      difference 3.996 +/- 0.804  (5.0 sigma)
+```
+
+Taken at face value that refutes the construction. But the obvious
+alternative is that `F` is absorbing curvature in `keep`, and testing it
+dissolves every estimate:
+
+| | `A` | `keep^2` | `F` |
+| --- | --- | --- | --- |
+| bf16, linear | 32.835 ± 0.615 | — | 3.801 ± 0.544 |
+| bf16, `+keep^2` | 27.162 ± **18.654** | 3.191 ± **10.486** | 6.296 ± **8.221** |
+| w4a16, linear | 18.862 ± 0.669 | — | 7.797 ± 0.592 |
+| w4a16, `+keep^2` | −6.950 ± **15.959** | 14.519 ± 8.971 | 19.150 ± **7.033** |
+
+Nothing survives. The preregistration predicted exactly this in advance —
+"an intercept cannot be separated from a slope over that span at the measured
+noise" — which is why **skip16** was added to the Round-2 fit set to extend
+the keep range to 0.556. The equal-work sweep has keeps {1.000, 0.889,
+0.778}, a 22% span, and **no skip16 in either family**.
+
+So `F`'s family difference is measured but not attributable. The cheapest
+thing that would settle it is `woff/skip16` in both families: **two boots.**
+
+### What Step 0a delivers
+
+A per-family cost fit that reproduces each family's own draft chain to
+**0.315%** and **0.523%** — inside this box's ~1% armed-arm stability — on a
+form that claims nothing the data does not support. That is a usable Round-1
+cost input for the quantized family, which the phase did not previously have.
+
+What it does not deliver is a **bytes** model of the window, in either
+family. The price of the honest form is that it predicts only at windows that
+were measured, per family. Given that the response is not monotone in bytes,
+that price is not a limitation of the form — it is the finding.

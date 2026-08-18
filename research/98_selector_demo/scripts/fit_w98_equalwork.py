@@ -225,12 +225,82 @@ def matched_pairs(directories: list[Path]) -> dict[str, Any]:
     }
 
 
+def fit_per_family(directories: list[Path]) -> dict[str, Any]:
+    """One coefficient set per weight version -- the form the data supports.
+
+    `fit_split` puts both families on ONE surface, with the weight version
+    entering through a single byte column `W_layer * kappa_w`. That fit is
+    refuted: `f_win` goes negative, which is unphysical, and `matched_pairs`
+    shows the implied per-byte coefficient is not constant across the arms it
+    is supposed to explain.
+
+    What is refuted is ONE SHARED SURFACE, not the two-round design. Round 1
+    needs composed cells predicted from single-lever profiles; it never needed
+    the two families to share coefficients. Fitting each family on its own
+    points restores that at the cost of one extra set of singles per weight
+    version -- which is the price of admitting that quantizing the draft is
+    not a byte discount.
+
+    Reported alongside: the terms the shared form was forcing to be equal, so
+    the size of that constraint is visible rather than inferred.
+    """
+    per_family: dict[str, Any] = {}
+    for directory in directories:
+        rows = [
+            artifacts.read(p)
+            for p in sorted(Path(directory).glob("*.json"))
+            if p.name != "summary.json"
+        ]
+        if not rows:
+            continue
+        quants = {r["config"]["quant"] for r in rows}
+        if len(quants) != 1:
+            raise ValueError(f"{directory} mixes weight versions: {sorted(quants)}")
+        per_family[quants.pop()] = fit(Path(directory))
+
+    names = sorted(per_family)
+    forced_equal: dict[str, Any] = {}
+    if len(names) == 2:
+        a, b = names
+        for key in ("A_per_layer_shared_s", "f_win_s", "kappa_kv", "F_s"):
+            va, vb = per_family[a][key], per_family[b][key]
+            forced_equal[key] = {
+                a: va,
+                b: vb,
+                "ratio": (va / vb) if vb else None,
+                "shared_form_forces_equal": key != "A_per_layer_shared_s",
+            }
+    return {
+        "record_type": "w98_equalwork_per_family_fit",
+        "families": per_family,
+        "forced_equal_by_shared_form": forced_equal,
+        "mean_abs_residual_by_family": {
+            k: v["mean_abs_residual"] for k, v in per_family.items()
+        },
+        "pooled_mean_abs_residual": (
+            sum(
+                abs(x)
+                for v in per_family.values()
+                for x in v["relative_residual"].values()
+            )
+            / sum(len(v["relative_residual"]) for v in per_family.values())
+        ),
+    }
+
+
 def main() -> int:
     out_dir = DATA / "g98_fit"
     out_dir.mkdir(parents=True, exist_ok=True)
-    if "--with-quant" in sys.argv:
+    if "--per-family" in sys.argv:
+        result: dict[str, Any] = fit_per_family(
+            [DATA / "g98_equalwork", DATA / "g98_equalwork_q4"]
+        )
+        (out_dir / "equalwork_per_family_fit.json").write_text(
+            json.dumps(result, indent=2, sort_keys=True) + "\n"
+        )
+    elif "--with-quant" in sys.argv:
         directories = [DATA / "g98_equalwork", DATA / "g98_equalwork_q4"]
-        result: dict[str, Any] = {
+        result = {
             "fit": fit_split(directories),
             "matched_pairs": matched_pairs(directories),
         }

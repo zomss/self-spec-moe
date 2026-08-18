@@ -1,0 +1,129 @@
+{
+  "families": {
+    "target-matching": {
+      "A_per_layer_shared_s": 0.026355620592304323,
+      "F_s": 0.003790519575150902,
+      "arms": [
+        "target-matching/w1024/skip0",
+        "target-matching/w1024/skip4",
+        "target-matching/w1024/skip8",
+        "target-matching/w256/skip0",
+        "target-matching/w256/skip4",
+        "target-matching/w256/skip8",
+        "target-matching/w512/skip4",
+        "target-matching/woff/skip0",
+        "target-matching/woff/skip4",
+        "target-matching/woff/skip8"
+      ],
+      "design_condition_number": 44.48751034687222,
+      "equal_work_steps": {
+        "target-matching/w1024/skip0": 1842,
+        "target-matching/w1024/skip4": 1910,
+        "target-matching/w1024/skip8": 2238,
+        "target-matching/w256/skip0": 2028,
+        "target-matching/w256/skip4": 2088,
+        "target-matching/w256/skip8": 2406,
+        "target-matching/w512/skip4": 1987,
+        "target-matching/woff/skip0": 1661,
+        "target-matching/woff/skip4": 1788,
+        "target-matching/woff/skip8": 2114
+      },
+      "f_win_kappa_kv_correlation": -0.9567130684515351,
+      "f_win_s": 0.0015103250891352724,
+      "kappa_kv": 1.0353748402955724e-11,
+      "mean_abs_residual": 0.0034505408543958893,
+      "nnls_agrees": true,
+      "record_type": "w98_equalwork_cost_fit",
+      "relative_residual": {
+        "target-matching/w1024/skip0": 0.003,
+        "target-matching/w1024/skip4": -0.0013,
+        "target-matching/w1024/skip8": -0.0044,
+        "target-matching/w256/skip0": 0.0012,
+        "target-matching/w256/skip4": 0.0011,
+        "target-matching/w256/skip8": -0.006,
+        "target-matching/w512/skip4": 0.0033,
+        "target-matching/woff/skip0": -0.0056,
+        "target-matching/woff/skip4": 0.0017,
+        "target-matching/woff/skip8": 0.007
+      },
+      "unconstrained_is_physical": true
+    },
+    "w4a16-quantized": {
+      "A_per_layer_shared_s": 0.020716835220128862,
+      "F_s": 0.007797471598195388,
+      "arms": [
+        "w4a16-quantized/w1024/skip0",
+        "w4a16-quantized/w1024/skip4",
+        "w4a16-quantized/w1024/skip8",
+        "w4a16-quantized/w256/skip0",
+        "w4a16-quantized/w256/skip4",
+        "w4a16-quantized/w256/skip8",
+        "w4a16-quantized/woff/skip0",
+        "w4a16-quantized/woff/skip4",
+        "w4a16-quantized/woff/skip8"
+      ],
+      "design_condition_number": 42.23030013327064,
+      "equal_work_steps": {
+        "w4a16-quantized/w1024/skip0": 1899,
+        "w4a16-quantized/w1024/skip4": 1937,
+        "w4a16-quantized/w1024/skip8": 2236,
+        "w4a16-quantized/w256/skip0": 2075,
+        "w4a16-quantized/w256/skip4": 2138,
+        "w4a16-quantized/w256/skip8": 2282,
+        "w4a16-quantized/woff/skip0": 1769,
+        "w4a16-quantized/woff/skip4": 1818,
+        "w4a16-quantized/woff/skip8": 2122
+      },
+      "f_win_kappa_kv_correlation": -0.954590133202979,
+      "f_win_s": -0.0045595885461185435,
+      "kappa_kv": -2.958370274181549e-12,
+      "mean_abs_residual": 0.005233428347988357,
+      "nnls_agrees": false,
+      "record_type": "w98_equalwork_cost_fit",
+      "relative_residual": {
+        "w4a16-quantized/w1024/skip0": 0.0004,
+        "w4a16-quantized/w1024/skip4": 0.0054,
+        "w4a16-quantized/w1024/skip8": -0.0072,
+        "w4a16-quantized/w256/skip0": -0.0079,
+        "w4a16-quantized/w256/skip4": 0.0036,
+        "w4a16-quantized/w256/skip8": 0.0077,
+        "w4a16-quantized/woff/skip0": 0.0,
+        "w4a16-quantized/woff/skip4": 0.0067,
+        "w4a16-quantized/woff/skip8": -0.0083
+      },
+      "unconstrained_is_physical": false
+    }
+  },
+  "forced_equal_by_shared_form": {
+    "A_per_layer_shared_s": {
+      "ratio": 1.2721837246017536,
+      "shared_form_forces_equal": false,
+      "target-matching": 0.026355620592304323,
+      "w4a16-quantized": 0.020716835220128862
+    },
+    "F_s": {
+      "ratio": 0.4861216264036362,
+      "shared_form_forces_equal": true,
+      "target-matching": 0.003790519575150902,
+      "w4a16-quantized": 0.007797471598195388
+    },
+    "f_win_s": {
+      "ratio": -0.3312415306466571,
+      "shared_form_forces_equal": true,
+      "target-matching": 0.0015103250891352724,
+      "w4a16-quantized": -0.0045595885461185435
+    },
+    "kappa_kv": {
+      "ratio": -3.499814912729324,
+      "shared_form_forces_equal": true,
+      "target-matching": 1.0353748402955724e-11,
+      "w4a16-quantized": -2.958370274181549e-12
+    }
+  },
+  "mean_abs_residual_by_family": {
+    "target-matching": 0.0034505408543958893,
+    "w4a16-quantized": 0.005233428347988357
+  },
+  "pooled_mean_abs_residual": 0.0043052631578947365,
+  "record_type": "w98_equalwork_per_family_fit"
+}
