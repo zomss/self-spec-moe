@@ -1,0 +1,167 @@
+{
+  "families": [
+    {
+      "arms": {
+        "off": {
+          "cap_hits": 1,
+          "context_ratio": 1.0,
+          "per_token_ms": 2.868,
+          "score_vs_off": 1.0,
+          "tokens_per_s": 348.63,
+          "total_out_tokens": 134139
+        },
+        "target-matching/w1024/skip4": {
+          "cap_hits": 0,
+          "context_ratio": 0.9111,
+          "per_token_ms": 1.943,
+          "score_vs_off": 1.496,
+          "tokens_per_s": 514.6,
+          "total_out_tokens": 124042
+        },
+        "target-matching/w128/skip4": {
+          "cap_hits": 3,
+          "context_ratio": 1.1608,
+          "per_token_ms": 2.666,
+          "score_vs_off": 1.0506,
+          "tokens_per_s": 375.114,
+          "total_out_tokens": 159170
+        },
+        "target-matching/w256/skip4": {
+          "cap_hits": 0,
+          "context_ratio": 0.8408,
+          "per_token_ms": 2.641,
+          "score_vs_off": 1.1127,
+          "tokens_per_s": 378.664,
+          "total_out_tokens": 109013
+        },
+        "target-matching/w512/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.9397,
+          "per_token_ms": 2.037,
+          "score_vs_off": 1.4213,
+          "tokens_per_s": 491.021,
+          "total_out_tokens": 127838
+        },
+        "target-matching/woff/skip0": {
+          "cap_hits": 1,
+          "context_ratio": 0.8834,
+          "per_token_ms": 2.774,
+          "score_vs_off": 1.0524,
+          "tokens_per_s": 360.467,
+          "total_out_tokens": 113537
+        },
+        "target-matching/woff/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.8787,
+          "per_token_ms": 2.803,
+          "score_vs_off": 1.0424,
+          "tokens_per_s": 356.788,
+          "total_out_tokens": 113730
+        },
+        "target-matching/woff/skip8": {
+          "cap_hits": 1,
+          "context_ratio": 0.874,
+          "per_token_ms": 3.198,
+          "score_vs_off": 0.9141,
+          "tokens_per_s": 312.665,
+          "total_out_tokens": 104530
+        }
+      },
+      "batch": 8,
+      "ctx_share": 0.15,
+      "directories": [
+        "research/98_selector_demo/data/g98_lo_b8",
+        "research/98_selector_demo/data/g98_lo_sweep"
+      ],
+      "record_type": "w98_refined_lo_score",
+      "reference_per_token_ms": 2.868,
+      "reference_tokens_per_s": 348.63
+    },
+    {
+      "arms": {
+        "off": {
+          "cap_hits": 1,
+          "context_ratio": 1.0,
+          "per_token_ms": 2.87,
+          "score_vs_off": 1.0,
+          "tokens_per_s": 348.443,
+          "total_out_tokens": 134139
+        },
+        "w4a16-quantized/w1024/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.9429,
+          "per_token_ms": 1.85,
+          "score_vs_off": 1.5651,
+          "tokens_per_s": 540.675,
+          "total_out_tokens": 130536
+        },
+        "w4a16-quantized/w128/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.9085,
+          "per_token_ms": 2.236,
+          "score_vs_off": 1.3011,
+          "tokens_per_s": 447.152,
+          "total_out_tokens": 124799
+        },
+        "w4a16-quantized/w256/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.869,
+          "per_token_ms": 2.198,
+          "score_vs_off": 1.3322,
+          "tokens_per_s": 455.06,
+          "total_out_tokens": 116780
+        },
+        "w4a16-quantized/w512/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.9017,
+          "per_token_ms": 1.931,
+          "score_vs_off": 1.5087,
+          "tokens_per_s": 517.947,
+          "total_out_tokens": 123205
+        },
+        "w4a16-quantized/woff/skip0": {
+          "cap_hits": 1,
+          "context_ratio": 0.9275,
+          "per_token_ms": 2.003,
+          "score_vs_off": 1.4486,
+          "tokens_per_s": 499.265,
+          "total_out_tokens": 128393
+        },
+        "w4a16-quantized/woff/skip4": {
+          "cap_hits": 1,
+          "context_ratio": 0.9209,
+          "per_token_ms": 2.013,
+          "score_vs_off": 1.4426,
+          "tokens_per_s": 496.709,
+          "total_out_tokens": 130590
+        },
+        "w4a16-quantized/woff/skip8": {
+          "cap_hits": 1,
+          "context_ratio": 0.9081,
+          "per_token_ms": 1.863,
+          "score_vs_off": 1.5617,
+          "tokens_per_s": 536.677,
+          "total_out_tokens": 120488
+        }
+      },
+      "batch": 8,
+      "ctx_share": 0.15,
+      "directories": [
+        "research/98_selector_demo/data/g98_lo_q4"
+      ],
+      "record_type": "w98_refined_lo_score",
+      "reference_per_token_ms": 2.87,
+      "reference_tokens_per_s": 348.443
+    }
+  ],
+  "record_type": "w98_refined_lo_score_set",
+  "reference_agreement": {
+    "families_comparable": true,
+    "note": "OFF on this box carries a 9-16% round-to-round band; this is the measured gap between the two families' own parked boots",
+    "reference_per_token_ms": [
+      2.868,
+      2.87
+    ],
+    "reference_spread_pct": 0.07
+  }
+}

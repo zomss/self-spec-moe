@@ -684,3 +684,115 @@ exclusively, while every selector pick in the 31-cell grid was `w4a16`. The
 refined-grid evaluation therefore has not yet scored the arm family the
 selector actually chooses, and this section is the first evidence that the
 two families do not share a cost surface.
+
+---
+
+## 15. The w4a16 family on the refined grid: the lattice reorders
+
+Section 14 closed on a gap: sections 2–13 scored `target-matching` arms
+exclusively while every selector pick in the 31-cell grid was `w4a16`, and
+the calibration had just shown the two families do not share a cost surface.
+This closes it — the same eight configurations, same protocol, same prompts,
+same cell, under the other draft weight version.
+
+### The denominator checks out first
+
+Anything scored against OFF on this box carries a 9–16% band, so two families
+scored against two separate parked boots are only comparable if those boots
+reproduced. They did, to a degree the band did not promise:
+
+| | `target-matching` run | `w4a16` run |
+| --- | --- | --- |
+| OFF tok/s | 348.6 | 348.4 |
+| OFF output tokens | 134,139 | **134,139** |
+| OFF per-token | 2.868 ms | 2.870 ms (**0.07%**) |
+
+An identical token count is the stronger half: the parked path is genuinely
+quant-independent — the draft is resident but never runs — so this is one
+measurement made twice, and the two families sit in one table by right.
+
+**A confound retires here too.** Section 3 could not invert measured time by
+acceptance because "the LO runs use the live K/OFF ladder, which may park
+steps". The traces say it never did: **armed fraction is 99.97% in all
+fourteen armed runs.** These are pure armed measurements.
+
+### The result
+
+| arm | `target-matching` | `w4a16` | quant buys | acc bf16 | acc w4a16 |
+| --- | --- | --- | --- | --- | --- |
+| `w1024/skip4` | **1.496** | **1.565** | +4.6% | 0.836 | 0.836 |
+| `w512/skip4` | 1.421 | 1.509 | +6.1% | 0.841 | 0.817 |
+| `w256/skip4` | 1.113 | 1.332 | +19.7% | 0.740 | 0.753 |
+| `woff/skip0` | 1.052 | 1.449 | +37.6% | 0.992 | 0.939 |
+| `w128/skip4` | 1.051 | 1.301 | +23.8% | 0.740 | 0.696 |
+| `woff/skip4` | 1.042 | 1.443 | +38.4% | 0.922 | 0.878 |
+| `woff/skip8` | **0.914** | **1.562** | **+70.8%** | 0.762 | 0.800 |
+
+**Quantization wins every arm, by between 4.6% and 70.8%** — and the size of
+the win is ordered inversely by how tight the window is, which is section
+14's interaction seen end to end rather than in a draft-chain profile.
+
+**The lattice reorders.** Spearman between the two families' rankings is
+**+0.286** (p=0.535, n=7): statistically indistinguishable from no
+relationship. The R-grid's content pair R5 vs R5cot — different task, same
+everything else — correlated at **+0.902**. So on this cell, **changing the
+draft's weight version reorders the lever lattice far more than changing the
+workload does**, and "pick the window and skip, then quantize" is not a
+decomposition the data supports.
+
+**`skip8` flips from worst to near-best**: the only sub-parity arm in the
+bf16 family (0.914, an 8.6% regression) becomes the second-best quantized arm
+(1.562). Same skip set, same cell, same prompts; only the draft's weights
+differ.
+
+### Why, from the traces
+
+Acceptance is nearly family-independent — within 6% at every one of the seven
+configurations — so the family gap is a cost effect, with one exception, and
+the exception is the flip:
+
+| | bf16 | w4a16 |
+| --- | --- | --- |
+| acceptance, `skip0` → `skip8` | 0.992 → 0.762 (**−23.2%**) | 0.939 → 0.800 (**−14.8%**) |
+| draft chain, `skip0` → `skip8` | 36.844 → 29.135 ms (−20.9%) | 26.659 → ~22.1 ms (−17%, extrapolated) |
+
+bf16 pays 23.2% of its acceptance to buy 20.9% of its draft cost — a losing
+trade, and measured as one. The quantized draft pays 14.8% to buy ~17% — a
+winning trade. The asymmetry has a plain cause: `target-matching/woff/skip0`
+is the **degenerate arm**, a draft whose weights are the target's own tensors
+with nothing removed, accepting 0.992 of what it drafts. It sits on the
+acceptance ceiling, so every lever applied to it can only fall off, and falls
+fast. The quantized draft starts at 0.939, already off the ceiling, and the
+same eight skipped layers cost it markedly less.
+
+Only the `skip0 → skip8` quantized cost is extrapolated: the equal-work sweep
+measured keeps 1.0 and 0.889 under w4a16, not 0.778. The end-to-end number it
+supports is measured, not extrapolated.
+
+### What this changes
+
+**Good news for the headline.** The best arm on this cell rises from 1.496 to
+**1.565**, and the best pick is `w1024/skip4` in *both* families — the top of
+the lattice transfers even though the ranking does not. That is why the
+31-cell selector scored 0.982 while never having been checked across weight
+versions: it was right where it mattered, not right throughout.
+
+**A live risk in the design, now concrete.** Round 1 eliminates candidates by
+predicted cost, from coefficients fitted on one weight version. Every
+coefficient this phase owns was fitted on `target-matching` arms. On bf16
+evidence `skip8` is the worst arm in the lattice and the obvious thing to
+eliminate; in the quantized lattice it is second best at 1.562. **The
+elimination round can discard the runner-up of the family the selector
+actually deploys.** Nothing in the current design would notice.
+
+**Scope.** One cell, one batch, single boots. The 1.496/1.421 and 1.052/1.051
+pairs sit inside this box's ~1% armed-arm stability and are not separated;
+the flip (0.914 → 1.562) and the family gaps at `woff` (+37–71%) are one to
+two orders outside it. `w128/skip4` remains the outlier flagged in section 12
+(159K tokens, 3 cap hits) in the bf16 family; its quantized twin emitted 125K
+with 1, so the bf16 w128 number is the less trustworthy of that pair.
+
+**Still open**: no u-resolved acceptance curve exists for the quantized
+family — `results_g98_longu.md` measured `target-matching` only — so these
+arms can be measured but not yet predicted. That is the next input the
+selector needs on this grid.

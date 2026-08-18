@@ -1,0 +1,118 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 1,
+      "tokens_per_s": 348.443,
+      "total_out_tokens": 134139,
+      "wall_s": 384.967
+    },
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 1,
+      "tokens_per_s": 540.675,
+      "total_out_tokens": 130536,
+      "wall_s": 241.432
+    },
+    "w4a16-quantized/w128/skip4": {
+      "cap_hits": 1,
+      "tokens_per_s": 447.152,
+      "total_out_tokens": 124799,
+      "wall_s": 279.098
+    },
+    "w4a16-quantized/w256/skip4": {
+      "cap_hits": 1,
+      "tokens_per_s": 455.06,
+      "total_out_tokens": 116780,
+      "wall_s": 256.625
+    },
+    "w4a16-quantized/w512/skip4": {
+      "cap_hits": 1,
+      "tokens_per_s": 517.947,
+      "total_out_tokens": 123205,
+      "wall_s": 237.872
+    },
+    "w4a16-quantized/woff/skip0": {
+      "cap_hits": 1,
+      "tokens_per_s": 499.265,
+      "total_out_tokens": 128393,
+      "wall_s": 257.164
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 1,
+      "tokens_per_s": 496.709,
+      "total_out_tokens": 130590,
+      "wall_s": 262.911
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 1,
+      "tokens_per_s": 536.677,
+      "total_out_tokens": 120488,
+      "wall_s": 224.507
+    }
+  },
+  "batch": 8,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-0",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-1",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-2",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-3",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-4",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-5",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-6",
+      "w4a16-quantized/w1024/skip4 diverges from off on LO-7",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-0",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-1",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-2",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-3",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-4",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-5",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-6",
+      "w4a16-quantized/w128/skip4 diverges from off on LO-7",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-0",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-1",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-2",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-3",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-4",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-5",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-6",
+      "w4a16-quantized/w256/skip4 diverges from off on LO-7",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-0",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-1",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-2",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-3",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-4",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-5",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-6",
+      "w4a16-quantized/w512/skip4 diverges from off on LO-7",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-0",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-1",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-2",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-3",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-4",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-5",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-6",
+      "w4a16-quantized/woff/skip0 diverges from off on LO-7",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-0",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-1",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-2",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-3",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-4",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-5",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-6",
+      "w4a16-quantized/woff/skip4 diverges from off on LO-7",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-0",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-1",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-2",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-3",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-4",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-5",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-6",
+      "w4a16-quantized/woff/skip8 diverges from off on LO-7"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
