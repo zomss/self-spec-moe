@@ -63,21 +63,33 @@ CELL = os.environ.get("W98_LONGU_CELL", "LO")
 # The three cells that define the u-curve, plus one windowed arm: the window
 # bounds what the draft can see, so its acceptance has its own reason to move
 # with generation length.
-CONFIGS = [
+BASE_CONFIGS = [
     {"quant": "target-matching", "window": "off", "skip_count": 0},
     {"quant": "target-matching", "window": "off", "skip_count": 4},
     {"quant": "target-matching", "window": "off", "skip_count": 8},
     {"quant": "target-matching", "window": 512, "skip_count": 4},
 ]
-if os.environ.get("W98_LONGU_WINDOWS") == "1":
-    # The window sweep's acceptance curves. The LO throughput sweep showed
-    # cost is NOT monotone in window size -- w128 and w256 measure slower
-    # than w512 -- which no KV-bytes model produces. Acceptance is the only
-    # candidate, and it was measured for w512 alone.
+# The window sweep's acceptance curves. The LO throughput sweep showed cost
+# is NOT monotone in window size -- w128 and w256 measure slower than w512 --
+# which no KV-bytes model produces. Acceptance is the only candidate, and it
+# was measured for w512 alone.
+WINDOW_CONFIGS = [
+    {"quant": "target-matching", "window": w, "skip_count": 4} for w in (128, 256, 1024)
+]
+CONFIGS = list(BASE_CONFIGS)
+if os.environ.get("W98_LONGU_QUANT") == "1":
+    # The quantized family's curves. Every acceptance curve this phase owns
+    # was measured on `target-matching`, and the refined-grid comparison then
+    # found the two families rank the lattice differently (Spearman +0.286),
+    # with skip8 moving from worst to runner-up. So the quantized arms can be
+    # measured but not predicted, and the u-axis is where that bites hardest:
+    # skip depth is both the lever whose acceptance moves most with u and the
+    # one whose damage differs most between the families.
     CONFIGS = [
-        {"quant": "target-matching", "window": w, "skip_count": 4}
-        for w in (128, 256, 1024)
+        {**cfg, "quant": "w4a16-quantized"} for cfg in BASE_CONFIGS + WINDOW_CONFIGS
     ]
+elif os.environ.get("W98_LONGU_WINDOWS") == "1":
+    CONFIGS = list(WINDOW_CONFIGS)
 
 
 def _require(condition: bool, message: str) -> None:

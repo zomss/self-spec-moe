@@ -1,0 +1,108 @@
+{
+  "batch": 8,
+  "cell": "w4a16-quantized/woff/skip0",
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "content_cell": "LO",
+  "gen_tokens": 8192,
+  "record_type": "w98_long_u",
+  "rows": 8279,
+  "schema_version": 1,
+  "tau_profile": {
+    "buckets": {
+      "0": {
+        "armed_steps": 279,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          261,
+          249,
+          237,
+          229,
+          215,
+          209,
+          198,
+          187
+        ],
+        "tau": 7.397849,
+        "tau_hi": 7.705224,
+        "tau_lo": 7.188153,
+        "unarmed_steps": 8,
+        "undefined_draws": 0
+      },
+      "1": {
+        "armed_steps": 823,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          776,
+          742,
+          708,
+          678,
+          646,
+          619,
+          591,
+          561
+        ],
+        "tau": 7.465371,
+        "tau_hi": 7.784264,
+        "tau_lo": 7.216471,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "2": {
+        "armed_steps": 2080,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          2015,
+          1944,
+          1870,
+          1810,
+          1763,
+          1700,
+          1635,
+          1573
+        ],
+        "tau": 7.879808,
+        "tau_hi": 8.047666,
+        "tau_lo": 7.698308,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "3": {
+        "armed_steps": 5082,
+        "clipped_excluded": 7,
+        "pos_accepted": [
+          4953,
+          4811,
+          4672,
+          4543,
+          4396,
+          4269,
+          4139,
+          4018
+        ],
+        "tau": 8.044667,
+        "tau_hi": 8.181745,
+        "tau_lo": 7.896832,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      }
+    },
+    "depth": 8,
+    "kmax": 8,
+    "u_edges": [
+      256,
+      1024,
+      3072,
+      8192
+    ]
+  },
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

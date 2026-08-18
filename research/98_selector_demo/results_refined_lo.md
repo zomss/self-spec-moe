@@ -796,3 +796,94 @@ with 1, so the bf16 w128 number is the less trustworthy of that pair.
 family — `results_g98_longu.md` measured `target-matching` only — so these
 arms can be measured but not yet predicted. That is the next input the
 selector needs on this grid.
+
+---
+
+## 16. The quantized family's u-curves: the missing input, measured
+
+Section 15 closed on the one thing blocking prediction: every acceptance
+curve the phase owned was `target-matching`, so the quantized arms could be
+measured but not predicted. All seven are now measured under the same
+instrument — LO content, 8192 tokens, `ignore_eos`, u-edges
+`[256, 1024, 3072, 8192]`, depth 8.
+
+### tau by bucket, both families
+
+| arm | u<256 | 256–1K | 1K–3K | 3K–8K | drift bf16 / w4a16 |
+| --- | --- | --- | --- | --- | --- |
+| `woff/skip0` | 8.851 / 7.398 | 8.757 / 7.465 | 8.822 / 7.880 | 8.891 / 8.045 | +0.4% / **+8.7%** |
+| `woff/skip4` | 7.270 / 6.367 | 7.386 / 6.864 | 7.527 / 7.388 | 7.918 / 7.672 | +8.9% / **+20.5%** |
+| `woff/skip8` | 5.012 / 4.916 | 5.122 / 4.960 | 5.782 / 5.688 | 6.257 / 5.972 | +24.8% / +21.5% |
+| `w128/skip4` | 6.186 / 5.742 | 5.679 / 5.385 | 5.572 / 5.205 | 5.585 / 5.064 | −9.7% / −11.8% |
+| `w256/skip4` | 7.027 / 6.267 | 6.277 / 6.025 | 5.968 / 5.526 | 5.841 / 5.497 | −16.9% / −12.3% |
+| `w512/skip4` | 7.270 / 6.367 | 6.968 / 6.568 | 6.597 / 6.673 | 6.722 / 6.348 | −7.5% / **−0.3%** |
+| `w1024/skip4` | 7.279 / 6.367 | 7.365 / 6.848 | 6.929 / 6.785 | 6.969 / 6.609 | −4.3% / **+3.8%** |
+
+The sign of the u-trend is family-independent — unwindowed arms gain with
+generation length, windowed arms lose — which is the reassuring half.
+
+### What quantization costs in acceptance, and where
+
+| arm | u<256 | 256–1K | 1K–3K | 3K–8K |
+| --- | --- | --- | --- | --- |
+| `woff/skip0` | **−16.4%** | −14.8% | −10.7% | **−9.5%** |
+| `woff/skip4` | −12.4% | −7.1% | −1.9% | −3.1% |
+| `woff/skip8` | **−1.9%** | −3.1% | −1.6% | **−4.6%** |
+| `w128/skip4` | −7.2% | −5.2% | −6.6% | −9.3% |
+| `w256/skip4` | −10.8% | −4.0% | −7.4% | −5.9% |
+| `w512/skip4` | −12.4% | −5.7% | +1.2% | −5.6% |
+| `w1024/skip4` | −12.5% | −7.0% | −2.1% | −5.2% |
+
+Two results, and both bear on section 15's flip.
+
+**Quantization's acceptance penalty shrinks as generation lengthens.** At
+`skip4` it falls from −12.4% to −3.1%. G98-D measured acceptance over 640
+generated tokens — entirely inside the first two buckets — so **the
+calibration the selector inherited overstates the cost of quantizing by two
+to four times for the regime the LO cell actually occupies.**
+
+**Deep skip is nearly free to quantize.** `skip8` pays 1.6–4.6% at every
+bucket while `skip0` pays 9.5–16.4%. This is the acceptance half of the flip
+section 15 measured on the cost side, and it is the same ceiling argument:
+`target-matching/woff/skip0` accepts 0.99 of what it drafts, so any
+degradation shows; a draft already down to tau 5 has little left to lose.
+Quantization and skip damage the *same* thing, so their damages do not add —
+just as their savings do not.
+
+### Why this is the input the selector was missing
+
+The selector consumes one scalar tau per cell, pooled below 1K. Against what
+an LO generation actually realizes:
+
+| arm | bf16 scalar → eff | error | w4a16 scalar → eff | error | measured (bf16/w4a16) |
+| --- | --- | --- | --- | --- | --- |
+| `woff/skip0` | 8.804 → 8.873 | −0.8% | 7.432 → 7.983 | −6.9% | 1.052 / 1.449 |
+| `woff/skip4` | 7.328 → 7.816 | −6.2% | 6.615 → 7.569 | **−12.6%** | 1.042 / 1.443 |
+| `woff/skip8` | 5.067 → 6.070 | **−16.5%** | 4.938 → 5.850 | **−15.6%** | 0.914 / 1.562 |
+| `w128/skip4` | 5.933 → 5.594 | +6.1% | 5.563 → 5.107 | +8.9% | 1.051 / 1.301 |
+| `w256/skip4` | 6.652 → 5.902 | **+12.7%** | 6.146 → 5.539 | **+11.0%** | 1.113 / 1.332 |
+| `w512/skip4` | 7.119 → 6.725 | +5.9% | 6.468 → 6.401 | +1.0% | 1.421 / 1.509 |
+| `w1024/skip4` | 7.322 → 6.987 | +4.8% | 6.608 → 6.638 | −0.4% | 1.496 / 1.565 |
+
+The error is not noise and not uniform — it is **signed by lever family**.
+The pooled scalar **under-rates every skip arm** (by 16.5% at `skip8`) and
+**over-rates every tight-window arm** (by 11–13% at `w256`). Between those two
+arms the scalar misstates their acceptance ratio by roughly **27 points** in
+the quantized family.
+
+That is precisely the bias needed to produce the failure section 15 could
+only flag as a risk: on scalar acceptance the selector sees deep skip as the
+worst thing in the lattice and tight windows as good, while the LO cell
+measures `skip8` second-best and `w256` sixth. **The misranking is not a cost
+bug and not a transfer bug — it is the selector reading acceptance at a
+generation length the workload never occupies.**
+
+### Scope
+
+Single boot per arm; `ignore_eos` deliberately (this is calibration, not a
+scored run, and it is what guarantees the long-u buckets fill). Bucket 3
+spans 3–8K while LO generations reach 13–17K, so `tau_eff` still carries the
+last measured bucket forward — conservative for both trends, since unwindowed
+acceptance is still rising and windowed still falling at the edge. Depth 8
+here against K=4 in the scored runs; the curves are used as ratios, not
+levels.
