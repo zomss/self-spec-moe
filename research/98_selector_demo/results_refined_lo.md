@@ -296,3 +296,83 @@ identical error for every value, which is impossible if the parameter is
 live. `integrated_with_drain` reaches cost through `split_cost`, not
 `draft_cost`, so gamma never entered the computation. The insensitivity is
 what exposed it; the numbers above come from the corrected path.
+
+---
+
+## 10. Refitting `kappa_kv` on the refined cell: done, and not adopted
+
+Section 9 attributed the residual to `kappa_kv` carrying the wrong regime —
+inherited from an R5cot fit at batch 8 and a fixed 14K context, applied to a
+cell whose context sweeps 120 to 33000 under a decaying batch. The refined
+cell can identify the coefficients itself, because one arm's measured time is
+linear in them:
+
+```text
+time = (v_shared + F)*S + keep*A*S + keep*f_win*[w>0]*S
+       + keep*kv_bytes*kappa_kv*R + v_per*Q
+```
+
+Seven armed arms, four unknowns. The design varies `keep` over
+{1.0, 0.889, 0.778} — which separates the per-layer term from the floor — and
+the window over {off, 128, 256, 512, 1024}, which is what should pin
+`kappa_kv`. (`A` absorbs the weight term: every arm shares the target's
+weights, so `W*kappa_w` is constant across this arm set and collinear with
+the per-layer constant.)
+
+### The fit is degenerate unconstrained
+
+Plain least squares returns **`kappa_kv` = −1.12e−11, `F` = −10.8 ms,
+`f_win` = −57 ms**: a negative floor, a window that pays to exist, and KV
+that makes the draft *faster* the more of it you read. Physically impossible,
+and the reason is in the design:
+
+| | F | A | f_win | kappa_kv |
+| --- | --- | --- | --- | --- |
+| f_win | +0.287 | +0.358 | +1.000 | **−0.985** |
+
+**`f_win` and `kappa_kv` are collinear at −0.985.** Every windowed arm carries
+the indicator, so the only thing separating the two columns is how window
+size moves KV exposure — and least squares happily trades a large negative KV
+coefficient against a large negative window constant.
+
+### Under a non-negativity constraint
+
+| parameter | refit (LO) | inherited (R5cot) |
+| --- | --- | --- |
+| `kappa_kv` | **8.08e−13** | 8.62e−12 (**10.7x larger**) |
+| `F` | 9.61 ms | — |
+| `A` (per-layer, keep=1) | 22.4 ms | — |
+| `f_win` | 0 (at the boundary) | — |
+| mean residual | **0.098** | 0.121 |
+
+The refit says the inherited KV coefficient is **an order of magnitude too
+large** for this cell, and fitting on the cell improves the residual from
+0.121 to 0.098.
+
+### Why it is not adopted
+
+Two defects, both in the data rather than the arithmetic:
+
+1. **`f_win` is pinned to zero by the constraint, not by measurement.** With
+   a −0.985 correlation the split between the window constant and the KV
+   coefficient is not identified; NNLS resolves it at a boundary, which is an
+   artifact. Breaking it needs unwindowed-vs-windowed contrasts at more than
+   one keep — the current sweep varies window only at skip4.
+2. **Each arm ran a different workload.** Realized output spans 104K to 159K
+   tokens, a **1.52x spread**, because natural EOS plus T=0 divergence gives
+   every arm its own generation lengths. The regressors therefore encode
+   workload as well as configuration.
+
+Both are fixed by the same thing, and it is a protocol rather than a model:
+**cost must be calibrated under equal work.** That is exactly what Phase 98's
+`ignore_eos` instrument provides and exactly what Phase 100 retires from
+*scoring* while keeping for *measurement*. The two protocols are for
+different purposes, and this attempt demonstrates the boundary by failing
+across it: natural EOS is right for scoring throughput and wrong for fitting
+coefficients.
+
+So the number stands as a measured indication — the inherited `kappa_kv` is
+roughly 10x too large at LO — and not as a calibration. The calibration run
+is an equal-work sweep on the refined cells with the window varied at two or
+more keeps, which is a well-specified next campaign rather than a further
+model refinement.
