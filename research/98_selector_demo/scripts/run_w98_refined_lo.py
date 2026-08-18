@@ -105,7 +105,20 @@ SWEEP: dict[str, dict[str, Any]] = {
     }
     for w in (128, 256, 1024)
 }
-if os.environ.get("W98_LO_SWEEP") == "1":
+# The quantized family: the same eight configurations under the OTHER draft
+# weight version. Sections 2-13 scored `target-matching` exclusively while
+# every selector pick in the 31-cell grid was `w4a16`, so the refined grid had
+# never measured the arm family the selector actually chooses -- and the
+# quant-axis calibration then showed the two families do not share a cost
+# surface. Like for like: same arms, same protocol, same cell, and its own OFF
+# so the two families' denominators can be checked against each other rather
+# than assumed equal.
+if os.environ.get("W98_LO_QUANT") == "1":
+    ARMS = {
+        name: {**cfg, "quant": "w4a16-quantized"}
+        for name, cfg in {**ARMS, **SWEEP}.items()
+    }
+elif os.environ.get("W98_LO_SWEEP") == "1":
     ARMS = dict(SWEEP)
 
 
