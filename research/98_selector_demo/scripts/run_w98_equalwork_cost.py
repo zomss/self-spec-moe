@@ -63,7 +63,7 @@ matrix = r1.matrix
 PROMPTS = (
     SCRIPT_DIR.parent.parent / "100_baselines/data/registration/w100_prompts.jsonl.gz"
 )
-CELL = "LO"
+CELL = os.environ.get("W98_EW_CELL", "LO")
 BATCH = int(os.environ.get("W98_EW_BATCH", "8"))
 GEN = int(os.environ.get("W98_EW_TOKENS", "8192"))
 MAX_MODEL_LEN = 40_960
@@ -78,7 +78,22 @@ def _require(condition: bool, message: str) -> None:
 
 
 def arms() -> list[dict[str, Any]]:
-    """Window x keep, plus w512/skip4 for continuity with the earlier sweep."""
+    """Window x keep, plus w512/skip4 for continuity with the earlier sweep.
+
+    On cells other than LO this trims to four arms spanning the levers: the
+    question there is whether LO's coefficients TRANSFER, which four points
+    answer, not whether a second lattice can be fitted.
+    """
+    if CELL != "LO":
+        return [
+            {
+                "action": "armed",
+                "quant": "target-matching",
+                "window": w,
+                "skip_count": s,
+            }
+            for w, s in (("off", 0), ("off", 4), (256, 4), (1024, 4))
+        ]
     out = [
         {"action": "armed", "quant": "target-matching", "window": w, "skip_count": s}
         for w in WINDOWS

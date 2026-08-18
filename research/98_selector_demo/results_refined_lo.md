@@ -495,3 +495,73 @@ therefore kept as fitted and the discrepancy recorded as open — either the
 sync cost is not a clean per-step constant at this batch, or the corrected
 arm still carries part of it. That is a question about the instrument, not
 about the cost model.
+
+---
+
+## 13. The transfer test — and the term that was "refuted" comes back
+
+The sharpest untested claim was whether coefficients fitted on ONE cell
+predict others, since that is the search strategy's whole premise. LI and LIO
+are the right test because their context profile is the **inverse** of LO's:
+~12K prompts with 512-token generations, against LO's 120-token prompt
+growing to 8K. Four arms each, equal work, same instrument.
+
+### Applying LO's coefficients unchanged
+
+| cell | arm | KV positions | measured | error |
+| --- | --- | --- | --- | --- |
+| LI | `w256/skip4` | 272 | 28.96 ms | **−0.1%** |
+| LI | `w1024/skip4` | 1040 | 29.77 ms | **+0.7%** |
+| LI | `woff/skip4` | 12416 | 48.58 ms | **−9.3%** |
+| LI | `woff/skip0` | 12416 | 55.32 ms | **−11.2%** |
+| LIO | `w256/skip4` | 272 | 28.83 ms | +0.3% |
+| LIO | `w1024/skip4` | 1040 | 29.42 ms | +1.9% |
+| LIO | `woff/skip4` | 9863 | 45.60 ms | −11.0% |
+| LIO | `woff/skip0` | 9863 | 52.48 ms | −13.9% |
+
+**Windowed arms transfer almost exactly; unwindowed arms under-predict by
+9–14%.** The error is not diffuse — it lands entirely on the arms whose KV
+sits far beyond the calibration range, and it is one-directional: real cost
+grows **faster** than linear in KV positions.
+
+That is the superlinear term section 9 implemented and reported as refuted.
+The refutation was correct for the data it had and wrong as a general
+conclusion, for a reason now visible: **LO spans 271–4252 KV positions, LI
+spans 271–12416.** LO's lever arm was three times too short to identify a
+curvature, so the fit sensibly returned `gamma = 1`.
+
+### Refitting gamma across all three cells
+
+| gamma | LO | LI | LIO | all |
+| --- | --- | --- | --- | --- |
+| 1.00 | **0.35%** | 5.33% | 6.76% | 2.88% |
+| 1.20 | 0.76% | 1.26% | 3.74% | 1.53% |
+| **1.25** | 0.88% | **0.89%** | **2.96%** | **1.34%** |
+| 1.30 | 0.98% | 1.91% | 2.14% | 1.44% |
+
+**gamma = 1.25 halves the error**, 2.88% to 1.34%, and does it in the way a
+real effect does rather than a fitted one: it gives up a little on the cell
+that calibrated it (0.35% to 0.88%) to gain a great deal on the two it never
+saw (5.33% to 0.89%, 6.76% to 2.96%). KV cost scales as `p^1.25` — attention
+gets less efficient per position as the working set grows, which is ordinary
+memory-hierarchy behaviour and the same physics that makes windows pay.
+
+### What this settles, and what it does not
+
+**Settles**: the cost model transfers. With one curvature parameter it
+predicts three cells spanning 271 to 12416 KV positions and two opposite
+context profiles to **1.34% mean error**, having been fitted on one of them.
+That is the search strategy's premise holding on the refined grid.
+
+**Does not settle**: LIO's unwindowed arms remain 4–7% under-predicted at
+`gamma = 1.25` while LI's are within 1.5%, so something separates the two
+long-prompt cells that a single curvature does not capture — plausibly that
+LIO's prompts are longer-tailed, making the mean KV position a worse summary
+of a run whose requests differ more in length. Retiring that would need
+per-request rather than per-run integration.
+
+**Method note.** Section 9's refutation is left standing in the record with
+this section appended rather than rewritten. It was right about its data and
+wrong about the world, and the distinction — a parameter that is
+unidentifiable in one design and measurable in another — is the reusable
+part.
