@@ -1772,3 +1772,116 @@ What survives, and should not be over-corrected away:
 **Scope.** One cell, one batch, single boots. Equal work is the calibration
 protocol; the scored protocol keeps natural EOS. The claim here is about the
 lattice's structure and the model, not about deployed throughput.
+
+---
+
+## 26. The kernel trace: identical KV, identical attention, unrealized savings
+
+Section 24 measured the window saving 4.544 ms in the bf16 draft against
+2.823 in the quantized one and called it an exposure effect, reading the
+bandwidth arithmetic as "the KV read is 81% exposed in one family and 50% in
+the other". The objection to that is immediate and correct: **the KV cache is
+shared, so at the same window over the same context the KV traffic is
+identical by construction.** Nothing about quantizing the draft's weights
+touches it.
+
+This settles it at kernel granularity. Four arms — `{bf16, w4a16} x {woff,
+w256}` at keep 1 — on the equal-work sweep's content and batch, warmed to
+context 4158-4160 so the window does the job whose cost section 24 fitted,
+then 25 steps under `torch.profiler`.
+
+### The attention kernel costs the same in both families
+
+| arm | attention kernel | calls |
+| --- | --- | --- |
+| `bf16 / woff` | **9.764 ms/step** | 180 |
+| `q4 / woff` | **9.912 ms/step** | 180 |
+| `bf16 / w256` | 4.029 ms/step | 180 |
+| `q4 / w256` | 3.817 ms/step | 180 |
+
+180 calls is 36 layers x (4 draft forwards + 1 verify), which confirms the
+chain structure the bandwidth account assumed. Unwindowed, the two families'
+attention differs by **1.5%**. The window removes **5.735 ms** (bf16) and
+**6.095 ms** (w4a16) — 6% apart, and both within 9% of the **5.607 ms** that
+18.78 GB of removed KV takes at this box's 3.35 TB/s peak.
+
+**So the bytes account is right, and it is right in both families.** The KV
+read is fully exposed and fully explained by its traffic. Section 24's
+"partly exposed" reading was wrong.
+
+Two controls confirm the arms are otherwise identical: GEMM time is
+untouched by windowing (bf16 27.525 -> 27.561 ms, w4a16 18.106 -> 18.118),
+and the kernels windowing *adds* — gather, scatter, elementwise for the
+window compaction — total **0.13 ms/step** and are the same in both
+families.
+
+### Where the difference actually is
+
+The draft chain holds 144 of the 180 attention calls, so apportioning:
+
+| | attention removed | draft-chain share | **fitted `g256`** | unrealized |
+| --- | --- | --- | --- | --- |
+| bf16 | 5.735 ms | 4.588 ms | **4.544 ms** | **+0.044** |
+| w4a16 | 6.095 ms | 4.876 ms | **2.823 ms** | **+2.053** |
+
+**In the bf16 draft the window's measured saving IS the attention time it
+removes, to 1.0%.** In the quantized draft, **42% of the freed GPU time never
+appears in the chain.**
+
+That is the whole anomaly, and it is not about KV at all. It is about
+whether freed device time converts into wall time. Total kernel time per
+step:
+
+```text
+bf16   woff 41.950 -> w256 36.335 ms
+w4a16  woff 31.129 -> w256 25.160 ms
+```
+
+The quantized chain runs **26% less device work**, having already shed 41
+GB/step of weight traffic. A step with less GPU work has less behind which to
+hide its host work — the per-step window compaction, the metadata rebuild,
+the launch stream. Freeing 4.9 ms of GPU time in a chain already close to
+host-bound converts only partly into wall time. The idle deltas point the
+same way (+14.48 ms bf16, +17.66 ms w4a16 when windowing is on), though the
+profiler inflates host time far too much for those magnitudes to be used
+directly.
+
+The self-consistency is worth noting: the bf16 fit needs the draft chain to
+hold 79.2% of the attention saving, and 144/180 is 80.0%. The apportionment
+was not tuned to produce that.
+
+### Correcting section 24, and what it means for the model
+
+Section 24 stands on its measurements — the fitted offsets, their standard
+errors, the 7.7 sigma family difference — and its *mechanism* is wrong. The
+KV read is not partly hidden. It is fully exposed in both families, and the
+window's value differs because the **freed time is realized differently**.
+
+The structural consequence is sharper than section 24's version:
+
+* the fitted per-window offset is **not a memory-traffic quantity**. It is
+  (attention time removed) − (host time exposed), and only the first term is
+  family-independent and predictable from bytes;
+* that is why the quantized window axis **saturated** in section 24 — once a
+  chain is host-bound, tightening the window frees GPU time that does not
+  convert, so `w256` and `w1024` measure the same;
+* and it is why section 25's residual ranking error sits exactly on the
+  `woff`-versus-windowed comparison in the quantized family, and nowhere
+  else.
+
+**The window term is therefore not separable per lever.** How much a window
+is worth depends on how much device work the rest of the step has, which the
+other two levers set. A cost model that fits `f_win` once per family, as
+every version in this phase has, is fitting a quantity that moves with skip
+depth and weight version together.
+
+### Scope
+
+One boot per arm, 25 profiled steps, one context. `torch.profiler` with CPU
+activities inflates host time heavily — wall is 88-97 ms/step here against a
+real chain-plus-verify of roughly 30-37 — so only the **device** numbers and
+the cross-arm ordering are used above; no wall or idle magnitude is claimed.
+The 144/180 apportionment assumes the draft's `q=1` and verify's `q=5`
+attention calls cost about the same per call, which is expected for a
+KV-read-bound kernel and is corroborated by the bf16 reconciliation landing
+at 79.2% against the assumed 80.0%.

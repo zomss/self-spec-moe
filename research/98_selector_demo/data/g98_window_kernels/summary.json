@@ -1,0 +1,86 @@
+{
+  "arms": {
+    "bf16_w256": {
+      "attention_calls_per_step": 829.0,
+      "attention_ms_per_step": 5.8543,
+      "by_family_ms_per_step": {
+        "attention": 5.8543,
+        "cublas_gemm": 0.6471,
+        "elementwise": 0.4012,
+        "norm_act": 1.1081,
+        "reduce": 0.3974,
+        "unclassified": 33.3645
+      },
+      "context_positions": 4160,
+      "device_ms_per_step": 41.7726,
+      "idle_ms_per_step": 55.0226,
+      "wall_ms_per_step": 96.7953
+    },
+    "bf16_woff": {
+      "attention_calls_per_step": 829.0,
+      "attention_ms_per_step": 11.5909,
+      "by_family_ms_per_step": {
+        "attention": 11.5909,
+        "cublas_gemm": 0.6458,
+        "elementwise": 0.2727,
+        "norm_act": 1.1436,
+        "reduce": 0.3933,
+        "unclassified": 39.3449
+      },
+      "context_positions": 4160,
+      "device_ms_per_step": 53.3912,
+      "idle_ms_per_step": 40.5427,
+      "wall_ms_per_step": 93.9339
+    },
+    "q4_w256": {
+      "attention_calls_per_step": 829.0,
+      "attention_ms_per_step": 5.5868,
+      "by_family_ms_per_step": {
+        "attention": 5.5868,
+        "cublas_gemm": 0.0771,
+        "elementwise": 0.4015,
+        "marlin": 10.8499,
+        "norm_act": 0.2386,
+        "reduce": 0.3947,
+        "unclassified": 12.9602
+      },
+      "context_positions": 4159,
+      "device_ms_per_step": 30.5087,
+      "idle_ms_per_step": 62.8346,
+      "wall_ms_per_step": 93.3434
+    },
+    "q4_woff": {
+      "attention_calls_per_step": 829.0,
+      "attention_ms_per_step": 11.6884,
+      "by_family_ms_per_step": {
+        "attention": 11.6884,
+        "cublas_gemm": 0.0768,
+        "elementwise": 0.2717,
+        "marlin": 10.8389,
+        "norm_act": 0.2386,
+        "reduce": 0.395,
+        "unclassified": 19.1581
+      },
+      "context_positions": 4158,
+      "device_ms_per_step": 42.6675,
+      "idle_ms_per_step": 45.1781,
+      "wall_ms_per_step": 87.8456
+    }
+  },
+  "record_type": "w98_window_kernels_summary",
+  "schema_version": 1,
+  "window_saving_off_minus_w256": {
+    "target-matching": {
+      "attention_ms_per_step": 5.7366,
+      "device_ms_per_step": 11.6186,
+      "idle_ms_per_step": -14.4799,
+      "wall_ms_per_step": -2.8614
+    },
+    "w4a16-quantized": {
+      "attention_ms_per_step": 6.1016,
+      "device_ms_per_step": 12.1588,
+      "idle_ms_per_step": -17.6565,
+      "wall_ms_per_step": -5.4978
+    }
+  }
+}

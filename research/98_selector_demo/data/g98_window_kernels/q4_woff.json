@@ -1,0 +1,702 @@
+{
+  "batch": 8,
+  "by_family": {
+    "attention": {
+      "calls": 20725,
+      "device_us_total": 292210.1200000157,
+      "distinct_kernels": 5
+    },
+    "cublas_gemm": {
+      "calls": 900,
+      "device_us_total": 1919.3470000003854,
+      "distinct_kernels": 1
+    },
+    "elementwise": {
+      "calls": 3550,
+      "device_us_total": 6793.210000001982,
+      "distinct_kernels": 28
+    },
+    "marlin": {
+      "calls": 25200,
+      "device_us_total": 270972.1150000179,
+      "distinct_kernels": 6
+    },
+    "norm_act": {
+      "calls": 2825,
+      "device_us_total": 5965.1920000037135,
+      "distinct_kernels": 4
+    },
+    "reduce": {
+      "calls": 875,
+      "device_us_total": 9874.762000002405,
+      "distinct_kernels": 13
+    },
+    "unclassified": {
+      "calls": 28485,
+      "device_us_total": 478953.08199999755,
+      "distinct_kernels": 50
+    }
+  },
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "content_cell": "LO",
+  "context_positions": 4158,
+  "device_ms_per_step": 42.667513120001594,
+  "device_us_total": 1066687.8280000398,
+  "idle_ms_per_step": 45.178120762096306,
+  "kernels": {
+    "Activity Buffer Request": {
+      "calls": 5,
+      "device_us_per_call": 1.0176000000000385,
+      "device_us_total": 5.088000000000193,
+      "family": "unclassified"
+    },
+    "Buffer Flush": {
+      "calls": 5,
+      "device_us_per_call": 23.0464000000502,
+      "device_us_total": 115.23200000025099,
+      "family": "unclassified"
+    },
+    "Memcpy DtoD (Device -> Device)": {
+      "calls": 350,
+      "device_us_per_call": 1.6892257142843976,
+      "device_us_total": 591.2289999995392,
+      "family": "unclassified"
+    },
+    "Memcpy DtoH (Device -> Pageable)": {
+      "calls": 275,
+      "device_us_per_call": 2.4718836363659054,
+      "device_us_total": 679.7680000006239,
+      "family": "unclassified"
+    },
+    "Memcpy DtoH (Device -> Pinned)": {
+      "calls": 25,
+      "device_us_per_call": 2.398719999996247,
+      "device_us_total": 59.96799999990617,
+      "family": "unclassified"
+    },
+    "Memcpy HtoD (Pinned -> Device)": {
+      "calls": 400,
+      "device_us_per_call": 0.9963974999994423,
+      "device_us_total": 398.5589999997769,
+      "family": "unclassified"
+    },
+    "Memset (Device)": {
+      "calls": 350,
+      "device_us_per_call": 0.8486314285703546,
+      "device_us_total": 297.0209999996241,
+      "family": "unclassified"
+    },
+    "_C_cache_ops::reshape_and_cache_flash": {
+      "calls": 3600,
+      "device_us_per_call": 2.5738008333338014,
+      "device_us_total": 9265.683000001685,
+      "family": "attention"
+    },
+    "_compute_slot_mapping_kernel": {
+      "calls": 25,
+      "device_us_per_call": 2.648319999997402,
+      "device_us_total": 66.20799999993505,
+      "family": "unclassified"
+    },
+    "_vllm_fa3_C::fwd": {
+      "calls": 3600,
+      "device_us_per_call": 60.85844194444727,
+      "device_us_total": 219090.3910000102,
+      "family": "unclassified"
+    },
+    "_vllm_fa3_C::get_scheduler_metadata": {
+      "calls": 25,
+      "device_us_per_call": 2.0492800000024,
+      "device_us_total": 51.23200000006,
+      "family": "unclassified"
+    },
+    "at::native::mbtopk::computeDigitCumSum(short*, unsigned int*, unsigned int)": {
+      "calls": 100,
+      "device_us_per_call": 1.9593499999987762,
+      "device_us_total": 195.93499999987762,
+      "family": "reduce"
+    },
+    "aten::_index_put_impl_": {
+      "calls": 25,
+      "device_us_per_call": 1.7765999999953055,
+      "device_us_total": 44.41499999988264,
+      "family": "unclassified"
+    },
+    "aten::add": {
+      "calls": 250,
+      "device_us_per_call": 1.072892000002963,
+      "device_us_total": 268.22300000074074,
+      "family": "unclassified"
+    },
+    "aten::arange": {
+      "calls": 100,
+      "device_us_per_call": 0.251829999999336,
+      "device_us_total": 25.1829999999336,
+      "family": "unclassified"
+    },
+    "aten::argmax": {
+      "calls": 175,
+      "device_us_per_call": 12.672068571427786,
+      "device_us_total": 2217.6119999998627,
+      "family": "reduce"
+    },
+    "aten::cat": {
+      "calls": 25,
+      "device_us_per_call": 1.6051200000065728,
+      "device_us_total": 40.12800000016432,
+      "family": "unclassified"
+    },
+    "aten::clamp": {
+      "calls": 25,
+      "device_us_per_call": 1.4041199999990932,
+      "device_us_total": 35.10299999997733,
+      "family": "unclassified"
+    },
+    "aten::copy_": {
+      "calls": 1875,
+      "device_us_per_call": 1.793997866667106,
+      "device_us_total": 3363.7460000008236,
+      "family": "elementwise"
+    },
+    "aten::cumsum": {
+      "calls": 25,
+      "device_us_per_call": 2.7237999999785827,
+      "device_us_total": 68.09499999946456,
+      "family": "unclassified"
+    },
+    "aten::fill_": {
+      "calls": 250,
+      "device_us_per_call": 0.5151839999993626,
+      "device_us_total": 128.79599999984066,
+      "family": "unclassified"
+    },
+    "aten::floor_divide": {
+      "calls": 25,
+      "device_us_per_call": 1.6691199999943638,
+      "device_us_total": 41.727999999859094,
+      "family": "unclassified"
+    },
+    "aten::gather": {
+      "calls": 25,
+      "device_us_per_call": 1.7254000000048837,
+      "device_us_total": 43.13500000012209,
+      "family": "unclassified"
+    },
+    "aten::ge": {
+      "calls": 25,
+      "device_us_per_call": 1.3477999999838357,
+      "device_us_total": 33.69499999959589,
+      "family": "unclassified"
+    },
+    "aten::index": {
+      "calls": 350,
+      "device_us_per_call": 2.0852771428591663,
+      "device_us_total": 729.8470000007082,
+      "family": "unclassified"
+    },
+    "aten::masked_fill_": {
+      "calls": 50,
+      "device_us_per_call": 1.3894199999977355,
+      "device_us_total": 69.47099999988677,
+      "family": "unclassified"
+    },
+    "aten::mm": {
+      "calls": 125,
+      "device_us_per_call": 420.1289840000048,
+      "device_us_total": 52516.123000000596,
+      "family": "unclassified"
+    },
+    "aten::mul": {
+      "calls": 100,
+      "device_us_per_call": 0.9593599999952858,
+      "device_us_total": 95.93599999952858,
+      "family": "unclassified"
+    },
+    "aten::remainder": {
+      "calls": 25,
+      "device_us_per_call": 1.6588400000070396,
+      "device_us_total": 41.47100000017599,
+      "family": "unclassified"
+    },
+    "aten::repeat_interleave": {
+      "calls": 50,
+      "device_us_per_call": 0.7654400000012538,
+      "device_us_total": 38.27200000006269,
+      "family": "unclassified"
+    },
+    "aten::sub": {
+      "calls": 100,
+      "device_us_per_call": 0.9139099999945757,
+      "device_us_total": 91.39099999945756,
+      "family": "unclassified"
+    },
+    "aten::sub_": {
+      "calls": 50,
+      "device_us_per_call": 1.3305600000058622,
+      "device_us_total": 66.5280000002931,
+      "family": "unclassified"
+    },
+    "aten::topk": {
+      "calls": 25,
+      "device_us_per_call": 112.84512000003225,
+      "device_us_total": 2821.1280000008064,
+      "family": "reduce"
+    },
+    "copy_and_expand_eagle_inputs_kernel": {
+      "calls": 25,
+      "device_us_per_call": 1.6076800000006188,
+      "device_us_total": 40.19200000001547,
+      "family": "elementwise"
+    },
+    "cuLaunchKernelEx": {
+      "calls": 325,
+      "device_us_per_call": 0.4309630769235754,
+      "device_us_total": 140.063000000162,
+      "family": "unclassified"
+    },
+    "cudaEventRecord": {
+      "calls": 25,
+      "device_us_per_call": 2.429440000001341,
+      "device_us_total": 60.73600000003353,
+      "family": "unclassified"
+    },
+    "cudaEventRecordWithFlags": {
+      "calls": 150,
+      "device_us_per_call": 0.8499133333332914,
+      "device_us_total": 127.48699999999371,
+      "family": "unclassified"
+    },
+    "cudaEventSynchronize": {
+      "calls": 25,
+      "device_us_per_call": 0.2060800000000745,
+      "device_us_total": 5.152000000001863,
+      "family": "unclassified"
+    },
+    "cudaGraphLaunch": {
+      "calls": 3725,
+      "device_us_per_call": 0.7637057718119223,
+      "device_us_total": 2844.8039999994107,
+      "family": "unclassified"
+    },
+    "cudaStreamIsCapturing": {
+      "calls": 4600,
+      "device_us_per_call": 0.7057184782606261,
+      "device_us_total": 3246.30499999888,
+      "family": "unclassified"
+    },
+    "eagle_prepare_inputs_padded_kernel": {
+      "calls": 25,
+      "device_us_per_call": 1.3068799999868497,
+      "device_us_total": 32.67199999967124,
+      "family": "unclassified"
+    },
+    "eagle_prepare_next_token_padded_kernel": {
+      "calls": 25,
+      "device_us_per_call": 1.8853599999894504,
+      "device_us_total": 47.13399999973626,
+      "family": "unclassified"
+    },
+    "eagle_step_slot_mapping_metadata_kernel": {
+      "calls": 75,
+      "device_us_per_call": 1.761266666660619,
+      "device_us_total": 132.09499999954642,
+      "family": "unclassified"
+    },
+    "nvjet_tst_192x40_64x7_2x1_v_bz_TNT": {
+      "calls": 900,
+      "device_us_per_call": 70.03833444444344,
+      "device_us_total": 63034.50099999909,
+      "family": "unclassified"
+    },
+    "nvjet_tst_384x40_64x3_2x1_v_bz_TNT": {
+      "calls": 25,
+      "device_us_per_call": 431.0207199999867,
+      "device_us_total": 10775.517999999667,
+      "family": "unclassified"
+    },
+    "nvjet_tst_384x8_64x4_2x1_v_bz_TNT": {
+      "calls": 100,
+      "device_us_per_call": 416.4630200000024,
+      "device_us_total": 41646.30200000024,
+      "family": "unclassified"
+    },
+    "nvjet_tst_64x40_64x16_2x1_v_bz_splitK_TNT": {
+      "calls": 900,
+      "device_us_per_call": 37.80163222222191,
+      "device_us_total": 34021.46899999972,
+      "family": "unclassified"
+    },
+    "nvjet_tst_64x40_64x16_4x1_v_bz_TNT": {
+      "calls": 1800,
+      "device_us_per_call": 17.88251500000009,
+      "device_us_total": 32188.527000000162,
+      "family": "unclassified"
+    },
+    "rejection_greedy_sample_kernel": {
+      "calls": 25,
+      "device_us_per_call": 2.155519999984972,
+      "device_us_total": 53.8879999996243,
+      "family": "unclassified"
+    },
+    "triton_poi_fused_2": {
+      "calls": 125,
+      "device_us_per_call": 1.9975599999997211,
+      "device_us_total": 249.69499999996515,
+      "family": "unclassified"
+    },
+    "triton_poi_fused_4": {
+      "calls": 4375,
+      "device_us_per_call": 1.949270399999365,
+      "device_us_total": 8528.057999997221,
+      "family": "unclassified"
+    },
+    "triton_poi_fused_marlin_gemm_mul_silu_slice_1": {
+      "calls": 3600,
+      "device_us_per_call": 1.541074722222631,
+      "device_us_total": 5547.869000001472,
+      "family": "marlin"
+    },
+    "triton_poi_fused_mul_silu_slice_1": {
+      "calls": 900,
+      "device_us_per_call": 1.8520366666695625,
+      "device_us_total": 1666.8330000026062,
+      "family": "norm_act"
+    },
+    "triton_red_fused_1": {
+      "calls": 125,
+      "device_us_per_call": 1.3887839999993594,
+      "device_us_total": 173.59799999991992,
+      "family": "unclassified"
+    },
+    "triton_red_fused_3": {
+      "calls": 4375,
+      "device_us_per_call": 1.3271942857131096,
+      "device_us_total": 5806.474999994854,
+      "family": "unclassified"
+    },
+    "triton_red_fused__to_copy_embedding_marlin_gemm_rms_norm_0": {
+      "calls": 100,
+      "device_us_per_call": 3.0108500000042113,
+      "device_us_total": 301.08500000042113,
+      "family": "marlin"
+    },
+    "triton_red_fused__to_copy_embedding_rms_norm_0": {
+      "calls": 25,
+      "device_us_per_call": 3.3253999999885853,
+      "device_us_total": 83.13499999971464,
+      "family": "norm_act"
+    },
+    "triton_red_fused_fused_add_rms_norm_0": {
+      "calls": 900,
+      "device_us_per_call": 2.1437688888916857,
+      "device_us_total": 1929.3920000025173,
+      "family": "norm_act"
+    },
+    "triton_red_fused_fused_add_rms_norm_2": {
+      "calls": 1000,
+      "device_us_per_call": 2.285831999998875,
+      "device_us_total": 2285.8319999988753,
+      "family": "norm_act"
+    },
+    "triton_red_fused_fused_add_rms_norm_marlin_gemm_0": {
+      "calls": 3600,
+      "device_us_per_call": 2.0257883333332,
+      "device_us_total": 7292.8379999995195,
+      "family": "marlin"
+    },
+    "triton_red_fused_fused_add_rms_norm_marlin_gemm_2": {
+      "calls": 3500,
+      "device_us_per_call": 2.132647714287188,
+      "device_us_total": 7464.2670000051585,
+      "family": "marlin"
+    },
+    "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}>::result_type*)": {
+      "calls": 25,
+      "device_us_per_call": 1.007319999997344,
+      "device_us_total": 25.1829999999336,
+      "family": "elementwise"
+    },
+    "void at::native::(anonymous namespace)::CatArrayBatchedCopy_alignedK_contig<at::native::(anonymous namespace)::OpaqueType<8u>, unsigned int, 2, 128, 1, 16>(at::native::(anonymous namespace)::OpaqueType<8u>*, at::native::(anonymous namespace)::CatArrInputTensorMetadata<at::native::(anonymous namespace)::OpaqueType<8u>, unsigned int, 128, 1>, at::native::(anonymous namespace)::TensorSizeStride<unsigned int, 4u>, int, unsigned int)": {
+      "calls": 25,
+      "device_us_per_call": 1.6051200000065728,
+      "device_us_total": 40.12800000016432,
+      "family": "elementwise"
+    },
+    "void at::native::_scatter_gather_elementwise_kernel<128, 8, at::native::_cuda_scatter_gather_internal_kernel<false, at::native::OpaqueType<8>, int>::operator()<at::native::TensorAssign>(at::TensorIterator&, long, long, long, at::native::TensorAssign const&)::{lambda(int)#1}>(int, at::native::_cuda_scatter_gather_internal_kernel<false, at::native::OpaqueType<8>, int>::operator()<at::native::TensorAssign>(at::TensorIterator&, long, long, long, at::native::TensorAssign const&)::{lambda(int)#1})": {
+      "calls": 25,
+      "device_us_per_call": 1.7254000000048837,
+      "device_us_total": 43.13500000012209,
+      "family": "elementwise"
+    },
+    "void at::native::bitonicSortKVInPlace<2, -1, 16, 16, float, long, at::native::GTOp<float, true>, unsigned int>(at::cuda::detail::TensorInfo<float, unsigned int>, unsigned int, unsigned int, unsigned int, at::cuda::detail::TensorInfo<long, unsigned int>, unsigned int, at::native::GTOp<float, true>)": {
+      "calls": 25,
+      "device_us_per_call": 4.615639999989362,
+      "device_us_total": 115.39099999973405,
+      "family": "reduce"
+    },
+    "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": {
+      "calls": 125,
+      "device_us_per_call": 1.8523839999992415,
+      "device_us_total": 231.5479999999052,
+      "family": "elementwise"
+    },
+    "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": {
+      "calls": 100,
+      "device_us_per_call": 1.8166300000055162,
+      "device_us_total": 181.66300000055162,
+      "family": "elementwise"
+    },
+    "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_put_kernel_impl<at::native::OpaqueType<8> >(at::TensorIterator&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_put_kernel_impl<at::native::OpaqueType<8> >(at::TensorIterator&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_put_kernel_impl<at::native::OpaqueType<8> >(at::TensorIterator&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_put_kernel_impl<at::native::OpaqueType<8> >(at::TensorIterator&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": {
+      "calls": 25,
+      "device_us_per_call": 1.7765999999953055,
+      "device_us_total": 44.41499999988264,
+      "family": "elementwise"
+    },
+    "void at::native::mbtopk::computeBlockDigitCounts<float, unsigned int, unsigned int, 2>(at::cuda::detail::TensorInfo<float const, unsigned int>, unsigned int, unsigned int*, unsigned int, unsigned int, int, int, unsigned int, unsigned int, unsigned int*, short*)": {
+      "calls": 100,
+      "device_us_per_call": 11.376880000002165,
+      "device_us_total": 1137.6880000002166,
+      "family": "reduce"
+    },
+    "void at::native::mbtopk::computeBlockwiseKthCounts<unsigned int>(unsigned int*, short*, unsigned int, unsigned int, unsigned int*)": {
+      "calls": 25,
+      "device_us_per_call": 2.611160000017408,
+      "device_us_total": 65.27900000043519,
+      "family": "reduce"
+    },
+    "void at::native::mbtopk::computeBlockwiseWithinKCounts<unsigned int, float>(unsigned int*, short*, unsigned int*, unsigned int*, unsigned int, int, bool, unsigned int*, float*, unsigned int*, unsigned int*, unsigned int)": {
+      "calls": 100,
+      "device_us_per_call": 2.9180600000054255,
+      "device_us_total": 291.80600000054255,
+      "family": "reduce"
+    },
+    "void at::native::mbtopk::fill<unsigned int, unsigned int>(unsigned int*, unsigned int, unsigned int)": {
+      "calls": 25,
+      "device_us_per_call": 1.0035200000042823,
+      "device_us_total": 25.08800000010706,
+      "family": "reduce"
+    },
+    "void at::native::mbtopk::gatherTopK<float, unsigned int, 2>(at::cuda::detail::TensorInfo<float const, unsigned int>, unsigned int, unsigned int, bool, unsigned int, unsigned int, at::cuda::detail::TensorInfo<float, unsigned int>, unsigned int, at::cuda::detail::TensorInfo<long, unsigned int>, unsigned int, unsigned int, unsigned int, float*, unsigned int*, unsigned int*, unsigned int)": {
+      "calls": 25,
+      "device_us_per_call": 27.747560000005542,
+      "device_us_total": 693.6890000001385,
+      "family": "reduce"
+    },
+    "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<c10::BFloat16, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4> >(at::native::ReduceOp<c10::BFloat16, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4>)": {
+      "calls": 125,
+      "device_us_per_call": 11.676303999999625,
+      "device_us_total": 1459.5379999999532,
+      "family": "reduce"
+    },
+    "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4> >(at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4>)": {
+      "calls": 50,
+      "device_us_per_call": 12.484380000015443,
+      "device_us_total": 624.2190000007722,
+      "family": "reduce"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctorOnSelf_add<int>, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, at::native::CUDAFunctorOnSelf_add<int>, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast)": {
+      "calls": 25,
+      "device_us_per_call": 1.1123199999913778,
+      "device_us_total": 27.807999999784442,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, 4, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast)": {
+      "calls": 25,
+      "device_us_per_call": 1.0931199999943784,
+      "device_us_total": 27.327999999859458,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<long>, std::array<char*, 3ul>, 4, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<2>, at::native::memory::StoreWithCast<1> >(int, at::native::CUDAFunctor_add<long>, std::array<char*, 3ul>, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<2>, at::native::memory::StoreWithCast<1>)": {
+      "calls": 25,
+      "device_us_per_call": 1.6985599999918486,
+      "device_us_total": 42.463999999796215,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::FillFunctor<int>, std::array<char*, 1ul>, 4, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, at::native::FillFunctor<int>, std::array<char*, 1ul>, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast)": {
+      "calls": 25,
+      "device_us_per_call": 1.0111200000032112,
+      "device_us_total": 25.278000000080283,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#3}::operator()() const::{lambda(int)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#3}::operator()() const::{lambda(int)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": {
+      "calls": 100,
+      "device_us_per_call": 1.3676700000098936,
+      "device_us_total": 136.76700000098936,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": {
+      "calls": 325,
+      "device_us_per_call": 1.4825261538463075,
+      "device_us_total": 481.82100000004993,
+      "family": "elementwise"
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": {
+      "calls": 100,
+      "device_us_per_call": 10.156339999999382,
+      "device_us_total": 1015.6339999999382,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul> >(int, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long)#1}, std::array<char*, 2ul>)": {
+      "calls": 25,
+      "device_us_per_call": 1.4041199999990932,
+      "device_us_total": 35.10299999997733,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, bool)#1}, std::array<char*, 3ul> >(int, at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, bool)#1}, std::array<char*, 3ul>)": {
+      "calls": 50,
+      "device_us_per_call": 1.3894199999977355,
+      "device_us_total": 69.47099999988677,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long> >, std::array<char*, 2ul> >(int, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long> >, std::array<char*, 2ul>)": {
+      "calls": 25,
+      "device_us_per_call": 1.2735999999922933,
+      "device_us_total": 31.839999999807333,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::binary_internal::div_floor_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::binary_internal::div_floor_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": {
+      "calls": 25,
+      "device_us_per_call": 1.6691199999943638,
+      "device_us_total": 41.727999999859094,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase&)::{lambda()#1}::operator()() const::{lambda()#4}::operator()() const::{lambda(long, long)#1}>, std::array<char*, 2ul>)": {
+      "calls": 25,
+      "device_us_per_call": 1.6588400000070396,
+      "device_us_total": 41.47100000017599,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::CUDAFunctor_add<long>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_add<long>, std::array<char*, 3ul>)": {
+      "calls": 50,
+      "device_us_per_call": 1.3145600000090054,
+      "device_us_total": 65.72800000045027,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<2, at::native::FillFunctor<long>, std::array<char*, 1ul> >(int, at::native::FillFunctor<long>, std::array<char*, 1ul>)": {
+      "calls": 50,
+      "device_us_per_call": 1.0278399999996326,
+      "device_us_total": 51.391999999981635,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::AUnaryFunctor<int, int, int, at::native::binary_internal::MulFunctor<int> >, std::array<char*, 2ul> >(int, at::native::AUnaryFunctor<int, int, int, at::native::binary_internal::MulFunctor<int> >, std::array<char*, 2ul>)": {
+      "calls": 50,
+      "device_us_per_call": 1.2819199999944249,
+      "device_us_total": 64.09599999972124,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctorOnSelf_add<int>, std::array<char*, 2ul> >(int, at::native::CUDAFunctorOnSelf_add<int>, std::array<char*, 2ul>)": {
+      "calls": 75,
+      "device_us_per_call": 1.2590800000048148,
+      "device_us_total": 94.43100000036111,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<int>, std::array<char*, 3ul> >(int, at::native::CUDAFunctor_add<int>, std::array<char*, 3ul>)": {
+      "calls": 125,
+      "device_us_per_call": 1.3470640000019194,
+      "device_us_total": 168.38300000023992,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": {
+      "calls": 50,
+      "device_us_per_call": 1.0425199999955748,
+      "device_us_total": 52.12599999977874,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::compare_scalar_kernel<long>(at::TensorIteratorBase&, at::native::(anonymous namespace)::OpType, long)::{lambda(long)#1}, std::array<char*, 2ul> >(int, at::native::compare_scalar_kernel<long>(at::TensorIteratorBase&, at::native::(anonymous namespace)::OpType, long)::{lambda(long)#1}, std::array<char*, 2ul>)": {
+      "calls": 25,
+      "device_us_per_call": 1.3477999999838357,
+      "device_us_total": 33.69499999959589,
+      "family": "elementwise"
+    },
+    "void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)": {
+      "calls": 125,
+      "device_us_per_call": 2.5330880000020115,
+      "device_us_total": 316.63600000025144,
+      "family": "elementwise"
+    },
+    "void at_cuda_detail::cub::DeviceScanByKeyInitKernel<at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, true>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned long long>(at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, true>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, std::iterator_traits<thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default> >::value_type*, unsigned long long, int)": {
+      "calls": 50,
+      "device_us_per_call": 1.008619999999719,
+      "device_us_total": 50.43099999998594,
+      "family": "reduce"
+    },
+    "void at_cuda_detail::cub::DeviceScanByKeyKernel<at_cuda_detail::cub::detail::scan_by_key::policy_hub<thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned int, unsigned int, cuda::std::__4::plus<void> >::Policy1000, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned int*, unsigned int*, at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, true>, cuda::std::__4::equal_to<void>, cuda::std::__4::plus<void>, at_cuda_detail::cub::NullType, unsigned long long, unsigned int, unsigned int>(thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::transform_iterator<at::native::mbtopk::BlockIdxToKey, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::counting_iterator<unsigned int, unsigned int, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default, thrust::THRUST_200802_SM_750_800_860_900_1000_1200_NS::use_default>, unsigned int*, unsigned int*, unsigned int*, at_cuda_detail::cub::ReduceByKeyScanTileState<unsigned int, int, true>, int, cuda::std::__4::equal_to<void>, cuda::std::__4::plus<void>, at_cuda_detail::cub::NullType, unsigned long long)": {
+      "calls": 50,
+      "device_us_per_call": 3.539159999999465,
+      "device_us_total": 176.95799999997325,
+      "family": "reduce"
+    },
+    "void at_cuda_detail::cub::DeviceScanInitKernel<at_cuda_detail::cub::ScanTileState<long, true> >(at_cuda_detail::cub::ScanTileState<long, true>, int)": {
+      "calls": 25,
+      "device_us_per_call": 1.0316799999917565,
+      "device_us_total": 25.791999999793916,
+      "family": "unclassified"
+    },
+    "void at_cuda_detail::cub::DeviceScanKernel<at_cuda_detail::cub::detail::scan::policy_hub<long, long, long, unsigned int, std::plus<long> >::Policy1000, long const*, long*, at_cuda_detail::cub::ScanTileState<long, true>, std::plus<long>, at_cuda_detail::cub::NullType, unsigned int, long, false>(long const*, long*, at_cuda_detail::cub::ScanTileState<long, true>, int, std::plus<long>, at_cuda_detail::cub::NullType, unsigned int)": {
+      "calls": 25,
+      "device_us_per_call": 1.692119999986826,
+      "device_us_total": 42.30299999967065,
+      "family": "unclassified"
+    },
+    "void compute_cuda_kernel<int>(int const*, long const*, int*, long, long)": {
+      "calls": 25,
+      "device_us_per_call": 1.5308800000025076,
+      "device_us_total": 38.27200000006269,
+      "family": "unclassified"
+    },
+    "void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)": {
+      "calls": 900,
+      "device_us_per_call": 2.132607777778206,
+      "device_us_total": 1919.3470000003854,
+      "family": "cublas_gemm"
+    },
+    "void cutlass::device_kernel<flash::FlashAttnFwdCombine<cute::tuple<cute::C<8>, cute::C<128> >, 5, 256, 1, false, true, cutlass::bfloat16_t, float, cutlass::arch::Sm90> >(flash::FlashAttnFwdCombine<cute::tuple<cute::C<8>, cute::C<128> >, 5, 256, 1, false, true, cutlass::bfloat16_t, float, cutlass::arch::Sm90>::Params)": {
+      "calls": 4500,
+      "device_us_per_call": 3.3149924444452408,
+      "device_us_total": 14917.466000003584,
+      "family": "attention"
+    },
+    "void cutlass::device_kernel<flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<flash::CollectiveMainloopFwdSm90<2, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, 128, cutlass::bfloat16_t, float, cutlass::arch::Sm90, true, false, false, true, true, false, false, true, true, true, true, false, cutlass::bfloat16_t, 1>, flash::CollectiveEpilogueFwd<cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cutlass::bfloat16_t, cutlass::arch::Sm90, 128, true, true, true, false, 1>, flash::VarlenDynamicPersistentTileScheduler<64, 128, 128, 128, true, true, true, true, false, true> > > >(flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<flash::CollectiveMainloopFwdSm90<2, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, 128, cutlass::bfloat16_t, float, cutlass::arch::Sm90, true, false, false, true, true, false, false, true, true, true, true, false, cutlass::bfloat16_t, 1>, flash::CollectiveEpilogueFwd<cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cutlass::bfloat16_t, cutlass::arch::Sm90, 128, true, true, true, false, 1>, flash::VarlenDynamicPersistentTileScheduler<64, 128, 128, 128, true, true, true, true, false, true> > >::Params)": {
+      "calls": 4500,
+      "device_us_per_call": 55.06727177777935,
+      "device_us_total": 247802.72300000707,
+      "family": "attention"
+    },
+    "void flash::prepare_varlen_num_blocks_kernel<1, false>(int, int, int, int const*, int const*, int const*, int const*, int const*, int const*, int, int, int, int, int, cutlass::FastDivmod, cutlass::FastDivmod, int*, int*, int*, int*, int*, bool, bool, bool, int)": {
+      "calls": 3625,
+      "device_us_per_call": 2.4119420689656885,
+      "device_us_total": 8743.290000000621,
+      "family": "attention"
+    },
+    "void marlin::Marlin<1125899906909960l, 1125899907892224l, 1125899906909960l, 1125899906909960l, 128, 1, 4, 8, false, 4, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool, bool, int)": {
+      "calls": 7200,
+      "device_us_per_call": 14.655474861111637,
+      "device_us_total": 105519.41900000379,
+      "family": "marlin"
+    },
+    "void marlin::Marlin<1125899906909960l, 1125899907892224l, 1125899906909960l, 1125899906909960l, 256, 1, 8, 8, false, 4, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, float const*, int4 const*, float const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool, bool, int)": {
+      "calls": 7200,
+      "device_us_per_call": 20.11758847222327,
+      "device_us_total": 144846.63700000755,
+      "family": "marlin"
+    },
+    "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(__nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, long const*, long, long, long, long, long, int, int, int, float const*, float const*, int)": {
+      "calls": 4500,
+      "device_us_per_call": 2.5513240000006134,
+      "device_us_total": 11480.95800000276,
+      "family": "attention"
+    }
+  },
+  "profiled_steps": 25,
+  "record_type": "w98_window_kernels",
+  "schema_version": 1,
+  "wall_ms_per_step": 87.8456338820979,
+  "wall_s_total": 2.1961408470524475,
+  "warmup_steps": 877,
+  "warmup_tokens_reached": 4002,
+  "warmup_tokens_target": 4000
+}
