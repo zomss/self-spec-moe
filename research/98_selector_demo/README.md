@@ -26,6 +26,15 @@ Results: [`results_g98_c.md`](results_g98_c.md) (cost),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).
 
+**Work measured on the VM box lives on `research/self-spec-moe-vm`**, not
+here, so a VM number cannot be mistaken for one from the scored h103/h104
+campaigns: [`status_vm_branch.md`](status_vm_branch.md) records it and the
+candidate next steps. Headline from that branch: the whole selector run end
+to end on one box reaches **98.2-98.4% of omniscient** over the full 31-cell
+lattice across two independent 62-boot grids, and D3's R4 regression does
+NOT reproduce there (1.13-1.20x over OFF against h103's 0.763x), which
+leaves the fail-closed rule built but disabled pending replication on h103.
+
 **Both campaigns run on h104 (bare metal), GPU 7 / NUMA node 1.** The
 original box was a QEMU/KVM guest whose host-side "clamp" gated 40+ attempts
 without a single accepted cell; sections 10-11 of the clamp document record
@@ -257,16 +266,16 @@ Order 25–35 scored boots total at the observed ~1h/boot cadence, plus smoke.
 Additive and scope-gated, so the scopes Rounds 1-2 were measured under do
 not move:
 
-* **`w98-d2` boot scope** (`vllm/v1/spec_decode/koff_runtime.py`) — KMAX = 8
+- **`w98-d2` boot scope** (`vllm/v1/spec_decode/koff_runtime.py`) — KMAX = 8
   unconditional arming, and per-request acceptance rows carrying each
   request's OWN generated-suffix length. Every other scope keeps the closed
   K in `{0, 4}`, emits no acceptance rows, and keeps its verbatim error text.
-* **Amendment 2** (`w98_prereg_amendment2_instrument.md`, APPROVED under the
+- **Amendment 2** (`w98_prereg_amendment2_instrument.md`, APPROVED under the
   dual-arm option) — the profiler no longer syncs inside the region it
   measures: 12 syncs per step become 4. `VLLM_SELF_SPEC_PROFILE_LEGACY_SYNCS=1`
   keeps the legacy instrument runnable, which is the mechanism D3's
   registered conservative bound depends on.
-* One upstream fix outside the scope system: step-0 work evidence was gated
+- One upstream fix outside the scope system: step-0 work evidence was gated
   on the action id being literally K4, so any other armed action arrived as
   `None`.
 
