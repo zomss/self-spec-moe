@@ -436,3 +436,62 @@ refusal to adopt its own result is what kept the error out of the model.
 * One cell, one batch, one model. These coefficients are calibrated for LO's
   context regime and should not be transferred back to the R-regimes without
   the same check that motivated this run.
+
+---
+
+## 12. LO re-scored with the equal-work coefficients
+
+The drain-integrated prediction, rerun over all seven armed LO arms with the
+section-11 coefficients in place of the inherited R5cot ones. Each arm uses
+its own measured acceptance curve and its own realized generation lengths;
+the verify level is calibrated once on the parked arm.
+
+| arm | inherited | **equal-work** | measured |
+| --- | --- | --- | --- |
+| `woff/skip0` | 1.415 | **1.018** | 1.034 |
+| `woff/skip4` | 1.431 | **1.043** | 1.023 |
+| `woff/skip8` | 1.239 | **0.917** | 0.897 |
+| `w256/skip4` | 1.603 | **1.065** | 1.086 |
+| `w1024/skip4` | 2.166 | **1.445** | 1.476 |
+| `w512/skip4` | 1.767 | 1.176 | **1.408** |
+| `w128/skip4` | 1.960 | 1.302 | **1.076** |
+| **mean error** | **0.4524** | **0.0675** | — |
+
+**Error falls 6.7x**, and five of seven arms land within 2–6% — including the
+sign at `woff/skip8`, which the model correctly places below no speculation.
+
+The earlier headline of 0.051 was over a four-arm subset that predates the
+window sweep; on this seven-arm set the inherited coefficients score 0.452,
+so the comparison above is the like-for-like one.
+
+### Two residuals, and one of them is the measurement
+
+`w512/skip4` is still under-predicted (1.176 against 1.408) and `w128/skip4`
+is now over-predicted (1.302 against 1.076). The model orders the window
+family `w1024 > w128 > w256 > w512`; measurement says
+`w1024 > w512 > w256 > w128`.
+
+The cost side cannot be responsible. In the equal-work data the draft chain
+is monotone in window — 33.073 ms at w1024, 32.033 at w256 — and the modelled
+KV difference between a 144-position and a 528-position window is ~0.07 ms
+per request per step against a ~30 ms step. Among windows, cost is nearly
+flat; acceptance is what should decide, and the measured curves have w128
+11.6% below w512 by the 3K–8K bucket.
+
+`w128/skip4` is also the workload outlier: its run emitted **159K tokens with
+3 cap hits**, against 104–128K and 0–1 for every other arm, because its low
+acceptance changed the sampled tokens and pushed three requests into the 32K
+cap. Its predicted-versus-measured comparison is the least trustworthy of the
+seven for that reason, and the honest reading is that the window ordering
+below 512 is not yet resolved rather than that the model has it wrong.
+
+### The sync correction does not behave
+
+The calibration ran under the **legacy** instrument (profiler syncs present,
+~2.4 ms/step per X25) while the scored throughput runs used **corrected**, so
+the fitted floor should arguably be reduced by that amount. It should not be:
+subtracting it moves the mean error the wrong way, 0.0675 to 0.0972. `F` is
+therefore kept as fitted and the discrepancy recorded as open — either the
+sync cost is not a clean per-step constant at this batch, or the corrected
+arm still carries part of it. That is a question about the instrument, not
+about the cost model.
