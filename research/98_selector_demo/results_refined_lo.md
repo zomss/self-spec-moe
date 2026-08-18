@@ -376,3 +376,63 @@ roughly 10x too large at LO — and not as a calibration. The calibration run
 is an equal-work sweep on the refined cells with the window varied at two or
 more keeps, which is a well-specified next campaign rather than a further
 model refinement.
+
+---
+
+## 11. The equal-work calibration — and what it overturns
+
+Section 10 specified the fix: calibrate cost under **equal work**, with the
+window varied at more than one keep. Run here as 10 arms (3 windows x 3
+skips, plus `w512/skip4`), `ignore_eos` with a fixed 8192-token budget at
+batch 8 on LO content, and the draft chain read **from the profiler** rather
+than inverted out of throughput — so acceptance leaves the calibration
+entirely.
+
+Equal work is visible in the data: every arm emitted exactly 65,536 tokens,
+differing only in how many steps it took (1661 for `woff/skip0`, 2406 for
+`w256/skip8`).
+
+### The fit
+
+| parameter | **equal-work (LO)** | inherited (R5cot) | natural-EOS refit |
+| --- | --- | --- | --- |
+| `kappa_kv` | **1.035e−11** | 8.622e−12 | 8.082e−13 |
+| `f_win` | **1.510 ms** | −1.192 ms | 0 (boundary) |
+| `A` per-layer | **26.356 ms** | — | 22.425 ms |
+| `F` floor | **3.791 ms** | 3.362 ms | 9.612 ms |
+| **mean residual** | **0.0035** | 0.1209 | 0.0984 |
+| physical unconstrained | **yes** | — | **no** |
+
+**Mean residual 0.35%**, every arm within ±0.7%, and — the decisive check —
+the unconstrained solution is **physically admissible on its own**, with NNLS
+agreeing to within 5%. The negative KV coefficient that made section 10's fit
+degenerate is gone.
+
+The keep axis validates itself: measured draft chain falls 36.844 → 32.933 →
+29.135 ms across skip 0/4/8, ratios of 0.894 and 0.791 against keep fractions
+of 0.889 and 0.778.
+
+### What it overturns
+
+Section 10 concluded from the natural-EOS data that the inherited `kappa_kv`
+was **~10x too large**. That conclusion was wrong, and it was flagged as
+not-adoptable at the time for exactly the reasons that turn out to matter.
+Under equal work `kappa_kv` is **1.20x the inherited value** — a modest
+correction in the *opposite direction*.
+
+The lesson is the protocol, not the number. A degenerate fit on confounded
+data produced a confident order-of-magnitude claim; the fix was not a better
+estimator but a measurement where every arm does identical work. Section 10's
+refusal to adopt its own result is what kept the error out of the model.
+
+### Honest residual concerns
+
+* `f_win` and `kappa_kv` still correlate at **−0.957** — better than −0.985
+  but not comfortable. The fit is physical and the residual is 0.35%, so the
+  identification held; a window sweep at more keeps would tighten it further.
+* The profiler's ~2.4 ms/step syncs (X25) inflate every arm's draft chain
+  equally and land in `F`, whose fitted 3.791 ms sits just above Round 1's
+  registered 3.66 ms floor. The two are not independent measurements.
+* One cell, one batch, one model. These coefficients are calibrated for LO's
+  context regime and should not be transferred back to the R-regimes without
+  the same check that motivated this run.
