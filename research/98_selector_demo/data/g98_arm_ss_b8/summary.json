@@ -1,0 +1,62 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 491.888,
+      "total_out_tokens": 1184,
+      "wall_s": 2.407
+    },
+    "stock": {
+      "cap_hits": 0,
+      "tokens_per_s": 711.423,
+      "total_out_tokens": 1184,
+      "wall_s": 1.664
+    },
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 586.23,
+      "total_out_tokens": 1198,
+      "wall_s": 2.044
+    },
+    "w4a16-quantized/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 581.265,
+      "total_out_tokens": 1198,
+      "wall_s": 2.061
+    },
+    "w4a16-quantized/woff/skip0": {
+      "cap_hits": 0,
+      "tokens_per_s": 563.086,
+      "total_out_tokens": 1154,
+      "wall_s": 2.049
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 603.54,
+      "total_out_tokens": 1198,
+      "wall_s": 1.985
+    }
+  },
+  "batch": 8,
+  "content_cell": "SS",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-2",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-4",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-7",
+      "w4a16-quantized/w512/skip4 diverges from off on SS-2",
+      "w4a16-quantized/w512/skip4 diverges from off on SS-4",
+      "w4a16-quantized/w512/skip4 diverges from off on SS-7",
+      "w4a16-quantized/woff/skip0 diverges from off on SS-2",
+      "w4a16-quantized/woff/skip0 diverges from off on SS-4",
+      "w4a16-quantized/woff/skip0 diverges from off on SS-7",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-2",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-4",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-7"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

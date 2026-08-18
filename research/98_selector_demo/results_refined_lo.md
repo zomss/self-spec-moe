@@ -2310,3 +2310,103 @@ all. LIO reproduced exactly (9,792 both). Same mechanism as section 22:
 batch composition changes reduction order and flips near-tie argmaxes. It is
 worth recording that this is not a property of speculative decoding; it is a
 property of batched inference.
+
+---
+
+## 31. The refined grid against stock: half of it should not arm
+
+Section 30 added the stock arm at LI and LIO b8. This completes the grid —
+b16 for both long-input cells, SS for the first time on this box, and LO's
+missing denominator — so every cell is scored against what a deployment
+would actually replace.
+
+### The grid
+
+Best arm per cell, against stock:
+
+| cell | batch | best arm | vs stock | `off` vs stock | verdict |
+| --- | --- | --- | --- | --- | --- |
+| **LI** | 8 | `woff/skip4` | **0.959** | 0.830 | **park** |
+| **LI** | 16 | `woff/skip0` | **0.875** | 0.812 | **park** |
+| LIO | 8 | `w1024/skip4` | **1.061** | 0.779 | arm |
+| LIO | 16 | `w1024/skip4` | **1.224** | 0.892 | arm |
+| **SS** | 8 | `woff/skip4` | **0.848** | 0.691 | **park** |
+| LO | 8 | `w1024/skip4` | **1.177** | 0.759 | arm |
+
+**Half the grid should not speculate.** LI and SS lose at every arm measured;
+LIO and LO win. That is a firing set for the fail-closed rule covering three
+of six (cell, batch) points, where section 29 concluded there was none.
+
+### Three findings the grid makes visible
+
+**1. The window lever's sign flips between two long-input cells.** At LI the
+windowed arms are the *worst* and get worse with batch — `w1024/skip4` goes
+0.913 -> **0.723**, falling below even `off` — while the unwindowed arms lead.
+At LIO the windowed arms lead at both batches and their margin *widens*,
+1.061 -> **1.224**. Both cells feed the draft 9-16K of context; they differ in
+output length (LI 0.3-1K, LIO 1-2K). So "long input" is not the axis that
+decides whether a window pays, and a selector keyed on input length alone
+would get LI exactly wrong.
+
+**2. Arming with the wrong lever is worse than not arming.** At LI b16 `off`
+(0.812) beats `w1024/skip4` (0.723) and `w512/skip4` (0.705); at LIO b16
+`off` (0.892) beats `woff/skip4` (0.879). The penalty for a bad lever choice
+exceeds the entire engine tax.
+
+**3. The engine tax varies 11-31% by cell**, and it is the dominant term
+almost everywhere:
+
+```text
+SS b8   0.691      LO b8   0.759      LIO b8  0.779
+LIO b16 0.892      LI b16  0.812      LI b8   0.830
+```
+
+Every armed number this record has reported against `off` is inflated by that
+factor. LO's headline is the clearest case: `w1024/skip4` scores **1.565**
+against `off` and **1.177** against stock. Both are correct measurements of
+different things, and only the second is what a deployment sees.
+
+### What the selector is worth here
+
+Against the best single static configuration — `w1024/skip4`, which wins
+every cell where arming wins at all:
+
+| cell, batch | selector (park or arm) | best static | selector gain |
+| --- | --- | --- | --- |
+| LI b8 | park, 1.000 | 0.913 | **+9.5%** |
+| LI b16 | park, 1.000 | 0.723 | **+38.3%** |
+| LIO b8 | arm, 1.061 | 1.061 | 0 |
+| LIO b16 | arm, 1.224 | 1.224 | 0 |
+| SS b8 | park, 1.000 | 0.824 | **+21.4%** |
+| LO b8 | arm, 1.177 | 1.177 | 0 |
+
+**The selector's entire value on this grid is the decision not to arm.**
+Where arming wins, one static configuration wins everywhere, so lever
+*selection* buys nothing across cells; the arm/park decision buys 9-38% on
+three of six points. That is a sharper and less flattering statement than the
+R-grid's +1.4% per-regime figure, and it points the design at the gate rather
+than at the lattice.
+
+It also vindicates the fail-closed rule's construction. The rule declines
+when the predicted margin is smaller than what the cost model can resolve;
+here the cells it should decline are the ones where the best arm clears stock
+by −4% to −15%, which no envelope in the map could certify as positive.
+
+### Scope, and what is not yet claimed
+
+* **The new points are single boots.** LI b8 and LIO b8 carry replicates
+  (agreeing to 1.2%); LI b16, LIO b16, SS b8 and LO stock do not. Given that
+  this record has twice been corrected by a replicate, they should get one
+  before any of this is used in a claim.
+* **LO's arms are natural-EOS** and carry section 25's contamination: at
+  equal work `woff/skip8` is last in the lattice, and here it reads second at
+  1.169. The LO *ranking* below the top arm should not be read; the top arm
+  agrees between protocols.
+* **The selector's picks are not modelled here** — this is the measured grid,
+  which is the ceiling the selector is scored against. Whether the two-round
+  prediction actually declines at LI and SS is the next question, and the
+  prediction map for those cells does not exist: their acceptance has never
+  been measured, only LO's.
+* **One box, and the tax is box-dependent** (6.7-7.5% on h103 against
+  11-31% here). Cells whose margin is inside that difference — LI b8 at
+  0.959 — could plausibly change sign on bare metal.
