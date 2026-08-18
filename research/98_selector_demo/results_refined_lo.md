@@ -976,3 +976,103 @@ calibrated against anything but the parked arm. The cheapest discriminator is
 a batch sweep: every one of those terms scales differently with batch, while
 cost and acceptance are already pinned. That is the next measurement, and it
 is also the one the refined grid was built to demand.
+
+---
+
+## 18. The batch sweep: a fifth refutation, and the switching case
+
+Section 17 narrowed the residual to the composition and named the batch sweep
+as the discriminator, because every uncalibrated term scales differently with
+batch while cost and acceptance are now pinned. Three arms — `off`,
+`woff/skip8`, `w1024/skip4` — at batches 2, 4, 8 and 16, quantized family,
+Phase-100 protocol throughout. Batch stops at 16 deliberately: at 32 the run
+needs ~544K KV tokens against this boot's ~355K, so the measurement would
+carry preemption instead of the split.
+
+### The split, measured rather than assumed
+
+Section 7 solved the verify split on the parked arm at one batch, where it is
+not identifiable — a single per-token number cannot say how much of a step is
+paid once and how much per sequence. Batch identifies it: for the parked arm
+`per_token(B) = Vs * H/T + Vp`, a straight line in the run's own
+horizon-over-tokens ratio.
+
+| | assumed (section 7) | **measured** |
+| --- | --- | --- |
+| shared, `Vs` | 7.69 ms | **8.79 ms** |
+| per-request, `Vp` | 0.989 ms | **0.682 ms** |
+
+The assumption was wrong in both terms — the profiler's verify divided by
+batch over-attributes to per-request by 45%. **And correcting it changes
+nothing**: mean error 0.0823 → 0.0813, `skip8` unmoved at −19.4%, ranking
+identical. That is the fifth hypothesis tested and refuted, and the sweep was
+worth running for that alone.
+
+### What the sweep actually found
+
+| batch | `skip8` measured | predicted | error | `w1024/skip4` measured | predicted | error |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 | **0.939** | 0.961 | **+2.3%** | 1.339 | 1.292 | −3.6% |
+| 4 | 1.296 | 1.140 | −12.0% | 1.516 | 1.437 | −5.2% |
+| 8 | **1.540** | 1.241 | **−19.4%** | 1.552 | 1.437 | −7.4% |
+| 16 | 1.402 | 1.877 | **+34.0%** | 1.607 | 1.581 | −1.6% |
+
+**The model is not mislevelling `skip8`; it is getting its batch scaling
+wrong.** Across an 8x batch range it tracks `w1024/skip4` within 8% at every
+point, while its `skip8` error swings from +2.3% to −19.4% to +34.0%. A single
+wrong coefficient cannot do that. The clean region is decisive on its own:
+from batch 2 to 8 the arm really improves by **+64%** and the model credits it
+**+29%**.
+
+**And the measurement is non-monotone.** `skip8` peaks at batch 8 (1.540) and
+falls at 16 (1.402), while every term in the cost model is monotone in batch —
+shared terms fall as `1/B`, per-request terms are flat — so **a maximum is
+structurally unreachable for it.** That is a shape error, not a parameter
+error, and no refit can fix it.
+
+The batch-16 point carries a caveat that must be stated: `skip8` took **6 cap
+hits** there against 1 everywhere else, and emitted 308K tokens against
+`w1024`'s 220K. Its low acceptance changes the sampled tokens, lengthens the
+generations, and pushes requests into the 32K cap — and 16 requests averaging
+~19K tokens sits close to this boot's KV ceiling. So the +34% is the least
+trustworthy number in the table, and the b2–b8 trend is where the finding
+rests.
+
+### The switching case, measured
+
+Set the model aside; the measurement is the more valuable half.
+
+| batch | `w1024/skip4` | `woff/skip8` | winner |
+| --- | --- | --- | --- |
+| 2 | **1.339** | 0.939 | window, by **43%** |
+| 4 | **1.516** | 1.296 | window, by 17% |
+| 8 | 1.552 | **1.540** | tied (0.8%) |
+| 16 | **1.607** | 1.402 | window, by 15% |
+
+At batch 2 the deep-skip arm does not clear parity and the windowed arm wins
+by 43%; by batch 8 they are inside each other's noise. **One cell, one
+content distribution, one weight version, and the gap between two arms moves
+by a factor of 43% on batch alone** — with the losing arm at one batch being
+the co-winner at another.
+
+This is the strongest switching evidence the phase has produced, and it is
+qualitatively unlike the R-regime result where per-regime selection was worth
++1.4%. It also confirms Campaign 1's b8/b16/b32 crossover on our own lattice
+rather than by analogy. What it does **not** yet show is a batch at which
+`skip8` strictly wins: the flip here is from "loses badly" to "ties", so the
+switching value is real but bounded by what these two arms can offer.
+
+### Where this leaves the model
+
+Five hypotheses tested, five refuted: scalar acceptance, wrong-family
+acceptance, extrapolated skip cost, carried-forward acceptance, and now the
+verify split. The inputs are each accurate to 1–5%. The failure is a shape the
+model cannot express — a batch optimum — and locating it took a sweep rather
+than another fit.
+
+The honest reading for the selector: **it may be calibrated at one batch and
+deployed at another only for arms whose batch response the model tracks**, and
+`w1024/skip4` qualifies while `woff/skip8` does not. Since the selector's
+current picks are windowed, this is a bounded risk today and a blocking one
+the moment deep skip enters the candidate set — which section 15 showed it
+should.

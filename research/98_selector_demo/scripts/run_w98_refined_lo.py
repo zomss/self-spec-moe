@@ -120,6 +120,15 @@ if os.environ.get("W98_LO_QUANT") == "1":
     }
 elif os.environ.get("W98_LO_SWEEP") == "1":
     ARMS = dict(SWEEP)
+# A batch sweep needs a few arms at many batches rather than many arms at one,
+# because what it separates is batch-SHARED cost from batch-proportional cost:
+# the shared part falls as 1/B per token and the per-request part does not.
+if os.environ.get("W98_LO_ARMS"):
+    wanted = os.environ["W98_LO_ARMS"].split(",")
+    missing = [name for name in wanted if name not in ARMS]
+    if missing:
+        raise SystemExit(f"unknown arms requested: {missing}")
+    ARMS = {name: ARMS[name] for name in wanted}
 
 
 def _require(condition: bool, message: str) -> None:

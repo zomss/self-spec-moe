@@ -1,0 +1,30 @@
+{
+  "batch": 4,
+  "cap": 32768,
+  "cap_hits": 0,
+  "cell": "w4a16-quantized/w1024/skip4",
+  "config": {
+    "action": "armed",
+    "quant": "w4a16-quantized",
+    "skip_count": 4,
+    "window": 1024
+  },
+  "content_cell": "LO",
+  "out_tokens_by_request": {
+    "LO-0": 4994,
+    "LO-1": 16009,
+    "LO-2": 26652,
+    "LO-3": 28387
+  },
+  "output_digests": {
+    "LO-0": "c47955effe0cb591cf4278a3cb99085a0b0a7cb03bad6dfad332b8ecffb4a313",
+    "LO-1": "364f62d87839237a409c5ae8e2eb8e17ba77b7cec4711fedd0b62c3cb6f2cc18",
+    "LO-2": "ede39e10bae6516b237299c30f6108da7d1757361ff54a1acc4a69ca7ffdbfe9",
+    "LO-3": "6f15f148d94896e805eeaf371257b1761cfab8cf7e23145c73cddd926ab55c08"
+  },
+  "record_type": "w98_refined_lo",
+  "schema_version": 1,
+  "tokens_per_s": 358.677,
+  "total_out_tokens": 76042,
+  "wall_s": 212.007
+}

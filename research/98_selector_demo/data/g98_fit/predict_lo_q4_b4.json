@@ -1,0 +1,40 @@
+{
+  "acceptance_from": "research/98_selector_demo/data/g98_longu_q4",
+  "acceptance_scalar": false,
+  "arms": {
+    "w1024/skip4": {
+      "measured": 1.5156,
+      "predicted": 1.4374,
+      "relative_error": -0.0516
+    },
+    "woff/skip8": {
+      "measured": 1.2961,
+      "predicted": 1.14,
+      "relative_error": -0.1204
+    }
+  },
+  "cost_fit": {
+    "F": 0.007797471598195409,
+    "c_layer": 0.015428492614779426,
+    "f_win": 0.0,
+    "fit_arms": 9,
+    "fit_mean_residual": 0.013380442798520749,
+    "kappa_kv": 5.336115412417559e-12,
+    "kappa_w": 0.0
+  },
+  "gamma": 1.0,
+  "k_deployed": 4,
+  "mean_abs_error": 0.086,
+  "measured_ranking": [
+    "w1024/skip4",
+    "woff/skip8"
+  ],
+  "predicted_ranking": [
+    "w1024/skip4",
+    "woff/skip8"
+  ],
+  "quant": "w4a16-quantized",
+  "record_type": "w98_refined_lo_prediction",
+  "verify_per_request_ms": 1.9775,
+  "verify_shared_ms": 5.8406
+}

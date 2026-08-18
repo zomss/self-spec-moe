@@ -1,0 +1,75 @@
+{
+  "acceptance_from": "research/98_selector_demo/data/g98_longu_q4",
+  "acceptance_scalar": false,
+  "arms": {
+    "w1024/skip4": {
+      "measured": 1.5517,
+      "predicted": 1.437,
+      "relative_error": -0.0739
+    },
+    "w128/skip4": {
+      "measured": 1.2833,
+      "predicted": 1.1942,
+      "relative_error": -0.0694
+    },
+    "w256/skip4": {
+      "measured": 1.306,
+      "predicted": 1.1856,
+      "relative_error": -0.0922
+    },
+    "w512/skip4": {
+      "measured": 1.4865,
+      "predicted": 1.346,
+      "relative_error": -0.0945
+    },
+    "woff/skip0": {
+      "measured": 1.4328,
+      "predicted": 1.365,
+      "relative_error": -0.0474
+    },
+    "woff/skip4": {
+      "measured": 1.4255,
+      "predicted": 1.4316,
+      "relative_error": 0.0042
+    },
+    "woff/skip8": {
+      "measured": 1.5402,
+      "predicted": 1.2406,
+      "relative_error": -0.1945
+    }
+  },
+  "cost_fit": {
+    "F": 0.007797471598195409,
+    "c_layer": 0.015428492614779426,
+    "f_win": 0.0,
+    "fit_arms": 9,
+    "fit_mean_residual": 0.013380442798520749,
+    "kappa_kv": 5.336115412417559e-12,
+    "kappa_w": 0.0
+  },
+  "gamma": 1.0,
+  "k_deployed": 4,
+  "mean_abs_error": 0.0823,
+  "measured_ranking": [
+    "w1024/skip4",
+    "woff/skip8",
+    "w512/skip4",
+    "woff/skip0",
+    "woff/skip4",
+    "w256/skip4",
+    "w128/skip4"
+  ],
+  "predicted_ranking": [
+    "w1024/skip4",
+    "woff/skip4",
+    "woff/skip0",
+    "w512/skip4",
+    "woff/skip8",
+    "w128/skip4",
+    "w256/skip4"
+  ],
+  "quant": "w4a16-quantized",
+  "record_type": "w98_refined_lo_prediction",
+  "verify_per_request_ms": 0.9888,
+  "verify_shared_ms": 7.7007
+}

@@ -179,9 +179,10 @@ def predict(
     verify_ms: float,
     prompt_tokens: float,
     gamma: float,
+    split: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
     off = runs[OFF_KEY]
-    shared, per_request = verify_split(off, verify_ms)
+    shared, per_request = split or verify_split(off, verify_ms)
     off_per_token = off["wall_s"] / off["total_out_tokens"]
     rows = {}
     for arm, record in sorted(runs.items()):
@@ -248,6 +249,11 @@ def main() -> int:
         help="ablation: pool acceptance below 1K and carry it flat, as the "
         "selector's current input does",
     )
+    parser.add_argument(
+        "--split-ms",
+        help="measured verify split as SHARED,PER_REQUEST in ms; without it "
+        "the split is assumed from the profiler and solved on the parked arm",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -265,6 +271,9 @@ def main() -> int:
         args.verify_ms,
         args.prompt_tokens,
         args.gamma,
+        tuple(float(v) / 1000 for v in args.split_ms.split(","))
+        if args.split_ms
+        else None,
     )
     result.update(
         {
