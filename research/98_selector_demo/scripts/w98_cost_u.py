@@ -183,3 +183,125 @@ def linear_verify(v_fixed: float, v_per_token: float):
         return v_fixed + v_per_token * float(context)
 
     return verify_at
+
+
+# --- the batch drain -------------------------------------------------------
+#
+# Under natural EOS requests finish at different lengths, so the concurrent
+# batch decays through a run and per-token cost rises: a step's batch-SHARED
+# work is amortised over fewer requests. `results_refined_lo.md` measured the
+# consequence -- a constant-batch prediction over-states throughput by 1.5-2x
+# at LO -- and named it as the next term. This is that term.
+#
+# The decomposition is physical rather than fitted. Per decode step:
+#
+#   * weights are read ONCE regardless of how many requests are in flight,
+#     as are the per-layer launch constant, the window overhead and the
+#     floor -> batch-SHARED;
+#   * KV is read per sequence -> batch-PROPORTIONAL.
+#
+# That split is also why speculation pays most at low batch on dense models
+# (C1's structural finding): the shared term is divided by fewer requests.
+
+
+def survival(gen_lengths: Sequence[float], u: float) -> int:
+    """Requests still generating at position `u`.
+
+    All requests in these cells are admitted together, so they advance in
+    lockstep and share one position; the active count is then just the
+    survival function of the generation-length distribution.
+    """
+    return sum(1 for length in gen_lengths if length > u)
+
+
+def split_cost(
+    fit: Mapping[str, float],
+    cfg: Mapping[str, Any],
+    context: float,
+    kv_bytes_per_token: float,
+    fit_batch: float,
+) -> tuple[float, float]:
+    """Draft cost per step, split into (batch-shared, per-request) parts.
+
+    The Round-2 fit was taken at one batch per regime, so its KV coefficient
+    absorbed that batch: the design column carried per-SEQUENCE bytes while
+    the measured cost covered the whole step. Dividing by the fitting batch
+    recovers a per-request coefficient, which is what a varying batch needs.
+    """
+    _require(fit_batch > 0, "fitting batch must be positive")
+    keep = float(cfg["keep_frac"])
+    windowed = 1.0 if cfg["window"] not in ("off", 0, None) else 0.0
+    shared = (
+        keep
+        * (
+            float(cfg["weight_bytes"]) * fit["kappa_w"]
+            + fit["c_layer"]
+            + fit["f_win"] * windowed
+        )
+        + fit["F"]
+    )
+    kv = kv_positions(cfg["window"], context) * kv_bytes_per_token
+    per_request = keep * kv * fit["kappa_kv"] / fit_batch
+    return shared, per_request
+
+
+def integrated_with_drain(
+    fit: Mapping[str, float],
+    cfg: Mapping[str, Any],
+    tau_by_bucket: Mapping[str, float],
+    u_edges: Sequence[int],
+    prompt_tokens: float,
+    gen_lengths: Sequence[float],
+    verify_shared: float,
+    verify_per_request: float,
+    kv_bytes_per_token: float,
+    fit_batch: float,
+    segment: int = SEGMENT,
+) -> dict[str, float]:
+    """Per-token time over a run whose batch decays as requests finish.
+
+    Emitting `du` tokens per active request costs `du / tau(u)` steps and
+    yields `B(u) * du` tokens, so a shrinking `B` raises per-token cost even
+    though the per-step cost falls.
+    """
+    _require(bool(gen_lengths), "no generation lengths")
+    bounds = bucket_bounds(u_edges)
+
+    def tau_at(u: float) -> float:
+        last = None
+        for index, (lo, hi) in enumerate(bounds):
+            value = tau_by_bucket.get(str(index))
+            if value:
+                last = value
+            if lo <= u < hi:
+                return value or last or 0.0
+        return last or 0.0
+
+    horizon = float(max(gen_lengths))
+    total_time = 0.0
+    total_tokens = 0.0
+    u = 0.0
+    while u < horizon:
+        width = min(float(segment), horizon - u)
+        centre = u + width / 2.0
+        active = survival(gen_lengths, centre)
+        if active:
+            context = prompt_tokens + centre
+            tau = tau_at(centre)
+            _require(tau > 0, f"no acceptance at u={centre}")
+            shared, per_request = split_cost(
+                fit, cfg, context, kv_bytes_per_token, fit_batch
+            )
+            step = (verify_shared + shared) + active * (
+                verify_per_request + per_request
+            )
+            steps = width / tau
+            total_time += steps * step
+            total_tokens += active * width
+        u += width
+    _require(total_tokens > 0, "no tokens emitted")
+    return {
+        "per_token_s": total_time / total_tokens,
+        "tokens_per_s": total_tokens / total_time,
+        "mean_active_batch": total_tokens / horizon,
+    }

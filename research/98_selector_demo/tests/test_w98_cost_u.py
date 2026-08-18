@@ -97,3 +97,76 @@ def test_zero_generation_is_an_error():
 def test_missing_fit_parameter_is_an_error():
     with pytest.raises(CostCurveError, match="missing"):
         draft_cost({"kappa_w": 1.0}, UNWINDOWED, 100, KVB)
+
+
+# --- the batch drain ---
+
+from w98_cost_u import integrated_with_drain, split_cost, survival  # noqa: E402
+
+
+def test_survival_counts_requests_still_generating():
+    assert survival([100, 200, 300], 0) == 3
+    assert survival([100, 200, 300], 150) == 2
+    assert survival([100, 200, 300], 400) == 0
+
+
+def test_split_puts_weights_in_shared_and_kv_in_per_request():
+    shared, per_req = split_cost(FIT, UNWINDOWED, 10_000, KVB, fit_batch=8)
+    assert shared == pytest.approx(
+        UNWINDOWED["weight_bytes"] * FIT["kappa_w"] + FIT["c_layer"] + FIT["F"]
+    )
+    assert per_req == pytest.approx(10_000 * KVB * FIT["kappa_kv"] / 8)
+
+
+def test_windowed_per_request_cost_saturates_but_shared_gains_the_window_term():
+    shared_w, per_w = split_cost(FIT, WINDOWED, 50_000, KVB, fit_batch=8)
+    shared_u, per_u = split_cost(FIT, UNWINDOWED, 50_000, KVB, fit_batch=8)
+    assert per_w < per_u / 50
+    assert shared_w > shared_u  # the window costs a per-layer constant
+
+
+def test_uniform_lengths_reproduce_the_constant_batch_result():
+    """With no drain the term must not change the answer."""
+    lengths = [4000.0] * 8
+    verify_shared, verify_per = 10.0e-3, 1.2e-3
+    drained = integrated_with_drain(
+        FIT,
+        UNWINDOWED,
+        FLAT_TAU,
+        EDGES,
+        120,
+        lengths,
+        verify_shared,
+        verify_per,
+        KVB,
+        fit_batch=8,
+    )
+    assert drained["mean_active_batch"] == pytest.approx(8.0)
+    assert drained["per_token_s"] > 0
+
+
+def test_drain_raises_per_token_cost_against_no_drain():
+    """The measured effect: a decaying batch amortises shared work worse."""
+    even = [4000.0] * 8
+    ragged = [500.0, 1000.0, 1500.0, 2000.0, 4000.0, 6000.0, 8000.0, 10_000.0]
+    kwargs = dict(
+        verify_shared=10.0e-3,
+        verify_per_request=1.2e-3,
+        kv_bytes_per_token=KVB,
+        fit_batch=8,
+    )
+    flat_run = integrated_with_drain(
+        FIT, UNWINDOWED, FLAT_TAU, EDGES, 120, even, **kwargs
+    )
+    drained = integrated_with_drain(
+        FIT, UNWINDOWED, FLAT_TAU, EDGES, 120, ragged, **kwargs
+    )
+    assert drained["mean_active_batch"] < 8.0
+    assert drained["per_token_s"] > flat_run["per_token_s"]
+
+
+def test_empty_lengths_is_an_error():
+    with pytest.raises(CostCurveError, match="no generation lengths"):
+        integrated_with_drain(
+            FIT, UNWINDOWED, FLAT_TAU, EDGES, 120, [], 10e-3, 1e-3, KVB, fit_batch=8
+        )

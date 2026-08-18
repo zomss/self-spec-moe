@@ -161,3 +161,70 @@ omitted the batch divisor entirely, predicting armed arms 2–3x *slower* than
 OFF and producing an unphysical negative verify intercept. A per-step model
 compared against per-token measurements is a units error, and the negative
 intercept is what exposed it.
+
+---
+
+## 7. The batch drain term
+
+Section 6 left a 1.5–2x over-prediction and named its cause: a constant-batch
+model. The LO run's actual generation lengths, per request, are
+
+```text
+4721  5743  10603  12154  15546  24408  28196  32768
+```
+
+a **7x spread**, so the concurrent batch decays from 8 to 1 across the run and
+its **mean active value is 4.09 of 8**. The run spends half its time at less
+than half the nominal batch, and a step's batch-shared work is amortised over
+whatever is left.
+
+The term is physical rather than fitted. Per decode step, weights are read
+**once** regardless of how many requests are in flight — as are the per-layer
+launch constant, the window overhead and the floor — while KV is read **per
+sequence**. So cost splits into a batch-shared part and a batch-proportional
+part, and the active count is just the survival function of the
+generation-length distribution, which every record already carries.
+
+```text
+per-token time = integral [ (verify_shared + D_shared)
+                          + B(u) * (verify_per + D_per(u)) ] / tau(u) du
+                 / integral B(u) du            with B(u) = #{i : G_i > u}
+```
+
+**Against the LO measurement**, with the verify split calibrated on the OFF
+arm alone (residual +0.00% by construction) and everything else predicted:
+
+| arm | no drain | **with drain** | measured |
+| --- | --- | --- | --- |
+| `woff/skip0` | 1.563x | **1.040x** | 1.034x |
+| `woff/skip4` | 1.560x | **1.066x** | 1.023x |
+| `woff/skip8` | 1.490x | **0.936x** | 0.897x |
+| `w512/skip4` | 1.554x | **1.250x** | 1.408x |
+| **mean relative error** | 0.450 | **0.051** | — |
+
+**Mean error falls 9x, and three of four arms land within 4%** — including
+the sign of the deep-skip arm, which the model now correctly places *below*
+no-speculation. The drain was the dominant missing term, as section 6
+predicted it would be.
+
+The residual is one arm: `w512/skip4` is under-predicted by 11%, the window
+saving more than the model credits it for. The KV-bytes coefficient is
+inherited from an R5cot fit at a fixed 14K context, and a 512-token window
+changes more than bytes read — attention work per step falls with it too. So
+the next refinement, if one is wanted, is a window-aware attention term rather
+than anything to do with batch.
+
+## 8. Where the three terms leave the model
+
+| model | mean relative error on LO |
+| --- | --- |
+| flat context, scalar tau | 1.015 |
+| + context-integrated cost | 0.739 |
+| + u-resolved acceptance | (folded into the above) |
+| + batch drain | **0.051** |
+
+All three terms were needed and they were needed in that order of magnitude:
+the drain dominates, context growth is second, and acceptance's u-dependence
+matters for *which* arm wins rather than for the level. None of them is
+visible in a short-generation regime, which is why the R-regimes never
+exposed them and the refined grid did.
