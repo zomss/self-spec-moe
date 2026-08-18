@@ -84,6 +84,22 @@ def arms() -> list[dict[str, Any]]:
     question there is whether LO's coefficients TRANSFER, which four points
     answer, not whether a second lattice can be fitted.
     """
+    if os.environ.get("W98_EW_QUANT") == "1":
+        # The quant axis. Every arm so far shared the target's weights, so
+        # `W * kappa_w` was constant across the design and collinear with the
+        # per-layer constant -- the fit could only report their sum. A second
+        # weight version (13.892 GB of body bytes against 3.581 GB) separates
+        # them, and it is also the strongest lever in the lattice.
+        return [
+            {
+                "action": "armed",
+                "quant": "w4a16-quantized",
+                "window": w,
+                "skip_count": s,
+            }
+            for w in ("off", 256, 1024)
+            for s in (0, 4)
+        ]
     if CELL != "LO":
         return [
             {
