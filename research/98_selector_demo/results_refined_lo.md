@@ -2009,3 +2009,114 @@ the bf16 family it needs a `keep` interaction; in the quantized family it does
 not, because that family sits against a floor. A single fitted `f_win` per
 family, which is what every version in this phase uses, is an average over a
 range it varies across by 19%.
+
+---
+
+## 28. Transferability: what moves to another box, model, or workload
+
+Written before starting step 3, because it is the first thing a reader asks
+and because sections 25-27 supply the strongest evidence the phase has for
+answering it. Nothing here is new measurement.
+
+| axis | transfers | cost to move |
+| --- | --- | --- |
+| the two-round **method** | **yes**, structurally | nothing |
+| cost **coefficients** | **no** | one singles sweep, ~19 boots |
+| **acceptance** curves | across hardware yes, across content no | re-measure per workload |
+| serving **stack** | weakest link | refit, possibly restructure |
+| **MoE**, TP>1 | **unvalidated** | structural extension |
+
+### The method transfers because the asymmetry is structural
+
+Cost is set by bytes and kernels; acceptance by content. That is not a
+property of this box. And the elimination rule `(K+1)/q_lo < 1 + epsilon_arm`
+kills only what cannot pay at *perfect* acceptance, so it is sound wherever
+the cost interval is honest — it is arithmetic, not calibration. Section 25
+is the positive evidence: at equal work the model predicts to 0.0218 and
+0.0366 and ranks the lattice identically in both weight versions.
+
+### The coefficients do not, and sections 26-27 say exactly why
+
+Three independent measurements each defeat coefficient transfer:
+
+* **`kappa_w` is a rate, not a byte constant.** Marlin sustains **39.5%** of
+  peak against the bf16 GEMM's **81.9%** — a property of (kernel, GPU
+  generation, batch shape). It is why 3.88x fewer bytes buys 1.87x less time.
+* **The window term carries a host-exposure component** — 42% of its value
+  in the quantized family — which depends on host CPU, driver and runtime
+  mode. This box has a documented clamp (a fixed per-step host delay, the
+  9-16% OFF-versus-armed band) that h103/h104 do not.
+* **`f_win` is not constant even within one family**, varying 19% across the
+  keep range in bf16.
+
+**But the design was built to be re-fitted.** Round 1 consumes single-lever
+profiles by construction, so relocating costs one singles sweep: ~19 cost
+boots, ~14 acceptance boots, 4 for the verify split — **about half a day** at
+this box's measured boot times — and it buys predictions for 30 composed
+cells.
+
+### Per axis
+
+**Server.** Acceptance transfers exactly; G98-F measured bit-identical accept
+patterns across boxes. Every cost coefficient does not. One caveat of our
+own: section 22 showed acceptance moves up to 5.9% from batch non-invariance
+alone, so a different GPU's kernel tiling can shift it at that scale.
+
+**Model.** Two of the decisive quantities are **computable before booting
+anything**:
+
+```text
+KV bytes/token = 2 * 2 * n_kv * d_head * L = 147,456   (Qwen3-8B)
+lm_head bytes  = V * H * 2 = 151936 * 4096 * 2 = 1.245 GB
+```
+
+The second predicted its own measurement: 1.245 GB read four times per step
+is 1.49 ms at peak, and `lm_head` measures **1.666 ms** — 89% of
+bandwidth-bound. So a new model can be screened in advance: MQA has far less
+KV traffic and a smaller window ceiling; a smaller vocabulary has a smaller
+irreducible floor. What still needs measuring is skip tolerance — a
+redundancy property of the weights — and the knapsack's additivity boundary,
+which for this model is exact at k=4 and k=8 and inverts at k=16.
+
+The sharpest illustration of why byte-share reasoning alone fails is in this
+model's own numbers. At batch 8 and context 4252, KV is **25%** of traffic in
+the bf16 draft and **57%** in the quantized one. By traffic share the window
+should matter *more* under quantization. It delivers *less*.
+
+**Workload.** This is what the selector is, so the design handles it by
+construction — subject to section 21's registered input requirement, the
+generation-length distribution, taken from the parked arm (0.0435 against
+0.0792 for each arm's own). Section 25's protocol finding travels with it: at
+LO lengths the registered context correction leaves up to 22 points of
+confound standing, so equal work is not optional for calibration.
+
+**Serving stack.** The least transferable and the real risk. Host exposure is
+a property of the stack's per-step host work; on another stack it is a
+different quantity, not a different number.
+
+### What is genuinely unvalidated
+
+One model (Qwen3-8B dense), one quantization kernel (w4a16 Marlin), one stack
+(vLLM V1, piecewise, shared KV), TP=1, and two boxes whose absolute numbers
+are explicitly not comparable. **MoE is a structural extension, not a
+re-fit**: under routing, weight traffic per token is not a constant, so
+`kappa_w` is not a coefficient at all.
+
+### What does port, because it is mechanistic
+
+1. **Kernels serialize**, so each lever shortens only the kernels it touches.
+2. **Dequantizing GEMMs sustain lower bandwidth than bf16** — universal in
+   kind, varying in fraction.
+3. **Removing device work pushes a step toward host-bound**, so levers
+   interact through the host rather than through the GPU.
+4. **Acceptance is batch non-invariant**, inherent to speculative decoding
+   where the draft runs at `(B, 1)` and verify at `(B, K+1)`.
+5. **`F` is a floor no lever touches**, given `lm_head` stays unquantized.
+
+### The claim this supports
+
+*A two-round selector, demonstrated on dense Qwen3-8B in vLLM, whose
+per-deployment calibration is one singles sweep* — not *these coefficients
+describe self-speculative decoding*. The mechanistic findings above are the
+portable part, and they are arguably worth more than the coefficients because
+they say **why** a re-fit is required rather than merely that it is.
