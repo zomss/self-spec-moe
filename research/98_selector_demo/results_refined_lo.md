@@ -113,3 +113,51 @@ the arms differently and wrongly.
 * `w512/skip4` is our arm, not Campaign 1's `magicdec512` (`w512/skip0`), and
   our `skip8` is the registered set, not their `knap8`. The numbers are
   therefore comparable in kind, not cell for cell.
+
+---
+
+## 6. The context-growth-aware cost term (`w98_cost_u`)
+
+Section 3 located the remaining LO error on the cost side. The term is now
+implemented: draft cost is integrated over the generation instead of
+evaluated at one context,
+
+```text
+per-token time = (1/G) * integral_0^G [verify(p+u) + D(p+u)] / tau(u) du / B
+```
+
+with `D(p+u)` the Round-2 model re-evaluated as the context grows, `tau(u)`
+from `w98_tau_u`, and `B` the concurrent batch. Nine tests, including the two
+structural properties that motivated it: an unwindowed draft's KV term grows
+by exactly `kappa_kv * delta_context`, while a windowed draft's **saturates**
+at `window + sinks` — and the integrated model therefore favours the window
+by more than a flat-context model does, which is the whole point.
+
+**Applied to the LO measurement** (R5cot fit, verify shape from the batch-8
+regimes with its level calibrated from the OFF arm):
+
+| arm | flat pred | integrated pred | measured |
+| --- | --- | --- | --- |
+| `woff/skip0` | 2.262x | 1.843x | 1.034x |
+| `woff/skip4` | 2.216x | 1.858x | 1.023x |
+| `woff/skip8` | 1.911x | 1.754x | 0.897x |
+| `w512/skip4` | 2.219x | **1.977x** | **1.408x** |
+| mean relative error | 1.015 | **0.739** | — |
+| rank correlation | +0.800 | +0.800 | — |
+
+The integrated term cuts absolute error by **27%** and both models pick the
+right winner. Ranking is unchanged, because at LO the window's advantage is
+large enough that either model finds it.
+
+**Both still over-predict by roughly 1.5–2x, and the residual has a named
+cause.** Predictions assume a constant batch of 8; under natural EOS requests
+finish at different lengths, so the effective batch decays through the run and
+per-token cost rises above what a constant-batch model gives. That is the
+Phase-96 W9 drain mechanism appearing on the cost side, and it is the next
+term to add — not another context refinement.
+
+**One error found in my own analysis and corrected here**: the first pass
+omitted the batch divisor entirely, predicting armed arms 2–3x *slower* than
+OFF and producing an unphysical negative verify intercept. A per-step model
+compared against per-token measurements is a units error, and the negative
+intercept is what exposed it.
