@@ -49,7 +49,9 @@ W_LAYER_BYTES = {"target-matching": 13.892e9, "w4a16-quantized": 3.581e9}
 OFF_KEY = "off"
 
 
-def fit_cost(directories: list[Path] | Path, batched: bool = False) -> dict[str, float]:
+def fit_cost(
+    directories: list[Path] | Path, batched: bool = False, quadratic: bool = False
+) -> dict[str, float]:
     """Per-family draft-cost coefficients, constrained physical.
 
     With `batched`, the KV column carries per-STEP bytes (`keep * kv * B`)
@@ -80,10 +82,16 @@ def fit_cost(directories: list[Path] | Path, batched: bool = False) -> dict[str,
                 float(record["prompt_tokens"]),
                 float(record["gen_tokens"]),
             )
-            scale = float(record["batch"]) if batched else 1.0
-            rows.append(
-                [keep, keep * windowed, keep * kv * KV_BYTES_PER_TOKEN * scale, 1.0]
-            )
+            batch = float(record["batch"])
+            scale = batch if batched else 1.0
+            row = [keep, keep * windowed, keep * kv * KV_BYTES_PER_TOKEN * scale, 1.0]
+            if quadratic:
+                # Fitted JOINTLY with the linear term, never added on top of
+                # it: a linear-in-batch fit to a convex curve absorbs the
+                # convexity into an inflated slope, so bolting a measured
+                # quadratic onto that fit counts the same physics twice.
+                row.append(batch * batch)
+            rows.append(row)
             targets.append(float(record["draft_chain_ms"]) / 1000.0)
     design, target = np.array(rows), np.array(targets)
     beta, _ = nnls(design, target)
@@ -100,6 +108,7 @@ def fit_cost(directories: list[Path] | Path, batched: bool = False) -> dict[str,
         "fit_mean_residual": float(residual.mean()),
         "fit_arms": len(targets),
         "kappa_kv_is_per_request": batched,
+        "curvature": float(beta[4]) if quadratic else 0.0,
     }
 
 
@@ -199,6 +208,7 @@ def predict(
     prompt_tokens: float,
     gamma: float,
     split: tuple[float, float] | None = None,
+    curvature: float = 0.0,
 ) -> dict[str, Any]:
     off = runs[OFF_KEY]
     shared, per_request = split or verify_split(off, verify_ms)
@@ -230,6 +240,7 @@ def predict(
             if fit.get("kappa_kv_is_per_request")
             else float(record["batch"]),
             gamma=gamma,
+            curvature=curvature,
         )
         measured = off_per_token / (record["wall_s"] / record["total_out_tokens"])
         predicted = off_per_token / result["per_token_s"]
@@ -281,11 +292,18 @@ def main() -> int:
         help="measured verify split as SHARED,PER_REQUEST in ms; without it "
         "the split is assumed from the profiler and solved on the parked arm",
     )
+    parser.add_argument(
+        "--quadratic-fit",
+        action="store_true",
+        help="fit a batch-squared term jointly with the linear one",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
     fit = fit_cost(
-        [Path(p) for p in args.equalwork.split(",")], batched=args.batched_fit
+        [Path(p) for p in args.equalwork.split(",")],
+        batched=args.batched_fit,
+        quadratic=args.quadratic_fit,
     )
     runs = load_runs([Path(p) for p in args.runs.split(",")])
     source = args.acceptance_from or args.curves
@@ -303,6 +321,7 @@ def main() -> int:
         tuple(float(v) / 1000 for v in args.split_ms.split(","))
         if args.split_ms
         else None,
+        fit.get("curvature", 0.0),
     )
     result.update(
         {

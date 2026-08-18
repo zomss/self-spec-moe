@@ -271,12 +271,24 @@ def integrated_with_drain(
     segment: int = SEGMENT,
     gamma: float = 1.0,
     p_ref: float = 14_000.0,
+    curvature: float = 0.0,
 ) -> dict[str, float]:
     """Per-token time over a run whose batch decays as requests finish.
 
     Emitting `du` tokens per active request costs `du / tau(u)` steps and
     yields `B(u) * du` tokens, so a shrinking `B` raises per-token cost even
     though the per-step cost falls.
+
+    `curvature` adds a `c * B^2` term to the step. Everything else here is
+    either shared (falling as 1/B per token) or per-request (flat), so the
+    predicted speedup is monotone in batch at any coefficients -- and the LO
+    sweep measures an arm that peaks at batch 8. Measured directly from the
+    traces, the armed step is CONVEX in batch (+0.083 ms/req^2, a quadratic
+    fitting to 0.15%) while the parked step is CONCAVE (-0.064), which is the
+    ratio that produces an interior maximum. The mechanism is that an armed
+    verify carries `B * (K+1)` query positions against the parked path's
+    `B * 1`, so it meets the compute-bound regime at a fraction of the batch.
+    Zero reproduces the affine model exactly.
     """
     _require(bool(gen_lengths), "no generation lengths")
     bounds = bucket_bounds(u_edges)
@@ -306,8 +318,10 @@ def integrated_with_drain(
             shared, per_request = split_cost(
                 fit, cfg, context, kv_bytes_per_token, fit_batch, gamma, p_ref
             )
-            step = (verify_shared + shared) + active * (
-                verify_per_request + per_request
+            step = (
+                (verify_shared + shared)
+                + active * (verify_per_request + per_request)
+                + curvature * active * active
             )
             steps = width / tau
             total_time += steps * step

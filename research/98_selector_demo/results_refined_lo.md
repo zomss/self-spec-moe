@@ -1163,3 +1163,93 @@ one the sweep was too coarse to see: the armed verify processes `B x (K+1)`
 query positions against the parked path's `B x 1`, so it meets any
 compute-bound knee at a fifth of the batch. Testing that needs the verify
 measured against batch on its own, which this sweep did not isolate.
+
+---
+
+## 20. Verify against batch: the mechanism refuted, the curvature confounded
+
+Section 19 proposed a mechanism for the batch peak — an armed verify carries
+`B * (K+1)` query positions against the parked path's `B * 1`, so it should
+meet any compute-bound knee at a fifth of the batch — and said testing it
+needed verify measured against batch on its own. The profiler already reports
+verify per step, so the batch sweep answers it directly.
+
+### Verify is linear. The mechanism is wrong
+
+| batch | 2 | 4 | 8 | 16 |
+| --- | --- | --- | --- | --- |
+| query positions (`B x 5`) | 10 | 20 | 40 | 80 |
+| `verify_ms` | 6.593 | 6.997 | 8.135 | 9.522 |
+
+An affine fit gives `6.230 + 0.211 * B` with residuals **at or below 2.8%**
+across an 8x batch range. **There is no knee.** Verify is strongly
+shared-dominated — 79% of it at batch 8 is paid once — and it does not bend
+between 10 and 80 query positions. Section 19's proposed mechanism is
+refuted, and it was mine, so it goes in the record with the other seven.
+
+### The step does curve — in opposite directions
+
+What the sweep does show is in the whole step, from the traces' own decode
+time:
+
+| path | quadratic fit (ms) | curvature | affine → quadratic residual |
+| --- | --- | --- | --- |
+| parked, `B x 1` positions | 3.702 + 0.745B **− 0.0643B²** | **concave** | 3.72% → 1.21% |
+| armed `skip8`, `B x 5` | 13.261 + 0.455B **+ 0.0834B²** | **convex** | 2.80% → **0.15%** |
+
+The local slope of the armed step rises 0.640 → 1.996 ms per request while
+the parked slope *falls* 0.571 → −0.083. **Concave over convex is exactly the
+ratio that peaks**, so the shape the model cannot express is now measured
+rather than hypothesised — even though the reason for it is not the one
+section 19 gave.
+
+### But the curvature is confounded with context, and does not transfer
+
+Two attempts to put it in the model, and the second explains the first.
+
+**Bolting the measured 0.0834 onto the batch-swept fit makes everything
+worse** — mean error over the eight sweep points 7.28% → **12.25%**, batch 8
+from −19.7% to −23.5%. It double-counts: a linear-in-batch fit to a convex
+curve absorbs the convexity into an inflated slope, and section 19's repair
+had already done exactly that.
+
+**Fitting the quadratic jointly** — which is the correct way, and is what the
+code now does — finds a curvature of only **+0.0122 ms/req²**, *6.8x smaller*
+than the step-level 0.0834. It improves the middle of the range (batch 8
+−19.7% → −17.2%, batch 4 −4.3% → −2.2%) and spoils the end (batch 16 +0.7% →
++10.5%), for a mean of 7.49% against the linear model's 7.28%. **And the
+prediction is still monotone**: 1.113, 1.267, 1.275, 1.549.
+
+The gap between 0.0834 and 0.0122 is the finding. The larger number comes
+from LO runs where **context is not held fixed**; the smaller one from
+equal-work arms where it is. And in these runs batch and realized context are
+not independent:
+
+| mean generated tokens per request | b2 | b4 | b8 | b16 |
+| --- | --- | --- | --- | --- |
+| `woff/skip8` | 18,584 | 19,112 | **15,061** | 19,273 |
+| `w1024/skip4` | 9,279 | 19,010 | 16,317 | 13,773 |
+
+Under natural EOS each arm generates what it generates, and `skip8`'s
+generations are **shortest at exactly the batch where its speedup peaks**.
+Shorter generations mean shallower contexts, cheaper KV and a better ratio.
+So a large part of the "batch curvature" is context growth wearing a batch
+costume, and the clean fixed-context measurement — which is 6.8x smaller —
+is the one that transfers.
+
+### Where this leaves it
+
+Verify's batch scaling is now measured and is linear, which removes it from
+suspicion permanently. The step curvature is real but mostly not a batch
+effect, so no batch term will carry it. The honest statement is that **the
+peak is not yet demonstrated to be a property of batch at all** — it is
+confounded with what these particular requests happened to generate, and
+separating them needs runs that hold generation length fixed while varying
+batch, which `ignore_eos` does and the scored protocol deliberately does not.
+
+That is a clean experiment and it is the next one. It is also a caution about
+the section 18 result: the switching case there — the window arm beating deep
+skip by 43% at batch 2 and tying at batch 8 — rests on measurements whose
+context profiles differ by a factor of two across batches, so the *magnitude*
+of that crossover should be treated as provisional even though its direction
+matches Campaign 1 independently.
