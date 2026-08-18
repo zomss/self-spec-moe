@@ -565,3 +565,122 @@ this section appended rather than rewritten. It was right about its data and
 wrong about the world, and the distinction — a parameter that is
 unidentifiable in one design and measurable in another — is the reusable
 part.
+
+---
+
+## 14. The quant axis: `kappa_w` identified, and the additive model refuted
+
+Six `w4a16-quantized` arms (windows `off/256/1024` x keeps `1.0/0.889`)
+measured under the same equal-work protocol, on a box gated to reproduce
+`target-matching/woff/skip4` to **0.02%** (32.941 ms against the 32.933 ms
+quiet-box reference) before any arm was allowed to run.
+
+They were added for one reason: every arm measured until now shared the
+target's weights, so `W * kappa_w` was **constant across the design** and
+perfectly collinear with the per-layer constant. The fit could only ever
+report their sum, `A`. A second weight version — 13.892 GB of body bytes
+against 3.581 GB — is the only thing that separates them.
+
+### It works: the collinearity breaks
+
+| coefficient | 10 arms, one weight version | 16 arms, two |
+| --- | --- | --- |
+| `A` (per-layer, keep-scaled) | 26.36 ms | — |
+| `kappa_w` | **unidentifiable** | 8.769e-13 s/byte |
+| `c_layer` | **unidentifiable** | 17.18 ms |
+| `kappa_kv` | 1.035e-11 | 4.264e-12 |
+| `f_win` | +1.51 ms | **−1.28 ms** |
+| condition number | 44.5 | 47.6 |
+| mean residual | **0.35%** | 1.23% |
+| physical / NNLS agrees | yes / yes | **no / no** |
+
+Weight traffic is **12.18 ms of the bf16 draft chain and 3.14 ms of the
+quantized one** — 41.5% of `A` against 15.5%. That is the number the phase
+has never had, and it says the quantized draft's step is no longer
+weight-dominated: it is mostly `c_layer`, the per-layer cost that
+quantization does not touch.
+
+### And it refutes the model that produced it
+
+Three things go wrong at once, and they are one thing. `f_win` turns
+**negative**, the unconstrained fit stops being physical, NNLS stops
+agreeing, and the residual rises 3.5x. None of that happened with ten arms.
+
+The cause is visible without any model. For every `(window, keep)` measured
+under **both** weight versions — pairs differing in nothing but the draft's
+weights, sharing the target's KV cache either way:
+
+| window | keep | bf16 | w4a16 | quant saves | implied `kappa_w` |
+| --- | --- | --- | --- | --- | --- |
+| off | 1.000 | 36.844 | 26.659 | **10.186 ms** | 9.879e-13 |
+| off | 0.889 | 32.933 | 24.401 | 8.532 ms | 9.308e-13 |
+| 1024 | 1.000 | 33.073 | 23.513 | 9.560 ms | 9.272e-13 |
+| 1024 | 0.889 | 29.947 | 21.657 | 8.289 ms | 9.043e-13 |
+| 256 | 1.000 | 32.033 | 24.026 | **8.008 ms** | 7.766e-13 |
+| 256 | 0.889 | 28.897 | 21.976 | 6.920 ms | 7.550e-13 |
+
+**Quantization is worth 21% less at a 256-token window than unwindowed**
+(10.186 → 8.008 ms), and the same at the other keep (8.532 → 6.920, −19%).
+The implied per-byte coefficient spreads **30.8%** and is ordered by window,
+not scattered. If quantization were simply fewer weight bytes, the window
+could not matter — the bytes are the same either way.
+
+The same interaction, seen from the other side, is the sharper statement:
+
+| draft | w256 → w1024 (+721 KV positions) |
+| --- | --- |
+| `target-matching` | **+1.040 ms** (tighter window saves) |
+| `w4a16-quantized` | **−0.513 ms** (tighter window *costs*) |
+
+Same shared KV cache, same positions, **opposite sign**. For the quantized
+draft, `w256` is more expensive than `w1024` at both keeps (24.026 vs 23.513;
+21.976 vs 21.657) — a window inversion, at 1.3–2x this box's armed-arm
+stability band, reproduced across two independent arms.
+
+### A bandwidth account rules out the innocent explanation
+
+If the two weight versions differed only in bytes read, at a shared effective
+bandwidth, then with `chain = W_bytes/BW + other` and `other` common:
+
+```text
+36.844 ms = 4 x 13.892 GB / BW + other      (K=4 draft forwards per chain)
+26.659 ms = 4 x  3.581 GB / BW + other
+---------------------------------------
+10.185 ms = 41.25 GB / BW   =>   BW = 4050 GB/s
+```
+
+The box is an **H100 80GB HBM3: 3350 GB/s peak**. The implied rate is 1.21x
+peak, so the premise is false — `other` is *not* common. The quantized path
+changes the kernels (Marlin GEMMs replace cuBLAS), not merely the byte count,
+and a single byte column charges the fit for all of it.
+
+### What this settles, and what it costs
+
+**Settles**: `kappa_w` is identified, and the quantized draft is only ~12% weight
+traffic. Skipping layers and quantizing therefore compete for the same
+shrinking share of the step, which is the cost-side reason deep skip stops
+paying once quantization is on — previously an inference, now a measurement.
+
+**Costs**: the additive cost model `D = keep*(W*kw + KV*kkv + c_layer +
+f_win) + F` is **refuted as a joint model over both weight versions**. It
+holds within a weight version (0.35% over ten bf16 arms) and fails across
+them (1.23%, non-physical). Levers do not add; quant and window interact,
+and in the direction that matters — each is worth less when the other is on.
+
+The leading mechanism is saturation: unwindowed bf16 is the most
+bandwidth-bound arm, so cutting weight bytes pays most there; the quantized
+windowed arm is already off the bandwidth wall, so cutting KV positions
+further buys nothing and the tighter window's fixed path cost dominates. It
+predicts that the inversion should weaken as batch rises, which is the test
+and is not run.
+
+**Not adopted**: the 16-arm coefficients are recorded, not shipped. A fit that
+returns a negative window cost would mispredict any window it has not seen,
+and the LO re-scoring of section 12 keeps the ten-arm bf16 coefficients it was
+built on.
+
+**A gap this exposes.** Sections 2–13 measure `target-matching` arms
+exclusively, while every selector pick in the 31-cell grid was `w4a16`. The
+refined-grid evaluation therefore has not yet scored the arm family the
+selector actually chooses, and this section is the first evidence that the
+two families do not share a cost surface.
