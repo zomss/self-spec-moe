@@ -1,0 +1,108 @@
+{
+  "batch": 8,
+  "cell": "target-matching/woff/skip0",
+  "config": {
+    "quant": "target-matching",
+    "skip_count": 0,
+    "window": "off"
+  },
+  "content_cell": "LO",
+  "gen_tokens": 8192,
+  "record_type": "w98_long_u",
+  "rows": 7407,
+  "schema_version": 1,
+  "tau_profile": {
+    "buckets": {
+      "0": {
+        "armed_steps": 235,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          234,
+          233,
+          233,
+          231,
+          231,
+          229,
+          227,
+          227
+        ],
+        "tau": 8.851064,
+        "tau_hi": 9.0,
+        "tau_lo": 8.683333,
+        "unarmed_steps": 8,
+        "undefined_draws": 0
+      },
+      "1": {
+        "armed_steps": 700,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          695,
+          693,
+          686,
+          679,
+          675,
+          671,
+          667,
+          664
+        ],
+        "tau": 8.757143,
+        "tau_hi": 8.837176,
+        "tau_lo": 8.67847,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "2": {
+        "armed_steps": 1857,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          1849,
+          1844,
+          1830,
+          1822,
+          1805,
+          1798,
+          1793,
+          1785
+        ],
+        "tau": 8.822294,
+        "tau_hi": 8.881779,
+        "tau_lo": 8.76351,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "3": {
+        "armed_steps": 4599,
+        "clipped_excluded": 8,
+        "pos_accepted": [
+          4591,
+          4581,
+          4562,
+          4543,
+          4527,
+          4510,
+          4497,
+          4478
+        ],
+        "tau": 8.890628,
+        "tau_hi": 8.914977,
+        "tau_lo": 8.868764,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      }
+    },
+    "depth": 8,
+    "kmax": 8,
+    "u_edges": [
+      256,
+      1024,
+      3072,
+      8192
+    ]
+  },
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

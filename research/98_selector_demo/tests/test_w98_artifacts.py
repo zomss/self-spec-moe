@@ -179,3 +179,11 @@ def test_audit_flags_a_name_that_contradicts_its_content(tmp_path):
     report = audit([directory], [QUANT_ARM], replicates=1)
     assert report["ok"] is False
     assert any("name says" in m for m in report["identity_mismatches"])
+
+
+def test_envelope_refuses_a_payload_that_would_overwrite_identity():
+    """Caught in practice: a probe's content-cell key clobbered `cell`."""
+    with pytest.raises(ArtifactError, match="carry the record's identity"):
+        envelope(OFF, "w98_test", {"cell": "LO", "observations": {}})
+    with pytest.raises(ArtifactError, match="carry the record's identity"):
+        envelope(OFF, "w98_test", {"config": {"something": "else"}})

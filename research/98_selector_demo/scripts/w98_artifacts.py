@@ -115,7 +115,21 @@ def plan(cells: Iterable[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
 def envelope(
     cfg: Mapping[str, Any], record_type: str, payload: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Wrap a measurement so its identity travels inside the file."""
+    """Wrap a measurement so its identity travels inside the file.
+
+    Raises:
+        ArtifactError: If the payload would overwrite the identity or config
+            fields. Caught in practice: a probe carrying its content cell
+            under the key ``cell`` silently replaced the configuration's
+            identity, and the mislabelled record was only refused later, at
+            read time. Writing is where it should fail.
+    """
+    reserved = {IDENTITY_FIELD, CONFIG_FIELD} & set(payload)
+    _require(
+        not reserved,
+        f"payload may not set {sorted(reserved)}: those fields carry the "
+        f"record's identity and are derived from the configuration",
+    )
     return {
         "schema_version": 1,
         "record_type": record_type,
