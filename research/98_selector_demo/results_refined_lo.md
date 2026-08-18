@@ -1354,3 +1354,80 @@ distribution. The good news measured in the same pass: predictions fed the
 *parked* arm's lengths — which a selector can actually obtain — score
 **0.0435** against **0.0792** for each arm's own realized lengths, so the
 input a deployment can supply is the better one.
+
+---
+
+## 22. Is acceptance batch-dependent? Yes, and it is numerical
+
+Two objections to section 21, both from outside the analysis, and they point
+at the same gap.
+
+**First: `ignore_eos` should inflate acceptance**, because past the natural
+stopping point the continuation is degenerate and a draft finds it easy. The
+opening-of-run comparison says the two protocols are not merely close but
+*identical* — 0.6570/0.6570, 0.6655/0.6655, 0.8230/0.8230, 0.8464/0.8464 at
+batches 2/4/8/16 — which is expected, since the runs are the same until the
+first request would have stopped. In the tail the fixed-length runs measure
+*lower* acceptance than natural-EOS ones (`skip8` 0.781 against 0.897 in the
+last decile), not higher. But that comparison is not controlled: a
+natural-EOS tail contains only the surviving long requests, and survivorship
+is its own selection toward predictable content. **So the inflation is not
+visible here, and this data cannot rule it out** — separating them needs
+per-request acceptance, which the trace does not carry.
+
+**Second, and the real question: why does acceptance differ by batch at all?**
+It does, at fixed `u`, on the same prompts, under either stopping rule:
+
+| arm | b2 | b4 | b8 | b16 | b16/b2 |
+| --- | --- | --- | --- | --- | --- |
+| `woff/skip8` | 0.6570 | 0.6655 | 0.6746 | 0.6934 | **1.055** |
+| `w1024/skip4` | 0.8230 | 0.8227 | 0.8385 | 0.8464 | **1.028** |
+
+In this design batch *is* content — batch B means the first B prompts — so
+that table is equally consistent with prompts 3–16 simply being easier to
+draft than prompts 1–2. **Replicating one prompt to fill the batch separates
+them**, holding content exactly fixed while batch varies:
+
+| arm | b2 | b4 | b8 | b16 | b16/b2 | confounded |
+| --- | --- | --- | --- | --- | --- | --- |
+| `woff/skip8` | 0.7220 | 0.7742 | 0.7594 | 0.7646 | **1.059** | 1.055 |
+| `w1024/skip4` | 0.7825 | 0.7684 | 0.8268 | 0.8043 | **1.028** | 1.028 |
+
+**The effect survives intact — 1.059 against 1.055, 1.028 against 1.028.** It
+is not content. It is the machine.
+
+The mechanism is batch non-invariance, and speculative decoding is unusually
+exposed to it. Acceptance is the rate at which two argmaxes agree, and the two
+paths run at *different shapes by construction*: the draft proposes at
+`(B, 1)` query positions while the target verifies at `(B, K+1)`. Reduction
+order in the GEMM and attention kernels depends on those shapes, so the two
+paths' rounding diverges differently as batch grows, and near-tie argmaxes
+agree more or less often. That also explains why the effect is **not
+monotone** — 0.7220, 0.7742, 0.7594, 0.7646 — since kernel tiling changes in
+steps, not smoothly. It is a step function of batch shape wearing the costume
+of a trend, and reading a smooth curve through it would be a mistake.
+
+### What this means for runtime switching
+
+This is the practical point, and it is a gap in the design rather than in the
+measurement. The selector consumes `tau(u)`. The evidence here is for
+**`tau(u, B)`**: acceptance moves with concurrent batch, and it moves by
+*different amounts per lever* — 5.9% for deep skip against 2.8% for the
+window arm over an 8x batch range.
+
+Under natural EOS the batch drains continuously — LO runs go from 8 active to
+1 — so **every long-running request crosses a range of batches, and the
+acceptance ranking between levers shifts underneath it while it runs.** That
+is a switching trigger that owes nothing to the workload changing: the same
+request, the same content, a different optimum because its neighbours
+finished. Nothing in the current cost model can see it, since `tau` enters as
+a function of `u` alone.
+
+The honest sizing: the lever *differential* is 5.9% − 2.8% ≈ **3 points of
+acceptance over an 8x batch swing**, which is real but modest — comparable to
+the +1.4% that per-regime switching was worth, and far smaller than the cost
+side's batch dependence, where shared terms amortise over the drain. So
+`tau(u, B)` belongs in the model as a correctness matter, and the switching
+value it unlocks on its own is likely small. The larger switching case remains
+the cost side, which section 21 showed is also where the measurement discipline
+has to be tightest.

@@ -61,6 +61,7 @@ BATCH = int(os.environ.get("W98_LO_BATCH", "8"))
 # Fixed-length mode: generation budget in tokens, EOS ignored. Zero keeps the
 # scored protocol's natural EOS.
 FIXED_TOKENS = int(os.environ.get("W98_LO_FIXED", "0"))
+REPLICATE = os.environ.get("W98_LO_REPLICATE") == "1"
 # The arms whose tau(u) curves are measured, plus the parked reference.
 ARMS: dict[str, dict[str, Any]] = {
     "off": {
@@ -140,6 +141,21 @@ def _require(condition: bool, message: str) -> None:
 
 
 def prompts(limit: int) -> list[list[int]]:
+    """LO prompts, or one prompt replicated to fill the batch.
+
+    Batch and content are otherwise the same variable in this design -- batch
+    B means the first B prompts -- so "acceptance rises with batch" and
+    "prompts 3-16 are more predictable than prompts 1-2" are indistinguishable.
+    Replicating one prompt holds content exactly fixed while batch varies,
+    which is what separates a numerical batch effect from a content effect.
+    Prefix caching is off, so replicas share no state.
+    """
+    if REPLICATE:
+        return [_load_prompts(1)[0] for _ in range(limit)]
+    return _load_prompts(limit)
+
+
+def _load_prompts(limit: int) -> list[list[int]]:
     out = []
     with gzip.open(PROMPTS, "rt", encoding="utf-8") as handle:
         for line in handle:
@@ -211,6 +227,7 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
                     "batch": BATCH,
                     "cap": CAP,
                     "fixed_tokens": FIXED_TOKENS,
+                    "replicated_prompt": REPLICATE,
                     "stopping_rule": "fixed" if FIXED_TOKENS else "natural_eos",
                     "wall_s": round(wall, 3),
                     "total_out_tokens": total,
