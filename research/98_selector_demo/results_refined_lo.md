@@ -1431,3 +1431,80 @@ side's batch dependence, where shared terms amortise over the drain. So
 value it unlocks on its own is likely small. The larger switching case remains
 the cost side, which section 21 showed is also where the measurement discipline
 has to be tightest.
+
+---
+
+## 23. Correcting section 15: the risk is in the ranking, not the elimination
+
+No new measurement. This is a re-reading of section 15's mechanism against
+the code that implements the two rounds, and it moves a finding from one
+stage of the selector to another without changing its size.
+
+### What section 15 claimed
+
+> Round 1 eliminates candidates by predicted cost, from coefficients fitted
+> on one weight version. [...] **The elimination round can discard the
+> runner-up of the family the selector actually deploys.**
+
+That names the wrong stage, and the arithmetic says so directly.
+
+### Round 1 cannot eliminate `skip8`, in either family
+
+The registered rule is `(K+1)/q_lo < 1 + epsilon_arm`
+(`w98_cost_model.eliminate`, `epsilon_arm = 0.015`): a candidate dies only
+when its most favourable possible speedup — full acceptance at the
+optimistic end of its predicted cost — still fails to beat parity. The rule
+is one-sided by construction, and it fires on cost being too **high**.
+
+Deep skip moves cost the other way. Section 15's own trace table:
+
+| | draft chain, `skip0` | draft chain, `skip8` |
+| --- | --- | --- |
+| `target-matching` | 36.844 ms | **29.135 ms** (−20.9%) |
+| `w4a16-quantized` | 26.659 ms | **22.655 ms** (−15.0%, measured in §17) |
+
+`skip8` is the *cheapest* arm in both families. No cost-based elimination
+rule can fire on the cheapest arm in the lattice, and this one is not close
+to firing. Round 1 passes `skip8` through in both families, and always would
+have.
+
+The bf16 arm's sub-parity score (0.914) is an **acceptance** collapse —
+0.992 → 0.762, −23.2%, bought for a 20.9% cost saving. Round 1 never sees
+acceptance. That is the asymmetry the whole design rests on, and it is
+working as specified here.
+
+### Where the risk actually sits
+
+The selector's pick is the argmax of the **predicted value map**
+(`score_w98_g98e_d3.py:100`, `selector_choice`) — the cost model composed
+with measured acceptance and integrated over the drain. A misranked arm is
+never eliminated; it simply never wins, and therefore never reaches
+confirmation. Section 17 measured exactly that: the quantized prediction
+ranks `skip8` **fifth** where the cell measures it **second**, at mean
+absolute error 0.0823.
+
+So the failure is in the **join** of the two rounds, not inside either one.
+
+### What is unchanged
+
+Everything section 15 measured. The lattice does reorder across weight
+versions (Spearman **+0.286**, against **+0.902** for a change of workload),
+`skip8` does move from worst to runner-up, and section 14's finding that the
+cost model is refuted across the quant axis stands untouched. The defect is
+the same size; only its address is corrected.
+
+### What it changes about priority
+
+It separates two things that section 15 fused, and they need opposite
+amounts of work:
+
+* the **sound elimination rule** needs none. It cannot be made unsound by a
+  reordering lattice, because a reordering that makes an arm *better* is
+  invisible to a rule that only kills arms too expensive to pay;
+* the **ranking** carries the entire error, and it is fed by a cost model
+  fitted on one weight version and refuted across the other. That is where
+  the quant-axis refit is worth spending on.
+
+Section 15 stands as written with this correction appended, on the same
+principle as sections 13 and 16: it was right about its data and wrong about
+its reach.
