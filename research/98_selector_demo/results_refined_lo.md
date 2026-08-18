@@ -1885,3 +1885,127 @@ The 144/180 apportionment assumes the draft's `q=1` and verify's `q=5`
 attention calls cost about the same per call, which is expected for a
 KV-read-bound kernel and is corroborated by the bf16 reconciliation landing
 at 79.2% against the assumed 80.0%.
+
+---
+
+## 27. The step budget: what quantization buys, and what it cannot
+
+The same four traces, bucketed by component. The question is the obvious one
+to ask of section 26's result: if quantizing the draft removes weight traffic,
+why does the attention kernel not get faster too?
+
+### The budget, unwindowed
+
+| component | bf16 | w4a16 | delta |
+| --- | --- | --- | --- |
+| **draft body GEMMs** | 20.253 | 10.827 | **−9.426** |
+| attention | 11.005 | 11.092 | +0.087 |
+| verify GEMMs | 5.606 | 5.601 | −0.005 |
+| `lm_head` | 1.666 | 1.678 | +0.011 |
+| other | 3.421 | 1.932 | −1.489 |
+| **total device** | **41.950** | **31.129** | **−10.821** |
+
+Quantization moves **one bucket**. Everything the draft's weights do not
+touch is unchanged inside noise: attention +0.8%, verify GEMMs −0.09%
+(the *target's* weights stay bf16 in both), `lm_head` +0.7%.
+
+**The `lm_head` row settles a question section 24 left open.** The registered
+model declares `F` quant-independent *by construction*, and section 24
+measured a fitted `F` of 3.801 ms against 7.797 — a 5 sigma difference that
+would have refuted it, except that adding `keep^2` dissolved every estimate.
+The kernel says the construction is right: the `lm_head` GEMM is **1.666 vs
+1.678 ms**, four calls per step at ~417 us each in both families. So section
+24's fitted difference was an artifact of a 22% keep span, and the two
+`woff/skip16` boots proposed there are **no longer needed to establish
+quant-independence** — only to pin `F`'s magnitude, which no claim currently
+rests on.
+
+### Why attention does not get faster
+
+Because kernels are **serialized**. Within a CUDA stream the attention kernel
+and the GEMM kernels run one after another, never together, so attention
+already had the entire HBM bandwidth to itself. There was no contention for
+quantization to relieve. Quantization shortens the GEMM kernels; it cannot
+shorten a kernel whose time is KV bytes over bandwidth when neither term
+moved. Measured, attention is 0.8% *slower* under quantization — the opposite
+sign from contention relief, and inside noise.
+
+Stated generally, and worth keeping: **each lever shortens only the kernels it
+touches.** Quantization -> draft body GEMMs. Window -> attention. Skip ->
+every per-layer kernel, proportionally. The levers do not share bandwidth
+headroom, because they do not run at the same time.
+
+### Quantization delivers 30% of the speedup its bytes promise
+
+| | draft weight traffic | time | achieved bandwidth |
+| --- | --- | --- | --- |
+| bf16 (nvjet) | 55.57 GB/step | 20.253 ms | 2,744 GB/s — **81.9% of peak** |
+| w4a16 (Marlin) | 14.32 GB/step | 10.827 ms | 1,323 GB/s — **39.5% of peak** |
+
+**3.88x fewer bytes, 1.87x faster.** Marlin sustains less than half the
+bandwidth the bf16 GEMM does: it dequantizes on the fly, so it spends far
+more compute per byte, and at batch 8 — query width 1 per request, so M = 8 —
+there is nothing to amortize that against.
+
+This is the direct, measured reason section 14's cross-family byte column
+could not work. A single `kappa_w` assumes both families read weights at the
+same rate. They read at **82%** and **40%** of peak, so a coefficient fitted
+across them attributes a *rate* difference to a *byte* difference. Section
+14's bandwidth argument inferred this from an impossible implied figure of
+4050 GB/s; the trace measures it directly.
+
+### The synthesis
+
+Section 26 found that quantization makes the window worth 2 ms less without
+touching the KV traffic. This says how: quantization removes 10.8 ms of
+**device** work while leaving attention alone, and thereby shrinks the pool of
+device work available to hide **host** work behind.
+
+So the levers do interact, and the channel is now named: **they interact
+through the host, not through the GPU.** On the device their effects are
+cleanly separable, which is why per-kernel accounting adds up. The
+non-separability appears only when device time is converted to wall time —
+which is the conversion the cost model performs and never measured.
+
+### The consequence, predicted and then tested
+
+If host exposure is what makes a window worth less, a *deeper skip* should do
+to a window what quantization does, for the same reason: fewer layers, less
+device work, less to hide behind. The model scales the window offset
+proportionally with `keep`, so the prediction is that the saving **per unit
+keep** should fall as keep falls. The equal-work sweep already has three
+windows at three keeps in both families, so this cost no boots.
+
+Window saving per unit keep, `(D_off - D_w) / keep`, in ms:
+
+| family | window | keep 1.000 | keep 0.889 | keep 0.778 | trend |
+| --- | --- | --- | --- | --- | --- |
+| bf16 | w256 | 4.811 | 4.540 | 4.105 | **-14.7%** |
+| bf16 | w1024 | 3.771 | 3.359 | 3.052 | **-19.1%** |
+| w4a16 | w256 | 2.633 | 2.727 | 3.261 | +23.8% |
+| w4a16 | w1024 | 3.146 | 3.086 | 3.190 | +1.4% |
+
+**Confirmed in bf16, refuted in w4a16.** The bf16 family falls
+super-proportionally at both windows, in agreement, by 15-19% over a 22% keep
+range -- the model's proportional scaling of `f_win` is wrong in the direction
+predicted. The quantized family does not fall at all.
+
+The reading that fits both is section 26's, applied twice: the quantized chain
+is **already** host-bound at `keep = 1` -- that is what "42% of the freed GPU
+time never appears" means -- so removing further device work cannot expose more
+host time, because there is none left hidden. bf16 still has device work to
+lose, so skipping layers walks it toward the same floor and the window loses
+value on the way.
+
+That is a post-hoc reading and is marked as one. What is not post-hoc: the
+bf16 trend was predicted before it was computed, it appears at both windows
+with the same sign, and it is 3-4x the 0.32 ms noise on a difference of two
+arms. The `w4a16` w256 rise is ~2 sigma on the same footing and its w1024
+counterpart is flat, so the quantized family's non-result is genuinely a
+non-result rather than a counter-trend.
+
+**For the model this is concrete:** `f_win` is not a per-family constant. In
+the bf16 family it needs a `keep` interaction; in the quantized family it does
+not, because that family sits against a floor. A single fitted `f_win` per
+family, which is what every version in this phase uses, is an average over a
+range it varies across by 19%.
