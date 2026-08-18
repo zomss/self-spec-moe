@@ -2510,3 +2510,94 @@ it is contradicted.
 Single boots per arm at three cells, batch 8, quantized family. LI b16, LIO
 b16 and LO have not been re-measured instrument-free, and their section-31
 numbers should be read as instrumented until they are.
+
+---
+
+## 33. Instrument-free: the window's "sign flip" was the instrument too
+
+Section 32 re-took LI, LIO and SS at batch 8 without the profiler or the koff
+trace and withdrew section 31's park verdicts. It left LI b16, LIO b16 and LO
+instrumented, so their published numbers were still scored against a baseline
+that did not pay the instrument. This completes them.
+
+### LI b16, where the effect is largest in the record
+
+| arm | instrumented | **instrument-free** | gain |
+| --- | --- | --- | --- |
+| `w1024/skip4` | 0.7234 (worst, below `off`) | **1.1281 (best)** | **+56.0%** |
+| `w512/skip4` | 0.7046 | **1.1122** | **+57.8%** |
+| `woff/skip4` | 0.8653 | 0.9873 | +14.1% |
+| `woff/skip0` | 0.8754 | 0.9719 | +11.0% |
+| `off` | 0.8117 | 0.9194 | +13.3% |
+
+**The instrument did not shift the arms uniformly — it reordered them.** The
+windowed arms gain 56-58% where everything else gains 11-14%, which takes
+them from the bottom of the cell (below the parked arm) to the top (above
+stock).
+
+**Section 31's first finding is withdrawn.** "The window lever's sign flips
+between two long-input cells" was an artifact: instrument-free, `w1024/skip4`
+is the *best* arm at LI b16, as it already was at LIO and LO. There is no
+flip.
+
+The mechanism is one this record already measured. Section 26 established
+that the window's value is **(attention time removed) − (host time exposed)**,
+and the window path is the one that does extra host work per step —
+`_apply_draft_kv_window` rebuilds the block table and sequence lengths on
+every draft step. The profiler's inner syncs inflate exactly that term, so
+the arms carrying the most host work are penalised most. An instrument that
+costs host time reorders levers that differ in host work, and this is that
+happening.
+
+### LIO b16 and LO
+
+| cell | arm | instrumented | **instrument-free** |
+| --- | --- | --- | --- |
+| LIO b16 | `w1024/skip4` | 1.2243 | **1.3314** |
+| | `off` | 0.8920 | 0.9441 |
+| | `woff/skip4` | 0.8786 | 0.9312 |
+| LO b8 | `w1024/skip4` | 1.1774 | **1.3583** |
+| | `woff/skip8` | 1.1687 | 1.2947 |
+| | `off` | 0.7588 | 0.8560 |
+
+**Section 31's second finding survives, narrowly.** At LIO b16 `off` (0.9441)
+still beats `woff/skip4` (0.9312) and `woff/skip0` (0.9339), so arming with
+the wrong lever remains worse than not arming — but by 1%, at one cell,
+rather than the 8-12% across two that the instrumented numbers showed.
+
+### The corrected grid
+
+Best arm against stock, instrument-free, natural EOS, quantized family:
+
+| cell | batch | best arm | vs stock | `off` vs stock |
+| --- | --- | --- | --- | --- |
+| LI | 8 | `woff/skip4` | **1.063** | 0.915 |
+| LI | 16 | `w1024/skip4` | **1.128** | 0.919 |
+| LIO | 8 | `w1024/skip4` | **1.232** | 0.930 |
+| LIO | 16 | `w1024/skip4` | **1.331** | 0.944 |
+| SS | 8 | `woff/skip4` | **1.055** | 0.751 |
+| LO | 8 | `w1024/skip4` | **1.358** | 0.856 |
+
+**Every cell wins, and `w1024/skip4` wins four of six** — the two exceptions
+being the cells with the shortest generations, where `woff/skip4` leads.
+
+The engine tax, instrument-free, runs **5.6% to 24.9%** and orders itself the
+way a fixed per-step cost should: worst at SS (0.751), whose sequences are
+shortest; next at LO (0.856), whose batch drains from 8 active to 1 so late
+steps amortise over fewer tokens; and mildest at LI/LIO b16 (0.919-0.944),
+which hold the most tokens per step. That is the constant term the search
+strategy should carry, and it is a per-step cost divided by tokens per step,
+not a flat percentage.
+
+### What still does not close
+
+The armed discrepancy with h103 is unmoved by any of this: their `w4a16` at
+LI b8 reads 0.708 against our comparable `woff/skip0` at 1.0034, a factor of
+**1.42**. The instrument explained the *parked* tax completely — two boxes now
+agree to 2% — and explains none of the armed gap.
+
+### Scope
+
+Single boots per arm. LO carries only four arms (parked, unlevered, deep
+skip, top pick) because its generations are ~100x longer than LI's, and its
+arms remain natural-EOS with section 25's contamination below the top arm.
