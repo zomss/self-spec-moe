@@ -1,0 +1,76 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 374.637,
+      "total_out_tokens": 9763,
+      "wall_s": 26.06
+    },
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 510.474,
+      "total_out_tokens": 9793,
+      "wall_s": 19.184
+    },
+    "w4a16-quantized/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 507.276,
+      "total_out_tokens": 9839,
+      "wall_s": 19.396
+    },
+    "w4a16-quantized/woff/skip0": {
+      "cap_hits": 0,
+      "tokens_per_s": 468.677,
+      "total_out_tokens": 10233,
+      "wall_s": 21.834
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 472.59,
+      "total_out_tokens": 9919,
+      "wall_s": 20.989
+    }
+  },
+  "batch": 8,
+  "content_cell": "LIO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-0",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-1",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-2",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-3",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-4",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-5",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-6",
+      "w4a16-quantized/w1024/skip4 diverges from off on LIO-7",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-0",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-1",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-2",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-3",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-4",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-5",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-6",
+      "w4a16-quantized/w512/skip4 diverges from off on LIO-7",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-0",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-1",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-2",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-3",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-4",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-5",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-6",
+      "w4a16-quantized/woff/skip0 diverges from off on LIO-7",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-0",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-1",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-2",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-3",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-4",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-5",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-6",
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-7"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

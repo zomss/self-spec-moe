@@ -2120,3 +2120,106 @@ per-deployment calibration is one singles sweep* — not *these coefficients
 describe self-speculative decoding*. The mechanistic findings above are the
 portable part, and they are arguably worth more than the coefficients because
 they say **why** a re-fit is required rather than merely that it is.
+
+---
+
+## 29. Step 3: the arming case does not reproduce either
+
+Step 3 was planned as "make OFF a first-class candidate", motivated by D3's
+R4 regression — 522 against OFF's 684.9, a 24% loss — and by Campaign 1
+measuring every armed arm losing to stock at LI and LIO. Reading the phase's
+own record before spending GPU time changed the step twice.
+
+**First, the rule already exists.** `w98_failclosed.py` and
+`w98_prereg_failclosed.md` define it with no free parameter —
+`arm iff margin - 1 > max(EPSILON_ARM, envelope(R))` — with a sealed firing
+set `{R4}` and in-sample effect 0.951 -> **0.996** of omniscient. Nothing to
+build.
+
+**Second, G98-F already refuted its premise.** On this box R4's armed arm
+*wins* at **1.129** against h103's 0.763, with R1 reproducing h103 to 1% as
+the control and six independent lines pointing at h103's R4 armed column
+having been measured under contention. So the 24% regression this record has
+cited repeatedly — including in this document's own plan — **is not
+established**, and on this box the rule would *cost* 11% at R4.
+
+That leaves one live question, and it is the one that matters for the grid we
+are moving to: **does "speculation loses at long input" reproduce here?**
+
+### The measurement
+
+LI (cap 2K) and LIO (cap 4K), batch 8, quantized family, natural EOS,
+registered prompts. `woff/skip0` included deliberately as the most
+bandwidth-hungry armed arm — the one G98-F's mechanism would hit hardest.
+Two independent boots per cell.
+
+| cell | arm | boot 1 | boot 2 | spread |
+| --- | --- | --- | --- | --- |
+| **LI** | `woff/skip4` | **1.1552** | 1.1571 | 0.17% |
+| | `woff/skip0` | 1.1475 | 1.1489 | 0.12% |
+| | `w1024/skip4` | 1.0989 | 1.0939 | 0.45% |
+| | `w512/skip4` | 1.0742 | 1.0849 | 0.99% |
+| **LIO** | `w1024/skip4` | **1.3626** | 1.3464 | 1.19% |
+| | `w512/skip4` | 1.3540 | 1.3382 | 1.17% |
+| | `woff/skip4` | 1.2614 | 1.2571 | 0.34% |
+| | `woff/skip0` | 1.2510 | 1.2470 | 0.32% |
+
+**Every armed arm beats the parked one at both cells**, and it replicates:
+the two OFF boots agree to 0.3% (334.5/333.8 and 374.6/375.8 tok/s), every
+armed ratio to within 1.2%. Zero cap hits, token counts within 4% across
+arms, so the length confound that dominated LO is small here.
+
+### Against Campaign 1, on the same denominator
+
+Campaign 1 scores against **stock** (plain vLLM), where its `off` arm — our
+runtime with speculation parked — is itself 0.933 (LI) and 0.925 (LIO).
+Dividing through to armed-over-off on both sides:
+
+| cell | Campaign 1 (h103) | **this box** | discrepancy |
+| --- | --- | --- | --- |
+| LI b8, `w4a16` | 0.759 | **1.148** | **1.51x** |
+| LIO b8, `w1024` | 0.901 | **1.363** | **1.51x** |
+| R4 (G98-F) | 0.763 | 1.129 | 1.48x |
+
+**Three independent long-context cells, the same 1.5x factor**, against an
+R1 control that reproduces across boxes to 1%. This is the R4 pattern
+repeating on the refined grid, and it fits G98-F's stated mechanism: the most
+bandwidth-hungry armed steps are the exposed ones, and LI/LIO are exactly
+that shape — 9-16K of context, batch 8, an unwindowed draft.
+
+### The verdict, and its limits
+
+**On this box the fail-closed rule has no firing set on the refined grid.**
+Every cell measured wants to arm. The rule remains sound and stays in the
+code; what is now doubtful is whether it has anything to decline.
+
+What this does **not** establish:
+
+* **Beating OFF is not beating stock.** Campaign 1's `off` sits 6.7-7.5%
+  below stock at these cells, which is our runtime's own overhead. Applying
+  that factor, our armed arms would score ~1.07 (LI) and ~1.26 (LIO) against
+  stock — still wins, but smaller, and taken from another box's overhead
+  measurement. **This grid has no stock arm of its own**, and adding one is
+  the cheapest thing that would close the gap.
+* **A protocol difference exists.** Campaign 1 queues `4 x batch` requests
+  behind a concurrency cap; we submit exactly 8 and let them drain (lengths
+  331-855 at LI). Real, and not plausibly worth 51%, but not zero.
+* **Scope**: one box, one batch, the quantized family, four arms, natural
+  EOS. Campaign 1 also measured b16, where its LI/LIO numbers are worse
+  (0.615-0.936), and we have not.
+* **The reproducibility here is stronger than the phase's standing caveat
+  but tests less.** The record's OFF-referenced band is 9-16%; two boots
+  minutes apart on a clean box agree to 0.3%. That is evidence the band is
+  not active right now, not evidence it does not exist — it was derived over
+  a longer horizon and under co-tenancy.
+
+### What it changes
+
+Two of the phase's three "speculation loses" results — R4 and now LI/LIO —
+are properties of one machine rather than of the workload. That is a finding
+about measurement discipline at least as much as about the selector: **every
+one of them came from single boots with no timing gate**, and both times a
+two-boot replicate on a clean box reversed the sign.
+
+The consequence for the plan is that step 3 closes without the deliverable it
+was scoped for, and the next step is the refined evaluation itself.

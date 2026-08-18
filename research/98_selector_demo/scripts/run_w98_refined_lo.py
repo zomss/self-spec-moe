@@ -50,8 +50,14 @@ matrix = r1.matrix
 PROMPTS = (
     SCRIPT_DIR.parent.parent / "100_baselines/data/registration/w100_prompts.jsonl.gz"
 )
-CELL = "LO"
-CAP = 32_768  # the registered Phase-100 cap for LO
+# The registered Phase-100 grid. LO is the default because it is the cell
+# this file was written for; the other three are selectable so the arming
+# decision can be measured where Campaign 1 says speculation loses.
+CAPS = {"LI": 2_048, "LO": 32_768, "LIO": 4_096, "SS": 1_024}
+CELL = os.environ.get("W98_LO_CELL", "LO")
+if CELL not in CAPS:
+    raise SystemExit(f"unknown cell {CELL!r}; expected one of {sorted(CAPS)}")
+CAP = CAPS[CELL]
 # Phase 100 re-pins the geometry for exactly this reason: with the
 # default 20480 a long LO generation runs into the context limit, the
 # scheduler shortens the draft near it, and the K/OFF registry rejects
