@@ -1,0 +1,120 @@
+{
+ "bands": {
+  "LI": [
+   12000,
+   20000
+  ],
+  "LIO": [
+   8000,
+   20000
+  ]
+ },
+ "cells": {
+  "LI": {
+   "batches": [
+    1,
+    8,
+    16
+   ],
+   "cap_max_tokens": 2048,
+   "max_n": 32,
+   "n_rule": "min(max_n, max(16, 2*batch)), nested prefixes",
+   "prompt_tokens_max": 19147,
+   "prompt_tokens_min": 12109,
+   "temperature": 0.0,
+   "thinking": false
+  },
+  "LIO": {
+   "batches": [
+    1,
+    8,
+    16
+   ],
+   "cap_max_tokens": 4096,
+   "max_n": 32,
+   "n_rule": "min(max_n, max(16, 2*batch)), nested prefixes",
+   "prompt_tokens_max": 19969,
+   "prompt_tokens_min": 9607,
+   "temperature": 0.0,
+   "thinking": false
+  },
+  "LO": {
+   "batches": [
+    1,
+    8,
+    16,
+    32
+   ],
+   "cap_max_tokens": 32768,
+   "max_n": 60,
+   "n_rule": "min(max_n, max(16, 2*batch)), nested prefixes",
+   "prompt_tokens_max": 853,
+   "prompt_tokens_min": 52,
+   "temperature": 0.0,
+   "thinking": true
+  },
+  "SS": {
+   "batches": [
+    1,
+    8,
+    32,
+    64
+   ],
+   "cap_max_tokens": 1024,
+   "max_n": 128,
+   "n_rule": "min(max_n, max(16, 2*batch)), nested prefixes",
+   "prompt_tokens_max": 145,
+   "prompt_tokens_min": 41,
+   "temperature": 0.0,
+   "thinking": false
+  }
+ },
+ "content_seed": 0,
+ "dataset_pins": {
+  "aime24": [
+   "HuggingFaceH4/aime_2024",
+   "2fe88a2f1091d5048c0f36abc874fb997b3dd99a"
+  ],
+  "aime25": [
+   "math-ai/aime25",
+   "563bb8404243c5f09de6ec262f2db674fe5bce9b"
+  ],
+  "booksum": [
+   "kmfoda/booksum",
+   "c62321036e5647db5767ecaff139912b554dc938"
+  ],
+  "govreport": [
+   "ccdv/govreport-summarization",
+   "4e21184e01ae8017e2c036e180fe5e541fef60a0"
+  ],
+  "gsm8k": [
+   "openai/gsm8k",
+   "740312add88f781978c0658806c59bc2815b9866"
+  ]
+ },
+ "frozen_date": "2026-08-16",
+ "lo_t1_arm": {
+  "batch": 8,
+  "n": 16,
+  "seed": 1234,
+  "temperature": 1.0
+ },
+ "manifest_id": "w100-final-grid-prompts-v1",
+ "phase": "100_baselines",
+ "prompt_file": {
+  "path": "data/registration/w100_prompts.jsonl.gz",
+  "payload_sha256": "89d2497ffa9484714aac60d7e6bb9e17bab5172df7bc526be441af0e5d6a657d",
+  "rows": 252,
+  "sha256": "8f386327b876290648c66d93b54e6ce14dce7def34c6c9a1f771884a5c1f3a03"
+ },
+ "schema_version": 1,
+ "software": {
+  "datasets": "5.0.1",
+  "transformers": "5.12.1",
+  "vllm": "0.1.dev17860+g9037498c2"
+ },
+ "tokenizer": {
+  "snapshot": "/h/v-sukmincho/.cache/huggingface/hub/models--Qwen--Qwen3-8B/snapshots/b968826d9c46dd6066d109eabc6255188de91218",
+  "tokenizer_json_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+ }
+}

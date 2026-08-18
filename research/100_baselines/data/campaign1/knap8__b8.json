@@ -1,0 +1,678 @@
+{
+ "arm": "knap8",
+ "batch": 8,
+ "host": "h103",
+ "boot_unix": 1786953794.1600885,
+ "cells": {
+  "SS": {
+   "cell": "SS",
+   "n": 16,
+   "wall_s": 5.802,
+   "total_out_toks": 2830,
+   "temperature": 0.0,
+   "seed": null,
+   "cap": 1024,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 82,
+     "out_toks": 95,
+     "finish": "stop",
+     "sha256": "e8d54d8601ce60f841c5a646b5a965738a1fbaf65f531857476cc0dd86414ce0"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 43,
+     "out_toks": 65,
+     "finish": "stop",
+     "sha256": "8553d88665075c735623d2ce93774bb0428dbc1442063fb217cd3cb9780c2721"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 74,
+     "out_toks": 181,
+     "finish": "stop",
+     "sha256": "62b11c73b37aef276d6f0b8d19eb0c644b295b799b47cadaece21ec925c26aeb"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 52,
+     "out_toks": 50,
+     "finish": "stop",
+     "sha256": "ee36989a4d15543189e05fed679a3ae22bae379b9f2a52bd781a8e29c82724ba"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 128,
+     "out_toks": 231,
+     "finish": "stop",
+     "sha256": "c68f64a8f3edb7efd1a7c9b2b08d87dace7f28be8b55eaaf6ec3c87ec075fdc5"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 73,
+     "out_toks": 128,
+     "finish": "stop",
+     "sha256": "68ebe9d20a703c02dee9fe9a4e2e45f828b5213950aa362178be342c9a0f8758"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 59,
+     "out_toks": 134,
+     "finish": "stop",
+     "sha256": "84d5359079f1a6a22e36d18955ddc5bdb167c39c3123428fbe9bc2a14545f621"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 87,
+     "out_toks": 221,
+     "finish": "stop",
+     "sha256": "2f714f19fafe4e3480ee9210cb8ba172d8977945122330b8d55ba87741ff5a41"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 121,
+     "out_toks": 395,
+     "finish": "stop",
+     "sha256": "8bb7bbcabf5bfe36f075e1a4c1ec7856a7212c054bcefa3a88d54ab1529d03b3"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 77,
+     "out_toks": 126,
+     "finish": "stop",
+     "sha256": "898ae5b9b3c965cf530b35bdb9ec22d8382d150ae89d74f325c204b3c6e75763"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 77,
+     "out_toks": 161,
+     "finish": "stop",
+     "sha256": "9b7dfbeac2937ed9075335e3c99394984e8630d5dc3b6c287d17bf25f8acabc9"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 82,
+     "out_toks": 119,
+     "finish": "stop",
+     "sha256": "27070d15c184e5b4e2ef673f1102a69ef88f00c3f7f42adf0b1827ff61292bda"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 84,
+     "out_toks": 273,
+     "finish": "stop",
+     "sha256": "fe6812cdd0a5c51e79e577ed6bd1d268cebf52566bbb3ccdd438ed8d059e8fdb"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 75,
+     "out_toks": 346,
+     "finish": "stop",
+     "sha256": "953bb99d0488e062ba0c789ac8d758ec35545e0ba111f5ba7e16810f99d8c35e"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 69,
+     "out_toks": 192,
+     "finish": "stop",
+     "sha256": "25b11647bb88f12cae25952890bc11beeb7b6d10155a23a91647098a05cba506"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 111,
+     "out_toks": 113,
+     "finish": "stop",
+     "sha256": "bb02a4c8310cbd12dff3a33179ddd22fbc48043db0a037c3085d89edfc67ad09"
+    }
+   ],
+   "cap_report": {
+    "cell": "SS",
+    "cap_hits": 0,
+    "n": 16,
+    "fraction": 0.0,
+    "exempt": false
+   },
+   "identity": "SS: T=0 output divergence vs stock at prompt_index [0, 2, 4, 7, 8, 9, 10, 12]... (9/16)"
+  },
+  "LI": {
+   "cell": "LI",
+   "n": 16,
+   "wall_s": 36.997,
+   "total_out_toks": 11515,
+   "temperature": 0.0,
+   "seed": null,
+   "cap": 2048,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 12160,
+     "out_toks": 629,
+     "finish": "stop",
+     "sha256": "57500e83ceaf72edede8cec79764fe874b3171abcf51549c8434f54b442d96fa"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 12109,
+     "out_toks": 331,
+     "finish": "stop",
+     "sha256": "a32aa538df485927f5f879fe3a525fbaf33a877d27ac0a0bbf064f54caca2520"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 14199,
+     "out_toks": 866,
+     "finish": "stop",
+     "sha256": "2a2ec5eb7b89faf84d64a4631364f5bd400abcecd967d1ec2403807acc2436e5"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 13905,
+     "out_toks": 682,
+     "finish": "stop",
+     "sha256": "a5f7dd656832810a01b1395faf583ded68afb958c837e34d1654ec8aed2dbb2e"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 16574,
+     "out_toks": 628,
+     "finish": "stop",
+     "sha256": "5c275fd1be18e642ee7c14951217e577cb6224459c6035c51958fe9c6be99e33"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 17494,
+     "out_toks": 433,
+     "finish": "stop",
+     "sha256": "a58c289eee9a9070551f64f20c675f85c39f3d0ee66832aa256cee12294da3eb"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 14242,
+     "out_toks": 782,
+     "finish": "stop",
+     "sha256": "e2776a91604442619c0062b8eb44bd2cd8e33ec7510348cab024d78351440062"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 16206,
+     "out_toks": 898,
+     "finish": "stop",
+     "sha256": "9e04ab6012c66f10996c4c8ea3dcc9ee6b3b54ef877277b9c87a911b7c0b62a4"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 14562,
+     "out_toks": 739,
+     "finish": "stop",
+     "sha256": "2c9e40c6444c34aa02f73d126226d84cc4307d75d49b69dfdcf479a030f1f4f9"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 13908,
+     "out_toks": 641,
+     "finish": "stop",
+     "sha256": "c3f097e2a9c64d08e3b8c735ce80d7a695acb9eb36982dee7b2d2b5fc2c8e726"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 19030,
+     "out_toks": 696,
+     "finish": "stop",
+     "sha256": "3d98235a231e2952f5ae877d5faf7abf833afb34bc8e311930cbca120152e822"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 15036,
+     "out_toks": 636,
+     "finish": "stop",
+     "sha256": "e27e4bc0677f3c5080d7f4ee1653ea37ad609d0b19d35da5a9de961991ebc32f"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 15139,
+     "out_toks": 937,
+     "finish": "stop",
+     "sha256": "b63d2849aa3dae7bb4384ca69b407694ba592f9f0f33f68c4e5a69cf3790b891"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 12390,
+     "out_toks": 1043,
+     "finish": "stop",
+     "sha256": "71c197735e9e1dee4425fad73f9af93eac8e0d49944ccc3ed1b93e54ff55c022"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 19147,
+     "out_toks": 853,
+     "finish": "stop",
+     "sha256": "a59512bc213baa180b0f9dae65f19d25fee32ce452f3c97175a69bbfd5a696c6"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 15476,
+     "out_toks": 721,
+     "finish": "stop",
+     "sha256": "fb58f8e070485bed7e6aa0b8990f64fdaeecda56b586da9790f6ba05ee7bb869"
+    }
+   ],
+   "cap_report": {
+    "cell": "LI",
+    "cap_hits": 0,
+    "n": 16,
+    "fraction": 0.0,
+    "exempt": false
+   },
+   "identity": "LI: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (15/16)"
+  },
+  "LIO": {
+   "cell": "LIO",
+   "n": 16,
+   "wall_s": 53.883,
+   "total_out_toks": 19151,
+   "temperature": 0.0,
+   "seed": null,
+   "cap": 4096,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 9607,
+     "out_toks": 1221,
+     "finish": "stop",
+     "sha256": "f2486454c8d530ced4db168790e417398fc2797e614d99f6c6599eaf8e4fa976"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 10734,
+     "out_toks": 1224,
+     "finish": "stop",
+     "sha256": "ae3056f19753398b2c8c2714d22fad29d347e25534672615ebab3b96f3e9c4ba"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 10440,
+     "out_toks": 1302,
+     "finish": "stop",
+     "sha256": "44f9b329f4decb54b21e0f797ce07a9f424c590826986cf0c266ba89e98b5853"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 12445,
+     "out_toks": 1138,
+     "finish": "stop",
+     "sha256": "ce218ec7a173e6f58b554a77a022365915ebc79ff41fe1275259b312a6ec55f7"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 11000,
+     "out_toks": 1037,
+     "finish": "stop",
+     "sha256": "352462da7b647d08f3d386c1eed7e0977e71563bc640b106208177d2fe34de14"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 11100,
+     "out_toks": 1022,
+     "finish": "stop",
+     "sha256": "8c1eaf2f02c791da2eeb84dc7f59586d2d4909421794a7ac8b5c3e263f395ff3"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 15236,
+     "out_toks": 1294,
+     "finish": "stop",
+     "sha256": "5ae81f6a406e11f0bb8375ad4b73209b458e27db9833467f97672c5ccfb9118b"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 14883,
+     "out_toks": 1362,
+     "finish": "stop",
+     "sha256": "08fba21396a05cab8cd1a4ac6e42f044bba94367fb789fbde50249a42bc7bfcd"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 19969,
+     "out_toks": 1138,
+     "finish": "stop",
+     "sha256": "72dddeafb8eaff1c9c37dd63422ae8f5307fb828d857af634e87b52043f6999e"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 17639,
+     "out_toks": 1092,
+     "finish": "stop",
+     "sha256": "3edbb724cb1f71f3f46632397cbcc27ffa8c47acfafa79865e7c68bd19bb048c"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 18016,
+     "out_toks": 1250,
+     "finish": "stop",
+     "sha256": "5f1afbd0e3a85945c7f897a0dc189ab21828119133d58faebe7677ad2968a5aa"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 14959,
+     "out_toks": 1287,
+     "finish": "stop",
+     "sha256": "8b735b7cb72d0fc20b2211d0af4f2c69f8cb411a072128d248f4048f5e6e544e"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 17479,
+     "out_toks": 1149,
+     "finish": "stop",
+     "sha256": "8de9343222071c68d41b26005e7746df76eae9d1cd0ab16ec24d880bb080d14e"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 13099,
+     "out_toks": 1244,
+     "finish": "stop",
+     "sha256": "f8b39a177813d82e9144d9be003eb4675fb875a93e43a95434fb73438f25546b"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 11399,
+     "out_toks": 1001,
+     "finish": "stop",
+     "sha256": "de5dcf244d83fe834902f43e1edad90116e6b0d9397817762136e7480c757c35"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 14959,
+     "out_toks": 1390,
+     "finish": "stop",
+     "sha256": "08c17fc7a2508cbb0e64cf342f95bdcc609848111a0e3e2a958a06d9a59c659e"
+    }
+   ],
+   "cap_report": {
+    "cell": "LIO",
+    "cap_hits": 0,
+    "n": 16,
+    "fraction": 0.0,
+    "exempt": false
+   },
+   "identity": "LIO: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (16/16)"
+  },
+  "LO": {
+   "cell": "LO",
+   "n": 16,
+   "wall_s": 358.477,
+   "total_out_toks": 208900,
+   "temperature": 0.0,
+   "seed": null,
+   "cap": 32768,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 156,
+     "out_toks": 4028,
+     "finish": "stop",
+     "sha256": "efbb2405f67cb88241370ea2acbb307ab8fd947b015d55eaf5ca5c515065aae2"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 130,
+     "out_toks": 12367,
+     "finish": "stop",
+     "sha256": "aeba9ced760be8dd1321625810cabc754a3b8e905e01e9c3d7fb629b712d15ad"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 99,
+     "out_toks": 32768,
+     "finish": "length",
+     "sha256": "09ee6be4053c4db640ee8bdf6cfc6cad731b37b9c907f767d680b025f08706bc"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 104,
+     "out_toks": 20343,
+     "finish": "stop",
+     "sha256": "ec7304affd9570f79c8b6d19b2d89944145252b8d20605f0cf0218f014308748"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 88,
+     "out_toks": 13860,
+     "finish": "stop",
+     "sha256": "f53be6b5b651345bd74f9187151b9299a9a35b8a72c0268c2c363803d5588548"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 175,
+     "out_toks": 8832,
+     "finish": "stop",
+     "sha256": "8e9bf74c4b347665c95844b91a6b1868d7467b7c00a873e966ad1c97e3db8952"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 120,
+     "out_toks": 8624,
+     "finish": "stop",
+     "sha256": "0c38313316132c438a5afb4dc418aa94e9205c4723325c8f12bf3c16e34333d2"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 73,
+     "out_toks": 11419,
+     "finish": "stop",
+     "sha256": "0454f2036c346e3005487f3a7ce36aa5d7d6d6d3bba870a5f2a1f0451a4f497d"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 121,
+     "out_toks": 8027,
+     "finish": "stop",
+     "sha256": "484d290e31ca4f229f34b7cb9fdac7dddb3e050e13e43a9935eafc973152d5a5"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 148,
+     "out_toks": 6562,
+     "finish": "stop",
+     "sha256": "4c606648349e3bdc2df6d217c0ea733a32e2bfede6825fc601b834ae5081e763"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 100,
+     "out_toks": 21135,
+     "finish": "stop",
+     "sha256": "d961cba144d4f5b979ed2cd679c90f407a0814b9518d7196ae0e1ddb39ec23ac"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 77,
+     "out_toks": 8412,
+     "finish": "stop",
+     "sha256": "3bbc6faed4aabe4261906216c71f0066e4cf70fa389799b4c859c8883168c4d8"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 71,
+     "out_toks": 7359,
+     "finish": "stop",
+     "sha256": "a22f0d9379cdfefa455b2596a5cb9c38f4566cfb4f715b9d9bf3fdfe6dea8a28"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 117,
+     "out_toks": 25813,
+     "finish": "stop",
+     "sha256": "b5a5fd0b812f366500c37529b73f710cf75cf32372e594c893684c1e1fa13a86"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 107,
+     "out_toks": 10114,
+     "finish": "stop",
+     "sha256": "397e0f3f3dede8c4733ac3e1ad9f9998fd5eeac2d802c4f1c9e5b959c3ac7691"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 135,
+     "out_toks": 9237,
+     "finish": "stop",
+     "sha256": "684037ddd1a5dee091fc23380b3a9b87424c76df5e7fd44d72c539b30ad5a0dc"
+    }
+   ],
+   "cap_report": {
+    "cell": "LO",
+    "cap_hits": 1,
+    "n": 16,
+    "fraction": 0.0625,
+    "exempt": true
+   },
+   "identity": "LO: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (16/16)"
+  },
+  "LO_T1": {
+   "cell": "LO",
+   "n": 16,
+   "wall_s": 413.475,
+   "total_out_toks": 203068,
+   "temperature": 1.0,
+   "seed": 1234,
+   "cap": 32768,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 156,
+     "out_toks": 5254,
+     "finish": "stop",
+     "sha256": "28ddfa21dfcd671a2363d9013dff839551191bc285f766ad8aa2c72e74e2b470"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 130,
+     "out_toks": 18023,
+     "finish": "stop",
+     "sha256": "5e4094f5925d391efcb5c4bd22273cef43c05d8227d44e8e3fa1ddcd3781a93d"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 99,
+     "out_toks": 28049,
+     "finish": "stop",
+     "sha256": "ad4d8809f6e5576eb968f5857fbb53ade4d02f40d4211797309a4f5978a36b29"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 104,
+     "out_toks": 26668,
+     "finish": "stop",
+     "sha256": "63b20adf023c4d29fef49cec6128cb95db97239f7871aed592435c5138c3892f"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 88,
+     "out_toks": 9745,
+     "finish": "stop",
+     "sha256": "b7305601fcef09e31765594357201c34d03819893b1333360ec69f6bff325f16"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 175,
+     "out_toks": 9786,
+     "finish": "stop",
+     "sha256": "3d4781b0b5605016325a0d276cdd1a0ffbf37c06f0802b3e6cdc8d994c3fc3f4"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 120,
+     "out_toks": 9770,
+     "finish": "stop",
+     "sha256": "e8c948d6141f5af723a74dd1db9c98d4a9013bb0b4e3cec6db13f143e5e96488"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 73,
+     "out_toks": 8341,
+     "finish": "stop",
+     "sha256": "09d3f17948ff92c08612225910e47bc3e6b8e9ebd7ab046d4d21cfebf86643f3"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 121,
+     "out_toks": 8287,
+     "finish": "stop",
+     "sha256": "74800fd7a01f4e6060af9dade72bb648e1821c706afc8d4fd6a2c642c8c3df45"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 148,
+     "out_toks": 6997,
+     "finish": "stop",
+     "sha256": "4486a7215d7f3c0bb75c65c8a88dadcc7f0f28c95e525d89e065623a1bb91463"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 100,
+     "out_toks": 13403,
+     "finish": "stop",
+     "sha256": "44c306bed680f3000d7c09cf83631587409e7cd933ae677bc9c230f3e1e9a0ec"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 77,
+     "out_toks": 8845,
+     "finish": "stop",
+     "sha256": "0bffe4ff2c997ff379b7cbf0a7b4692be6f0fa51903c229e7f5e3792053c761e"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 71,
+     "out_toks": 7297,
+     "finish": "stop",
+     "sha256": "f5bebbb35986332b2ec4508cbc22e775ab69f774d2f6325fbe79d436e9681743"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 117,
+     "out_toks": 24005,
+     "finish": "stop",
+     "sha256": "8f47ab42b67f3a7ef070a512c5b3004c035edc1514a15452ffd02a02128ce76e"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 107,
+     "out_toks": 10406,
+     "finish": "stop",
+     "sha256": "5173563a1c0363bf6f68597e7abadc399fd504a70362acccc2c32d8efb35de9b"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 135,
+     "out_toks": 8192,
+     "finish": "stop",
+     "sha256": "7491dd200618e90f99d683d4ee547037f94c91d2298b46aed2303d908f3f556d"
+    }
+   ],
+   "cap_report": {
+    "cell": "LO",
+    "cap_hits": 0,
+    "n": 16,
+    "fraction": 0.0,
+    "exempt": true
+   }
+  }
+ },
+ "host_snapshot": {
+  "loadavg": [
+   1.8310546875,
+   2.046875,
+   2.0654296875
+  ],
+  "lane_cpu_affinity": "96-111",
+  "foreign_lane_processes": []
+ },
+ "boot_wall_s": 979.1,
+ "violations": [
+  "SS: T=0 output divergence vs stock at prompt_index [0, 2, 4, 7, 8, 9, 10, 12]... (9/16)",
+  "LI: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (15/16)",
+  "LIO: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (16/16)",
+  "LO: T=0 output divergence vs stock at prompt_index [0, 1, 2, 3, 4, 5, 6, 7]... (16/16)"
+ ]
+}

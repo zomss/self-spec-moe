@@ -1,0 +1,936 @@
+{
+ "arm": "w1024",
+ "batch": 64,
+ "host": "h104",
+ "boot_unix": 1786972807.8302948,
+ "cells": {
+  "SS": {
+   "cell": "SS",
+   "n": 128,
+   "wall_s": 8.356,
+   "total_out_toks": 20920,
+   "temperature": 0.0,
+   "seed": null,
+   "cap": 1024,
+   "requests": [
+    {
+     "prompt_index": 0,
+     "prompt_toks": 82,
+     "out_toks": 113,
+     "finish": "stop",
+     "sha256": "27df39132cd4264af2fa9057e9df7b513e06972ccb732d6dcdbb4d92dda89454"
+    },
+    {
+     "prompt_index": 1,
+     "prompt_toks": 43,
+     "out_toks": 65,
+     "finish": "stop",
+     "sha256": "8553d88665075c735623d2ce93774bb0428dbc1442063fb217cd3cb9780c2721"
+    },
+    {
+     "prompt_index": 2,
+     "prompt_toks": 74,
+     "out_toks": 263,
+     "finish": "stop",
+     "sha256": "1f081b5749560eb18341ca3ba5adc840db0f08f8dfaf87d2f86603cb1590f025"
+    },
+    {
+     "prompt_index": 3,
+     "prompt_toks": 52,
+     "out_toks": 50,
+     "finish": "stop",
+     "sha256": "ee36989a4d15543189e05fed679a3ae22bae379b9f2a52bd781a8e29c82724ba"
+    },
+    {
+     "prompt_index": 4,
+     "prompt_toks": 128,
+     "out_toks": 210,
+     "finish": "stop",
+     "sha256": "93f24f54b4246a5d2109fbcf4eb4afad35ff2f423f775da536adbe1f9cf1331e"
+    },
+    {
+     "prompt_index": 5,
+     "prompt_toks": 73,
+     "out_toks": 121,
+     "finish": "stop",
+     "sha256": "89fc3b52c16d843b02179705637f1cc52cf3539d249ba3d4971557621d35bd8f"
+    },
+    {
+     "prompt_index": 6,
+     "prompt_toks": 59,
+     "out_toks": 134,
+     "finish": "stop",
+     "sha256": "84d5359079f1a6a22e36d18955ddc5bdb167c39c3123428fbe9bc2a14545f621"
+    },
+    {
+     "prompt_index": 7,
+     "prompt_toks": 87,
+     "out_toks": 221,
+     "finish": "stop",
+     "sha256": "2f714f19fafe4e3480ee9210cb8ba172d8977945122330b8d55ba87741ff5a41"
+    },
+    {
+     "prompt_index": 8,
+     "prompt_toks": 121,
+     "out_toks": 456,
+     "finish": "stop",
+     "sha256": "ee9f0467a6136660ef9849bf15d501af37876b1a4fc2db137becbb76ae03d34e"
+    },
+    {
+     "prompt_index": 9,
+     "prompt_toks": 77,
+     "out_toks": 126,
+     "finish": "stop",
+     "sha256": "898ae5b9b3c965cf530b35bdb9ec22d8382d150ae89d74f325c204b3c6e75763"
+    },
+    {
+     "prompt_index": 10,
+     "prompt_toks": 77,
+     "out_toks": 162,
+     "finish": "stop",
+     "sha256": "fe947b4448cddea054772ccf90db0f71ed2ba60342c8391a79e0ca3bf5cab899"
+    },
+    {
+     "prompt_index": 11,
+     "prompt_toks": 82,
+     "out_toks": 119,
+     "finish": "stop",
+     "sha256": "27070d15c184e5b4e2ef673f1102a69ef88f00c3f7f42adf0b1827ff61292bda"
+    },
+    {
+     "prompt_index": 12,
+     "prompt_toks": 84,
+     "out_toks": 273,
+     "finish": "stop",
+     "sha256": "fe6812cdd0a5c51e79e577ed6bd1d268cebf52566bbb3ccdd438ed8d059e8fdb"
+    },
+    {
+     "prompt_index": 13,
+     "prompt_toks": 75,
+     "out_toks": 348,
+     "finish": "stop",
+     "sha256": "246d27220ab200736ac354fe4c5c1bc8c0aa84ab89939799ccd7df7b7326463f"
+    },
+    {
+     "prompt_index": 14,
+     "prompt_toks": 69,
+     "out_toks": 192,
+     "finish": "stop",
+     "sha256": "25b11647bb88f12cae25952890bc11beeb7b6d10155a23a91647098a05cba506"
+    },
+    {
+     "prompt_index": 15,
+     "prompt_toks": 111,
+     "out_toks": 113,
+     "finish": "stop",
+     "sha256": "bb02a4c8310cbd12dff3a33179ddd22fbc48043db0a037c3085d89edfc67ad09"
+    },
+    {
+     "prompt_index": 16,
+     "prompt_toks": 70,
+     "out_toks": 54,
+     "finish": "stop",
+     "sha256": "18e88f2b679a3c63b6134339d8f20b0605e595893358cff56595b7fc210e9cf1"
+    },
+    {
+     "prompt_index": 17,
+     "prompt_toks": 75,
+     "out_toks": 229,
+     "finish": "stop",
+     "sha256": "0e692a4e247dfeec5ad37600d1a85d95e5acf2830f47f16cff952f5183cb0dce"
+    },
+    {
+     "prompt_index": 18,
+     "prompt_toks": 46,
+     "out_toks": 116,
+     "finish": "stop",
+     "sha256": "fbeba06fa952d275d6fab1a77ad40022628c52e9f54a4661530f00b49209ca6f"
+    },
+    {
+     "prompt_index": 19,
+     "prompt_toks": 82,
+     "out_toks": 315,
+     "finish": "stop",
+     "sha256": "9d3e9a99bf61547fa3857a97693cf342ae4146da455f6a1e63e013f57f3acfc4"
+    },
+    {
+     "prompt_index": 20,
+     "prompt_toks": 80,
+     "out_toks": 314,
+     "finish": "stop",
+     "sha256": "2cb1ced706bb7cdab2baf45de69030657c2da5abdc31234bbbe7328d3df848f0"
+    },
+    {
+     "prompt_index": 21,
+     "prompt_toks": 63,
+     "out_toks": 108,
+     "finish": "stop",
+     "sha256": "2e6380313836cf44a66c121a1df50b40f2829e159e931617ff43adb34cab214d"
+    },
+    {
+     "prompt_index": 22,
+     "prompt_toks": 72,
+     "out_toks": 68,
+     "finish": "stop",
+     "sha256": "10efa17fea9f95dcdc2becd9565955eafbd923f084fc60fc6715bf7bf38c041e"
+    },
+    {
+     "prompt_index": 23,
+     "prompt_toks": 57,
+     "out_toks": 83,
+     "finish": "stop",
+     "sha256": "812fc1bcfc1aedbcca2d2b51e468bb0ee6f6081a6178de8f776fc222df051d86"
+    },
+    {
+     "prompt_index": 24,
+     "prompt_toks": 56,
+     "out_toks": 112,
+     "finish": "stop",
+     "sha256": "447007246e6c592d65a9a63f778b437c1da02e9f01eacf632b5d4ed98f442b2d"
+    },
+    {
+     "prompt_index": 25,
+     "prompt_toks": 85,
+     "out_toks": 227,
+     "finish": "stop",
+     "sha256": "9ee2be7e481f00873fadcc0f23d957483314cdde1ba5338b6eadb422b7f3824f"
+    },
+    {
+     "prompt_index": 26,
+     "prompt_toks": 86,
+     "out_toks": 130,
+     "finish": "stop",
+     "sha256": "fc90a2ce3c50196b13ae1d89eb9c8479bd437420f166ce6d678fc50f5c87e91e"
+    },
+    {
+     "prompt_index": 27,
+     "prompt_toks": 76,
+     "out_toks": 102,
+     "finish": "stop",
+     "sha256": "d1aa9177fbd99dcabbfcfe993bea2cc0d05f17b468dcc1b1f1b215ca242037c2"
+    },
+    {
+     "prompt_index": 28,
+     "prompt_toks": 67,
+     "out_toks": 124,
+     "finish": "stop",
+     "sha256": "5b9e083e84d313b3c13a0ad742ad8fa503371e8e288ecd5ceca0c5a2c37a72c6"
+    },
+    {
+     "prompt_index": 29,
+     "prompt_toks": 86,
+     "out_toks": 153,
+     "finish": "stop",
+     "sha256": "970fc42614e8ce6ad278c1e71d87341febfd7edd8801bc259bfe2c1be375c67e"
+    },
+    {
+     "prompt_index": 30,
+     "prompt_toks": 56,
+     "out_toks": 233,
+     "finish": "stop",
+     "sha256": "c0fca8cdb45eca25c1cac17ea1cb1235a53ed7233f64c6b3d49c1629b7b70a76"
+    },
+    {
+     "prompt_index": 31,
+     "prompt_toks": 80,
+     "out_toks": 165,
+     "finish": "stop",
+     "sha256": "b29b23f8ed8174b9969af1180a3663fa4baca608011f58d4472ed502bbd65fe8"
+    },
+    {
+     "prompt_index": 32,
+     "prompt_toks": 58,
+     "out_toks": 49,
+     "finish": "stop",
+     "sha256": "0a4bbc00535c5864232a9d9cb88aace1fc6d4c655ea5ac10b39ae104843c627d"
+    },
+    {
+     "prompt_index": 33,
+     "prompt_toks": 48,
+     "out_toks": 128,
+     "finish": "stop",
+     "sha256": "fd08d8993108da16a847187686bdef01c7f2b5733bdaddc75696842e0e4021e2"
+    },
+    {
+     "prompt_index": 34,
+     "prompt_toks": 58,
+     "out_toks": 162,
+     "finish": "stop",
+     "sha256": "eda0eac4d60cefd0866c763b70949d8ecc1193f181bfb1ef272f6d61b3fd8eee"
+    },
+    {
+     "prompt_index": 35,
+     "prompt_toks": 69,
+     "out_toks": 116,
+     "finish": "stop",
+     "sha256": "4fa56ba3ea607ba96e4d37d4541cf2c801169eaa84ff6d758944e45c1545a267"
+    },
+    {
+     "prompt_index": 36,
+     "prompt_toks": 61,
+     "out_toks": 129,
+     "finish": "stop",
+     "sha256": "4d27322d42f9947174e6e04645a3fb54fa29181f303a333efc1fb19eb76ca437"
+    },
+    {
+     "prompt_index": 37,
+     "prompt_toks": 80,
+     "out_toks": 29,
+     "finish": "stop",
+     "sha256": "0762b8783f040fc24360eeb8c8f2483ea94e8399fc73d965975675a5ebc7ca54"
+    },
+    {
+     "prompt_index": 38,
+     "prompt_toks": 61,
+     "out_toks": 178,
+     "finish": "stop",
+     "sha256": "64d0dc6c2fc7827fda65a35b08c3bf8f23ea9494861605edcb66678bd1a0af86"
+    },
+    {
+     "prompt_index": 39,
+     "prompt_toks": 90,
+     "out_toks": 419,
+     "finish": "stop",
+     "sha256": "2f42c1d56c0b1af342a6ddefecac82f39c6cbda3935d084163897abab4c63ee0"
+    },
+    {
+     "prompt_index": 40,
+     "prompt_toks": 61,
+     "out_toks": 160,
+     "finish": "stop",
+     "sha256": "c915c3bd8c7f5b38d7ffc11da4cad5bcb19a1abd5125eda028d5ae3059daa1f0"
+    },
+    {
+     "prompt_index": 41,
+     "prompt_toks": 145,
+     "out_toks": 124,
+     "finish": "stop",
+     "sha256": "321d393b2c909e6342a771841e3c3a982f79910395fa9af279833e570b99092a"
+    },
+    {
+     "prompt_index": 42,
+     "prompt_toks": 99,
+     "out_toks": 86,
+     "finish": "stop",
+     "sha256": "0a03702a948ab3eda2a21f8a0264e2e0025794e23e426936aecba329fcd70492"
+    },
+    {
+     "prompt_index": 43,
+     "prompt_toks": 78,
+     "out_toks": 141,
+     "finish": "stop",
+     "sha256": "7de799cee900c28e0da554ed59cd43e8dedfccf3374c7d3e72a056a428a4773a"
+    },
+    {
+     "prompt_index": 44,
+     "prompt_toks": 94,
+     "out_toks": 268,
+     "finish": "stop",
+     "sha256": "77327aaca31b5dcbec77f2a414815d60a3dc9695106095e5d9fa905e632f8978"
+    },
+    {
+     "prompt_index": 45,
+     "prompt_toks": 111,
+     "out_toks": 248,
+     "finish": "stop",
+     "sha256": "390dec25db6d178119623a0fb1ec6705339c8d5e88bc5e6c4547c7f26c892768"
+    },
+    {
+     "prompt_index": 46,
+     "prompt_toks": 111,
+     "out_toks": 170,
+     "finish": "stop",
+     "sha256": "b5f8e5324a2465340d891cf1797fa0b00bc5a05ce62a399d1d2dc3abdcbe1533"
+    },
+    {
+     "prompt_index": 47,
+     "prompt_toks": 67,
+     "out_toks": 342,
+     "finish": "stop",
+     "sha256": "dbc45aea6a8399560115321674e776d9b4bc1d15e5c6cc49d9321e9f7a1d271c"
+    },
+    {
+     "prompt_index": 48,
+     "prompt_toks": 54,
+     "out_toks": 62,
+     "finish": "stop",
+     "sha256": "6c8d41002e32354a70c367ad60b38c1d8a868174e6a3fd3cf949e003374172b0"
+    },
+    {
+     "prompt_index": 49,
+     "prompt_toks": 60,
+     "out_toks": 116,
+     "finish": "stop",
+     "sha256": "e698f46924f7d041c2369d16b118470c482904a5f5043c0ac701b1305cd6c5b9"
+    },
+    {
+     "prompt_index": 50,
+     "prompt_toks": 54,
+     "out_toks": 87,
+     "finish": "stop",
+     "sha256": "e1794b1d7165ba539e08b0e089a7f5913200ded3c46fe4ac1942dcbbcda6e868"
+    },
+    {
+     "prompt_index": 51,
+     "prompt_toks": 66,
+     "out_toks": 101,
+     "finish": "stop",
+     "sha256": "462966fdb57fd6dd66c9724f069b1dc86cc5805910e222b5d8f77ef1657027a1"
+    },
+    {
+     "prompt_index": 52,
+     "prompt_toks": 79,
+     "out_toks": 201,
+     "finish": "stop",
+     "sha256": "4bfd62219c5e1d6b1e89e96273a8b02204377b8d66d2ee8a6a5481f4c3b09f33"
+    },
+    {
+     "prompt_index": 53,
+     "prompt_toks": 117,
+     "out_toks": 155,
+     "finish": "stop",
+     "sha256": "9d27ab50e85f0fc6043b652c45eb0b8f6bf00cfa2ec8afe4f5a9764bae9df750"
+    },
+    {
+     "prompt_index": 54,
+     "prompt_toks": 99,
+     "out_toks": 223,
+     "finish": "stop",
+     "sha256": "94f6e9c09487400fc9e9fd88b20282063cfa948a916ba50d9c93e671c48c8d4d"
+    },
+    {
+     "prompt_index": 55,
+     "prompt_toks": 67,
+     "out_toks": 82,
+     "finish": "stop",
+     "sha256": "b34fddec15f98452815f5430073733b0ee5ad51e754ed729fd23b1f89ebe2088"
+    },
+    {
+     "prompt_index": 56,
+     "prompt_toks": 62,
+     "out_toks": 58,
+     "finish": "stop",
+     "sha256": "bf1d4a72a4da8ba6603145febac3bc59b6b382222a3ac0887ff3f970a51db239"
+    },
+    {
+     "prompt_index": 57,
+     "prompt_toks": 94,
+     "out_toks": 205,
+     "finish": "stop",
+     "sha256": "48f6e3418f7d4bba93f8ff7fe3f7f4d62ea3271e61c3efb46e90c9b2294ee995"
+    },
+    {
+     "prompt_index": 58,
+     "prompt_toks": 101,
+     "out_toks": 154,
+     "finish": "stop",
+     "sha256": "45c18d14b0e302f98450744b66f0ec1364c6d329af3ce455d2d7db8e42842021"
+    },
+    {
+     "prompt_index": 59,
+     "prompt_toks": 49,
+     "out_toks": 59,
+     "finish": "stop",
+     "sha256": "d9d49fce5a40ef46eba4732a794f39e94afd76c1b032a81be5efcfa39ab455c9"
+    },
+    {
+     "prompt_index": 60,
+     "prompt_toks": 55,
+     "out_toks": 214,
+     "finish": "stop",
+     "sha256": "af2a9a91f7fbf925401cfff84d5abf95fe3e1c656ff6d05e0a435f913896ad81"
+    },
+    {
+     "prompt_index": 61,
+     "prompt_toks": 79,
+     "out_toks": 116,
+     "finish": "stop",
+     "sha256": "7e6b532f2e57b3d5390d508a90340bcb71ee636e9b9d408e5fdc8e7f95b68551"
+    },
+    {
+     "prompt_index": 62,
+     "prompt_toks": 85,
+     "out_toks": 109,
+     "finish": "stop",
+     "sha256": "6867eebf24f4d1113493c278aeb9a2c98f29265b8e17821749b7b4aeb7af6fbb"
+    },
+    {
+     "prompt_index": 63,
+     "prompt_toks": 86,
+     "out_toks": 89,
+     "finish": "stop",
+     "sha256": "79c3d41000c4bd62c07d9de047cf4b6bfdadbdf069e5ef79a28e12bd1486fe2e"
+    },
+    {
+     "prompt_index": 64,
+     "prompt_toks": 110,
+     "out_toks": 190,
+     "finish": "stop",
+     "sha256": "43565fb4ca004a7557079c2843d8dee3f7c3350cf8644213c2eb548e67071c5e"
+    },
+    {
+     "prompt_index": 65,
+     "prompt_toks": 64,
+     "out_toks": 117,
+     "finish": "stop",
+     "sha256": "25d19d0ccee2e73c6501e820d32f07d9f175e38d729baea2b1a135d051c237b0"
+    },
+    {
+     "prompt_index": 66,
+     "prompt_toks": 75,
+     "out_toks": 142,
+     "finish": "stop",
+     "sha256": "0234ac9f0db37844c9042392e819c7dacba561ef60d11f854c2dcf5d4a478b92"
+    },
+    {
+     "prompt_index": 67,
+     "prompt_toks": 71,
+     "out_toks": 120,
+     "finish": "stop",
+     "sha256": "ce7fb73ed407e7a77bd9c77ac5a66959c4e24bd73ba79736e7c933f1d37e537e"
+    },
+    {
+     "prompt_index": 68,
+     "prompt_toks": 54,
+     "out_toks": 138,
+     "finish": "stop",
+     "sha256": "7087ce35e7c04583d714c34348a3753ae119e64a3aa2b717b6b45d9ef47a78d8"
+    },
+    {
+     "prompt_index": 69,
+     "prompt_toks": 69,
+     "out_toks": 109,
+     "finish": "stop",
+     "sha256": "81b85a2bc27bda9122b451b250b38bc5837850ddeb9e023108cc7e4cd53ef194"
+    },
+    {
+     "prompt_index": 70,
+     "prompt_toks": 70,
+     "out_toks": 215,
+     "finish": "stop",
+     "sha256": "1fcc903a9780629c232b160877e275030ed993a0196409849f00114e5ce8b827"
+    },
+    {
+     "prompt_index": 71,
+     "prompt_toks": 61,
+     "out_toks": 60,
+     "finish": "stop",
+     "sha256": "817a3724cd8817cca3a2c98fdc726a28d3c3f95f5b6f1c42abb0891ef5d69bb2"
+    },
+    {
+     "prompt_index": 72,
+     "prompt_toks": 67,
+     "out_toks": 90,
+     "finish": "stop",
+     "sha256": "a5933f485f5c0d951cff9dcf2869c7b599a361ab68ed8eeeed6020c21697f0a7"
+    },
+    {
+     "prompt_index": 73,
+     "prompt_toks": 62,
+     "out_toks": 122,
+     "finish": "stop",
+     "sha256": "dc607a8ba0254fa0210cb2f65685dc0e8d66405586bbe5b2370a8c278bccfc92"
+    },
+    {
+     "prompt_index": 74,
+     "prompt_toks": 143,
+     "out_toks": 182,
+     "finish": "stop",
+     "sha256": "35ebbf79226038612fa7bd04b50f45c19bc8f411b3a94a4fb1b3e4b3c5b455c9"
+    },
+    {
+     "prompt_index": 75,
+     "prompt_toks": 83,
+     "out_toks": 190,
+     "finish": "stop",
+     "sha256": "a2fdca396fd69146ddac218de25a9eab5d4036567c31a1a4eb342b474077fa19"
+    },
+    {
+     "prompt_index": 76,
+     "prompt_toks": 104,
+     "out_toks": 282,
+     "finish": "stop",
+     "sha256": "e919e11f3bc36d78b70d189f3496da46a81958a05cbe66f80d84adfb6baf4a0c"
+    },
+    {
+     "prompt_index": 77,
+     "prompt_toks": 62,
+     "out_toks": 226,
+     "finish": "stop",
+     "sha256": "ade34895f3c2366458677573a10b81f7653a95bff7f4bd1ca8a60214b6bdee65"
+    },
+    {
+     "prompt_index": 78,
+     "prompt_toks": 60,
+     "out_toks": 207,
+     "finish": "stop",
+     "sha256": "65b47b8ef70a24a7246363dcfea52b67be1c95a779362bcc23c515708e883e8b"
+    },
+    {
+     "prompt_index": 79,
+     "prompt_toks": 65,
+     "out_toks": 73,
+     "finish": "stop",
+     "sha256": "c03b29a79f19d22da2c94edd6a0395f2d8668c712e53a7a7b83452f491c7c342"
+    },
+    {
+     "prompt_index": 80,
+     "prompt_toks": 52,
+     "out_toks": 139,
+     "finish": "stop",
+     "sha256": "d4686ebd2c7e2e5753f2414bd1230158a644b6bd759c5a7dd4a704b21eff94cf"
+    },
+    {
+     "prompt_index": 81,
+     "prompt_toks": 76,
+     "out_toks": 135,
+     "finish": "stop",
+     "sha256": "b9fba93ec6f1012c3129c4e007fc89e73cdc3bf4eac5d5a7bb290ff93891ea96"
+    },
+    {
+     "prompt_index": 82,
+     "prompt_toks": 47,
+     "out_toks": 87,
+     "finish": "stop",
+     "sha256": "0e15cfc3fab5c2dc60e12d2b1203625a448910827ac578b680063f49c880753b"
+    },
+    {
+     "prompt_index": 83,
+     "prompt_toks": 49,
+     "out_toks": 65,
+     "finish": "stop",
+     "sha256": "02bc14f0470fa347d812306cf45c2573785e2a086e692c0dabf9825e4c1cc2c1"
+    },
+    {
+     "prompt_index": 84,
+     "prompt_toks": 41,
+     "out_toks": 118,
+     "finish": "stop",
+     "sha256": "c6fb1852b9b0837fc9de3f56a9ae6895307e2238ff0e27099f6eec442112c6df"
+    },
+    {
+     "prompt_index": 85,
+     "prompt_toks": 100,
+     "out_toks": 132,
+     "finish": "stop",
+     "sha256": "a84f6def0405e8966f5cca981b5305df1d9974afa67a790d8dd7d4e103947cab"
+    },
+    {
+     "prompt_index": 86,
+     "prompt_toks": 105,
+     "out_toks": 179,
+     "finish": "stop",
+     "sha256": "639147b3a19d5c948bb6c8fcc1681e21faf4939dcf3a8fecf987ab8289aa44d3"
+    },
+    {
+     "prompt_index": 87,
+     "prompt_toks": 96,
+     "out_toks": 274,
+     "finish": "stop",
+     "sha256": "d96973326f4651ed558eba47447f7f7e3c67b283acc26ea658d3fb2bd8549fcf"
+    },
+    {
+     "prompt_index": 88,
+     "prompt_toks": 57,
+     "out_toks": 121,
+     "finish": "stop",
+     "sha256": "86132bffc1f741a55c180e956b787a58d61728343836b13de7bca5c87384f57a"
+    },
+    {
+     "prompt_index": 89,
+     "prompt_toks": 67,
+     "out_toks": 84,
+     "finish": "stop",
+     "sha256": "17f131c6908322daea4e8e286dbac02b4f1788956a42457d86d370dac0ea5e23"
+    },
+    {
+     "prompt_index": 90,
+     "prompt_toks": 103,
+     "out_toks": 168,
+     "finish": "stop",
+     "sha256": "dacd9c9e824b05b2e6337f80a188ba367a6b4bc119aae86552d2c4474dc6b459"
+    },
+    {
+     "prompt_index": 91,
+     "prompt_toks": 53,
+     "out_toks": 132,
+     "finish": "stop",
+     "sha256": "2f261f38e2c9522bcffeeb236594a705c0770cd9862b1fa6655b092c8d291ff8"
+    },
+    {
+     "prompt_index": 92,
+     "prompt_toks": 68,
+     "out_toks": 218,
+     "finish": "stop",
+     "sha256": "cec67fa8216c38b08b2b96b8e1babcca8a0b81ae0d3d3559700bd31329870a94"
+    },
+    {
+     "prompt_index": 93,
+     "prompt_toks": 101,
+     "out_toks": 309,
+     "finish": "stop",
+     "sha256": "6ed23ba805c4cfbd3d9910297cf388c3395ef01df45272075aa32e09e5059f79"
+    },
+    {
+     "prompt_index": 94,
+     "prompt_toks": 68,
+     "out_toks": 271,
+     "finish": "stop",
+     "sha256": "3185615ff80e2aac21764b33586a10595f7fc6ce8267af1c2341312cc9bcbfbc"
+    },
+    {
+     "prompt_index": 95,
+     "prompt_toks": 59,
+     "out_toks": 169,
+     "finish": "stop",
+     "sha256": "6d673797fc2510e0687ae06376052056de81ff09739d07d04b9595d538dcd7cd"
+    },
+    {
+     "prompt_index": 96,
+     "prompt_toks": 49,
+     "out_toks": 52,
+     "finish": "stop",
+     "sha256": "4cfe7838595d98d95a411fdf458a23c401b4df66db9bbbc947ea41256caf9fc8"
+    },
+    {
+     "prompt_index": 97,
+     "prompt_toks": 71,
+     "out_toks": 287,
+     "finish": "stop",
+     "sha256": "a47dea6db98726cbba09c266f957d0cd5323516f418ac73fabbae0c559e413e8"
+    },
+    {
+     "prompt_index": 98,
+     "prompt_toks": 113,
+     "out_toks": 254,
+     "finish": "stop",
+     "sha256": "1dbe16cfcde30ff7f6334fc6a22373fffde43f9fa62ac265ed65d767770bc7f2"
+    },
+    {
+     "prompt_index": 99,
+     "prompt_toks": 99,
+     "out_toks": 116,
+     "finish": "stop",
+     "sha256": "a26d8112fdb7ac14b8984db23209554211c9bc5d419e62db2d325f470de64570"
+    },
+    {
+     "prompt_index": 100,
+     "prompt_toks": 112,
+     "out_toks": 232,
+     "finish": "stop",
+     "sha256": "7bd3b7699498177df89f760d8b024969b977946af279e72e1134c83b00443096"
+    },
+    {
+     "prompt_index": 101,
+     "prompt_toks": 94,
+     "out_toks": 121,
+     "finish": "stop",
+     "sha256": "9ff841610aaa0450d961f8909a4111ee81b3fb2382e611f4125a6fdf440ef4e5"
+    },
+    {
+     "prompt_index": 102,
+     "prompt_toks": 82,
+     "out_toks": 100,
+     "finish": "stop",
+     "sha256": "2cfb6c9f7451dc76e2bcb07361ed3c16ebff1d654dd5678d55f1cfb4a78c3975"
+    },
+    {
+     "prompt_index": 103,
+     "prompt_toks": 81,
+     "out_toks": 146,
+     "finish": "stop",
+     "sha256": "7d2393f142e5abac3fba9a900609b9967cf05c23d8649bb8065179428cc8b34e"
+    },
+    {
+     "prompt_index": 104,
+     "prompt_toks": 65,
+     "out_toks": 230,
+     "finish": "stop",
+     "sha256": "2b1a6685ec78ee0b2bcc54608f69a4e5bbcf27d6393947d5472189c6504742cc"
+    },
+    {
+     "prompt_index": 105,
+     "prompt_toks": 47,
+     "out_toks": 68,
+     "finish": "stop",
+     "sha256": "5c647e8cb9cb8e5488b147d36750a5bfe89f38b3e62a9bf400f219f62239e7b4"
+    },
+    {
+     "prompt_index": 106,
+     "prompt_toks": 61,
+     "out_toks": 259,
+     "finish": "stop",
+     "sha256": "097eb46c038058811bf8eaf698fe265ba1a489f223314d54079eb262485986de"
+    },
+    {
+     "prompt_index": 107,
+     "prompt_toks": 132,
+     "out_toks": 289,
+     "finish": "stop",
+     "sha256": "3dcb72fd084a8ca234610182d38035aeb2948eee736506f9f88f77b5b73d51fc"
+    },
+    {
+     "prompt_index": 108,
+     "prompt_toks": 97,
+     "out_toks": 209,
+     "finish": "stop",
+     "sha256": "7a1252622795f5cae2fa7cd5fdde8e50fb19bdb0ef5887064f5800f2e109b400"
+    },
+    {
+     "prompt_index": 109,
+     "prompt_toks": 78,
+     "out_toks": 91,
+     "finish": "stop",
+     "sha256": "d1db2044fae2690168f173582e2cbd21debbe7bfac4275e74cbaeb4485381b4c"
+    },
+    {
+     "prompt_index": 110,
+     "prompt_toks": 104,
+     "out_toks": 220,
+     "finish": "stop",
+     "sha256": "bd9fabb89ef994a76744c1d8d601e74734d92dceba39ec817fc65a9816db01a2"
+    },
+    {
+     "prompt_index": 111,
+     "prompt_toks": 87,
+     "out_toks": 186,
+     "finish": "stop",
+     "sha256": "cfa5e25114db8bf84018137d4ad1ed1801efeaf9ed23ed711a0c724688363523"
+    },
+    {
+     "prompt_index": 112,
+     "prompt_toks": 79,
+     "out_toks": 160,
+     "finish": "stop",
+     "sha256": "3dabb79050c246d5fc5be470df1f7f6a2f0591810caa6334def223dfb38ce65d"
+    },
+    {
+     "prompt_index": 113,
+     "prompt_toks": 47,
+     "out_toks": 70,
+     "finish": "stop",
+     "sha256": "807b8d9526e930dd08ecdd8d6aeaa10eb91197ae0b7c9d7553937281c4426179"
+    },
+    {
+     "prompt_index": 114,
+     "prompt_toks": 98,
+     "out_toks": 304,
+     "finish": "stop",
+     "sha256": "4ead0d86574ca780009e4ee9e2815221bbbd5ba5a29f32e6a94767ab9e253b10"
+    },
+    {
+     "prompt_index": 115,
+     "prompt_toks": 110,
+     "out_toks": 416,
+     "finish": "stop",
+     "sha256": "67ca80274920be50724f6dfcbb62d84934de27e041cc8a6673184fca8b197fb2"
+    },
+    {
+     "prompt_index": 116,
+     "prompt_toks": 69,
+     "out_toks": 126,
+     "finish": "stop",
+     "sha256": "d7c0eb228a62a7f133ce29ed8edb29bcc5e0a1ec7b57c0adc08b62be2c3a9fc2"
+    },
+    {
+     "prompt_index": 117,
+     "prompt_toks": 47,
+     "out_toks": 8,
+     "finish": "stop",
+     "sha256": "61be2dd30190c52199a87b46ae730a27448ae50f773759e19e39f31c1b6c8854"
+    },
+    {
+     "prompt_index": 118,
+     "prompt_toks": 90,
+     "out_toks": 84,
+     "finish": "stop",
+     "sha256": "7488e3736614f6448934cdb615932a1432e1e6f8f6e3d37be6d208933ee50a7d"
+    },
+    {
+     "prompt_index": 119,
+     "prompt_toks": 100,
+     "out_toks": 486,
+     "finish": "stop",
+     "sha256": "0c2ccb63b45bc08bef74568b8e7430406fa2b91727177ee163f8467bfa39d0f6"
+    },
+    {
+     "prompt_index": 120,
+     "prompt_toks": 58,
+     "out_toks": 81,
+     "finish": "stop",
+     "sha256": "3356dbeaf1d907ec9ff9ce34d30479e9af29409fbaac68bd29e743fe2d2e5b7b"
+    },
+    {
+     "prompt_index": 121,
+     "prompt_toks": 70,
+     "out_toks": 151,
+     "finish": "stop",
+     "sha256": "e57778ea3f31d4c89640ff7ce091663a60b4a18c2fa7b7953a02b17f00dbb617"
+    },
+    {
+     "prompt_index": 122,
+     "prompt_toks": 78,
+     "out_toks": 193,
+     "finish": "stop",
+     "sha256": "22c16dcc9450051ff64c4f4299029fb4e5339be74bcc7091245b710060f99d32"
+    },
+    {
+     "prompt_index": 123,
+     "prompt_toks": 54,
+     "out_toks": 85,
+     "finish": "stop",
+     "sha256": "676aca6d0b7c394e55110b002721f1fd58774e05f9c3009ee8ed0745a2fc4079"
+    },
+    {
+     "prompt_index": 124,
+     "prompt_toks": 87,
+     "out_toks": 231,
+     "finish": "stop",
+     "sha256": "8096df07cc53800b141401c7bde1dddf77117a10c77e01bc51d134334e87109c"
+    },
+    {
+     "prompt_index": 125,
+     "prompt_toks": 134,
+     "out_toks": 182,
+     "finish": "stop",
+     "sha256": "f3d3dee3e769bece8e4ac423cb53a798163c212eec95cd82a59a2bd35ae1228f"
+    },
+    {
+     "prompt_index": 126,
+     "prompt_toks": 72,
+     "out_toks": 69,
+     "finish": "stop",
+     "sha256": "979a07bb10d28917f810a623f1bdb82701f39f1b743f2ec0c8d745a812f9a5d9"
+    },
+    {
+     "prompt_index": 127,
+     "prompt_toks": 52,
+     "out_toks": 71,
+     "finish": "stop",
+     "sha256": "3e6cf9d8250339f16aff8b2f057f7fd476ce245be28c0d9759c1104de76c8c81"
+    }
+   ],
+   "cap_report": {
+    "cell": "SS",
+    "cap_hits": 0,
+    "n": 128,
+    "fraction": 0.0,
+    "exempt": false
+   },
+   "identity": "SS: T=0 output divergence at prompt_index [0, 2, 4, 5, 7, 8, 10, 13]... (45/128)"
+  }
+ },
+ "host_snapshot": {
+  "loadavg": [
+   2.30859375,
+   1.712890625,
+   1.30322265625
+  ],
+  "lane_cpu_affinity": "96-111",
+  "foreign_lane_processes": []
+ },
+ "boot_wall_s": 122.0,
+ "violations": [
+  "SS: T=0 output divergence at prompt_index [0, 2, 4, 5, 7, 8, 10, 13]... (45/128)"
+ ]
+}
