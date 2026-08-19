@@ -2711,3 +2711,91 @@ The bf16 family is single boots at three cells; only the quantized family is
 replicated. `w512/skip4` has no quantized twin at these cells, so its rows
 are bf16-only. LO's bf16 family is not re-measured here — section 25 covers
 it at equal work.
+
+---
+
+## 35. Acceptance on LI, LIO and SS: the window's real price, and an inflation confirmed
+
+Twenty-one boots, the quantized family's seven arms across the three cells
+whose acceptance had never been measured. Generation budgets matched to each
+cell's natural output (LI 1024, LIO 2048, SS 512), registered u-edges
+unchanged, `ignore_eos` per the calibration protocol. All 21 succeeded.
+
+`tau_k4`, re-derived at the deployed depth from `pos_accepted`:
+
+| arm | LI b0 | LI b1 | LIO b0 | LIO b1 | LIO b2 | SS b0 | SS b1 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `woff/skip0` | **4.448** | **4.542** | **4.305** | **4.345** | 4.808 | 4.806 | 5.000 |
+| `woff/skip4` | 4.254 | 4.334 | 4.000 | 3.931 | 4.724 | 4.779 | 5.000 |
+| `woff/skip8` | 3.453 | 3.568 | 3.075 | 3.014 | 4.105 | 4.293 | 4.969 |
+| `w1024/skip4` | 2.920 | 3.308 | 3.252 | 3.294 | 4.425 | 4.779 | 5.000 |
+| `w512/skip4` | 2.892 | 3.043 | 3.242 | 3.105 | 4.300 | 4.759 | 5.000 |
+| `w256/skip4` | 2.855 | 2.818 | 3.171 | 2.962 | 4.105 | 4.797 | 4.973 |
+| `w128/skip4` | 2.772 | 2.570 | 3.053 | 2.807 | 3.597 | 4.587 | 4.288 |
+
+### The window's price is enormous at long input, and zero at short
+
+At LI the window costs **31%** of acceptance — `woff/skip4` 4.254 against
+`w1024/skip4` 2.920 — and at LIO **19%**. That is the opposite end of the
+scale from LO, where the same window barely moved acceptance, and the reason
+is geometric: LI feeds the draft 12,109-19,147 tokens of context, so a
+1024-token window shows it **6%** of the document it is summarizing.
+
+At SS the window costs **nothing**: `w1024/skip4` and `woff/skip4` both read
+**4.779**, identical to three decimals. SS prompts are 41-145 tokens, so a
+1024 window cannot bind and the two arms are the same configuration. That
+identity is a control the campaign passed without being asked to.
+
+**This is what sections 31-34 could not see.** They measured `w1024/skip4` as
+the best arm at LI b16 (1.128) and LIO (1.232, 1.331) — and acceptance now
+says the window arms have the *worst* acceptance at exactly those cells. So
+the window wins on throughput **despite** losing a third of its acceptance,
+because at 12-17K of context the KV traffic it removes outweighs the tokens
+it gives up. That is a genuine cost-acceptance trade, and it is the first one
+on this grid the two-round design has both halves of.
+
+### The `ignore_eos` inflation is real, and now measured
+
+Earlier in this arc the researcher predicted it: with `ignore_eos`, once a
+request passes its natural stopping point the continuation is trivial filler
+that the draft predicts perfectly, inflating acceptance. This measures it.
+
+SS's natural output is **median 153, p95 350** tokens. Bucket 1 covers
+u >= 256, so it is almost entirely **past** natural EOS — and there four of
+seven arms read **`tau_k4` = 5.000**, which at K=4 is *every drafted token
+accepted, every step*. Perfect acceptance is not a property of the workload;
+it is the signature of predicting filler.
+
+The same effect is visible wherever a bucket runs past a cell's natural
+length:
+
+| cell | natural median / p95 | bucket past it | what it reads |
+| --- | --- | --- | --- |
+| SS | 153 / 350 | b1 (256+) | **5.000** for four arms |
+| LIO | 1,257 / 1,459 | b2 (1024-3072) | 4.1-4.8, above b0/b1 for **every** arm |
+| LI | 771 / 999 | b1 partly (256-1024) | mildly above b0 |
+
+**Registered consequence: an acceptance curve must be truncated at the
+cell's natural output distribution before it is fed to a prediction.** SS's
+bucket 1 and LIO's bucket 2 are calibration artifacts, not workload
+acceptance, and using them would over-predict every arm — most at the cells
+where generations are shortest. The researcher's split stands and is now
+quantified: `ignore_eos` is right for calibration and must not be read past
+the length the scored protocol would have stopped at.
+
+### What this unblocks
+
+The prediction map for LI, LIO and SS is now computable: cost coefficients
+per family (section 24), acceptance per cell (here), and the length
+distributions the parked arms measured (section 21's registered input). The
+selector can finally be **scored** against section 33's ceiling rather than
+handed it.
+
+### Scope
+
+Quantized family only — section 34 established it as the deployed default
+and showed the bf16 family losing to stock at LI and SS, so predicting the
+bf16 arms is needed only to verify the selector rejects them. Single boots,
+but acceptance is near-deterministic at fixed realization: G98-F measured
+bit-identical accept patterns across boxes, which is also why these two cells
+were safe to run concurrently on separate GPUs.
