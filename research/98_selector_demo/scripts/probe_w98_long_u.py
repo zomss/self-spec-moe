@@ -115,7 +115,13 @@ def prompts(limit: int) -> list[list[int]]:
 def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     from vllm import LLMEngine, SamplingParams
 
-    engine = LLMEngine.from_engine_args(d0._engine_args(dict(cfg)))
+    args = d0._engine_args(dict(cfg))
+    # Phase 100's geometry. The registered default is 20480, and LI's prompts
+    # reach 17,494 tokens: near the limit the scheduler shortens the draft and
+    # the K/OFF registry then rejects the unregistered width. The refined-grid
+    # runner re-pins it for the same reason.
+    args.max_model_len = 40_960
+    engine = LLMEngine.from_engine_args(args)
     try:
         before = _trace_len(trace)
         for index, tokens in enumerate(prompts(BATCH)):
