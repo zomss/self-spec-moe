@@ -145,6 +145,41 @@ elif os.environ.get("W98_LO_SWEEP") == "1":
 # A batch sweep needs a few arms at many batches rather than many arms at one,
 # because what it separates is batch-SHARED cost from batch-proportional cost:
 # the shared part falls as 1/B per token and the per-request part does not.
+if os.environ.get("W98_LO_LATTICE") == "1":
+    # The FULL registered lattice, both weight versions: window x skip over
+    # every combination, not the five the refined grid sampled. Sections 39-43
+    # scored the selector against a "best static" chosen from four arms of
+    # which exactly one carried a window, so `w1024/skip4` won by being the
+    # only windowed arm rather than by beating a field. The claim that no
+    # static policy is best cannot be made on that set, and the untested
+    # region -- windowed arms at deep skip -- is where D2(a) measured
+    # composition to be CONSTRUCTIVE (interaction ratio up to 1.670): a window
+    # that already discards the context removes the very information layer
+    # skipping would have degraded, so their losses overlap rather than
+    # compound.
+    ARMS = {
+        f"{q[0]}_{'woff' if w == 'off' else 'w' + str(w)}_skip{s}": {
+            "action": "armed",
+            "quant": q,
+            "window": w,
+            "skip_count": s,
+        }
+        for q in ("target-matching", "w4a16-quantized")
+        for w in ("off", 128, 256, 512, 1024)
+        for s in (0, 4, 8, 16)
+    }
+    ARMS["off"] = {
+        "action": "off",
+        "quant": "w4a16-quantized",
+        "window": "off",
+        "skip_count": 0,
+    }
+    ARMS["stock"] = {
+        "action": "stock",
+        "quant": "target-matching",
+        "window": "off",
+        "skip_count": 0,
+    }
 if os.environ.get("W98_LO_ARMS"):
     wanted = os.environ["W98_LO_ARMS"].split(",")
     missing = [name for name in wanted if name not in ARMS]
@@ -208,6 +243,12 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     else:
         args = d3._engine_args(cfg)
         args.max_model_len = MAX_MODEL_LEN
+    # The registered geometry pins max_num_seqs at 32. A batch above that is
+    # silently CLAMPED rather than refused, so the run would report a batch it
+    # never had -- the same class of defect as the filename collision
+    # `w98_artifacts` exists to prevent, and invisible in the record because
+    # every arm would be clamped identically.
+    args.max_num_seqs = max(args.max_num_seqs or 0, BATCH)
     engine = LLMEngine.from_engine_args(args)
     outputs: dict[str, list[int]] = {}
     try:
