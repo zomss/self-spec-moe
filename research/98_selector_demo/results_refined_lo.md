@@ -3537,3 +3537,95 @@ spread.
 Six boots, single, quantized family. The b8 non-monotonicity is asserted as
 noise on the basis of its size relative to replicate spread, not on repeated
 measurement of those three arms.
+
+---
+
+## 44. Replicating the swept grid: 36 of 38 arms hold, and the two that move are both baselines
+
+Every point in sections 40-43 was a single boot, and this record has been
+corrected by a replicate three times. This replicates the four swept points
+that had none, each with its own fresh stock boot.
+
+**Thirty-eight arms compared across eight (cell, batch) points.** Excluding
+the two co-tenant contaminations section 34 already diagnosed and confirmed
+with a third boot, **every armed arm reproduces to 1.31% or better** — and at
+the six long-generation points, to 1.19%.
+
+### The exception: SS b32's denominator, not its arms
+
+Every arm at SS b32 moved by ~20%, uniformly:
+
+| arm | boot 1 | boot 2 | spread |
+| --- | --- | --- | --- |
+| `woff/skip4` | 1.3440 | 1.0606 | 21.1% |
+| `w1024/skip4` | 1.1310 | 0.9016 | 20.3% |
+| `woff/skip0` | 1.1064 | 0.8746 | 21.0% |
+| `off` | 0.8120 | 0.6489 | 20.1% |
+
+A uniform shift in every ratio is a denominator effect, and it is:
+
+| boot | tokens | wall | **longest request** |
+| --- | --- | --- | --- |
+| stock | 5,476 | 3.123 s | **454** |
+| stock r2 | 5,388 | 2.446 s | **350** |
+| `off` | 5,476 | 3.846 s | 454 |
+| `off` r2 | 5,476 | 3.831 s | 454 |
+
+**In absolute tok/s the armed arms reproduce to 0.87%** (`woff/skip4` 2357.0
+against 2336.4; `w1024/skip4` 1982.8 against 1986.0; `off` 1423.7 against
+1429.4). Only stock moved.
+
+The mechanism is section 30's finding meeting section 21's. Stock is not
+bit-deterministic across boots — greedy fixes the rule for choosing a token,
+not the logits — and at SS b32 that non-determinism moved the **longest**
+request from 454 tokens to 350. The run is 2.4-3.1 seconds with a batch that
+drains to one, so the tail request sets the wall clock: a 23% shorter tail is
+a 26% faster run.
+
+**This is a short-cell measurement defect, not a lever effect.** It is worst
+exactly where sections 21 and 35 said length effects bite hardest — the cell
+with the shortest generations — and the registered remedy is Campaign 1's:
+`n = max(16, 2b)` requests rather than `n = batch`, so no single tail
+dominates. We submit `batch` requests, which at b32 is 32 against Campaign
+1's 64.
+
+### What it does to the claims, and what it does not
+
+Re-scoring the whole grid under each denominator:
+
+| | boot 1 stock | boot 2 stock at SS b32 |
+| --- | --- | --- |
+| selector, of stock | 1.2414 | **1.2042** |
+| share of omniscient | **99.61%** | **99.62%** |
+| over the best single static | **+1.97%** | **+2.30%** |
+
+**The two claims the phase makes are insensitive to it, and the third is
+not.** Share-of-omniscient and over-best-static both compare arms measured
+against the *same* denominator, so it cancels; the absolute "x stock" figure
+does not, and carries roughly 3% uncertainty in the mix from this one cell.
+
+Reported accordingly: **99.61-99.62% of omniscient and +1.97% to +2.30% over
+the best static**, with the absolute multiple over stock stated as ~1.20-1.24
+rather than to four figures. The ranking at SS b32 is identical in both boots
+(`woff/skip4 > w1024/skip4 > woff/skip0 > woff/skip8 > off`), so the
+selector's pick there — the largest lever reversal on the grid — is not in
+question.
+
+### The two known contaminations, closed
+
+| arm | boot 1 | boot 2 | boot 3 (quiet box) |
+| --- | --- | --- | --- |
+| `lio_b8 / woff/skip0` | 1.0381 | 0.5442 | **1.0536** |
+| `li_b16 / w1024/skip4` | 1.1281 | 1.0459 | **1.1295** |
+
+Both third boots agree with boot 1, isolating the contended measurements
+rather than averaging them. Section 34's diagnosis stands: a co-tenant OOM'd
+one of our boots at 11:35:12 and the outliers were written at 11:36:55 and
+11:33:38.
+
+### Scope
+
+Two boots at each of eight points, one third boot at each of the two
+contaminated arms. SS b32's instability is diagnosed from two boots and its
+mechanism is inferred from the request-length records, not from a repeated
+measurement of the tail.
