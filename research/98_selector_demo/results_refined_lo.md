@@ -3338,3 +3338,113 @@ Two arms, one cell, one batch pair. The b16 acceptance is a fresh measurement;
 the cost comparison uses the section-40 throughput records. Whether `f_win`
 refitted across batches actually corrects the rank is untested — this locates
 the term, it does not repair it.
+
+---
+
+## 42. `f_win` refitted across batch: the rank is corrected, and it was not `f_win`
+
+Section 41 located the selector's one damaging miss in a cost term fitted at
+a single batch and left the repair untested. This runs it: the same nine-arm
+equal-work design on LI prompts at **batch 16**, giving 18 arms across two
+batches.
+
+### The measurement the batch-8 fit could not see
+
+| arm, keep 1.0 | b8 | **b16** | growth |
+| --- | --- | --- | --- |
+| `woff` | 44.942 ms | **74.526 ms** | **+65.8%** |
+| `w1024` | 23.760 ms | 25.186 ms | +6.0% |
+| `w256` | 23.581 ms | 23.495 ms | −0.4% |
+
+Doubling batch costs the unwindowed draft 30 ms and the windowed one 1.4 ms.
+That is the whole of section 41's reversal, measured directly at the draft
+chain rather than inferred from throughput.
+
+### `f_win` is batch-shared, and my reading of the code was wrong
+
+Three forms fitted on all 18 arms, `nnls`-constrained:
+
+| form | `f_win` | mean residual |
+| --- | --- | --- |
+| A: flat `keep*[w>0]` | 5.215 ms shared | **2.471%** |
+| B: per-request `keep*[w>0]*B` | 0.086 ms/request | 2.962% |
+| C: both, jointly | **5.215 ms shared, 0 per-request** | 2.471% |
+
+Form C drives the per-request column to **exactly zero**. I expected the
+opposite: `_apply_draft_kv_window` opens with `bs = cad.num_reqs` and compacts
+every request's page list, so the compaction plainly does work proportional
+to batch. **The data says that work is not on the critical path** — it is
+metadata manipulation over a few hundred bytes per request, hidden behind
+kernels that read gigabytes.
+
+So section 41's diagnosis was right about *where* (a cost term fitted at one
+batch) and wrong about *which*. `f_win` never needed a batch axis.
+
+### What did need it: `kappa_kv` as a per-request coefficient
+
+The correction is the `--batched-fit` column — KV bytes charged per step as
+`keep * kv * B` rather than per sequence — which makes `kappa_kv` a true
+per-request coefficient rather than one that silently absorbs the fitting
+batch. That distinction is invisible in a single-batch design, and every cost
+arm in this phase before now shared one batch.
+
+With 18 arms across two batches under that form:
+
+| point | before | **after** |
+| --- | --- | --- |
+| **LI b16** | `woff/skip4` (**wrong**) | **`w1024/skip4`** (correct) |
+| LI b8 | `woff/skip4` | `woff/skip4` (unchanged, all four arms ranked exactly) |
+
+### The selector, re-scored on the swept grid
+
+| point | selector | rate | omniscient | share |
+| --- | --- | --- | --- | --- |
+| LI b8 | `woff/skip4` | 1.0632 | same | 100% |
+| **LI b16** | **`w1024/skip4`** | **1.1281** | same | **100%** |
+| LIO b8 | `w1024/skip4` | 1.2323 | same | 100% |
+| LIO b16 | `w512/skip4` | 1.2995 | `w1024/skip4` | 97.61% |
+| SS b8 | `w1024/skip4` | 1.0471 | `woff/skip4` | 99.29% |
+| SS b32 | `woff/skip4` | 1.3440 | same | 100% |
+| LO b8 | `w1024/skip4` | 1.3583 | same | 100% |
+| LO b16 | `w1024/skip4` | 1.6637 | same | 100% |
+
+```text
+                          section 40    section 42
+selector of stock            1.2209        1.2414
+share of omniscient          97.97%        99.61%
+over best static             +0.29%        +1.97%
+switching case available     +2.37%        +2.37%
+captured                        12%           83%
+```
+
+**The selector now captures 83% of the switching case, against 12% before.**
+
+### The new miss is a different failure, and a milder one
+
+LIO b16 picks `w512/skip4` (1.2995) over `w1024/skip4` (1.3314) — 2.4% apart,
+a within-window-family choice rather than a lever reversal. Both windowed
+arms beat every unwindowed arm at that point by 39%, so the selector gets the
+*lever* right and the *size* wrong. Section 24 predicted exactly this: the
+window-size axis is the one it could not resolve (`g256 - g1024` at 1.9
+sigma), and it remains the weakest direction in the design.
+
+### Honest accounting of this sequence
+
+Sections 40-42 were three hypotheses, and the record should show the score:
+
+| section | hypothesis | verdict |
+| --- | --- | --- |
+| 40 | `tau(u, B)` — acceptance moves with batch | **refuted** (§41: under 4%, both directions) |
+| 41 | `f_win` fitted at one batch | **located the area, named the wrong term** |
+| 42 | `kappa_kv` absorbing the fitting batch | **confirmed** — rank corrected, b8 unchanged |
+
+The productive pattern was not the hypotheses but the discriminator: each was
+tested by a measurement that could return either answer, and two returned the
+answer that killed them.
+
+### Scope
+
+Nine boots at b16, quantized family, LI content. The two-batch fit is
+validated by the rank it corrects and by leaving b8 unchanged; it is not
+validated at batch 32, where SS's prediction still uses it and lands correctly
+but is a single point.

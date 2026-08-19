@@ -1,60 +1,39 @@
 {
-  "acceptance_from": "research/98_selector_demo/data/g98_acc_li_q4",
+  "acceptance_from": "research/98_selector_demo/data/g98_acc_li_q4_b16",
   "acceptance_scalar": false,
   "arms": {
     "w1024/skip4": {
       "measured": 1.2269,
-      "predicted": 1.6537,
-      "relative_error": 0.3478
-    },
-    "w512/skip4": {
-      "measured": 1.2097,
-      "predicted": 1.6187,
-      "relative_error": 0.3381
-    },
-    "woff/skip0": {
-      "measured": 1.0571,
-      "predicted": 1.712,
-      "relative_error": 0.6196
+      "predicted": 1.577,
+      "relative_error": 0.2853
     },
     "woff/skip4": {
       "measured": 1.0738,
-      "predicted": 1.743,
-      "relative_error": 0.6231
-    },
-    "woff/skip8": {
-      "measured": 1.0041,
-      "predicted": 1.5309,
-      "relative_error": 0.5246
+      "predicted": 1.2978,
+      "relative_error": 0.2086
     }
   },
   "cost_fit": {
-    "F": 0.004263186338656338,
-    "c_layer": 0.018359018826028816,
+    "F": 0.003111705469290559,
+    "c_layer": 0.013709973081299712,
     "curvature": 0.0,
-    "f_win": 0.0,
-    "fit_arms": 9,
-    "fit_mean_residual": 0.021173584095063473,
-    "kappa_kv": 1.1784060820605384e-11,
-    "kappa_kv_is_per_request": false,
+    "f_win": 0.005214911812792185,
+    "fit_arms": 18,
+    "fit_mean_residual": 0.024706078053650674,
+    "kappa_kv": 1.8851031614160137e-12,
+    "kappa_kv_is_per_request": true,
     "kappa_w": 0.0
   },
   "gamma": 1.0,
   "k_deployed": 4,
-  "mean_abs_error": 0.4906,
+  "mean_abs_error": 0.247,
   "measured_ranking": [
     "w1024/skip4",
-    "w512/skip4",
-    "woff/skip4",
-    "woff/skip0",
-    "woff/skip8"
+    "woff/skip4"
   ],
   "predicted_ranking": [
-    "woff/skip4",
-    "woff/skip0",
     "w1024/skip4",
-    "w512/skip4",
-    "woff/skip8"
+    "woff/skip4"
   ],
   "quant": "w4a16-quantized",
   "record_type": "w98_refined_lo_prediction",
