@@ -1,0 +1,56 @@
+{
+  "acceptance_from": "research/98_selector_demo/data/g98_acc_ss_q4",
+  "acceptance_scalar": false,
+  "arms": {
+    "w1024/skip4": {
+      "measured": 1.3936,
+      "predicted": 1.4614,
+      "relative_error": 0.0487
+    },
+    "woff/skip0": {
+      "measured": 1.3459,
+      "predicted": 1.3732,
+      "relative_error": 0.0203
+    },
+    "woff/skip4": {
+      "measured": 1.4035,
+      "predicted": 1.408,
+      "relative_error": 0.0032
+    },
+    "woff/skip8": {
+      "measured": 1.391,
+      "predicted": 1.4177,
+      "relative_error": 0.0192
+    }
+  },
+  "cost_fit": {
+    "F": 0.004263186338656338,
+    "c_layer": 0.018359018826028816,
+    "curvature": 0.0,
+    "f_win": 0.0,
+    "fit_arms": 9,
+    "fit_mean_residual": 0.021173584095063473,
+    "kappa_kv": 1.1784060820605384e-11,
+    "kappa_kv_is_per_request": false,
+    "kappa_w": 0.0
+  },
+  "gamma": 1.0,
+  "k_deployed": 4,
+  "mean_abs_error": 0.0228,
+  "measured_ranking": [
+    "woff/skip4",
+    "w1024/skip4",
+    "woff/skip8",
+    "woff/skip0"
+  ],
+  "predicted_ranking": [
+    "w1024/skip4",
+    "woff/skip8",
+    "woff/skip4",
+    "woff/skip0"
+  ],
+  "quant": "w4a16-quantized",
+  "record_type": "w98_refined_lo_prediction",
+  "verify_per_request_ms": 1.0169,
+  "verify_shared_ms": 3.7503
+}

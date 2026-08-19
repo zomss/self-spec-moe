@@ -29,6 +29,12 @@
       "tokens_per_s": 750.559,
       "total_out_tokens": 1151,
       "wall_s": 1.534
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 743.723,
+      "total_out_tokens": 1198,
+      "wall_s": 1.611
     }
   },
   "batch": 8,
@@ -54,7 +60,12 @@
       "w4a16-quantized/woff/skip4 diverges from off on SS-2",
       "w4a16-quantized/woff/skip4 diverges from off on SS-4",
       "w4a16-quantized/woff/skip4 diverges from off on SS-5",
-      "w4a16-quantized/woff/skip4 diverges from off on SS-7"
+      "w4a16-quantized/woff/skip4 diverges from off on SS-7",
+      "w4a16-quantized/woff/skip8 diverges from off on SS-0",
+      "w4a16-quantized/woff/skip8 diverges from off on SS-2",
+      "w4a16-quantized/woff/skip8 diverges from off on SS-4",
+      "w4a16-quantized/woff/skip8 diverges from off on SS-5",
+      "w4a16-quantized/woff/skip8 diverges from off on SS-7"
     ],
     "ok": false,
     "reference": "off"

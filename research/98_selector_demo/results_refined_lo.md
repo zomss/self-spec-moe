@@ -3070,3 +3070,88 @@ The equal-work sweep's 156-token prompts were chosen when LO was the only
 cell; on a grid spanning 75 to 19,147 prompt tokens that choice put every
 coefficient's identifiability at the wrong end. Nine boots at the long end
 buy the whole range.
+
+---
+
+## 39. The selector scored end to end: the prediction works, the selection is worth 0.15%
+
+Every input now exists, so this runs the selector's own decision rule rather
+than describing it. Picks are the argmax of **predicted** value from the
+long-context fit (section 38); the measured grid supplies only the realized
+rate, so the selector is free to be wrong. Rates are against each cell's own
+**stock** boot, instrument-free. Four cells, four arms common to all of them,
+equal token mix, time-weighted.
+
+### Per cell
+
+| cell | selector picks | rate | omniscient | rate | share |
+| --- | --- | --- | --- | --- | --- |
+| LI | `woff/skip4` | 1.0632 | `woff/skip4` | 1.0632 | **100%** |
+| LIO | `w1024/skip4` | 1.2323 | `w1024/skip4` | 1.2323 | **100%** |
+| LO | `w1024/skip4` | 1.3583 | `w1024/skip4` | 1.3583 | **100%** |
+| SS | `w1024/skip4` | 1.0471 | `woff/skip4` | 1.0545 | 99.29% |
+
+**Three of four picks are the omniscient pick.** The one miss is SS, where
+the two arms differ by 0.7% measured — the near-tie section 38 already
+identified as unresolvable, and section 35 explained: at 75-token prompts a
+1024 window cannot bind, so those two arms are close to the same
+configuration.
+
+### The mix
+
+```text
+selector      1.1617 of stock
+omniscient    1.1639
+              99.80% of omniscient
+```
+
+| static (one arm everywhere) | rate |
+| --- | --- |
+| **`w1024/skip4`** | **1.1599** |
+| `woff/skip4` | 1.0889 |
+| `woff/skip0` | 1.0642 |
+| `woff/skip8` | 1.0441 |
+| `off` (parked) | 0.8571 |
+
+**The selector reaches 99.80% of omniscient and beats the best single static
+by 0.15%.**
+
+### Both halves of that sentence matter, and they are different claims
+
+**The prediction is validated.** One coefficient set, calibrated at one
+context, ranks four cells spanning 75 to 19,147 prompt tokens well enough to
+pick the omniscient arm three times out of four and lose 0.7% on the fourth.
+That is the two-round design's central premise — cost predictable offline,
+acceptance measured where it must be — and on this grid it holds.
+
+**The selection is worth nothing.** `w1024/skip4` held constant scores 1.1599
+against the selector's 1.1617. There is no cell on this grid where the right
+lever is meaningfully different, so per-cell selection has nothing to buy.
+
+This is the Phase-82 dwell-time law and D3's frontier finding arriving a third
+time, now on the refined grid against a stock baseline: *switching pays only
+where the mix makes cells differ enough, and on this workload family they do
+not.* D3 measured the selector beating the best static by 1.4% on the
+R-grid and failing its +2% clause; here it is 0.15%.
+
+### What the value actually is
+
+Not selection between levers, but the two decisions either side of it:
+
+* **arming at all** is worth **+35.5%** over the parked runtime (1.1617
+  against 0.8571) and **+16.2%** over stock;
+* **not picking a bad lever** is worth **+11.3%** (best static 1.1599
+  against worst 1.0441).
+
+A deployment that picks `w1024/skip4` once and never thinks again gets
+essentially everything. The selector's machinery earns its place by finding
+that arm and by being right about *why* — which is what makes it transfer to
+a grid where the answer is not constant — not by switching on this one.
+
+### Scope
+
+Equal token mix over four cells at batch 8, quantized family, single boots for
+the four arms added to complete the common set. Section 33 measured LIO's
+margin widening with batch (1.232 -> 1.331 from b8 to b16) while LI's best arm
+changes identity, so a batch-swept mix is where a selection case would have to
+come from; it is not measured here.

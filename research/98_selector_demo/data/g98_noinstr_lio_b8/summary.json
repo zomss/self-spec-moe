@@ -29,6 +29,12 @@
       "tokens_per_s": 476.758,
       "total_out_tokens": 10618,
       "wall_s": 22.271
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 451.638,
+      "total_out_tokens": 9985,
+      "wall_s": 22.108
     }
   },
   "batch": 8,
@@ -66,7 +72,15 @@
       "w4a16-quantized/woff/skip4 diverges from off on LIO-4",
       "w4a16-quantized/woff/skip4 diverges from off on LIO-5",
       "w4a16-quantized/woff/skip4 diverges from off on LIO-6",
-      "w4a16-quantized/woff/skip4 diverges from off on LIO-7"
+      "w4a16-quantized/woff/skip4 diverges from off on LIO-7",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-0",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-1",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-2",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-3",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-4",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-5",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-6",
+      "w4a16-quantized/woff/skip8 diverges from off on LIO-7"
     ],
     "ok": false,
     "reference": "off"
