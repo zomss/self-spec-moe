@@ -1,0 +1,90 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 367.423,
+      "total_out_tokens": 5690,
+      "wall_s": 15.486
+    },
+    "stock": {
+      "cap_hits": 0,
+      "tokens_per_s": 398.876,
+      "total_out_tokens": 5458,
+      "wall_s": 13.683
+    },
+    "target-matching/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 350.143,
+      "total_out_tokens": 5261,
+      "wall_s": 15.025
+    },
+    "target-matching/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 337.522,
+      "total_out_tokens": 5329,
+      "wall_s": 15.789
+    },
+    "target-matching/woff/skip0": {
+      "cap_hits": 0,
+      "tokens_per_s": 317.512,
+      "total_out_tokens": 5160,
+      "wall_s": 16.251
+    },
+    "target-matching/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 369.045,
+      "total_out_tokens": 5250,
+      "wall_s": 14.226
+    }
+  },
+  "batch": 8,
+  "content_cell": "LI",
+  "divergence_gate": {
+    "mismatches": [
+      "stock diverges from off on LI-0",
+      "stock diverges from off on LI-1",
+      "stock diverges from off on LI-2",
+      "stock diverges from off on LI-3",
+      "stock diverges from off on LI-4",
+      "stock diverges from off on LI-5",
+      "stock diverges from off on LI-6",
+      "stock diverges from off on LI-7",
+      "target-matching/w1024/skip4 diverges from off on LI-0",
+      "target-matching/w1024/skip4 diverges from off on LI-1",
+      "target-matching/w1024/skip4 diverges from off on LI-2",
+      "target-matching/w1024/skip4 diverges from off on LI-3",
+      "target-matching/w1024/skip4 diverges from off on LI-4",
+      "target-matching/w1024/skip4 diverges from off on LI-5",
+      "target-matching/w1024/skip4 diverges from off on LI-6",
+      "target-matching/w1024/skip4 diverges from off on LI-7",
+      "target-matching/w512/skip4 diverges from off on LI-0",
+      "target-matching/w512/skip4 diverges from off on LI-1",
+      "target-matching/w512/skip4 diverges from off on LI-2",
+      "target-matching/w512/skip4 diverges from off on LI-3",
+      "target-matching/w512/skip4 diverges from off on LI-4",
+      "target-matching/w512/skip4 diverges from off on LI-5",
+      "target-matching/w512/skip4 diverges from off on LI-6",
+      "target-matching/w512/skip4 diverges from off on LI-7",
+      "target-matching/woff/skip0 diverges from off on LI-0",
+      "target-matching/woff/skip0 diverges from off on LI-1",
+      "target-matching/woff/skip0 diverges from off on LI-2",
+      "target-matching/woff/skip0 diverges from off on LI-3",
+      "target-matching/woff/skip0 diverges from off on LI-4",
+      "target-matching/woff/skip0 diverges from off on LI-5",
+      "target-matching/woff/skip0 diverges from off on LI-6",
+      "target-matching/woff/skip0 diverges from off on LI-7",
+      "target-matching/woff/skip4 diverges from off on LI-0",
+      "target-matching/woff/skip4 diverges from off on LI-1",
+      "target-matching/woff/skip4 diverges from off on LI-2",
+      "target-matching/woff/skip4 diverges from off on LI-3",
+      "target-matching/woff/skip4 diverges from off on LI-4",
+      "target-matching/woff/skip4 diverges from off on LI-5",
+      "target-matching/woff/skip4 diverges from off on LI-6",
+      "target-matching/woff/skip4 diverges from off on LI-7"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

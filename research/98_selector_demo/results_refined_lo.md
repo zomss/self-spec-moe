@@ -2601,3 +2601,102 @@ agree to 2% — and explains none of the armed gap.
 Single boots per arm. LO carries only four arms (parked, unlevered, deep
 skip, top pick) because its generations are ~100x longer than LI's, and its
 arms remain natural-EOS with section 25's contamination below the top arm.
+
+---
+
+## 34. The bf16 family, and a contamination the replicates caught
+
+Two jobs section 33 left open, both instrument-free: the bf16 family at the
+three cells where every armed arm so far has been quantized, and replicates
+of the instrument-free grid.
+
+### The denominators check out first
+
+| cell | stock, bf16 run | stock, quantized run | apart |
+| --- | --- | --- | --- |
+| LI | 398.9 | 399.3 | **0.09%** |
+| LIO | 481.1 | 481.4 | 0.08% |
+| SS | 710.9 | 711.4 | 0.06% |
+
+And the parked arm agrees between weight versions to **0.25-0.63%** (LI
+0.9211 vs 0.9154, LIO 0.9263 vs 0.9301, SS 0.7532 vs 0.7513), reproducing at
+three new cells what section 15 found at LO: the parked path is genuinely
+quant-independent, because the draft is resident but never runs. The two
+families sit in one table by right.
+
+### Quantization is load-bearing, not a default we inherited
+
+Against stock, instrument-free, batch 8:
+
+| cell | arm | bf16 | w4a16 | quant buys |
+| --- | --- | --- | --- | --- |
+| **LI** | `woff/skip4` | **0.9252** | **1.0632** | +14.9% |
+| | `w1024/skip4` | 0.8778 | 1.0574 | +20.5% |
+| | `woff/skip0` | 0.7960 | 1.0034 | +26.1% |
+| | `w512/skip4` | 0.8461 | — | — |
+| **LIO** | `w1024/skip4` | 1.0060 | **1.2323** | +22.5% |
+| | `w512/skip4` | 1.0030 | — | — |
+| | `woff/skip0` | 0.9750 | 1.0381 | +6.5% |
+| | `woff/skip4` | 0.9106 | 0.9903 | +8.8% |
+| **SS** | `woff/skip4` | **0.7869** | **1.0545** | +34.0% |
+| | `w1024/skip4` | 0.7764 | 1.0471 | +34.9% |
+| | `woff/skip0` | 0.7717 | 1.0112 | +31.0% |
+
+**Quantization wins every arm at every cell, by 6.5% to 34.9% — and at LI and
+SS it is the difference between losing and winning.** With the bf16 draft
+every arm at LI (0.796-0.925) and SS (0.772-0.787) falls below stock; with
+the quantized draft every one clears it.
+
+So "quantize the draft" is not a convenience generalized from LO. On two of
+the three cells measured here it decides whether speculation is worth doing
+at all, and a selector restricted to the bf16 family would correctly park at
+LI and SS — the firing set sections 29-33 have been arguing about exists, but
+only for the *other* weight version.
+
+The size also tracks traffic share the way section 27's account predicts, with
+SS highest: SS removes ~72% of draft traffic (negligible KV, weights dominate)
+against LO's 54.5%, LIO's 39.2% and LI's 35.4%.
+
+### The replicates caught a contamination, with a timestamp
+
+Twenty-five arms compared across six (cell, batch) points. **Twenty-three
+reproduce to within 1.5%.** Two did not:
+
+| arm | boot 1 | boot 2 | spread |
+| --- | --- | --- | --- |
+| `lio_b8 / woff/skip0` | 1.0381 | **0.5442** | **47.6%** |
+| `li_b16 / w1024/skip4` | 1.1281 | 1.0459 | 7.3% |
+
+Both are explained by the same event, and the evidence is direct rather than
+inferred. A co-tenant process appeared mid-run and **OOM'd one of our boots at
+11:35:12** (`Process 2900885 has 4.11 GiB memory in use`). The 47.6% outlier
+was written at **11:36:55** — immediately after, with the co-tenant still
+resident. The 7.3% outlier landed at 11:33:38, ninety seconds before. Both
+read slow, and no arm outside that window moved more than 1.5%.
+
+**This is the h103 mechanism, reproduced on our own box with a clock.** G98-F
+attributed h103's R4 anomaly — and sections 29 and 31 the LI/LIO discrepancy —
+to contention on unreplicated single boots, on six lines of circumstantial
+evidence. Here the same failure produced a 47.6% error, and the only reason
+it did not become a finding is that the boot was replicated. It is also a
+direct answer to the question of whether that mechanism is real on this
+hardware: it is, it is large, and it is invisible in a single boot.
+
+The two contaminated records are kept rather than overwritten, and a third
+replicate is being measured on a verified-quiet box (memory below 2 GB before
+launch).
+
+### What this does to the grid
+
+Nothing, for the quantized family: `lio_b8 / woff/skip0` and
+`li_b16 / w1024/skip4` are neither cell's best arm, so section 33's headline
+figures — LI b8 1.063, LI b16 1.128, LIO b8 1.232, LIO b16 1.331, SS 1.055,
+LO 1.358 — all replicate to within 0.5%, and the best arm at every cell
+reproduces to **0.15% or better**.
+
+### Scope
+
+The bf16 family is single boots at three cells; only the quantized family is
+replicated. `w512/skip4` has no quantized twin at these cells, so its rows
+are bf16-only. LO's bf16 family is not re-measured here — section 25 covers
+it at equal work.
