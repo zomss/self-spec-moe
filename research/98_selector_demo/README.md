@@ -26,6 +26,14 @@ Results: [`results_g98_c.md`](results_g98_c.md) (cost),
 [`results_clamp_investigation.md`](results_clamp_investigation.md) (the
 measurement-environment investigation and the box relocation).
 
+**The refined-grid arc** (Phase 100's LI/LO/LIO/SS quadrants, scored against
+stock vLLM rather than OFF, with the selector's decision rule run end to end)
+is recorded in [`results_refined_summary.md`](results_refined_summary.md):
+99.61-99.62% of omniscient, +1.97-2.30% over the best single static
+configuration, ~1.20-1.24x stock. It also found three measurement asymmetries
+that each reversed a published conclusion, the largest being the profiler and
+koff trace running on our side of every comparison and not on stock's.
+
 **Work measured on the VM box lives on `research/self-spec-moe-vm`**, not
 here, so a VM number cannot be mistaken for one from the scored h103/h104
 campaigns: [`status_vm_branch.md`](status_vm_branch.md) records it and the

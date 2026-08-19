@@ -8,6 +8,25 @@ measurement.
 **Status: every registered claim of the phase is measured.** Four scored
 campaigns (D1', D2a/c, D2b, D3), where the phase had none a week ago.
 
+> **This document records the six-regime R-grid, scored against OFF.** A
+> later arc moved to Phase 100's length-quadrant grid (LI/LO/LIO/SS), scored
+> against **stock vLLM**, and ran the selector's decision rule end to end:
+> [`results_refined_summary.md`](results_refined_summary.md), consolidating
+> `results_refined_lo.md` sections 29-44. It supersedes nothing here -- a
+> different grid and a different baseline -- but three of its findings bear
+> directly on how this document should be read:
+>
+> * **Every armed number here was measured with the profiler and koff trace
+>   enabled, which OFF also paid and stock did not.** Removing them does not
+>   shift arms uniformly, it *reorders* them: at one cell the windowed arms
+>   gained 56-58% where everything else gained 11-14%. Ratios against OFF are
+>   unaffected; any inference about deployment against plain vLLM is not.
+> * **Scoring against OFF is not scoring against a deployment.** Our runtime
+>   parked costs 5.6-24.9% by itself, instrument-free and cell-dependent.
+> * **The R4 regression that section 4.3 calls the single highest-value fix
+>   does not reproduce**, and on the refined grid no cell wanted a
+>   fail-closed rule once the instrument was removed.
+
 ---
 
 ## 1. The method
