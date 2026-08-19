@@ -1,0 +1,120 @@
+{
+  "cells": [
+    "LI b8",
+    "LI b16",
+    "LIO b8",
+    "LIO b16",
+    "SS b8",
+    "SS b32",
+    "LO b8",
+    "LO b16"
+  ],
+  "common_arms": [
+    "w1024/skip4",
+    "woff/skip0",
+    "woff/skip4",
+    "woff/skip8"
+  ],
+  "equal_mix": {
+    "best_static": "w1024/skip4",
+    "omniscient": 1.2462,
+    "selector": 1.2209,
+    "selector_over_best_static": 1.0029,
+    "selector_over_stock": 1.2209,
+    "share_of_omniscient": 0.9797,
+    "statics": {
+      "off": 0.8748,
+      "w1024/skip4": 1.2174,
+      "woff/skip0": 1.0516,
+      "woff/skip4": 1.0876,
+      "woff/skip8": 1.0071
+    }
+  },
+  "omniscient_choice": {
+    "LI b16": "w1024/skip4",
+    "LI b8": "woff/skip4",
+    "LIO b16": "w1024/skip4",
+    "LIO b8": "w1024/skip4",
+    "LO b16": "w1024/skip4",
+    "LO b8": "w1024/skip4",
+    "SS b32": "woff/skip4",
+    "SS b8": "woff/skip4"
+  },
+  "per_cell": {
+    "LI b16": {
+      "omniscient_arm": "w1024/skip4",
+      "omniscient_rate": 1.1281,
+      "selector_arm": "woff/skip4",
+      "selector_rate": 0.9873,
+      "share_of_omniscient": 0.8752,
+      "stock": 1.0
+    },
+    "LI b8": {
+      "omniscient_arm": "woff/skip4",
+      "omniscient_rate": 1.0632,
+      "selector_arm": "woff/skip4",
+      "selector_rate": 1.0632,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "LIO b16": {
+      "omniscient_arm": "w1024/skip4",
+      "omniscient_rate": 1.3314,
+      "selector_arm": "w1024/skip4",
+      "selector_rate": 1.3314,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "LIO b8": {
+      "omniscient_arm": "w1024/skip4",
+      "omniscient_rate": 1.2323,
+      "selector_arm": "w1024/skip4",
+      "selector_rate": 1.2323,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "LO b16": {
+      "omniscient_arm": "w1024/skip4",
+      "omniscient_rate": 1.6637,
+      "selector_arm": "w1024/skip4",
+      "selector_rate": 1.6637,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "LO b8": {
+      "omniscient_arm": "w1024/skip4",
+      "omniscient_rate": 1.3583,
+      "selector_arm": "w1024/skip4",
+      "selector_rate": 1.3583,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "SS b32": {
+      "omniscient_arm": "woff/skip4",
+      "omniscient_rate": 1.344,
+      "selector_arm": "woff/skip4",
+      "selector_rate": 1.344,
+      "share_of_omniscient": 1.0,
+      "stock": 1.0
+    },
+    "SS b8": {
+      "omniscient_arm": "woff/skip4",
+      "omniscient_rate": 1.0545,
+      "selector_arm": "w1024/skip4",
+      "selector_rate": 1.0471,
+      "share_of_omniscient": 0.9929,
+      "stock": 1.0
+    }
+  },
+  "record_type": "w98_refined_selector_score",
+  "selector_choice": {
+    "LI b16": "woff/skip4",
+    "LI b8": "woff/skip4",
+    "LIO b16": "w1024/skip4",
+    "LIO b8": "w1024/skip4",
+    "LO b16": "w1024/skip4",
+    "LO b8": "w1024/skip4",
+    "SS b32": "woff/skip4",
+    "SS b8": "w1024/skip4"
+  }
+}

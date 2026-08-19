@@ -3155,3 +3155,99 @@ the four arms added to complete the common set. Section 33 measured LIO's
 margin widening with batch (1.232 -> 1.331 from b8 to b16) while LI's best arm
 changes identity, so a batch-swept mix is where a selection case would have to
 come from; it is not measured here.
+
+---
+
+## 40. The batch-swept grid: the switching case exists, and the selector captures 12% of it
+
+Section 39 found selection worth **+0.15%** over the best static, because one
+arm sat at or near the top of all four cells. Section 33 named batch as the
+axis on which the optimum actually moves. This sweeps it: eight (cell, batch)
+points, four arms common to every one, instrument-free, against each point's
+own stock boot.
+
+### The optimum does move
+
+| point | `w1024/skip4` | `woff/skip0` | `woff/skip4` | `woff/skip8` | best |
+| --- | --- | --- | --- | --- | --- |
+| LI b8 | 1.0574 | 1.0034 | **1.0632** | 0.9654 | `woff/skip4` |
+| LI b16 | **1.1281** | 0.9719 | 0.9873 | 0.9232 | `w1024/skip4` |
+| LIO b8 | **1.2323** | 1.0381 | 0.9903 | 0.9381 | `w1024/skip4` |
+| LIO b16 | **1.3314** | 0.9339 | 0.9312 | 0.8216 | `w1024/skip4` |
+| SS b8 | 1.0471 | 1.0112 | **1.0545** | 1.0451 | `woff/skip4` |
+| **SS b32** | 1.1310 | 1.1064 | **1.3440** | 1.0471 | **`woff/skip4`** |
+| LO b8 | **1.3583** | 1.2348 | 1.2907 | 1.2947 | `w1024/skip4` |
+| LO b16 | **1.6637** | 1.1834 | 1.1742 | 1.1665 | `w1024/skip4` |
+
+**SS b32 is the separation the grid was missing**: the unwindowed arm beats
+the window by **19%** where at SS b8 they were 0.7% apart. And LI's best arm
+changes identity between batches, as section 33 said it would.
+
+Neither static is good everywhere. `w1024/skip4` gives up 16% at SS b32;
+`woff/skip4` gives up 30% at LIO b16 and 29% at LO b16.
+
+### The selector, scored on the swept mix
+
+| point | selector | rate | omniscient | rate | share |
+| --- | --- | --- | --- | --- | --- |
+| LI b8 | `woff/skip4` | 1.0632 | `woff/skip4` | 1.0632 | 100% |
+| **LI b16** | `woff/skip4` | **0.9873** | `w1024/skip4` | **1.1281** | **87.52%** |
+| LIO b8 | `w1024/skip4` | 1.2323 | same | 1.2323 | 100% |
+| LIO b16 | `w1024/skip4` | 1.3314 | same | 1.3314 | 100% |
+| **SS b32** | **`woff/skip4`** | **1.3440** | same | 1.3440 | **100%** |
+| SS b8 | `w1024/skip4` | 1.0471 | `woff/skip4` | 1.0545 | 99.29% |
+| LO b8 | `w1024/skip4` | 1.3583 | same | 1.3583 | 100% |
+| LO b16 | `w1024/skip4` | 1.6637 | same | 1.6637 | 100% |
+
+```text
+selector     1.2209 of stock
+omniscient   1.2462          -> 97.97%
+best static  1.2174 (w1024/skip4 everywhere)
+             selector beats it by +0.29%
+```
+
+**The model caught the hard one.** SS b32 is the largest lever reversal on
+the grid — 19% — and the prediction picks it correctly, having been
+calibrated at a completely different context. That is the two-round design
+doing exactly what it exists for.
+
+**And it lost the value again on LI b16**, where it predicts `woff/skip4`
+(1.743) over `w1024/skip4` (1.654) while measurement puts them at 0.987
+against 1.128. That single miss costs 12.5% of one point, and time-weighted
+aggregation punishes low rates hardest, so it very nearly cancels the SS b32
+win.
+
+### The number that matters
+
+```text
+omniscient over best static   +2.37%     <- the switching case that EXISTS
+selector   over best static   +0.29%     <- the part the selector CAPTURES
+                                            = 12% of what is available
+```
+
+**Sweeping batch produced a real switching case where the equal-batch grid had
+none** — the ceiling rises from ~0.3% to **+2.37%** — and the selector
+realizes an eighth of it. So the honest reading of sections 39 and 40
+together is not "switching is worthless" but **"switching is worth ~2% here
+and our selector is not yet accurate enough to collect it."** Those are very
+different conclusions and only the second is actionable.
+
+### The suspect for LI b16, untested
+
+The acceptance curves are measured at **batch 8** and applied at 16 and 32.
+Section 22 measured acceptance moving with concurrent batch by *different
+amounts per lever* — 5.9% for deep skip against 2.8% for the window arm — and
+sized `tau(u, B)` as "real but modest, likely small". LI b16 is the first
+place in this record where that gap could cost something, and the miss has
+the right shape: the model over-rates the unwindowed arm at the batch where
+the window's advantage is widening.
+
+That is a hypothesis. It was not tested here, and the alternative -- a cost
+term that scales wrongly with batch at long context -- is equally live, since
+the cost fit is also batch-8.
+
+### Scope
+
+Single boots at the four new points, equal token mix over eight points,
+quantized family. Verify cost at b16 and b32 is extrapolated from section
+20's affine fit rather than measured at those batches.

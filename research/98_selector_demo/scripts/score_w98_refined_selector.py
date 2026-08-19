@@ -35,11 +35,19 @@ import w98_artifacts as artifacts  # noqa: E402
 DATA = SCRIPT_DIR.parent / "data"
 STOCK = "stock"
 OFF = "off"
+# Eight (cell, batch) points. Section 39 scored four cells at one batch and
+# found selection worth 0.15%, because one arm was at or near the top
+# everywhere. Section 33 named batch as the axis on which the optimum
+# actually moves, so the grid is swept rather than sliced.
 CELL_DIRS = {
-    "LI": "g98_noinstr_li_b8",
-    "LIO": "g98_noinstr_lio_b8",
-    "SS": "g98_noinstr_ss_b8",
-    "LO": "g98_noinstr_lo_b8",
+    "LI b8": "g98_noinstr_li_b8",
+    "LI b16": "g98_noinstr_li_b16",
+    "LIO b8": "g98_noinstr_lio_b8",
+    "LIO b16": "g98_noinstr_lio_b16",
+    "SS b8": "g98_noinstr_ss_b8",
+    "SS b32": "g98_noinstr_ss_b32",
+    "LO b8": "g98_noinstr_lo_b8",
+    "LO b16": "g98_noinstr_lo_b16",
 }
 
 
@@ -90,9 +98,7 @@ def aggregate(
 
 
 def main() -> int:
-    predictions = json.loads(
-        (DATA / "g98_fit" / "refined_predictions.json").read_text()
-    )
+    predictions = json.loads((DATA / "g98_fit" / "batch_predictions.json").read_text())
     grid = measured_grid()
     cells: Sequence[str] = [c for c in CELL_DIRS if c in predictions]
     armed = {c: {a for a in grid[c] if a not in (STOCK, OFF)} for c in cells}
@@ -138,7 +144,7 @@ def main() -> int:
             "selector_over_stock": round(sel, 4),
         },
     }
-    (DATA / "g98_fit" / "refined_selector_score.json").write_text(
+    (DATA / "g98_fit" / "batch_selector_score.json").write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n"
     )
     print(json.dumps(result, indent=2, sort_keys=True))
