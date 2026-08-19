@@ -67,7 +67,14 @@ CELL = os.environ.get("W98_EW_CELL", "LO")
 BATCH = int(os.environ.get("W98_EW_BATCH", "8"))
 GEN = int(os.environ.get("W98_EW_TOKENS", "8192"))
 MAX_MODEL_LEN = 40_960
-WINDOWS = ("off", 256, 1024)
+# `W98_EW_WINDOWS` overrides the swept windows. Section 24 left window SIZE
+# as the design's weakest direction (`g256 - g1024` at 1.9 sigma) and the
+# refined grid's last miss is an arm at a window this sweep never measured:
+# `w512`'s cost is interpolated across exactly that unresolved gap.
+WINDOWS: tuple[Any, ...] = tuple(
+    (w if w == "off" else int(w))
+    for w in os.environ.get("W98_EW_WINDOWS", "off,256,1024").split(",")
+)
 SKIPS = (0, 4, 8)
 KEEP = {0: 1.0, 4: 32 / 36, 8: 28 / 36}
 
@@ -116,7 +123,7 @@ def arms() -> list[dict[str, Any]]:
                 "window": w,
                 "skip_count": s,
             }
-            for w in ("off", 256, 1024)
+            for w in WINDOWS
             # skip8 added after the fact: the first pass measured keeps 1.0
             # and 0.889 only, so the quantized skip8 arm's cost was reached by
             # extrapolating keep past its calibration -- and that arm is the

@@ -3448,3 +3448,92 @@ Nine boots at b16, quantized family, LI content. The two-batch fit is
 validated by the rank it corrects and by leaving b8 unchanged; it is not
 validated at batch 32, where SS's prediction still uses it and lands correctly
 but is a single point.
+
+---
+
+## 43. The window-size axis, measured: resolved in cost, and the miss survives
+
+Section 42 left one miss — LIO b16 picking `w512/skip4` over `w1024/skip4` —
+and section 24 had already named window size as the design's weakest
+direction (`g256 - g1024` at 1.9 sigma). `w512` was in neither long-context
+cost sweep, so its cost was interpolated across exactly that unresolved gap.
+Six boots close it: `w512` at three keeps, at b8 and b16, on LI prompts.
+
+### The axis resolves at b16 and still does not at b8
+
+Draft chain, keep 1.0:
+
+| window | b8 | b16 |
+| --- | --- | --- |
+| `off` | 44.942 | 74.526 |
+| `w256` | 23.581 | **23.495** |
+| `w512` | **23.033** | **23.926** |
+| `w1024` | 23.760 | **25.186** |
+
+**At b16 the window-size axis is finally ordered by bytes** — 23.495 <
+23.926 < 25.186, monotone, spanning 7.2%. At b8 it is not: `w512` measures
+*cheaper* than both its neighbours, a non-monotone pattern inside the ~1%
+noise, which is section 24's 1.9 sigma reproducing at a longer context.
+
+So the axis needed **both** a long context and a large batch to separate. That
+is a third instance of this record's recurring lesson, and the sharpest: the
+term was unidentified not because the design lacked levels, but because the
+*operating point* made its differences small.
+
+### The miss survives anyway
+
+Refitting on 24 arms with `w512` measured — residual improves 2.471% to
+2.218% — and re-scoring:
+
+| point | selector | omniscient | share |
+| --- | --- | --- | --- |
+| LIO b16 | `w512/skip4` 1.2995 | `w1024/skip4` 1.3314 | **97.61%** |
+
+Unchanged. The grid score is unchanged too: **99.61% of omniscient, +1.97%
+over the best static.** Measuring the interpolated arm did not move the
+decision, so **the miss is not a cost-interpolation artifact**, which is what
+this sweep was run to find out.
+
+### What the miss actually is
+
+Both inputs are now measured and both are nearly tied:
+
+```text
+cost      w512 21.913 ms against w1024 23.158     -> w512 cheaper by 5.4%
+acceptance  bucket 0  1.003    bucket 1  1.061    -> w1024 higher by 0-6%
+measured    w512 1.2995 against w1024 1.3314      -> w1024 wins by 2.4%
+```
+
+The model has `w512` ahead by 1.0%; measurement has `w1024` ahead by 2.4%. It
+is wrong by **3.4 points on a near-tie between two arms of the same lever
+family**, where the replicate spread on this grid is 1.2% and the model's own
+level error is 8-25%. Both windowed arms beat every unwindowed arm at that
+point by 39%, so the selector picks the lever correctly and the size
+marginally wrong.
+
+**This is where the design's resolution ends rather than a defect with a
+next fix.** Section 24 said the window-size axis was the weakest direction;
+sections 37, 42 and 43 have now each improved a coefficient without moving
+it, and the remaining error is smaller than the gap between the two arms
+being ranked.
+
+### Where the arc stands
+
+| | value |
+| --- | --- |
+| selector, swept grid | **1.2414 of stock** |
+| share of omniscient | **99.61%** |
+| over the best single static | **+1.97%** |
+| switching case available | +2.37% |
+| **captured** | **83%** |
+| points picked exactly | **6 of 8** |
+
+The two misses are a 2.4% near-tie (LIO b16) and a 0.7% near-tie (SS b8),
+both between arms whose separation is at or below this box's replicate
+spread.
+
+### Scope
+
+Six boots, single, quantized family. The b8 non-monotonicity is asserted as
+noise on the basis of its size relative to replicate spread, not on repeated
+measurement of those three arms.
