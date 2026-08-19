@@ -63,6 +63,26 @@ def kv_positions(window: Any, context: float) -> float:
     return min(float(context), float(window) + WINDOW_SINKS)
 
 
+def window_binds(window: Any, context: float) -> float:
+    """Whether a window actually truncates anything at this context.
+
+    A window wider than the context is not a lever: it removes no KV, and
+    measured it costs nothing. Section 35 found `w1024/skip4` and
+    `woff/skip4` have identical acceptance at SS to three decimals -- they
+    are the same configuration when the prompt is 75 tokens -- and section 37
+    found their throughput agrees to 0.6% while a model charging `f_win` on
+    `[w > 0]` alone puts them 9% apart and ranks the window last.
+
+    The overhead is charged only where the window binds, which is also the
+    only place sections 26 and 33 could attribute it: the window's cost is
+    host work for the scratchpad gather, and there is nothing to gather when
+    the window already covers the context.
+    """
+    if window in ("off", 0, None):
+        return 0.0
+    return 1.0 if float(window) + WINDOW_SINKS < float(context) else 0.0
+
+
 def draft_cost(
     fit: Mapping[str, float],
     cfg: Mapping[str, Any],
@@ -73,7 +93,7 @@ def draft_cost(
     for key in ("kappa_w", "kappa_kv", "c_layer", "f_win", "F"):
         _require(key in fit, f"fit is missing {key}")
     keep = float(cfg["keep_frac"])
-    windowed = 1.0 if cfg["window"] not in ("off", 0, None) else 0.0
+    windowed = window_binds(cfg["window"], context)
     kv = kv_positions(cfg["window"], context) * kv_bytes_per_token
     layer = (
         float(cfg["weight_bytes"]) * fit["kappa_w"]
@@ -241,7 +261,7 @@ def split_cost(
     """
     _require(fit_batch > 0, "fitting batch must be positive")
     keep = float(cfg["keep_frac"])
-    windowed = 1.0 if cfg["window"] not in ("off", 0, None) else 0.0
+    windowed = window_binds(cfg["window"], context)
     shared = (
         keep
         * (
@@ -376,7 +396,7 @@ def draft_cost_windowed(
     instead of rescaling everything.
     """
     keep = float(cfg["keep_frac"])
-    windowed = 1.0 if cfg["window"] not in ("off", 0, None) else 0.0
+    windowed = window_binds(cfg["window"], context)
     positions = kv_positions(cfg["window"], context)
     kv = positions * kv_bytes_per_token * kv_cost_factor(positions, gamma, p_ref)
     layer = (

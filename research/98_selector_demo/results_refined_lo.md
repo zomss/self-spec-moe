@@ -2990,3 +2990,83 @@ because nothing constrains its sign.
 
 The remaining defects are both specification rather than measurement: the
 unbinding window gate above, and the one-sided 8-18% level offset at LI/LIO.
+
+---
+
+## 38. Calibrate at the long end: it transfers down, not up
+
+Two changes tested against section 37's open items — the `f_win` binding gate
+it named, and the choice of calibration context it raised.
+
+### The binding gate: right, and not the fix
+
+`w98_cost_u.window_binds` now charges `f_win` only where
+`window + sinks < context`, at all three call sites. It is correctly scoped:
+**LI and LIO are unchanged to four decimals**, because their windows bind. At
+SS it does what it was designed to do and removes the phantom charge — and
+the prediction gets *worse*, 0.1186 to 0.1755.
+
+So the gate is right on the physics (section 35 measured those two SS arms as
+literally the same configuration, identical acceptance to three decimals) and
+was never the cause of SS's error. Kept, because a model that charges for a
+lever that does nothing is wrong whether or not that error happens to
+dominate.
+
+### The cause was the calibration context
+
+Three cost fits, each scored against all three cells:
+
+| fit | LI | LIO | SS |
+| --- | --- | --- | --- |
+| LO-only (prompt 156) | 0.3224 | 0.2216 | **0.0164** |
+| **LI-only (prompt 12,160)** | **0.1645** | **0.0848** | **0.0241** |
+| both, pooled | 0.1675 | 0.0942 | 0.1755 |
+
+**Calibration at the long end transfers down; calibration at the short end
+does not transfer up.** The LI-fitted coefficients hold at a cell with 60x
+less context (SS, 2.4%) while the LO-fitted ones fail by 32% in the other
+direction.
+
+The reason is identifiability, and it is section 36's principle stated
+positively. At long context the KV term *varies* across the window axis —
+`woff` reads 12,672 positions and `w1024` reads 1,040 — so `kappa_kv` is
+pinned by the design. At short context every arm reads ~250 positions
+whatever its window, so `kappa_kv` is fitted on nothing, and a coefficient
+fitted on nothing is not merely imprecise away from home: it is unbounded,
+because nothing constrains its sign. Extrapolating a *pinned* coefficient
+into a regime where its term is small is safe; extrapolating an unpinned one
+into a regime where its term is large is not.
+
+**The pooled fit is worse than the long-only fit at every cell**, including
+the two it was meant to serve. Pooling two contexts with different residual
+structure degrades both rather than averaging them, so "fit everywhere at
+once" is not the resolution either.
+
+### Where the selector now stands
+
+Long-context fit, quantized family, curves truncated at natural length:
+
+| cell | mean abs error | predicted rank | measured rank |
+| --- | --- | --- | --- |
+| LI | 0.1645 | `woff/skip4 > w1024/skip4 > woff/skip0` | **identical** |
+| LIO | 0.0848 | `w1024/skip4 > woff/skip0 > woff/skip4` | **identical** |
+| SS | **0.0241** | `w1024 > woff/skip4 > woff/skip0` | top two swapped |
+| LO | 0.0366 | `w512 > w1024 > w256 > w128 > ...` | top two swapped |
+
+**Two cells rank exactly; the other two swap a pair that measurement does not
+separate** — SS's top two differ by **0.6%** measured (1.403 against 1.394)
+and LO's by 1.2%, both inside this box's armed-arm stability. On the ranking
+the selector actually consumes, one coefficient set now covers the whole
+refined grid.
+
+The residual is a one-sided level offset: every LI and LIO arm is
+over-predicted by 8-17%, in the same direction, which moves no ranks. It is
+the last unexplained term and it is not what the selector reads.
+
+### Registered guidance
+
+**Calibrate the cost model at the longest context the deployment will see.**
+The equal-work sweep's 156-token prompts were chosen when LO was the only
+cell; on a grid spanning 75 to 19,147 prompt tokens that choice put every
+coefficient's identifiability at the wrong end. Nine boots at the long end
+buy the whole range.
