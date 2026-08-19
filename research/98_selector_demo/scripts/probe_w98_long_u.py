@@ -90,6 +90,20 @@ if os.environ.get("W98_LONGU_QUANT") == "1":
     ]
 elif os.environ.get("W98_LONGU_WINDOWS") == "1":
     CONFIGS = list(WINDOW_CONFIGS)
+if os.environ.get("W98_LONGU_ARMS"):
+    # Restrict to named arms, for the batch axis. Section 22 measured
+    # acceptance moving with concurrent batch by different amounts per lever,
+    # so re-measuring a whole family at a second batch is wasteful when the
+    # question is about one pair.
+    wanted = set(os.environ["W98_LONGU_ARMS"].split(","))
+    CONFIGS = [
+        cfg
+        for cfg in CONFIGS
+        if f"{'woff' if cfg['window'] == 'off' else 'w' + str(cfg['window'])}"
+        f"skip{cfg['skip_count']}" in wanted
+    ]
+    if not CONFIGS:
+        raise SystemExit(f"no arms matched {sorted(wanted)}")
 
 
 def _require(condition: bool, message: str) -> None:

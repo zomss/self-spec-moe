@@ -3251,3 +3251,90 @@ the cost fit is also batch-8.
 Single boots at the four new points, equal token mix over eight points,
 quantized family. Verify cost at b16 and b32 is extrapolated from section
 20's affine fit rather than measured at those batches.
+
+---
+
+## 41. LI b16: the acceptance hypothesis is refuted, and the miss is a cost effect
+
+Section 40 named `tau(u, B)` as the suspect for the selector's one damaging
+miss — LI b16, where the model predicts `woff/skip4` over `w1024/skip4` while
+measurement puts them at 0.987 against 1.128 — and marked it untested. This
+tests it: the same two arms, same LI content, same 1024-token budget, at
+**batch 16** instead of 8, so the only variable that moves is B.
+
+### Acceptance barely moves
+
+| arm | b8 bucket 0 | b16 bucket 0 | b8 bucket 1 | b16 bucket 1 |
+| --- | --- | --- | --- | --- |
+| `woff/skip4` | 4.254 | 4.188 | 4.334 | 4.302 |
+| `w1024/skip4` | 2.920 | 2.969 | 3.308 | 3.172 |
+
+The quantity the ranking depends on is the ratio between them:
+
+```text
+bucket 0:  b8 1.457 -> b16 1.411   (-3.2%)
+bucket 1:  b8 1.310 -> b16 1.356   (+3.5%)
+```
+
+**Under 4% in both buckets, and in opposite directions.** That is section 22's
+non-monotone batch effect at its measured size, and it is nowhere near enough
+to reverse a 31% acceptance gap. Feeding the b16 curves into the prediction
+makes it *worse* — mean error 0.4610 against 0.4022 with the b8 curves, rank
+still wrong.
+
+**`tau(u, B)` is refuted as the cause.** Section 22's own sizing — "real but
+modest, likely small" — holds, and section 40's suspicion of it was wrong.
+
+### The cost side is where the arms separate
+
+Measured per-token cost, the two arms against each other:
+
+| | `woff/skip4` | `w1024/skip4` | ratio |
+| --- | --- | --- | --- |
+| b8 | 2.356 ms | 2.369 ms | **0.995** |
+| b16 | 2.055 ms | 1.799 ms | **1.143** |
+
+**At batch 8 the two arms cost the same to within 0.5%; at batch 16 the
+unwindowed arm costs 14.3% more.** Acceptance held fixed, so the entire
+reversal is cost.
+
+The mechanism is the one the model should already have: the draft chain reads
+KV once per request per forward, so the window's saving scales with batch.
+
+```text
+B=8   woff reads 71.3 GB/step, w1024 4.91 GB  -> difference 66.4 GB = 19.8 ms at peak
+B=16  woff reads 142.6 GB/step, w1024 9.81 GB -> difference 132.8 GB = 39.6 ms at peak
+```
+
+The model does carry `keep * KV * B`, so it doubles that difference correctly.
+What it does not carry is why doubling it changes the *ranking*: at b8 the
+window's KV saving is already large enough that both arms are limited by
+something else, and at b16 it is not. Section 26 measured that "something
+else" directly — the window's value is (attention time removed) minus (host
+time exposed), and only the first term scales with batch.
+
+**So the defect is section 26's non-separability, evaluated at a second
+batch.** The window's overhead `f_win` is fitted once, at batch 8, and
+charged flat; its benefit scales with B. A term that is constant in B
+competing with a term linear in B cannot rank correctly at both ends unless
+the constant is right, and section 37 fitted it at one end only.
+
+### What it costs, and what it does not
+
+This is the whole of the selector's loss on the swept grid: correcting LI b16
+alone moves the selector from 1.2209 to 1.2462 — **the omniscient value** —
+turning +0.29% over the best static into the full **+2.37%**. One arm at one
+batch is the entire gap between capturing an eighth of the switching case and
+capturing all of it.
+
+It is also a narrow defect rather than a broad one. Seven of eight points are
+already exact, the cost model ranks correctly at three other cells and at
+batch 32, and the fix is a fitted quantity rather than a missing mechanism:
+`f_win` measured at two batches instead of one.
+
+### Scope
+
+Two arms, one cell, one batch pair. The b16 acceptance is a fresh measurement;
+the cost comparison uses the section-40 throughput records. Whether `f_win`
+refitted across batches actually corrects the rank is untested — this locates
+the term, it does not repair it.
