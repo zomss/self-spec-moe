@@ -2799,3 +2799,93 @@ bf16 arms is needed only to verify the selector rejects them. Single boots,
 but acceptance is near-deterministic at fixed realization: G98-F measured
 bit-identical accept patterns across boxes, which is also why these two cells
 were safe to run concurrently on separate GPUs.
+
+---
+
+## 36. The prediction map for the new cells: SS works, LI and LIO fail for a located reason
+
+With section 35's curves the prediction map is computable for all four cells.
+Scored against the instrument-free measurements, quantized family, batch 8,
+curves truncated at each cell's natural p95 length per section 35:
+
+| cell | mean abs error | predicted best | measured best |
+| --- | --- | --- | --- |
+| **SS** | **0.0164** | `w1024/skip4` | `woff/skip4` |
+| LO (section 25) | 0.0366 | `w1024/skip4` | `w1024/skip4` |
+| **LIO** | **0.2254** | `woff/skip0` | `w1024/skip4` |
+| **LI** | **0.3223** | `woff/skip4` | `woff/skip4` |
+
+**SS predicts to 1.6%**, and its rank swap is unresolvable — 1.421 against
+1.368 predicted, 1.403 against 1.394 measured. **LI and LIO over-predict by
+23-32%.**
+
+### It is not the KV superlinearity
+
+The obvious suspect was extrapolating a linear KV term 3.5x past its
+calibration, so section 13's `gamma` was swept:
+
+| gamma | LI | LIO | SS |
+| --- | --- | --- | --- |
+| 1.00 | 0.3223 | 0.2254 | 0.0164 |
+| 1.15 | 0.3222 | 0.2298 | 0.0169 |
+| 1.25 | 0.3219 | 0.2323 | 0.0170 |
+
+Nothing moves. **Refuted**, and the reason is that the KV term is not merely
+wrongly scaled — it has the wrong sign.
+
+### It is section 24's unidentified window term, extrapolated
+
+The quantized family's per-family fit returned `kappa_kv = -2.96e-12` and
+`f_win = -4.56 ms`, both unphysical. Section 24 diagnosed why: at LO's
+context the window-size axis carried no resolved signal (`g256 - g1024` =
+0.315 +/- 0.165 ms, 1.9 sigma), so the bytes form had nothing to fit but
+noise. Section 24 also recorded the consequence as bounded — "the honest form
+predicts only at windows that were measured".
+
+It is not bounded when the *context* moves. Evaluating that fit:
+
+| | `woff`, keep 0.889 | `w1024` | `w256` |
+| --- | --- | --- | --- |
+| at LO calibration (156+8192) | 24.57 ms | 21.78 | 22.06 |
+| **at LI (14611+999)** | **20.35 ms** | 21.76 | 22.06 |
+
+**The model says reading 15,000 KV positions is 4.2 ms cheaper than reading
+4,252.** A negative per-byte coefficient is harmless where KV is small and
+absurd where it dominates, and the error's shape is exactly that signature:
+the two **unwindowed** arms over-predict by **+40.8%** and **+42.0%**, the
+windowed one by **+13.9%**, because only the unwindowed arms collect the
+spurious discount.
+
+The three cells then order themselves by how much KV the draft reads:
+
+| cell | mean KV positions | prediction error |
+| --- | --- | --- |
+| SS | ~200 | **1.6%** |
+| LO | 4,252 | 3.7% |
+| LIO | ~12,900 | 22.5% |
+| LI | ~15,100 | 32.2% |
+
+Prediction quality is a function of distance from the calibration context,
+and the failure is not in the acceptance measured in section 35 — SS and LO
+use the same pipeline and land inside 4%.
+
+### What this settles about the search strategy
+
+Round 1's premise is that composed cells can be predicted from single-lever
+profiles. Sections 25 and here confirm it **within the context the profiles
+were fitted at**, and this is the first clean demonstration of where it stops:
+a coefficient that is unidentified at calibration context is not merely
+imprecise elsewhere, it is **unbounded**, because nothing constrains its sign.
+
+The registered fix is a cost calibration at long context: the equal-work
+sweep uses 156-token prompts, so `kappa_kv` and `f_win` have never been
+fitted where they dominate. An LI-shaped equal-work sweep -- three windows at
+three keeps on 12-16K prompts -- identifies them where the refined grid
+actually operates, and is the same nine boots per family that section 24's
+sweep was.
+
+### Scope
+
+Three arms per cell, quantized family, batch 8. LI and LIO carry `w512` and
+`w128` in the acceptance campaign but not in the throughput grid, so only the
+three arms measured both ways are scored.

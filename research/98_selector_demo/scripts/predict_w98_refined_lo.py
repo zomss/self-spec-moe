@@ -148,8 +148,33 @@ def pool_below_1k(profile: dict[str, Any], depth: int) -> dict[str, float]:
     return {"0": 1.0 + accepted / steps} if steps else {}
 
 
+def truncate_at(
+    curve: dict[str, float], edges: tuple[int, ...], natural_len: float
+) -> dict[str, float]:
+    """Drop buckets that begin past the cell's natural stopping point.
+
+    Calibration uses `ignore_eos`, so a request that would have stopped keeps
+    generating filler that the draft predicts almost perfectly. Section 35
+    measured it: at SS, whose natural output is a median of 153 tokens, four
+    of seven arms read `tau_k4` = 5.000 in the bucket covering u >= 256 --
+    every drafted token accepted, every step. Feeding that to a prediction
+    over-states every arm, and most where generations are shortest.
+
+    A bucket is kept when its LOWER edge is below `natural_len`, so the
+    bucket the workload stops inside is retained and everything beyond it is
+    dropped.
+    """
+    lower = (0,) + tuple(edges)
+    kept = {i: v for i, v in curve.items() if lower[int(i)] < natural_len}
+    return kept or curve
+
+
 def load_curves(
-    directories: list[Path], depth: int, scalar: bool = False
+    directories: list[Path],
+    depth: int,
+    scalar: bool = False,
+    natural_len: float | None = None,
+    edges: tuple[int, ...] = U_EDGES,
 ) -> dict[str, dict[str, float]]:
     curves = {}
     for directory in directories:
@@ -159,11 +184,14 @@ def load_curves(
                 continue
             arm = record["cell"].split("/", 1)[1]
             profile = record["tau_profile"]
-            curves[arm] = (
+            curve = (
                 pool_below_1k(profile, depth)
                 if scalar
                 else tau_at_depth(profile, depth)
             )
+            if natural_len is not None and not scalar:
+                curve = truncate_at(curve, edges, natural_len)
+            curves[arm] = curve
     return curves
 
 
@@ -178,6 +206,11 @@ def load_runs(directories: list[Path]) -> dict[str, dict[str, Any]]:
             if record.get("record_type") != "w98_refined_lo":
                 continue
             key = record["cell"]
+            if key != OFF_KEY and "/" not in key:
+                # `stock` shares these directories from section 30 onward. It
+                # is a baseline, not a lever configuration, and the model
+                # predicts armed-against-parked, so it is not a run to score.
+                continue
             runs[key if key == OFF_KEY else key.split("/", 1)[1]] = record
     return runs
 
@@ -297,6 +330,12 @@ def main() -> int:
         action="store_true",
         help="fit a batch-squared term jointly with the linear one",
     )
+    parser.add_argument(
+        "--natural-len",
+        type=float,
+        help="the cell's natural p95 output length; buckets beginning past "
+        "it are dropped as ignore_eos filler (section 35)",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
@@ -308,7 +347,10 @@ def main() -> int:
     runs = load_runs([Path(p) for p in args.runs.split(",")])
     source = args.acceptance_from or args.curves
     curves = load_curves(
-        [Path(p) for p in source.split(",")], K_DEPLOYED, args.scalar_tau
+        [Path(p) for p in source.split(",")],
+        K_DEPLOYED,
+        args.scalar_tau,
+        args.natural_len,
     )
     result = predict(
         fit,
