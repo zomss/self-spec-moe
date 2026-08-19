@@ -2683,8 +2683,19 @@ direct answer to the question of whether that mechanism is real on this
 hardware: it is, it is large, and it is invisible in a single boot.
 
 The two contaminated records are kept rather than overwritten, and a third
-replicate is being measured on a verified-quiet box (memory below 2 GB before
-launch).
+replicate was measured on a verified-quiet box (memory below 2 GB before
+launch). It closes the diagnosis:
+
+| arm | boot 1 | boot 2 (contended) | **boot 3 (quiet)** |
+| --- | --- | --- | --- |
+| `lio_b8 / woff/skip0` | 1.0381 | 0.5442 | **1.0536** |
+| `li_b16 / w1024/skip4` | 1.1281 | 1.0459 | **1.1295** |
+
+Both clean boots agree with boot 1 -- to 1.5% and 0.12% -- so boot 2 is
+isolated as the outlier rather than the pair being averaged. The first
+attempt at boot 3 itself failed with a CUDA OOM during graph capture while
+another tenant held memory, which is its own measurement of how often this
+machine is contended.
 
 ### What this does to the grid
 
