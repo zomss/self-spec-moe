@@ -2889,3 +2889,104 @@ sweep was.
 Three arms per cell, quantized family, batch 8. LI and LIO carry `w512` and
 `w128` in the acceptance campaign but not in the throughput grid, so only the
 three arms measured both ways are scored.
+
+---
+
+## 37. The long-context cost calibration: signs fixed, ranks fixed, one bug named
+
+Section 36 registered the fix — fit `kappa_kv` and `f_win` where KV dominates
+— and this runs it. Three windows at three keeps on LI's 12,160-token
+prompts, 1,024 generated, quantized family complete at nine arms; the bf16
+path trims to four on non-LO cells by design, which tests transfer rather
+than fitting a second lattice.
+
+**The sweep waited for the box.** A first attempt was launched while another
+tenant held 77 GB on GPU 0 at 100% util; five boots OOM'd and **no record was
+written**, which is the benign failure — a boot that dies is visible, one
+that runs 40% slow is not. It was re-queued behind a gate requiring the whole
+box under 2 GB across two samples 60 s apart, and fired at 15:49 on 0 MiB
+with no other tenants.
+
+### What the LO-fitted model was doing at LI
+
+| arm, keep 1.0 | LO fit predicts | **measured** | error |
+| --- | --- | --- | --- |
+| `woff` | 22.99 ms | **44.942 ms** | **−48.9%** |
+| `w1024` | 23.50 ms | 23.760 ms | −1.1% |
+| `w256` | 23.84 ms | 23.581 ms | +1.1% |
+
+The windowed arms predict to **1.1% at a context 3x beyond calibration**,
+because a window saturates and bounds its own KV. The unwindowed arm is
+under-charged by half. That is the whole of section 36's 32% error, and it
+is one arm's cost term.
+
+The window's worth, by context:
+
+```text
+at LO (ctx 4252):   off 26.659 -> w1024 23.513 =  3.15 ms
+at LI (ctx 12672):  off 44.942 -> w1024 23.760 = 21.18 ms
+```
+
+**A 6.7x swing that the LO sweep could not see**, because at LO the window
+removes a quarter of the KV and at LI it removes 92% of it.
+
+### Refitting across both contexts
+
+Eighteen arms spanning 156 to 12,160 prompt tokens, residual 0.0265:
+
+| coefficient | LO-only (section 24) | **two-context** |
+| --- | --- | --- |
+| `kappa_kv` | **−2.96e−12** | **+1.395e−11** |
+| `f_win` | **−4.56 ms** | **+4.12 ms** |
+| `c_layer` | — | 12.24 ms |
+| `F` | — | 6.03 ms |
+
+**Every coefficient is physical for the first time in the quantized family.**
+The fitted `kappa_kv` also lands within 35% of the bf16 family's independent
+LO value (1.035e−11), where before the two had opposite signs.
+
+Re-scoring the prediction:
+
+| cell | LO-only fit | **two-context fit** | ranking |
+| --- | --- | --- | --- |
+| **LI** | 0.3223 | **0.1675** | **exactly correct** |
+| **LIO** | 0.2254 | **0.0942** | **exactly correct** |
+| SS | 0.0164 | 0.1186 | degraded |
+
+LI and LIO now rank all three arms in the measured order, which neither did
+before. The residual error is one-sided — every arm over-predicted by
+8-18% — which is a level effect, not a ranking one, and the selector consumes
+the ranking.
+
+### The SS regression names a specification bug
+
+At SS the model computes **250 KV positions for `woff` and 250 for
+`w1024`**: with 75-token prompts and 350 generated, a 1024 window has nothing
+to truncate. The KV term is therefore identical for the two arms — and the
+model still charges the windowed one `f_win`, now +4.12 ms, roughly 18% of an
+SS draft chain.
+
+Measurement says the window is free there. Section 35 already showed it:
+`w1024/skip4` and `woff/skip4` have **identical acceptance to three
+decimals** (4.779 both), because they are the same configuration. Throughput
+agrees — 1.394 against 1.403, **0.6% apart**. The model puts them 9% apart
+and ranks the window last.
+
+**`f_win` is charged as `[w > 0]` where the data supports `[w > 0 and the
+window actually binds]`.** It was invisible until now because every cell
+previously fitted or scored had a context far exceeding its windows. The
+LO-only fit hid it a second way: with `f_win` negative, the windowed arm got
+a spurious *bonus* that happened to cancel the missing gate, which is why SS
+scored 0.0164 on a model that was wrong twice.
+
+### Where this leaves the search strategy
+
+Round 1's premise — composed cells predicted from single-lever profiles —
+now holds across a 60x context range on one coefficient set, with correct
+ranking at the two cells that previously failed. What it took was calibrating
+where the dominant term dominates, and the general statement is section 36's:
+a coefficient unidentified at calibration context is unbounded elsewhere,
+because nothing constrains its sign.
+
+The remaining defects are both specification rather than measurement: the
+unbinding window gate above, and the one-sided 8-18% level offset at LI/LIO.
