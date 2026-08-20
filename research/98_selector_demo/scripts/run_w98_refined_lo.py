@@ -343,16 +343,22 @@ def run_all(output_dir: Path, gpu: int) -> None:
         # stock nor a deployment -- so leaving them on charges every armed arm
         # and `off` a cost the baseline never pays. Phase 100's campaign
         # runner turns both off for exactly this reason.
-        if os.environ.get("W98_LO_NOINSTRUMENT") == "1":
-            base = d3.boot_environment(cfg, trace, "corrected")
-            base["VLLM_SELF_SPEC_PROFILE"] = "0"
-            base.pop("VLLM_SELF_SPEC_KOFF_TRACE", None)
-            env = matrix._boot_child_environment(base)
-        elif cfg.get("action") == "stock":
+        # Stock is tested FIRST. It has no speculative config, so any
+        # `VLLM_SELF_SPEC_*` left in its environment makes the boot-scope
+        # validator refuse it ("minimal-B0 requires speculative method
+        # 'draft_model', got None"). Ordering this after the instrument
+        # branch silently dropped the stock arm from every point of a
+        # campaign that set `W98_LO_NOINSTRUMENT`.
+        if cfg.get("action") == "stock":
             base = d3.boot_environment(cfg, trace, "corrected")
             env = matrix._boot_child_environment(
                 {k: v for k, v in base.items() if not k.startswith("VLLM_SELF_SPEC")}
             )
+        elif os.environ.get("W98_LO_NOINSTRUMENT") == "1":
+            base = d3.boot_environment(cfg, trace, "corrected")
+            base["VLLM_SELF_SPEC_PROFILE"] = "0"
+            base.pop("VLLM_SELF_SPEC_KOFF_TRACE", None)
+            env = matrix._boot_child_environment(base)
         else:
             env = matrix._boot_child_environment(
                 d3.boot_environment(cfg, trace, "corrected")
