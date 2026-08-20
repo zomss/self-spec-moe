@@ -1,0 +1,41 @@
+{
+  "batch": 8,
+  "cap": 2048,
+  "cap_hits": 0,
+  "cell": "target-matching/w512/skip8",
+  "config": {
+    "action": "armed",
+    "quant": "target-matching",
+    "skip_count": 8,
+    "window": 512
+  },
+  "content_cell": "LI",
+  "fixed_tokens": 0,
+  "out_tokens_by_request": {
+    "LI-0": 785,
+    "LI-1": 331,
+    "LI-2": 836,
+    "LI-3": 684,
+    "LI-4": 796,
+    "LI-5": 548,
+    "LI-6": 811,
+    "LI-7": 849
+  },
+  "output_digests": {
+    "LI-0": "d7a2b83256f67b13204fc55299f4691ba67feb8cf7ec91e89f660555ad77fcb4",
+    "LI-1": "ffe2e9158356761094d5760a57e511b307f9b8f5ff85a024fbb001b36419eb66",
+    "LI-2": "26445f1331ae02da68b0feb5478882900b9d8485251f94115ab466beccf167cf",
+    "LI-3": "8170f882ca3e8e2ff1eb75b27d3c577f13c9f32a5e2f6430d1f23a9b899b2c80",
+    "LI-4": "7c7ac65bdf657218e0946bedec43ec0a34be798ffaba7c79b128233d9f201b18",
+    "LI-5": "5d0f42365ac0831995eedeff847dc96cc21af2f21fe276391e5c065e13988c4c",
+    "LI-6": "d7e74fec65ef11d56d466800fc74c5fe23e5342c7d7bf0ab4f5c12c439a1abd5",
+    "LI-7": "ae905504cd450f918b9d953f9bafb4f3d0ec742f4ae8873b7e63424eef9237ee"
+  },
+  "record_type": "w98_refined_lo",
+  "replicated_prompt": false,
+  "schema_version": 1,
+  "stopping_rule": "natural_eos",
+  "tokens_per_s": 347.681,
+  "total_out_tokens": 5640,
+  "wall_s": 16.222
+}

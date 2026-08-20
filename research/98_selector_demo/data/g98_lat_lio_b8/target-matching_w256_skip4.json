@@ -1,0 +1,41 @@
+{
+  "batch": 8,
+  "cap": 4096,
+  "cap_hits": 0,
+  "cell": "target-matching/w256/skip4",
+  "config": {
+    "action": "armed",
+    "quant": "target-matching",
+    "skip_count": 4,
+    "window": 256
+  },
+  "content_cell": "LIO",
+  "fixed_tokens": 0,
+  "out_tokens_by_request": {
+    "LIO-0": 1280,
+    "LIO-1": 1421,
+    "LIO-2": 1252,
+    "LIO-3": 1338,
+    "LIO-4": 1174,
+    "LIO-5": 1169,
+    "LIO-6": 1175,
+    "LIO-7": 1572
+  },
+  "output_digests": {
+    "LIO-0": "1a554c1c2f1cb5e167876a6688d21123a24e8f66e4968147f57a64b895a7b14a",
+    "LIO-1": "0fa525fc86e3bc5dbec43c314002cc283c2c786d2a2a7ecb0937a11d534fcf65",
+    "LIO-2": "e7f5d215fbaf94709b15fd801f5b77486dbb89f94395c6cf241937c32d8b2c1b",
+    "LIO-3": "8a5494f67058a7f0a85b988de69e8040ba02ec142038ee6b73201febce7cc39b",
+    "LIO-4": "3a96103e2bfe4099c7e1d5f5760a49c5d1b889bfb06e932668648c0949b06a4b",
+    "LIO-5": "2062abf8aa09ec19226a38f78f5994259f5a296aabb24df92fa4ca3f91e37dbb",
+    "LIO-6": "3eb53b76f598cba4b1c698639db043c86514a08cb99179e001def048dc0551d7",
+    "LIO-7": "142369e055b188ba3de903ee38ba1c9a0ececa50597dcd6f3a66b4ff24be96f2"
+  },
+  "record_type": "w98_refined_lo",
+  "replicated_prompt": false,
+  "schema_version": 1,
+  "stopping_rule": "natural_eos",
+  "tokens_per_s": 472.854,
+  "total_out_tokens": 10381,
+  "wall_s": 21.954
+}

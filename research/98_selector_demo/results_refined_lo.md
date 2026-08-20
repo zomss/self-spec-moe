@@ -3629,3 +3629,115 @@ Two boots at each of eight points, one third boot at each of the two
 contaminated arms. SS b32's instability is diagnosed from two boots and its
 mechanism is inferred from the request-length records, not from a repeated
 measurement of the tail.
+
+---
+
+## 45. The full lattice: no static policy is best, and the earlier grid could not have shown it
+
+Sections 39-44 scored the selector against a "best static" chosen from four
+arms common to every point — of which exactly **one** carried a window. Five
+of the twenty window x skip combinations per weight version were ever
+measured. So `w1024/skip4` won that comparison by being the only windowed arm
+at cells where windows dominate, and the claim that no static policy is best
+was not tested.
+
+This tests it. **588 boots**: 40 lattice configurations (both weight versions
+x 5 windows x 4 skips) plus `off` and `stock`, at all 14 registered
+`(cell, batch)` points, instrument-free, natural EOS, ~22 GPU-hours.
+
+### The grid
+
+Best arm at each point, against that point's own stock boot:
+
+| point | best arm | vs stock | `off` vs stock |
+| --- | --- | --- | --- |
+| LI b1 | `woff/skip4` | 1.1616 | 0.851 |
+| LI b8 | **`w512/skip4`** | 1.0921 | 0.922 |
+| LI b16 | **`w512/skip4`** | 1.1552 | 0.916 |
+| LIO b1 | `woff/skip0` | 1.1472 | 0.848 |
+| LIO b8 | **`w512/skip4`** | 1.2515 | 0.925 |
+| LIO b16 | `w1024/skip4` | 1.3302 | 0.944 |
+| LO b1 | `woff/skip4` | 1.3556 | 0.850 |
+| LO b8 | **`w1024/skip8`** | **1.6595** | 0.854 |
+| LO b16 | **`w256/skip0`** | **1.7096** | 0.908 |
+| LO b32 | **`w512/skip4`** | **1.7471** | 0.927 |
+| SS b1 | `woff/skip8` | **0.9703** | 0.849 |
+| SS b8 | `woff/skip4` | 1.0677 | 0.753 |
+| SS b32 | `woff/skip4` | 1.0679 | 0.630 |
+| SS b64 | `woff/skip4` | 1.0320 | 0.797 |
+
+**Seven distinct arms win across fourteen points.** `woff/skip4` (5),
+`w512/skip4` (4), and one each for `woff/skip0`, `w1024/skip4`,
+`w1024/skip8`, `w256/skip0`, `woff/skip8`.
+
+### No static policy is best — measured
+
+| candidate static | mix | worst point |
+| --- | --- | --- |
+| **`w512/skip4`** | **1.1412** | **−24.8%** |
+| `w1024/skip4` | 1.1307 | −24.6% |
+| `w1024/skip0` | 1.0940 | −26.2% |
+| `woff/skip4` | 1.0782 | −39.0% |
+
+* **The best static is not the one the earlier grid found.** `w512/skip4`
+  displaces `w1024/skip4` — an arm the four-arm set carried at only two of
+  fourteen points.
+* **Every candidate gives up 25-39% at its worst point.** With the four-arm
+  set the figure was −15.8%.
+* **The omniscient mix is 1.2243 against the best static's 1.1412, so a
+  single fixed configuration gives up 6.79%.** Section 40 measured that gap
+  at 2.37% on the impoverished set. **Filling the lattice nearly tripled the
+  switching case**, because it added arms that are much better *somewhere*
+  without being better everywhere.
+
+### The composed arms are the top of the lattice, as D2(a) predicted
+
+At LO b8 the top three are `w1024/skip8` (1.6595), `w512/skip8` (1.6266) and
+`w256/skip8` (1.6161) — **windowed deep skip, all three**. The earlier grid's
+best static ranks **7th of 40** there, at 1.3614, beaten by **21.9%**.
+
+That is D2(a)'s constructive composition measured end to end: a window that
+has already discarded the context removes the very information layer skipping
+would have degraded, so the two levers' losses overlap instead of compounding.
+`woff/skip8` alone is mediocre; *windowed* deep skip is the best arm on the
+highest-value cell.
+
+Two more lattice facts fall out:
+
+* **`skip16` never places in a top-5** at any of the fourteen points, and
+  occupies the bottom of LO b8 (0.596-0.642). That is D2(b)'s additivity
+  boundary — the knapsack's ranking inverts at k=16 — showing up end to end.
+* **bf16 appears in 2 of 70 top-5 slots and wins nothing.** Every one of the
+  fourteen winners is `w4a16-quantized`, confirming section 34's default on
+  the full lattice rather than on a sample.
+
+### A fail-closed firing set exists, and it is one point
+
+**SS b1: the best arm measures 0.9703 — no configuration beats stock.** Every
+other point has a winning arm. So the rule has exactly one place to fire on
+this grid, at the cell with the shortest sequences and the smallest batch,
+where a fixed per-step cost is amortised over the fewest tokens.
+
+### What this does to the earlier claims
+
+Sections 39-44's *measurements* stand — they are a subset of this grid and
+reproduce within it. Their *interpretation* does not:
+
+| claim | on four arms | **on the full lattice** |
+| --- | --- | --- |
+| distinct winning arms | 3 of 8 points | **7 of 14 points** |
+| best static's worst point | −15.8% | **−24.8%** |
+| switching value available | +2.37% | **+6.79%** |
+| best static's identity | `w1024/skip4` | **`w512/skip4`** |
+
+The selector's own score is not restated here: its prediction map covers the
+five arms the earlier grid measured, not forty, so scoring it on this lattice
+requires acceptance for the thirty-five arms that have none. That is the next
+measurement, and it is now the only thing between this grid and an end-to-end
+number.
+
+### Scope
+
+Single boots per arm; the earlier grid's replication (section 44) found armed
+arms reproducing to 1.31% and one baseline unstable at SS b32. Fourteen points
+at one box, quantized and bf16 families, natural EOS, decode currency.
