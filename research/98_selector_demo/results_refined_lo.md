@@ -3797,23 +3797,50 @@ it costs 2.2-2.7 ms.**
 
 ### Where it comes from, and why it is structural
 
-`gpu_model_runner.py:942-945` creates `num_accepted_tokens_event` whenever
-`self.num_spec_tokens` is set, and `:2107` synchronizes on it every step:
+**Corrected attribution.** This section first named
+`num_accepted_tokens_event`, from reading the call site at
+`gpu_model_runner.py:2107`. That is wrong, and the way it is wrong is worth
+recording: the *record* side of that event sits inside
+`_update_states_after_model_execute`, which returns early unless the model is
+hybrid (`:1576`). Qwen3-8B is dense, so the event is created and synchronized
+but **never recorded**, and a synchronize on an unrecorded event is a no-op —
+which is why it costs nothing despite being called every step.
 
-```python
-if self.num_spec_tokens:
-    self.draft_token_ids_event = torch.Event()
-    self.num_accepted_tokens_event = torch.Event()
-...
-if self.num_accepted_tokens_event is not None:
-    self.num_accepted_tokens_event.synchronize()
+Wrapping the live runner's event objects and counting attributes it directly:
+
+```text
+per step, K=0 parked
+  1.00  num_accepted_tokens_event.synchronize()   <- no-op, never recorded
+  1.00  transfer_event.record() + .synchronize()  <- stock pays this too
+  1.00  draft_token_ids_event.record() + .synchronize()   <- THE EXTRA ONE
 ```
 
-The condition is `num_spec_tokens`, which is the **configured maximum** (K=4
-in our boots), not the per-step schedule. `off` sets
-`num_speculative_tokens_per_batch_size: [[1, 32, 0]]` — zero tokens drafted —
-but `num_speculative_tokens` remains 4, so the event is created and
-synchronized on every step even though no acceptance count is ever produced.
+Three Python-level synchronizes, two real `cudaEventSynchronize` calls, and
+exactly one of them absent from stock. **The extra sync is
+`draft_token_ids_event`.**
+
+Its path, when the schedule drafts nothing (`:4835-4841`):
+
+```python
+self._draft_token_ids = torch.zeros(1, device=self.device, dtype=torch.int32
+    ).expand(len(self.input_batch.req_ids), zero_width)
+self._copy_draft_token_ids_to_cpu(scheduler_output, zeros_only=True)
+    # -> writes zeros to a pinned CPU tensor on a side stream
+    # -> self.draft_token_ids_event.record()
+...
+def take_draft_token_ids(self):
+    if not self.num_spec_tokens or not self._draft_token_req_ids:
+        return None
+    draft_token_ids, req_ids = self._get_draft_token_ids_cpu()
+        # -> self.draft_token_ids_event.synchronize()
+```
+
+So the parked step **materialises a zero-filled draft-token tensor, copies it
+to the host on a side stream, and then blocks the main thread until that copy
+lands** — for tokens that do not exist. The guard is `self.num_spec_tokens`,
+the **configured maximum** (K=4 in our boots), not the per-step schedule:
+`off` sets `num_speculative_tokens_per_batch_size: [[1, 32, 0]]` and
+`num_speculative_tokens` stays 4, so the whole path runs.
 
 **This is upstream vLLM's speculative-decoding path, not phase-98 code.** Any
 deployment that configures speculation and then disables it per-batch pays
@@ -3835,13 +3862,29 @@ it, which is exactly what a K/OFF ladder does whenever it parks.
 
 ### What it does NOT settle, and the honest caveat
 
-**A fix is not demonstrated here.** The measurement locates the call and
-attributes the cost; it does not show that gating it is correct. The event is
-also recorded unconditionally at `:1605` and `:1611`, and whether the
-synchronize can be skipped when zero tokens were drafted requires reading the
-async-scheduling path that consumes `num_accepted_tokens`, not just the call
-site. That is a change to upstream runtime code and belongs behind a test,
-not behind this measurement.
+**A fix is not demonstrated here**, but the change is now well posed. Both
+the record and the sync are reached only through the zero-width path, so the
+candidate is to skip them when the step drafted nothing:
+
+* at `:4841`, do not call `_copy_draft_token_ids_to_cpu(..., zeros_only=True)`
+  when `zero_width == 0`;
+* at `take_draft_token_ids` (`:5060`), return `None` on the same condition.
+
+What has to be checked before believing it: **the consumer.**
+`take_draft_token_ids` returning `None` is already the documented path when
+speculation is off (`if not self.num_spec_tokens ... return None`), so the
+scheduler tolerates it — but `_draft_token_req_ids` and `_koff_draft_action_id`
+are set alongside the copy and the K/OFF registry reads the action id to
+verify the realization it committed to. Skipping the copy must not skip the
+action-id bookkeeping. That is a change to upstream runtime code with a live
+registry contract behind it, and it belongs behind a test rather than behind
+this measurement.
+
+**A cheaper variant needs no upstream change at all**: the sync exists to
+deliver draft tokens to the host, and a parked step's draft tokens are known
+to be zeros without asking the GPU. Filling the CPU tensor directly and never
+recording the event would remove the round trip while leaving every consumer
+intact.
 
 **And it does not transfer to the armed arms unchanged.** An armed step
 genuinely produces acceptance counts, so it needs the readback; the question
