@@ -1,0 +1,609 @@
+{
+  "arm": "stock",
+  "batch": 8,
+  "config": {
+    "action": "stock"
+  },
+  "content_cell": "LO",
+  "device_kernels": {
+    "Memcpy DtoD (Device -> Device)": {
+      "calls": 40,
+      "us_per_step": 1.2311750000018606,
+      "us_total": 49.24700000007442
+    },
+    "Memcpy DtoH (Device -> Pinned)": {
+      "calls": 80,
+      "us_per_step": 4.577524999997786,
+      "us_total": 183.10099999991144
+    },
+    "Memcpy HtoD (Pinned -> Device)": {
+      "calls": 96,
+      "us_per_step": 2.7159500000003276,
+      "us_total": 108.63800000001311
+    },
+    "Memset (Device)": {
+      "calls": 40,
+      "us_per_step": 0.9024000000006709,
+      "us_total": 36.096000000026834
+    },
+    "_apply_write_kernel": {
+      "calls": 16,
+      "us_per_step": 1.6343750000004094,
+      "us_total": 65.37500000001637
+    },
+    "_combine_sampled_and_draft_tokens_kernel": {
+      "calls": 40,
+      "us_per_step": 4.038375000000519,
+      "us_total": 161.53500000002077
+    },
+    "_compute_slot_mappings_kernel": {
+      "calls": 40,
+      "us_per_step": 2.607949999999562,
+      "us_total": 104.31799999998248
+    },
+    "_gather_block_tables_kernel": {
+      "calls": 40,
+      "us_per_step": 3.5303500000031933,
+      "us_total": 141.21400000012773
+    },
+    "_get_num_sampled_and_rejected_kernel": {
+      "calls": 40,
+      "us_per_step": 3.9695250000026134,
+      "us_total": 158.78100000010454
+    },
+    "_gumbel_sample_kernel": {
+      "calls": 40,
+      "us_per_step": 6.626324999999497,
+      "us_total": 265.0529999999799
+    },
+    "_post_update_kernel": {
+      "calls": 40,
+      "us_per_step": 3.597599999997692,
+      "us_total": 143.90399999990768
+    },
+    "_prepare_pos_seq_lens_kernel": {
+      "calls": 40,
+      "us_per_step": 1.5104000000024485,
+      "us_total": 60.41600000009794
+    },
+    "_vllm_fa3_C::get_scheduler_metadata": {
+      "calls": 40,
+      "us_per_step": 1.9575750000012362,
+      "us_total": 78.30300000004945
+    },
+    "aten::arange": {
+      "calls": 80,
+      "us_per_step": 0.9599749999996448,
+      "us_total": 38.39899999998579
+    },
+    "aten::argmax": {
+      "calls": 40,
+      "us_per_step": 4.711174999996774,
+      "us_total": 188.44699999987097
+    },
+    "aten::copy_": {
+      "calls": 336,
+      "us_per_step": 14.381299999999147,
+      "us_total": 575.2519999999658
+    },
+    "aten::fill_": {
+      "calls": 160,
+      "us_per_step": 2.962325000002238,
+      "us_total": 118.49300000008952
+    },
+    "aten::gather": {
+      "calls": 40,
+      "us_per_step": 1.7631749999992734,
+      "us_total": 70.52699999997094
+    },
+    "aten::index": {
+      "calls": 120,
+      "us_per_step": 5.7647749999996,
+      "us_total": 230.59099999998398
+    },
+    "aten::mm": {
+      "calls": 40,
+      "us_per_step": 414.2424750000009,
+      "us_total": 16569.699000000037
+    },
+    "cuLaunchKernelEx": {
+      "calls": 336,
+      "us_per_step": 21.361349999999767,
+      "us_total": 854.4539999999906
+    },
+    "cudaEventRecordWithFlags": {
+      "calls": 256,
+      "us_per_step": 0.3111999999998261,
+      "us_total": 12.447999999993044
+    },
+    "cudaEventSynchronize": {
+      "calls": 40,
+      "us_per_step": 0.12159999999967112,
+      "us_total": 4.863999999986845
+    },
+    "cudaStreamIsCapturing": {
+      "calls": 512,
+      "us_per_step": 11.047099999998409,
+      "us_total": 441.88399999993635
+    },
+    "cudaStreamWaitEvent": {
+      "calls": 40,
+      "us_per_step": 0.11599999999998545,
+      "us_total": 4.639999999999418
+    },
+    "memcpy32_post": {
+      "calls": 40,
+      "us_per_step": 1.349549999997953,
+      "us_total": 53.981999999918116
+    },
+    "nvjet_tst_192x8_64x8_2x1_v_bz_TNT": {
+      "calls": 1440,
+      "us_per_step": 2491.9620500000156,
+      "us_total": 99678.48200000063
+    },
+    "nvjet_tst_384x8_64x4_2x1_v_bz_TNT": {
+      "calls": 40,
+      "us_per_step": 413.34007500000024,
+      "us_total": 16533.60300000001
+    },
+    "nvjet_tst_64x8_64x16_2x1_v_bz_splitK_TNT": {
+      "calls": 2880,
+      "us_per_step": 1797.6073500000016,
+      "us_total": 71904.29400000007
+    },
+    "nvjet_tst_64x8_64x16_4x1_v_bz_TNT": {
+      "calls": 1440,
+      "us_per_step": 739.5852249999879,
+      "us_total": 29583.408999999516
+    },
+    "triton_poi_fused_2": {
+      "calls": 40,
+      "us_per_step": 1.8703750000012405,
+      "us_total": 74.81500000004962
+    },
+    "triton_poi_fused_4": {
+      "calls": 1400,
+      "us_per_step": 58.42400000000316,
+      "us_total": 2336.9600000001265
+    },
+    "triton_poi_fused_mul_silu_slice_1": {
+      "calls": 1440,
+      "us_per_step": 55.461000000004084,
+      "us_total": 2218.4400000001633
+    },
+    "triton_red_fused_1": {
+      "calls": 40,
+      "us_per_step": 1.5168000000009443,
+      "us_total": 60.67200000003777
+    },
+    "triton_red_fused_3": {
+      "calls": 1400,
+      "us_per_step": 45.96507500000405,
+      "us_total": 1838.603000000162
+    },
+    "triton_red_fused__to_copy_embedding_rms_norm_0": {
+      "calls": 40,
+      "us_per_step": 3.170375000001127,
+      "us_total": 126.81500000004507
+    },
+    "triton_red_fused_fused_add_rms_norm_0": {
+      "calls": 1440,
+      "us_per_step": 83.26400000000226,
+      "us_total": 3330.5600000000904
+    },
+    "triton_red_fused_fused_add_rms_norm_2": {
+      "calls": 1440,
+      "us_per_step": 75.35020000000804,
+      "us_total": 3014.0080000003218
+    },
+    "void (anonymous namespace)::elementwise_kernel_with_index<int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#3}::operator()() const::{lambda(long)#1}>(int, at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#3}::operator()() const::{lambda(long)#1}, function_traits<at::native::arange_cuda_out(c10::Scalar const&, c10::Scalar const&, c10::Scalar const&, at::Tensor&)::{lambda()#1}::operator()() const::{lambda()#3}::operator()() const::{lambda(long)#1}>::result_type*)": {
+      "calls": 40,
+      "us_per_step": 0.9599749999996448,
+      "us_total": 38.39899999998579
+    },
+    "void at::native::_scatter_gather_elementwise_kernel<128, 8, at::native::_cuda_scatter_gather_internal_kernel<false, at::native::OpaqueType<8>, long>::operator()<at::native::TensorAssign>(at::TensorIterator&, long, long, long, at::native::TensorAssign const&)::{lambda(int)#1}>(int, at::native::_cuda_scatter_gather_internal_kernel<false, at::native::OpaqueType<8>, long>::operator()<at::native::TensorAssign>(at::TensorIterator&, long, long, long, at::native::TensorAssign const&)::{lambda(int)#1})": {
+      "calls": 40,
+      "us_per_step": 1.7631749999992734,
+      "us_total": 70.52699999997094
+    },
+    "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<4> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": {
+      "calls": 40,
+      "us_per_step": 1.8711750000010396,
+      "us_total": 74.84700000004159
+    },
+    "void at::native::index_elementwise_kernel<128, 4, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1}>(long, at::native::gpu_index_kernel<at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1}>(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>, at::native::index_kernel_impl<at::native::OpaqueType<8> >(at::TensorIteratorBase&, c10::ArrayRef<long>, c10::ArrayRef<long>)::{lambda(char*, char const*, long)#1} const&, bool)::{lambda(int)#1})": {
+      "calls": 40,
+      "us_per_step": 2.2407999999994446,
+      "us_total": 89.63199999997778
+    },
+    "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4> >(at::native::ReduceOp<float, at::native::ArgMaxOps<float>, unsigned int, long, 4, 4>)": {
+      "calls": 40,
+      "us_per_step": 4.711174999996774,
+      "us_total": 188.44699999987097
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::FillFunctor<int>, std::array<char*, 1ul>, 4, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>(int, at::native::FillFunctor<int>, std::array<char*, 1ul>, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast)": {
+      "calls": 40,
+      "us_per_step": 0.9303749999990941,
+      "us_total": 37.214999999963766
+    },
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)": {
+      "calls": 40,
+      "us_per_step": 5.856649999999172,
+      "us_total": 234.26599999996688
+    },
+    "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": {
+      "calls": 80,
+      "us_per_step": 2.031950000003144,
+      "us_total": 81.27800000012576
+    },
+    "void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)": {
+      "calls": 40,
+      "us_per_step": 1.6527999999991152,
+      "us_total": 66.11199999996461
+    },
+    "void cublasLt::splitKreduce_kernel<32, 16, int, float, __nv_bfloat16, float, __nv_bfloat16, false, float, __nv_bfloat16, __nv_bfloat16, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, float const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)": {
+      "calls": 2880,
+      "us_per_step": 128.45839999998526,
+      "us_total": 5138.335999999411
+    },
+    "void cutlass::device_kernel<flash::FlashAttnFwdCombine<cute::tuple<cute::C<8>, cute::C<128> >, 5, 256, 1, false, true, cutlass::bfloat16_t, float, cutlass::arch::Sm90> >(flash::FlashAttnFwdCombine<cute::tuple<cute::C<8>, cute::C<128> >, 5, 256, 1, false, true, cutlass::bfloat16_t, float, cutlass::arch::Sm90>::Params)": {
+      "calls": 1440,
+      "us_per_step": 89.15644999999559,
+      "us_total": 3566.2579999998234
+    },
+    "void cutlass::device_kernel<flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<flash::CollectiveMainloopFwdSm90<2, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, 128, cutlass::bfloat16_t, float, cutlass::arch::Sm90, true, false, false, true, true, false, false, true, true, true, true, false, cutlass::bfloat16_t, 1>, flash::CollectiveEpilogueFwd<cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cutlass::bfloat16_t, cutlass::arch::Sm90, 128, true, true, true, false, 1>, flash::VarlenDynamicPersistentTileScheduler<64, 128, 128, 128, true, true, true, true, false, true> > > >(flash::enable_sm90_or_later<flash::FlashAttnFwdSm90<flash::CollectiveMainloopFwdSm90<2, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, 128, cutlass::bfloat16_t, float, cutlass::arch::Sm90, true, false, false, true, true, false, false, true, true, true, true, false, cutlass::bfloat16_t, 1>, flash::CollectiveEpilogueFwd<cute::tuple<cute::C<64>, cute::C<128>, cute::C<128> >, cute::tuple<cute::C<1>, cute::C<1>, cute::C<1> >, cutlass::bfloat16_t, cutlass::arch::Sm90, 128, true, true, true, false, 1>, flash::VarlenDynamicPersistentTileScheduler<64, 128, 128, 128, true, true, true, true, false, true> > >::Params)": {
+      "calls": 1440,
+      "us_per_step": 372.6956000000133,
+      "us_total": 14907.824000000532
+    },
+    "void flash::prepare_varlen_num_blocks_kernel<1, false>(int, int, int, int const*, int const*, int const*, int const*, int const*, int const*, int, int, int, int, int, cutlass::FastDivmod, cutlass::FastDivmod, int*, int*, int*, int*, int*, bool, bool, bool, int)": {
+      "calls": 40,
+      "us_per_step": 1.9575750000012362,
+      "us_total": 78.30300000004945
+    },
+    "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(__nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, long const*, long, long, long, long, long, int, int, int, float const*, float const*, int)": {
+      "calls": 1440,
+      "us_per_step": 81.26142499999192,
+      "us_total": 3250.4569999996766
+    }
+  },
+  "device_ms_per_step": 6.981055575000016,
+  "host_cpu_ms_per_step": 5.249892774999997,
+  "host_events": {
+    "Activity Buffer Request": {
+      "calls": 2,
+      "calls_per_step": 0.05,
+      "us_per_step": 110.76174999999982,
+      "us_total": 4430.469999999993
+    },
+    "Buffer Flush": {
+      "calls": 2,
+      "calls_per_step": 0.05,
+      "us_per_step": 20.445624999999563,
+      "us_total": 817.8249999999825
+    },
+    "_vllm_fa3_C::get_scheduler_metadata": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 12.405274999998927,
+      "us_total": 496.21099999995704
+    },
+    "aten::_local_scalar_dense": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 0.7493000000025518,
+      "us_total": 29.97200000010207
+    },
+    "aten::_pin_memory": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 14.605100000003779,
+      "us_total": 584.2040000001512
+    },
+    "aten::_to_copy": {
+      "calls": 96,
+      "calls_per_step": 2.4,
+      "us_per_step": 8.964549999999884,
+      "us_total": 358.58199999999533
+    },
+    "aten::alias": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 1.3111499999972238,
+      "us_total": 52.445999999888954
+    },
+    "aten::arange": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 12.077225000000738,
+      "us_total": 483.0890000000295
+    },
+    "aten::argmax": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 17.522425000000432,
+      "us_total": 700.8970000000172
+    },
+    "aten::as_strided": {
+      "calls": 1488,
+      "calls_per_step": 37.2,
+      "us_per_step": 24.62372499997891,
+      "us_total": 984.9489999991564
+    },
+    "aten::copy_": {
+      "calls": 336,
+      "calls_per_step": 8.4,
+      "us_per_step": 59.49639999999839,
+      "us_total": 2379.8559999999356
+    },
+    "aten::detach": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 1.9022499999967977,
+      "us_total": 76.0899999998719
+    },
+    "aten::detach_": {
+      "calls": 16,
+      "calls_per_step": 0.4,
+      "us_per_step": 0.1525750000014682,
+      "us_total": 6.103000000058728
+    },
+    "aten::empty": {
+      "calls": 336,
+      "calls_per_step": 8.4,
+      "us_per_step": 37.67567500000615,
+      "us_total": 1507.027000000246
+    },
+    "aten::empty_like": {
+      "calls": 120,
+      "calls_per_step": 3.0,
+      "us_per_step": 5.872800000004167,
+      "us_total": 234.9120000001667
+    },
+    "aten::empty_strided": {
+      "calls": 216,
+      "calls_per_step": 5.4,
+      "us_per_step": 30.71537500000188,
+      "us_total": 1228.6150000000753
+    },
+    "aten::fill_": {
+      "calls": 160,
+      "calls_per_step": 4.0,
+      "us_per_step": 21.445225000002313,
+      "us_total": 857.8090000000925
+    },
+    "aten::gather": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 13.630975000001808,
+      "us_total": 545.2390000000723
+    },
+    "aten::index": {
+      "calls": 120,
+      "calls_per_step": 3.0,
+      "us_per_step": 62.77642499999176,
+      "us_total": 2511.0569999996706
+    },
+    "aten::is_pinned": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 7.862574999997127,
+      "us_total": 314.5029999998851
+    },
+    "aten::item": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 2.853900000000999,
+      "us_total": 114.15600000003997
+    },
+    "aten::lift_fresh": {
+      "calls": 216,
+      "calls_per_step": 5.4,
+      "us_per_step": 1.4328250000032086,
+      "us_total": 57.31300000012834
+    },
+    "aten::linear": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 3.9315250000036257,
+      "us_total": 157.26100000014503
+    },
+    "aten::matmul": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 3.439175,
+      "us_total": 137.567
+    },
+    "aten::max": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 7.280399999993961,
+      "us_total": 291.2159999997584
+    },
+    "aten::mm": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 56.827874999998585,
+      "us_total": 2273.1149999999434
+    },
+    "aten::new_empty": {
+      "calls": 120,
+      "calls_per_step": 3.0,
+      "us_per_step": 3.3544249999873728,
+      "us_total": 134.1769999994949
+    },
+    "aten::new_ones": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 2.762625000001526,
+      "us_total": 110.50500000006105
+    },
+    "aten::pin_memory": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 5.536575000001017,
+      "us_total": 221.46300000004067
+    },
+    "aten::reshape": {
+      "calls": 120,
+      "calls_per_step": 3.0,
+      "us_per_step": 2.9588000000044756,
+      "us_total": 118.35200000017903
+    },
+    "aten::resize_": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 4.178074999998205,
+      "us_total": 167.1229999999282
+    },
+    "aten::resolve_conj": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 0.517574999999033,
+      "us_total": 20.70299999996132
+    },
+    "aten::resolve_neg": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 0.26622500000025867,
+      "us_total": 10.649000000010346
+    },
+    "aten::select": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 6.016800000001228,
+      "us_total": 240.67200000004914
+    },
+    "aten::set_": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 3.4133499999974672,
+      "us_total": 136.5339999998987
+    },
+    "aten::slice": {
+      "calls": 1168,
+      "calls_per_step": 29.2,
+      "us_per_step": 55.1604750000328,
+      "us_total": 2206.419000001312
+    },
+    "aten::t": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 4.784824999996886,
+      "us_total": 191.39299999987543
+    },
+    "aten::to": {
+      "calls": 192,
+      "calls_per_step": 4.8,
+      "us_per_step": 4.628974999997036,
+      "us_total": 185.15899999988142
+    },
+    "aten::transpose": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 1.8231749999992872,
+      "us_total": 72.92699999997149
+    },
+    "aten::unbind": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 4.687149999998712,
+      "us_total": 187.4859999999485
+    },
+    "aten::view": {
+      "calls": 200,
+      "calls_per_step": 5.0,
+      "us_per_step": 4.793274999995265,
+      "us_total": 191.7309999998106
+    },
+    "aten::zero_": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 2.7911749999978044,
+      "us_total": 111.64699999991217
+    },
+    "aten::zeros": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 3.232224999998027,
+      "us_total": 129.2889999999211
+    },
+    "cuLaunchKernelEx": {
+      "calls": 336,
+      "calls_per_step": 8.4,
+      "us_per_step": 68.65579999999748,
+      "us_total": 2746.2319999998995
+    },
+    "cudaDeviceSynchronize": {
+      "calls": 2,
+      "calls_per_step": 0.05,
+      "us_per_step": 163.47462499999966,
+      "us_total": 6538.984999999986
+    },
+    "cudaEventQuery": {
+      "calls": 346,
+      "calls_per_step": 8.65,
+      "us_per_step": 19.443399999993165,
+      "us_total": 777.7359999997266
+    },
+    "cudaEventRecordWithFlags": {
+      "calls": 256,
+      "calls_per_step": 6.4,
+      "us_per_step": 8.395225000000517,
+      "us_total": 335.80900000002066
+    },
+    "cudaEventSynchronize": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 3636.7450000000003,
+      "us_total": 145469.80000000002
+    },
+    "cudaGraphLaunch": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 518.850474999999,
+      "us_total": 20754.018999999964
+    },
+    "cudaLaunchKernel": {
+      "calls": 440,
+      "calls_per_step": 11.0,
+      "us_per_step": 97.7813250000062,
+      "us_total": 3911.2530000002484
+    },
+    "cudaMemcpyAsync": {
+      "calls": 216,
+      "calls_per_step": 5.4,
+      "us_per_step": 58.58210000000355,
+      "us_total": 2343.284000000142
+    },
+    "cudaMemsetAsync": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 10.134525000001986,
+      "us_total": 405.38100000007944
+    },
+    "cudaPointerGetAttributes": {
+      "calls": 80,
+      "calls_per_step": 2.0,
+      "us_per_step": 7.165850000001944,
+      "us_total": 286.6340000000778
+    },
+    "cudaStreamIsCapturing": {
+      "calls": 512,
+      "calls_per_step": 12.8,
+      "us_per_step": 6.796975000004375,
+      "us_total": 271.879000000175
+    },
+    "cudaStreamWaitEvent": {
+      "calls": 40,
+      "calls_per_step": 1.0,
+      "us_per_step": 2.199649999997996,
+      "us_total": 87.98599999991984
+    }
+  },
+  "idle_ms_per_step": 4.906139374667885,
+  "profiled_steps": 40,
+  "record_type": "w98_engine_tax",
+  "schema_version": 1,
+  "wall_ms_per_step": 11.8871949496679
+}

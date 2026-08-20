@@ -1,0 +1,96 @@
+{
+  "batch": 8,
+  "content_cell": "LO",
+  "device_identical": true,
+  "per_step_ms": {
+    "off": {
+      "device": 6.9656,
+      "host_cpu": 7.3516,
+      "idle": 7.6272,
+      "wall": 14.5928
+    },
+    "stock": {
+      "device": 6.9811,
+      "host_cpu": 5.2499,
+      "idle": 4.9061,
+      "wall": 11.8872
+    }
+  },
+  "record_type": "w98_engine_tax_summary",
+  "schema_version": 1,
+  "tax_ms_per_step": 2.7056,
+  "top_host_deltas": [
+    {
+      "delta_us_per_step": 2164.2,
+      "event": "cudaEventSynchronize",
+      "off_calls_per_step": 2.0,
+      "off_us_per_step": 5800.9,
+      "stock_calls_per_step": 1.0,
+      "stock_us_per_step": 3636.7
+    },
+    {
+      "delta_us_per_step": -146.1,
+      "event": "cudaDeviceSynchronize",
+      "off_calls_per_step": 0.05,
+      "off_us_per_step": 17.3,
+      "stock_calls_per_step": 0.05,
+      "stock_us_per_step": 163.5
+    },
+    {
+      "delta_us_per_step": 62.5,
+      "event": "aten::copy_",
+      "off_calls_per_step": 22.0,
+      "off_us_per_step": 122.0,
+      "stock_calls_per_step": 8.4,
+      "stock_us_per_step": 59.5
+    },
+    {
+      "delta_us_per_step": 50.4,
+      "event": "cudaMemcpyAsync",
+      "off_calls_per_step": 14.0,
+      "off_us_per_step": 109.0,
+      "stock_calls_per_step": 5.4,
+      "stock_us_per_step": 58.6
+    },
+    {
+      "delta_us_per_step": 46.6,
+      "event": "aten::slice",
+      "off_calls_per_step": 58.0,
+      "off_us_per_step": 101.7,
+      "stock_calls_per_step": 29.2,
+      "stock_us_per_step": 55.2
+    },
+    {
+      "delta_us_per_step": -45.3,
+      "event": "cuLaunchKernelEx",
+      "off_calls_per_step": 3.0,
+      "off_us_per_step": 23.4,
+      "stock_calls_per_step": 8.4,
+      "stock_us_per_step": 68.7
+    },
+    {
+      "delta_us_per_step": 33.3,
+      "event": "cudaLaunchKernel",
+      "off_calls_per_step": 14.0,
+      "off_us_per_step": 131.1,
+      "stock_calls_per_step": 11.0,
+      "stock_us_per_step": 97.8
+    },
+    {
+      "delta_us_per_step": -21.5,
+      "event": "aten::empty",
+      "off_calls_per_step": 4.0,
+      "off_us_per_step": 16.1,
+      "stock_calls_per_step": 8.4,
+      "stock_us_per_step": 37.7
+    },
+    {
+      "delta_us_per_step": 21.3,
+      "event": "aten::add",
+      "off_calls_per_step": 3.0,
+      "off_us_per_step": 21.3,
+      "stock_calls_per_step": 0.0,
+      "stock_us_per_step": 0.0
+    }
+  ]
+}

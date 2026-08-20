@@ -3741,3 +3741,120 @@ number.
 Single boots per arm; the earlier grid's replication (section 44) found armed
 arms reproducing to 1.31% and one baseline unstable at SS b32. Fourteen points
 at one box, quantized and bf16 families, natural EOS, decode currency.
+
+---
+
+## 46. The engine tax, located: one synchronization per step
+
+Sections 30-33 measured our runtime parked (`off`) against plain vLLM
+(`stock`) and found a cell-dependent tax of 5.6-37%, worst where steps are
+cheapest. The researcher's position was that this is implementation overhead
+rather than an intrinsic cost of having speculation available, and that if it
+were removed the two baselines would converge. This investigates it.
+
+Two candidates were eliminated before profiling, from data the phase already
+owned:
+
+* **HBM residency.** `off` measures within **0.20-0.54%** of itself whether
+  the draft is a separate 6.1 GB resident (`w4a16-quantized`) or shares the
+  target's own tensors (`target-matching`, `SHARE_WEIGHTS=1`). A cost that
+  does not move when 6.1 GB appears is not a memory cost.
+* **The instrument.** Section 32 removed the profiler and koff trace and the
+  tax fell from 17-22% to 5.6-9.4% at LI/LIO, with the residual reproducing
+  on h103 (0.933/0.925 against our 0.915/0.930). What remains is our
+  implementation, not this box.
+
+### The device does identical work
+
+`off` pins K to 0, so it should run exactly the target's forward passes. It
+does, to 0.07%:
+
+| | stock | `off` |
+| --- | --- | --- |
+| SS b32 device | 7.290 ms/step | **7.285** |
+| LO b8 device | 6.981 ms/step | **6.966** |
+| SS b32 wall | 11.910 | **14.946** |
+| LO b8 wall | 11.869 | **14.575** |
+| SS b32 **idle** | 4.619 | **7.661** |
+| LO b8 **idle** | 4.906 | **7.627** |
+
+**The entire tax is idle time.** The GPU does the same work and waits longer
+for the host.
+
+### It is one call
+
+Ranked by per-step host delta, the top entry is not merely largest — it is
+almost the whole thing:
+
+| | stock | `off` | share of tax |
+| --- | --- | --- | --- |
+| SS b32 `cudaEventSynchronize` | 3.368 ms, 1.0 calls | **6.046 ms, 2.0 calls** | **88%** |
+| LO b8 `cudaEventSynchronize` | 3.637 ms, 1.0 calls | **5.801 ms, 2.0 calls** | **80%** |
+
+Every other host event moves by under 70 us/step, and several move the other
+way. **`off` performs one additional blocking synchronization per step, and
+it costs 2.2-2.7 ms.**
+
+### Where it comes from, and why it is structural
+
+`gpu_model_runner.py:942-945` creates `num_accepted_tokens_event` whenever
+`self.num_spec_tokens` is set, and `:2107` synchronizes on it every step:
+
+```python
+if self.num_spec_tokens:
+    self.draft_token_ids_event = torch.Event()
+    self.num_accepted_tokens_event = torch.Event()
+...
+if self.num_accepted_tokens_event is not None:
+    self.num_accepted_tokens_event.synchronize()
+```
+
+The condition is `num_spec_tokens`, which is the **configured maximum** (K=4
+in our boots), not the per-step schedule. `off` sets
+`num_speculative_tokens_per_batch_size: [[1, 32, 0]]` — zero tokens drafted —
+but `num_speculative_tokens` remains 4, so the event is created and
+synchronized on every step even though no acceptance count is ever produced.
+
+**This is upstream vLLM's speculative-decoding path, not phase-98 code.** Any
+deployment that configures speculation and then disables it per-batch pays
+it, which is exactly what a K/OFF ladder does whenever it parks.
+
+### What this settles
+
+* **The tax is not intrinsic to having speculation resident.** It is a
+  host-side round-trip whose only purpose is to read back a count that a
+  parked step does not compute.
+* **It is a fixed per-step cost**, which is why the *relative* tax tracks
+  step cheapness: 25.5% of a stock step at SS b32 and 22.8% at LO b8 in
+  absolute terms, but 37% and 14.6% of throughput because SS b32's steps are
+  cheap and LO b8's are not.
+* **The researcher's premise is supported.** A gate on the per-step schedule
+  rather than the configured maximum would remove 80-88% of the residual tax
+  and bring `off` close to `stock` — the condition under which scoring against
+  `off` and against `stock` converge.
+
+### What it does NOT settle, and the honest caveat
+
+**A fix is not demonstrated here.** The measurement locates the call and
+attributes the cost; it does not show that gating it is correct. The event is
+also recorded unconditionally at `:1605` and `:1611`, and whether the
+synchronize can be skipped when zero tokens were drafted requires reading the
+async-scheduling path that consumes `num_accepted_tokens`, not just the call
+site. That is a change to upstream runtime code and belongs behind a test,
+not behind this measurement.
+
+**And it does not transfer to the armed arms unchanged.** An armed step
+genuinely produces acceptance counts, so it needs the readback; the question
+there is whether it can be overlapped rather than removed. Section 26 already
+measured that the armed path's host time is what suppresses lever value — the
+window's benefit is (attention removed) minus (host exposed) — so removing
+host stalls would raise armed throughput *and* reorder levers, as section 33
+demonstrated when the instrument came out. **The tax is not a uniform factor
+that cancels in a ratio.**
+
+### Scope
+
+Two operating points, single boots, `torch.profiler` with CPU and CUDA
+activities, 40 profiled steps after 30 warmup. The profiler inflates absolute
+host time, so the wall figures here are larger than the scored runs' and only
+the stock-versus-off comparison within each profile is used.

@@ -1,0 +1,104 @@
+{
+  "batch": 32,
+  "content_cell": "SS",
+  "device_identical": true,
+  "per_step_ms": {
+    "off": {
+      "device": 7.285,
+      "host_cpu": 7.6255,
+      "idle": 7.6607,
+      "wall": 14.9457
+    },
+    "stock": {
+      "device": 7.2904,
+      "host_cpu": 5.0485,
+      "idle": 4.6192,
+      "wall": 11.9096
+    }
+  },
+  "record_type": "w98_engine_tax_summary",
+  "schema_version": 1,
+  "tax_ms_per_step": 3.0361,
+  "top_host_deltas": [
+    {
+      "delta_us_per_step": 2678.3,
+      "event": "cudaEventSynchronize",
+      "off_calls_per_step": 2.0,
+      "off_us_per_step": 6046.1,
+      "stock_calls_per_step": 1.0,
+      "stock_us_per_step": 3367.8
+    },
+    {
+      "delta_us_per_step": -147.0,
+      "event": "cudaDeviceSynchronize",
+      "off_calls_per_step": 0.05,
+      "off_us_per_step": 19.7,
+      "stock_calls_per_step": 0.05,
+      "stock_us_per_step": 166.7
+    },
+    {
+      "delta_us_per_step": 67.2,
+      "event": "aten::copy_",
+      "off_calls_per_step": 22.0,
+      "off_us_per_step": 136.5,
+      "stock_calls_per_step": 8.93,
+      "stock_us_per_step": 69.3
+    },
+    {
+      "delta_us_per_step": -54.0,
+      "event": "cuLaunchKernelEx",
+      "off_calls_per_step": 3.0,
+      "off_us_per_step": 24.7,
+      "stock_calls_per_step": 8.93,
+      "stock_us_per_step": 78.7
+    },
+    {
+      "delta_us_per_step": 53.0,
+      "event": "cudaMemcpyAsync",
+      "off_calls_per_step": 14.0,
+      "off_us_per_step": 116.5,
+      "stock_calls_per_step": 5.92,
+      "stock_us_per_step": 63.6
+    },
+    {
+      "delta_us_per_step": 39.5,
+      "event": "aten::slice",
+      "off_calls_per_step": 55.0,
+      "off_us_per_step": 99.3,
+      "stock_calls_per_step": 30.77,
+      "stock_us_per_step": 59.8
+    },
+    {
+      "delta_us_per_step": -28.9,
+      "event": "aten::empty",
+      "off_calls_per_step": 4.0,
+      "off_us_per_step": 17.6,
+      "stock_calls_per_step": 8.93,
+      "stock_us_per_step": 46.5
+    },
+    {
+      "delta_us_per_step": 26.7,
+      "event": "cudaLaunchKernel",
+      "off_calls_per_step": 13.0,
+      "off_us_per_step": 128.6,
+      "stock_calls_per_step": 11.0,
+      "stock_us_per_step": 101.9
+    },
+    {
+      "delta_us_per_step": 22.1,
+      "event": "aten::add",
+      "off_calls_per_step": 3.0,
+      "off_us_per_step": 22.1,
+      "stock_calls_per_step": 0.0,
+      "stock_us_per_step": 0.0
+    },
+    {
+      "delta_us_per_step": -21.8,
+      "event": "cudaEventQuery",
+      "off_calls_per_step": 0.0,
+      "off_us_per_step": 0.0,
+      "stock_calls_per_step": 9.72,
+      "stock_us_per_step": 21.8
+    }
+  ]
+}
