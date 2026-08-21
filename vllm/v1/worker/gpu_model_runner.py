@@ -943,6 +943,10 @@ class GPUModelRunner(
         if self.num_spec_tokens:
             self.draft_token_ids_event = torch.Event()
             self.num_accepted_tokens_event = torch.Event()
+            # Whether the draft-token copy actually queued device work. A
+            # parked step (per-step K=0) drafts nothing, so its "copy" is a
+            # zero-width no-op and there is nothing to wait for.
+            self.draft_token_ids_pending = False
             self.draft_token_ids_copy_stream = torch.cuda.Stream()
             self.draft_token_ids_cpu = torch.empty(
                 (self.max_num_reqs, self.num_spec_tokens),
@@ -5093,6 +5097,16 @@ class GPUModelRunner(
         default_stream = torch.cuda.current_stream()
         num_reqs = draft_token_ids.shape[0]
         num_spec_tokens = draft_token_ids.shape[1]
+        # A step that drafted nothing has nothing to transfer. Both call
+        # sites reach here with a zero-width tensor when the per-step schedule
+        # is K=0 -- the K/OFF ladder's parked action -- and the copy path then
+        # calls `wait_stream(default_stream)`, which blocks the copy stream on
+        # the WHOLE forward pass, records an event and waits on it, in order
+        # to move zero bytes. Measured on Qwen3-8B that round trip is 2.2-2.7
+        # ms per step: 14.6% of a parked LO step and 37% of a parked SS step
+        # at batch 32.
+        if num_spec_tokens == 0:
+            zeros_only = True
         with torch.cuda.stream(self.draft_token_ids_copy_stream):
             if not zeros_only:
                 # Trigger async copy of draft token ids to cpu.
@@ -5100,10 +5114,15 @@ class GPUModelRunner(
                 self.draft_token_ids_cpu[:num_reqs, :num_spec_tokens].copy_(
                     draft_token_ids, non_blocking=True
                 )
+                self.draft_token_ids_event.record()
+                self.draft_token_ids_pending = True
             else:
-                # No copy needed, just zero-out cpu tensor.
+                # No copy needed, just zero-out cpu tensor. This is a host
+                # write to pinned memory, so it queues no device work and the
+                # event is neither recorded nor waited on: a step that drafts
+                # nothing must not pay a device round trip to learn it.
                 self.draft_token_ids_cpu[:num_reqs, :num_spec_tokens] = 0
-            self.draft_token_ids_event.record()
+                self.draft_token_ids_pending = False
 
     def _get_draft_token_ids_cpu(self) -> tuple[list[list[int]], list[str]]:
         if isinstance(self._draft_token_ids, list):
@@ -5113,7 +5132,8 @@ class GPUModelRunner(
             return [], []
         assert self.draft_token_ids_event is not None
         assert self.draft_token_ids_cpu is not None
-        self.draft_token_ids_event.synchronize()
+        if self.draft_token_ids_pending:
+            self.draft_token_ids_event.synchronize()
         assert isinstance(self._draft_token_ids, torch.Tensor)
         num_spec_tokens = self._draft_token_ids.shape[1]
         return self.draft_token_ids_cpu[

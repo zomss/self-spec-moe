@@ -249,6 +249,13 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     # `w98_artifacts` exists to prevent, and invisible in the record because
     # every arm would be clamped identically.
     args.max_num_seqs = max(args.max_num_seqs or 0, BATCH)
+    if os.environ.get("W98_LO_ASYNC") == "1":
+        # Async scheduling moves draft-token bookkeeping into the worker, so
+        # `_copy_draft_token_ids_to_cpu` takes its early return and the
+        # per-step host round trip disappears (`gpu_model_runner.py:5078`).
+        # Only P4 same-event capture forbids it, and the scored boots set no
+        # capture paths, so `capture_enabled` is False here.
+        args.async_scheduling = True
     engine = LLMEngine.from_engine_args(args)
     outputs: dict[str, list[int]] = {}
     try:

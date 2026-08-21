@@ -3901,3 +3901,100 @@ Two operating points, single boots, `torch.profiler` with CPU and CUDA
 activities, 40 profiled steps after 30 warmup. The profiler inflates absolute
 host time, so the wall figures here are larger than the scored runs' and only
 the stock-versus-off comparison within each profile is used.
+
+---
+
+## 47. The fix is correct and the attribution was wrong
+
+Section 46 profiled `off` against `stock`, found `cudaEventSynchronize` going
+from one call per step to two, and attributed **80-88% of the engine tax** to
+it. This implements the removal and measures it. The fix works; the
+attribution does not survive.
+
+### The fix
+
+The parked path does not use the `zeros_only` flag the code already carries —
+it reaches `_copy_draft_token_ids_to_cpu` through the ordinary route at
+`:4761` with a **zero-width** tensor. So a step that drafts nothing was
+executing:
+
+```python
+self.draft_token_ids_copy_stream.wait_stream(default_stream)  # block on the WHOLE forward
+self.draft_token_ids_cpu[:num_reqs, :0].copy_(draft_token_ids)  # transfer zero bytes
+self.draft_token_ids_event.record()
+...
+self.draft_token_ids_event.synchronize()                       # then wait for it
+```
+
+Gating on the real condition — `num_spec_tokens == 0` — removes it. Verified
+by wrapping the live runner's event objects: `draft_token_ids_event` record
+and synchronize are **gone from parked steps and unchanged on armed steps**,
+which is the intended scope.
+
+### What it buys, measured on a reserved lane
+
+Identical token counts on both sides, so no workload confound:
+
+| point | arm | before | after | change |
+| --- | --- | --- | --- | --- |
+| SS b32 | `off` | 0.6299 | 0.6456 | **+2.50%** |
+| SS b32 | `w1024/skip4` | 0.8923 | 0.8996 | +0.81% |
+| SS b32 | `woff/skip4` | 1.0679 | 1.0652 | −0.25% |
+| LO b8 | `off` | 0.8540 | 0.8570 | +0.34% |
+| LO b8 | `w1024/skip4` | 1.3614 | 1.3589 | −0.19% |
+| LO b8 | `woff/skip4` | 1.2871 | 1.2848 | −0.18% |
+
+**+2.50% at the worst-taxed point and nothing anywhere else**, against
+section 46's predicted 80-88% of a 14.6-37% tax. The armed movements are
+inside the 1.2% replicate spread, as they should be — the fix cannot touch a
+step that drafts tokens.
+
+### Section 46's attribution is retracted
+
+The profiler measured a real 2.678 ms/step difference in `cudaEventSynchronize`,
+and that difference was **not causal**. Under `torch.profiler` with CPU
+activities the timeline serializes: a wait that overlaps other work in a
+normal run is recorded at its full duration when tracing forces ordering. So
+the call was correctly identified as *present* and wrongly identified as
+*expensive*.
+
+This is section 32's lesson turned inward. There the instrument sat on one
+side of a comparison between arms; here it distorted an attribution **within**
+one arm. The same correction applies: **profiler-attributed host time is
+evidence of what runs, not of what costs.** An attribution is only established
+by removing the thing and re-measuring, which is what this section does.
+
+### Where the tax actually is — narrowed, not found
+
+What the arc now knows about the 5.6-37% gap between `off` and `stock`:
+
+| candidate | status |
+| --- | --- |
+| HBM residency of the draft | **eliminated** — `off` within 0.20-0.54% of itself with 6.1 GB present or absent |
+| the profiler and koff trace | **eliminated** — removed in section 32, worth 10-15 points, and the residual reproduces on h103 |
+| the zero-width draft-token round trip | **eliminated here** — worth 2.5% at its best point |
+| device work | **eliminated** — identical to 0.07% |
+| **host-GPU serialization generally** | **the surviving candidate** |
+
+The last row is where the evidence points. Async scheduling — which overlaps
+host scheduling work with GPU execution rather than removing any single call —
+bought `off` **+18.9%** at LO b8 at equal work (section 47a below), which is
+two orders more than removing the individual sync. That suggests the tax is
+the *serialization* of per-step host work against GPU execution, distributed
+across the step rather than concentrated in one wait.
+
+### The fix is kept
+
+It is correct on its own terms — a step that drafts nothing should not block
+on a zero-byte transfer gated on the whole forward — it is worth 2.5% where
+the tax is worst, and it is confined to parked steps by construction. It is
+not the answer to the tax.
+
+### Scope and verification
+
+Two operating points, one boot each, on a reserved lane after four boots of a
+first attempt were lost to a co-tenant holding 18 GB. The vLLM spec-decode
+test suite fails identically with and without the change (45 failed, 1
+passed, 6 skipped), so it is broken at baseline here and provides no signal
+either way; the phase-98 suite passes 358 of 360 with the two known
+pre-existing failures.

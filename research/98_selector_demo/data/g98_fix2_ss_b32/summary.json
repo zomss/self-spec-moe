@@ -1,0 +1,68 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 1422.533,
+      "total_out_tokens": 5476,
+      "wall_s": 3.849
+    },
+    "stock": {
+      "cap_hits": 0,
+      "tokens_per_s": 2204.001,
+      "total_out_tokens": 5388,
+      "wall_s": 2.445
+    },
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 1982.279,
+      "total_out_tokens": 5517,
+      "wall_s": 2.783
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 2347.223,
+      "total_out_tokens": 5406,
+      "wall_s": 2.303
+    }
+  },
+  "batch": 32,
+  "content_cell": "SS",
+  "divergence_gate": {
+    "mismatches": [
+      "stock diverges from off on SS-0",
+      "stock diverges from off on SS-10",
+      "stock diverges from off on SS-13",
+      "stock diverges from off on SS-14",
+      "stock diverges from off on SS-15",
+      "stock diverges from off on SS-19",
+      "stock diverges from off on SS-2",
+      "stock diverges from off on SS-20",
+      "stock diverges from off on SS-21",
+      "stock diverges from off on SS-4",
+      "stock diverges from off on SS-8",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-12",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-13",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-18",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-2",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-25",
+      "w4a16-quantized/w1024/skip4 diverges from off on SS-7",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-0",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-12",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-13",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-15",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-18",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-19",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-2",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-20",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-21",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-4",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-5",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-7",
+      "w4a16-quantized/woff/skip4 diverges from off on SS-8"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
