@@ -15,6 +15,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from vllm.v1.spec_decode import koff_runtime
 from vllm.v1.spec_decode.koff_runtime import (
     BOOT_SCOPE_MINIMAL_B0,
     BOOT_SCOPE_W98_D2,
@@ -85,12 +86,46 @@ def _validate(draft: _ModelConfig | None = None, **overrides) -> None:
 class ScopeRegistryTests(unittest.TestCase):
     """Scopes are closed and default to the Phase 97 behaviour."""
 
-    def test_three_registered_scopes(self) -> None:
-        """w98-d2 (G98-D acceptance) joins the closed registry."""
+    def test_four_registered_scopes(self) -> None:
+        """w98-d2 (acceptance) and w98-ksweep (draft depth) join the registry.
+
+        The set is asserted exactly so a scope cannot be added silently. Each
+        addition widens what K a boot may select, which is the one axis the
+        closed registry exists to hold shut.
+        """
         self.assertEqual(
             BOOT_SCOPES,
-            {BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2},
+            {
+                BOOT_SCOPE_MINIMAL_B0,
+                BOOT_SCOPE_W98_LATTICE,
+                BOOT_SCOPE_W98_D2,
+                koff_runtime.BOOT_SCOPE_W98_KSWEEP,
+            },
         )
+
+    def test_ksweep_admits_the_swept_depths_and_scored_scopes_do_not(self) -> None:
+        """K=1,2 resolve only under w98-ksweep; scored scopes still refuse."""
+        import os
+        from unittest import mock
+
+        for scope, admitted in (
+            (koff_runtime.BOOT_SCOPE_W98_KSWEEP, {0, 1, 2, 4, 8}),
+            (BOOT_SCOPE_W98_LATTICE, {0, 4}),
+            (BOOT_SCOPE_MINIMAL_B0, {0, 4}),
+        ):
+            with mock.patch.dict(os.environ, {"VLLM_SELF_SPEC_BOOT_SCOPE": scope}):
+                self.assertEqual(set(koff_runtime._active_k_values()), admitted)
+                for k in sorted(admitted):
+                    self.assertEqual(koff_runtime.action_for_k(k).k, k)
+                for k in {1, 2} - admitted:
+                    with self.assertRaises(KOffRuntimeError):
+                        koff_runtime.action_for_k(k)
+
+    def test_ksweep_actions_declare_the_right_query_width(self) -> None:
+        """A depth-K action verifies K+1 positions; the graph id must match."""
+        for action in koff_runtime.KSWEEP_ACTIONS:
+            self.assertEqual(action.target_query_width, action.k + 1)
+            self.assertEqual(action.target_graph_id, f"target-k{action.k + 1}")
 
     def test_unknown_scope_fails_closed(self) -> None:
         with self.assertRaises(KOffRuntimeError) as ctx:

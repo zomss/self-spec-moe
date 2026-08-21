@@ -1,0 +1,41 @@
+oser.py:4466] Draft FULL-CG: running the draft chain attention eagerly (non-MLA backend); the captured decode graph is not replay-safe for the draft's growing sequence.
+INFO 08-21 09:19:26 [gpu_model_runner.py:6957] Profiling CUDA graph memory: PIECEWISE=37 (largest=320), FULL=25 (largest=160)
+INFO 08-21 09:19:29 [gpu_model_runner.py:7062] Estimated CUDA graph memory: 31.02 GiB total
+INFO 08-21 09:19:29 [gpu_worker.py:509] Available KV cache memory: 2.47 GiB
+INFO 08-21 09:19:29 [gpu_worker.py:524] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-utilization=0.5083 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 1.0000. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 483, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:                      ^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 447, in main
+[rank0]:     measure(
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 259, in measure
+[rank0]:     engine = LLMEngine.from_engine_args(args)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py", line 179, in from_engine_args
+[rank0]:     return cls(
+[rank0]:            ^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py", line 105, in __init__
+[rank0]:     self.engine_core = EngineCoreClient.make_client(
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py", line 105, in make_client
+[rank0]:     return InprocClient(vllm_config, executor_class, log_stats)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py", line 287, in __init__
+[rank0]:     self.engine_core = EngineCore(*args, **kwargs)
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core.py", line 133, in __init__
+[rank0]:     kv_cache_config = self._initialize_kv_caches(vllm_config)
+[rank0]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/tracing/otel.py", line 178, in sync_wrapper
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core.py", line 294, in _initialize_kv_caches
+[rank0]:     kv_cache_configs = get_kv_cache_configs(
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/core/kv_cache_utils.py", line 2071, in get_kv_cache_configs
+[rank0]:     _check_enough_kv_cache_memory(
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/core/kv_cache_utils.py", line 741, in _check_enough_kv_cache_memory
+[rank0]:     raise ValueError(
+[rank0]: ValueError: To serve at least one request with the model's max seq len (40960), (5.62 GiB KV cache is needed, which is larger than the available KV cache memory (2.47 GiB). Based on the available memory, the estimated maximum model length is 18016. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+[rank0]:[W821 09:19:31.042360073 ProcessGroupNCCL.cpp:1575] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

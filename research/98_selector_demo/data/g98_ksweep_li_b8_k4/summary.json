@@ -1,0 +1,33 @@
+{
+  "arms": {
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 444.961,
+      "total_out_tokens": 5673,
+      "wall_s": 12.749
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 408.623,
+      "total_out_tokens": 5214,
+      "wall_s": 12.76
+    }
+  },
+  "batch": 8,
+  "content_cell": "LI",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-0",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-2",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-3",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-4",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-5",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-6",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LI-7"
+    ],
+    "ok": false,
+    "reference": "w4a16-quantized/w1024/skip4"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

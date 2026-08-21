@@ -249,6 +249,17 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     # `w98_artifacts` exists to prevent, and invisible in the record because
     # every arm would be clamped identically.
     args.max_num_seqs = max(args.max_num_seqs or 0, BATCH)
+    if os.environ.get("W98_LO_K"):
+        # Draft depth as a swept dimension. K was frozen at 4 for every scored
+        # run of this phase; the measured acceptance profiles put the optimum
+        # at 2 for fourteen of twenty-eight (cell, arm) pairs. Needs the
+        # w98-ksweep boot scope, which is the only registry admitting K=1,2.
+        k = int(os.environ["W98_LO_K"])
+        args.speculative_config = {
+            **args.speculative_config,
+            "num_speculative_tokens": max(k, 1),
+            "num_speculative_tokens_per_batch_size": [[1, 64, k]],
+        }
     if os.environ.get("W98_LO_ASYNC") == "1":
         # Async scheduling moves draft-token bookkeeping into the worker, so
         # `_copy_draft_token_ids_to_cpu` takes its early return and the
@@ -361,6 +372,14 @@ def run_all(output_dir: Path, gpu: int) -> None:
             env = matrix._boot_child_environment(
                 {k: v for k, v in base.items() if not k.startswith("VLLM_SELF_SPEC")}
             )
+        elif os.environ.get("W98_LO_K"):
+            # The K sweep needs its own registry; `boot_environment` pins the
+            # scored scope, which admits only K=4 and would refuse the boot.
+            base = d3.boot_environment(cfg, trace, "corrected")
+            base["VLLM_SELF_SPEC_BOOT_SCOPE"] = "w98-ksweep"
+            base["VLLM_SELF_SPEC_PROFILE"] = "0"
+            base.pop("VLLM_SELF_SPEC_KOFF_TRACE", None)
+            env = matrix._boot_child_environment(base)
         elif os.environ.get("W98_LO_NOINSTRUMENT") == "1":
             base = d3.boot_environment(cfg, trace, "corrected")
             base["VLLM_SELF_SPEC_PROFILE"] = "0"

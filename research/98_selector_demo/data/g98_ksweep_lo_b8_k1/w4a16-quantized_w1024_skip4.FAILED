@@ -1,0 +1,43 @@
+s=[], has_structured_output_requests=false, pending_structured_output_tokens=false, num_invalid_spec_tokens=null, kv_connector_metadata=null, ec_connector_metadata=null, new_block_ids_to_zero=null, num_spec_tokens_to_schedule=1, koff_runtime=KOffSchedulerMetadata(engine_step_index=1, verified_action_id='off', next_action_id='w98-ksweep-k1', selection_intent='exploit', capture_cohort_arm=false, decode_req_ids=['LO-0-8b9ee072', 'LO-1-8145a340', 'LO-2-88df806c', 'LO-3-bdadc0f3', 'LO-4-b2ba5411', 'LO-5-ab1ad9ff', 'LO-6-b7164ed5', 'LO-7-b703ba9a'], pure_decode=true, total_scheduled_kv_tokens=945, generated_suffix_min=1, generated_suffix_max=1, shared_target_kv_blocks_in_use=65, shared_target_kv_block_capacity=22448, preemptions=0, recomputed_tokens=0, scheduled_at_s=1208328.481072318, aborted_action_id=null, discarded_draft_width=0, aborted_draft_request_count=0, generated_suffix_by_req=[1, 1, 1, 1, 1, 1, 1, 1]))
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 502, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:                      ^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 466, in main
+[rank0]:     measure(
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 296, in measure
+[rank0]:     for request_output in engine.step():
+[rank0]:                           ^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py", line 304, in step
+[rank0]:     outputs = self.engine_core.get_output()
+[rank0]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py", line 290, in get_output
+[rank0]:     outputs, model_executed = self.engine_core.step_fn()
+[rank0]:                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core.py", line 499, in step
+[rank0]:     model_output = self.model_executor.sample_tokens(grammar_output)
+[rank0]:                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py", line 126, in sample_tokens
+[rank0]:     return self.collective_rpc(
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/executor/uniproc_executor.py", line 92, in collective_rpc
+[rank0]:     result = run_method(self.driver_worker, method, args, kwargs)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/serial_utils.py", line 510, in run_method
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/worker/gpu_worker.py", line 835, in sample_tokens
+[rank0]:     return self.model_runner.sample_tokens(grammar_output)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/worker/gpu_model_runner.py", line 4926, in sample_tokens
+[rank0]:     koff_runtime_evidence = make_runner_evidence(
+[rank0]:                             ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py", line 1915, in make_runner_evidence
+[rank0]:     raise KOffRuntimeError(
+[rank0]: vllm.v1.spec_decode.koff_runtime.KOffRuntimeError: w98-ksweep-k1 used draft step-0 query width 2, expected 1

@@ -4133,3 +4133,102 @@ families, **all twenty arms collided** and the last record read silently won.
 That is the identity-in-the-name defect `w98_artifacts` was written to
 prevent, reappearing one layer up. Now filtered by weight version. Earlier
 results are unaffected: every prior invocation used single-family directories.
+
+---
+
+## 49. The K sweep: draft depth measured, and the analytic model half-refuted
+
+Section 48 registered K as a free search dimension on the strength of an
+analytic argument: `pos_accepted` is a prefix profile, so one KMAX=8
+measurement yields `tau(K)` for every K, cost is `K * D_fwd + V`, and the
+implied optimum is K=2 for fourteen of twenty-eight (cell, arm) pairs against
+the frozen K=4. This measures it.
+
+### Extending the registry took four gates
+
+K was pinned at 4 for every scored run, and the closed registry enforces that
+in four independent places. Adding a `w98-ksweep` scope -- mirroring how
+`w98-d2` added K=8, rather than weakening any scored scope -- required all
+four:
+
+| gate | governs | found by |
+| --- | --- | --- |
+| `BOOT_SCOPES` | which scope names may boot | reading |
+| `ACTIONS_BY_K` / `_active_k_values` | which K a running boot may select per step | reading |
+| `validate_boot_config` depth check | which `num_speculative_tokens` may be **configured** | **failure** |
+| `W98_LATTICE_SCOPES` | which **levers** the scope admits | **failure** |
+
+Three launches failed before the fourth ran. **Every failure was fail-closed
+and no contaminated record was written** -- at no point did a boot run at K=4
+while labelled K=2, which is the outcome that would have produced four
+identical-looking result sets and a confident wrong conclusion. The scored
+scopes are byte-identical, still refuse K=1 and K=2, and two new tests pin
+that (`test_w98_boot_scope.py`, 41 passing).
+
+The distinction that cost two attempts is worth stating: **"may boot", "may
+use a lever", and "may use a depth" are three separate sets.** A comment now
+says so at the definition.
+
+### K=1 is not reachable, for a structural reason
+
+```text
+KOffRuntimeError: w98-ksweep-k1 used draft step-0 query width 2, expected 1
+```
+
+The chain's step-0 proposes at a width tied to the previous step's accepted
+count, and the shared-KV step-0 compaction produces width 2 where a depth-1
+action declares 1. That is the draft chain's structure, not a registry gap,
+so K=1 is left unmeasured and the assertion is left standing.
+
+### The measurement
+
+Against each cell's own stock boot, quantized family, batch 8:
+
+| cell | arm | K=2 | K=4 | K=8 | best | model said |
+| --- | --- | --- | --- | --- | --- | --- |
+| LI | `w1024/skip4` | **1.1217** | 1.1152 | 0.8722 | K=2 | K=2 |
+| LI | `woff/skip4` | **1.0565** | 1.0241 | 0.9457 | K=2 | K=5 |
+| LO | `w1024/skip4` | 1.2953 | **1.5034** | 1.3976 | K=4 | K=2 |
+| LO | `woff/skip4` | **1.3858** | 1.2395 | 1.2218 | K=2 | K=3 |
+
+**K=2 wins three of four.** So the premise holds -- the frozen K=4 is not the
+right depth, and depth belongs in the search.
+
+**K=8 loses everywhere**, by 8-27%. The model predicted that correctly and it
+is the clearest result of the sweep: deeper drafting is never worth it on this
+lattice, because every additional position is reached only if all earlier ones
+were accepted while its cost is paid unconditionally.
+
+### What the analytic model gets wrong
+
+It picks the optimum in **one of four** cases, and its magnitudes are wrong
+where it was most confident:
+
+* LI `w1024/skip4`: predicted K=4 loses **10.5%**, measured **0.6%**.
+* LO `w1024/skip4`: predicted K=2 best, measured K=4 best by **16%**.
+
+This is section 48's verdict arriving on a second quantity. There, the
+analytic `tau*V/(K*D+V)` form ranked *levers* wrongly even when fed perfectly
+measured acceptance, and the defect was the cost side -- it omits the drain
+integral, the batch-shared/per-request split, host exposure and the engine
+tax. The same form applied to *depth* fails the same way, and for the same
+reason: it treats cost as `K * D_fwd + V` when a deeper chain also changes
+the verify width, the KV footprint and the host work per step.
+
+**So K is a real search dimension whose optimum cannot be computed from the
+acceptance profile alone.** Section 48's claim that "K is free to search" is
+therefore withdrawn in its strong form: the *acceptance* half is free, and the
+*cost* half is not, so choosing K needs the full model or a measurement.
+
+### What stands
+
+* **K belongs in the lattice** -- three of four arms want K=2, not the frozen 4.
+* **K=8 can be excluded a priori** on this lattice, which halves the space a
+  sweep must cover.
+* **The registry now supports the sweep** without touching any scored scope.
+
+### Scope
+
+Two cells, two arms, one batch, single boots, K in {2, 4, 8}; K=1 unreachable.
+The arms are the two the refined grid measures most often, not a lattice-wide
+sweep, so "K=2 usually wins" is four data points rather than a distribution.

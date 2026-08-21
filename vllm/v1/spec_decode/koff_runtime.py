@@ -25,8 +25,16 @@ W512_ACTION_ID = "target-matching-w512-masked-k4"
 # the w98-d2 boot scope -- every other scope keeps the closed K in {0, 4}.
 KMAX8_ACTION_ID = "w98-d2-kmax8"
 W98_D2_KMAX = 8
+# W98-KSWEEP measures cost and throughput as a function of draft depth. K was
+# frozen at 4 for every scored run of this phase, and the acceptance profiles
+# show that choice is optimal in 3 of 28 (cell, arm) pairs -- windowed arms
+# want K=2, where a window has already cost 31% of acceptance so tau(K)
+# saturates early, and short-prompt cells want K=5-8. Admitted ONLY under the
+# w98-ksweep boot scope; every scored scope keeps its own closed set.
+KSWEEP_K_VALUES = (1, 2)
 ALLOWED_K_VALUES = frozenset({0, 4})
 W98_D2_ALLOWED_K_VALUES = frozenset({0, 4, W98_D2_KMAX})
+W98_KSWEEP_ALLOWED_K_VALUES = frozenset({0, *KSWEEP_K_VALUES, 4, W98_D2_KMAX})
 P4_MIN_SHARED_KV_BLOCKS = 21682
 P4_CAPTURE_PLAN_CONTRACT_ID = "p4-b0-same-boot-capture-plan-v1"
 P4_CAPTURE_COHORT_CONTRACT_ID = "p4-capture-cohort-barrier-v1"
@@ -64,13 +72,26 @@ BOOT_SCOPE_W98_LATTICE = "w98-lattice"
 # in exactly one registered way: the draft is unconditionally armed at
 # KMAX = 8 (see KMAX8_ACTION_ID).
 BOOT_SCOPE_W98_D2 = "w98-d2"
+BOOT_SCOPE_W98_KSWEEP = "w98-ksweep"
 BOOT_SCOPES = frozenset(
-    {BOOT_SCOPE_MINIMAL_B0, BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2}
+    {
+        BOOT_SCOPE_MINIMAL_B0,
+        BOOT_SCOPE_W98_LATTICE,
+        BOOT_SCOPE_W98_D2,
+        BOOT_SCOPE_W98_KSWEEP,
+    }
 )
 # Scopes that draw from the phase-98 lattice: a declared quantized/skipped
 # draft realization is admitted, so its weight version legitimately differs
 # from the target's.
-W98_LATTICE_SCOPES = frozenset({BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2})
+# Scopes that admit the phase-98 lever axes (quantized draft, KV window,
+# skipped layers). Distinct from BOOT_SCOPES, which is only the set of names
+# that may boot, and from the K registries: a scope must be listed here to
+# use a lever, and there separately to use a depth. w98-ksweep needs both --
+# it sweeps K over the same levered arms the lattice measures.
+W98_LATTICE_SCOPES = frozenset(
+    {BOOT_SCOPE_W98_LATTICE, BOOT_SCOPE_W98_D2, BOOT_SCOPE_W98_KSWEEP}
+)
 # The w98 scope relaxes exactly three axes, each bounded to the frozen lattice
 # in research/98_selector_demo/data/prereg/w98_prereg_matrix.json.
 W98_WINDOWS = frozenset({0, 128, 256, 512, 1024})
@@ -762,6 +783,17 @@ KMAX8_ACTION = KOffAction(
     draft_graph_id="draft-target-matching-k1",
     draft_query_width=1,
 )
+KSWEEP_ACTIONS = tuple(
+    KOffAction(
+        action_id=f"w98-ksweep-k{k}",
+        k=k,
+        target_graph_id=f"target-k{k + 1}",
+        target_query_width=k + 1,
+        draft_graph_id="draft-target-matching-k1",
+        draft_query_width=1,
+    )
+    for k in KSWEEP_K_VALUES
+)
 ACTIONS_BY_ID = {
     OFF_ACTION.action_id: OFF_ACTION,
     K4_ACTION.action_id: K4_ACTION,
@@ -769,6 +801,13 @@ ACTIONS_BY_ID = {
 ACTIONS_BY_K = {action.k: action for action in ACTIONS_BY_ID.values()}
 W98_D2_ACTIONS_BY_ID = {**ACTIONS_BY_ID, KMAX8_ACTION.action_id: KMAX8_ACTION}
 W98_D2_ACTIONS_BY_K = {action.k: action for action in W98_D2_ACTIONS_BY_ID.values()}
+W98_KSWEEP_ACTIONS_BY_ID = {
+    **W98_D2_ACTIONS_BY_ID,
+    **{action.action_id: action for action in KSWEEP_ACTIONS},
+}
+W98_KSWEEP_ACTIONS_BY_K = {
+    action.k: action for action in W98_KSWEEP_ACTIONS_BY_ID.values()
+}
 
 
 def _active_boot_scope() -> str:
@@ -790,18 +829,24 @@ def _active_boot_scope() -> str:
 
 
 def _active_actions_by_id() -> dict[str, KOffAction]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_KSWEEP:
+        return W98_KSWEEP_ACTIONS_BY_ID
     if _active_boot_scope() == BOOT_SCOPE_W98_D2:
         return W98_D2_ACTIONS_BY_ID
     return ACTIONS_BY_ID
 
 
 def _active_actions_by_k() -> dict[int, KOffAction]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_KSWEEP:
+        return W98_KSWEEP_ACTIONS_BY_K
     if _active_boot_scope() == BOOT_SCOPE_W98_D2:
         return W98_D2_ACTIONS_BY_K
     return ACTIONS_BY_K
 
 
 def _active_k_values() -> frozenset[int]:
+    if _active_boot_scope() == BOOT_SCOPE_W98_KSWEEP:
+        return W98_KSWEEP_ALLOWED_K_VALUES
     if _active_boot_scope() == BOOT_SCOPE_W98_D2:
         return W98_D2_ALLOWED_K_VALUES
     return ALLOWED_K_VALUES
@@ -1069,19 +1114,33 @@ def validate_boot_config(
         raise KOffRuntimeError(
             f"minimal-B0 requires speculative method 'draft_model', got {method!r}"
         )
-    expected_spec_tokens = (
-        W98_D2_KMAX if options.boot_scope == BOOT_SCOPE_W98_D2 else 4
-    )
-    if getattr(spec_config, "num_speculative_tokens", None) != expected_spec_tokens:
-        # Legacy wording preserved for every scope but w98-d2.
-        label = (
-            BOOT_SCOPE_W98_D2
-            if options.boot_scope == BOOT_SCOPE_W98_D2
-            else "minimal-B0"
+    # w98-ksweep varies the configured depth by design -- it is the scope that
+    # exists to measure K -- so it checks membership rather than a single
+    # value. Every other scope keeps its pinned depth and its legacy wording.
+    if options.boot_scope == BOOT_SCOPE_W98_KSWEEP:
+        depth = getattr(spec_config, "num_speculative_tokens", None)
+        if depth not in W98_KSWEEP_ALLOWED_K_VALUES - {0}:
+            permitted = ", ".join(
+                str(v) for v in sorted(W98_KSWEEP_ALLOWED_K_VALUES - {0})
+            )
+            raise KOffRuntimeError(
+                f"{BOOT_SCOPE_W98_KSWEEP} permits num_speculative_tokens in "
+                f"{{{permitted}}}, got {depth}"
+            )
+    else:
+        expected_spec_tokens = (
+            W98_D2_KMAX if options.boot_scope == BOOT_SCOPE_W98_D2 else 4
         )
-        raise KOffRuntimeError(
-            f"{label} requires num_speculative_tokens={expected_spec_tokens}"
-        )
+        if getattr(spec_config, "num_speculative_tokens", None) != expected_spec_tokens:
+            # Legacy wording preserved for every scope but w98-d2.
+            label = (
+                BOOT_SCOPE_W98_D2
+                if options.boot_scope == BOOT_SCOPE_W98_D2
+                else "minimal-B0"
+            )
+            raise KOffRuntimeError(
+                f"{label} requires num_speculative_tokens={expected_spec_tokens}"
+            )
     if getattr(spec_config, "disable_padded_drafter_batch", False):
         raise KOffRuntimeError("minimal-B0 requires the padded draft-model batch")
 

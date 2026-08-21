@@ -1,0 +1,35 @@
+{
+  "arms": {
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 739.635,
+      "total_out_tokens": 1198,
+      "wall_s": 1.62
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 763.027,
+      "total_out_tokens": 1151,
+      "wall_s": 1.508
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 711.824,
+      "total_out_tokens": 1198,
+      "wall_s": 1.683
+    }
+  },
+  "batch": 8,
+  "content_cell": "SS",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on SS-2",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on SS-4",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on SS-7"
+    ],
+    "ok": false,
+    "reference": "w4a16-quantized/w1024/skip4"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

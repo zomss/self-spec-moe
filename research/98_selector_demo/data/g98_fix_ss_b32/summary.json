@@ -1,0 +1,37 @@
+{
+  "arms": {
+    "off": {
+      "cap_hits": 0,
+      "tokens_per_s": 1421.107,
+      "total_out_tokens": 5476,
+      "wall_s": 3.853
+    },
+    "stock": {
+      "cap_hits": 0,
+      "tokens_per_s": 2202.404,
+      "total_out_tokens": 5388,
+      "wall_s": 2.446
+    }
+  },
+  "batch": 32,
+  "content_cell": "SS",
+  "divergence_gate": {
+    "mismatches": [
+      "stock diverges from off on SS-0",
+      "stock diverges from off on SS-10",
+      "stock diverges from off on SS-13",
+      "stock diverges from off on SS-14",
+      "stock diverges from off on SS-15",
+      "stock diverges from off on SS-19",
+      "stock diverges from off on SS-2",
+      "stock diverges from off on SS-20",
+      "stock diverges from off on SS-21",
+      "stock diverges from off on SS-4",
+      "stock diverges from off on SS-8"
+    ],
+    "ok": false,
+    "reference": "off"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
