@@ -29,6 +29,20 @@ than fixing one configuration per job.
 * Self-spec's draft derives from the policy's own weights, so it tracks
   training automatically -- no draft model to retrain between iterations.
 
+## Objectives (registered 2026-08-22, researcher)
+
+1. **Beat the single static baseline with a big margin — over 10%.**
+2. **Test on real RL rollout**, demanding much longer context than the
+   phase-98 grid measured.
+3. **Test on other models.**
+
+Objective 1 raises the bar above the earlier E1 criterion (under ~3% fails
+the thesis): the target is now +10%, and the static-point analysis says the
+equal-mix ceiling at the measured operating points is +7.28% — so reaching
+10% requires the trajectory (intra-rollout switching), the longer contexts of
+objective 2 (the window crossover grows with context), or the K axis. E1 is
+the first pricing of that path.
+
 ## Design (working)
 
 * **Round 1 -- cost modeling with calibration.** The section-38 discipline:
