@@ -1,0 +1,108 @@
+{
+  "batch": 8,
+  "cell": "w4a16-quantized/w256/skip16",
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 16,
+    "window": 256
+  },
+  "content_cell": "LO",
+  "gen_tokens": 8192,
+  "record_type": "w98_long_u",
+  "rows": 34625,
+  "schema_version": 1,
+  "tau_profile": {
+    "buckets": {
+      "0": {
+        "armed_steps": 1051,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          608,
+          250,
+          83,
+          30,
+          11,
+          3,
+          1,
+          0
+        ],
+        "tau": 1.938154,
+        "tau_hi": 1.990225,
+        "tau_lo": 1.883441,
+        "unarmed_steps": 8,
+        "undefined_draws": 0
+      },
+      "1": {
+        "armed_steps": 3164,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          1832,
+          733,
+          285,
+          93,
+          31,
+          7,
+          0,
+          0
+        ],
+        "tau": 1.942162,
+        "tau_hi": 2.000651,
+        "tau_lo": 1.878362,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "2": {
+        "armed_steps": 8666,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          4923,
+          1852,
+          648,
+          217,
+          60,
+          13,
+          2,
+          0
+        ],
+        "tau": 1.890261,
+        "tau_hi": 1.931156,
+        "tau_lo": 1.853281,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "3": {
+        "armed_steps": 21732,
+        "clipped_excluded": 4,
+        "pos_accepted": [
+          12312,
+          4614,
+          1675,
+          453,
+          121,
+          35,
+          8,
+          1
+        ],
+        "tau": 1.884364,
+        "tau_hi": 1.930703,
+        "tau_lo": 1.838316,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      }
+    },
+    "depth": 8,
+    "kmax": 8,
+    "u_edges": [
+      256,
+      1024,
+      3072,
+      8192
+    ]
+  },
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

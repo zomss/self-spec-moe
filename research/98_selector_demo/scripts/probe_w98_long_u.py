@@ -90,6 +90,15 @@ if os.environ.get("W98_LONGU_QUANT") == "1":
     ]
 elif os.environ.get("W98_LONGU_WINDOWS") == "1":
     CONFIGS = list(WINDOW_CONFIGS)
+if os.environ.get("W98_LONGU_LATTICE") == "1":
+    # The full quantized lattice. Section 45 measured all forty arms end to
+    # end; acceptance exists for seven, so the selector cannot be scored on
+    # the grid its own ground truth now covers.
+    CONFIGS = [
+        {"quant": "w4a16-quantized", "window": w, "skip_count": s}
+        for w in ("off", 128, 256, 512, 1024)
+        for s in (0, 4, 8, 16)
+    ]
 if os.environ.get("W98_LONGU_ARMS"):
     # Restrict to named arms, for the batch axis. Section 22 measured
     # acceptance moving with concurrent batch by different amounts per lever,

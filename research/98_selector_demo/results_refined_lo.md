@@ -3998,3 +3998,138 @@ test suite fails identically with and without the change (45 failed, 1
 passed, 6 skipped), so it is broken at baseline here and provides no signal
 either way; the phase-98 suite passes 358 of 360 with the two known
 pre-existing failures.
+
+---
+
+## 48. The refined search design, measured against its own ground truth
+
+Section 45 measured all forty lattice arms at fourteen points, and section 47
+closed the tax investigation. That leaves the design question the arc was
+built to answer: **with forty arms to choose from, does a two-round selector
+find the right one, and how many measurements does it need?** Every input now
+exists, so this is analysis rather than a campaign.
+
+### What Round 1 cannot do
+
+**The sound elimination rule is nearly empty.** `(K+1)/q_lo < 1 + eps` kills
+only what cannot pay at *perfect* acceptance, which needs
+`draft > 3.93 x verify` — per draft forward, roughly the target's own cost.
+Measured at LI context:
+
+| arm | draft/verify | verdict |
+| --- | --- | --- |
+| `bf16 woff/skip0` | **4.51** | eliminated |
+| `bf16 woff/skip4` | **4.00** | eliminated |
+| `w4a16 woff/skip0` | 3.62 | survives |
+| `w4a16 w256/skip8` | 1.56 | survives |
+
+**It fires on 2 of 40 arms, and only on the unlevered bf16 corner** — arms
+section 45 already shows win nothing. The rule stays correct as the lattice
+improves and becomes less useful: every lever reduces draft cost, so the
+better the lever set, the less the rule can kill. Its threshold also scales
+with K, so at K=2 essentially nothing could ever be eliminated.
+
+**A cost-only front degenerates.** Ranking by `speedup(a) = (1+a)V/(KD+V)`
+over a swept accept length picks, in all four cells, an eight-arm front that
+is entirely **`woff/skip16`** — the cheapest draft and the worst arm in the
+lattice. At fixed acceptance, cost is the only term, so the most damaged
+lever always wins. This is the same blindness that makes elimination empty:
+levers trade cost against acceptance, and a round that sees only cost cannot
+see the trade.
+
+### What Round 1 can do
+
+Ranking with the section-38 cost model (long-context, two-batch, drain-
+integrated) and measured acceptance, restricted to K=4 where section 45's
+ground truth lives:
+
+| cell | measured best | rank of 20 | best within top-3 | shortfall |
+| --- | --- | --- | --- | --- |
+| LI | `w512/skip4` | **3** | 1.092 | **0.0%** |
+| LIO | `w512/skip4` | **3** | 1.251 | **0.0%** |
+| SS | `woff/skip4` | **3** | 1.068 | **0.0%** |
+| LO | `w1024/skip8` | 5 | 1.627 vs 1.659 | 2.0% |
+
+**Top-3 contains the true best at three of four cells; top-5 at four of
+four.** A confirmation budget of three costs nothing at three cells and 2.0%
+at the fourth.
+
+### Two rankers that do not work, and why
+
+| ranker | top-3 hit | top-5 hit |
+| --- | --- | --- |
+| analytic `tau*V/(K*D+V)`, product-bound acceptance | 1/4 | 2/4 |
+| analytic form, **measured** acceptance | **1/4** | — |
+| **section-38 model, measured acceptance** | **3/4** | **4/4** |
+
+The middle row is the diagnostic. Substituting perfect acceptance into the
+analytic form changes nothing — the true best still ranks 6, 5, 2 and 12 —
+so **the defect is the cost side, not the acceptance screen.** The analytic
+form omits what sections 7, 19, 26 and 47 measured: the drain integral, the
+batch-shared/per-request split, host exposure that differs per lever, and the
+engine tax. Those are not refinements; without them the ranking is wrong.
+
+**And the product bound must not be used as a ranker.** It is honest as a
+bound — violated 0/12 at LI and LIO — but its error is *correlated with arm
+quality*: composed arms beat it by 9-21% because composition is constructive
+(D2a), and the composed arms are the winners. A ranker whose error grows with
+quality systematically buries the best arm. It remains usable as a sound
+eliminator, which is a different job.
+
+### K is free to search, and K=4 is usually wrong
+
+`pos_accepted` is a prefix profile, so **one KMAX=8 measurement yields tau(K)
+for every K in 1..8**, and cost is analytic in K. Adding K multiplies the
+lattice eightfold and the measurement budget by zero.
+
+Computed over the 28 (cell, arm) pairs with measured curves:
+
+| optimal K | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| count | **14** | 3 | 3 | 2 | 1 | 2 | 3 |
+
+**K=4 is optimal in 3 of 28**, and freezing it costs up to **12.2%**
+(`LI w128/skip4`, K*=2, 1.209 against 1.061). The structure is legible:
+windowed arms want K=2 because a window costs 31% of acceptance at LI so
+tau(K) saturates early, while unwindowed arms at SS want K=5-8 because
+acceptance is near the ceiling. **The optimum is a joint property of (lever,
+cell)**, which is exactly why K cannot be frozen ahead of the lever search.
+
+These are model estimates: tau(K) is measured, the speedups are not. A K
+sweep is the next measurement.
+
+### The registered design
+
+```text
+Round 1 -- analytic
+  cost model, calibrated at the LONGEST context and LARGEST batch (s38)
+  acceptance, measured per cell and truncated at natural length (s35)
+  tau(K) for K=1..8 from the same depth-8 profiles          [free]
+  rank by the section-38 model; keep the sound rule but do not rely on it
+  output: top-3 (lever, K) candidates
+
+Round 2 -- confirmation
+  measure the top-3 end to end; pick the best
+```
+
+Cost per cell: 9 single-lever acceptance boots if the product bound screens,
+20 if it does not, plus 3 confirmations — against 40 arms x |K| in the full
+lattice.
+
+### What this design does not claim
+
+* **The 3/4 top-3 result is at K=4 only.** Ground truth for other K does not
+  exist, so the design's K selection is unvalidated end to end.
+* **It is not sound.** Round 1's ranking can bury the true best, as it does at
+  LO; the confirmation budget is the only safety net, and at LO it costs 2.0%.
+* **One box, one model, one weight version.** bf16 is excluded on section 45's
+  evidence rather than tested here.
+
+### A defect found in the analysis layer
+
+`predict_w98_refined_lo.load_runs` keyed measured runs by `window/skip`,
+dropping the weight version. On the full-lattice directories, which hold both
+families, **all twenty arms collided** and the last record read silently won.
+That is the identity-in-the-name defect `w98_artifacts` was written to
+prevent, reappearing one layer up. Now filtered by weight version. Earlier
+results are unaffected: every prior invocation used single-family directories.

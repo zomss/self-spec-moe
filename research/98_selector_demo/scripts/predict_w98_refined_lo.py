@@ -195,7 +195,18 @@ def load_curves(
     return curves
 
 
-def load_runs(directories: list[Path]) -> dict[str, dict[str, Any]]:
+def load_runs(
+    directories: list[Path], quant: str | None = None
+) -> dict[str, dict[str, Any]]:
+    """Measured runs keyed by `window/skip`, restricted to one weight version.
+
+    The key drops the quant prefix, so a directory holding both families maps
+    every arm to a colliding key and the last record read silently wins --
+    which is how the full-lattice directories are laid out. `quant` is
+    therefore required whenever the source may hold more than one family; it
+    is the same defect `w98_artifacts` exists to prevent, reappearing in the
+    analysis layer because the key here is deliberately family-agnostic.
+    """
     runs = {}
     for directory in directories:
         for path in sorted(Path(directory).glob("*.json")):
@@ -206,6 +217,13 @@ def load_runs(directories: list[Path]) -> dict[str, dict[str, Any]]:
             if record.get("record_type") != "w98_refined_lo":
                 continue
             key = record["cell"]
+            if (
+                quant is not None
+                and key != OFF_KEY
+                and "/" in key
+                and record["config"].get("quant") != quant
+            ):
+                continue
             if key != OFF_KEY and "/" not in key:
                 # `stock` shares these directories from section 30 onward. It
                 # is a baseline, not a lever configuration, and the model
@@ -344,7 +362,7 @@ def main() -> int:
         batched=args.batched_fit,
         quadratic=args.quadratic_fit,
     )
-    runs = load_runs([Path(p) for p in args.runs.split(",")])
+    runs = load_runs([Path(p) for p in args.runs.split(",")], args.quant)
     source = args.acceptance_from or args.curves
     curves = load_curves(
         [Path(p) for p in source.split(",")],
