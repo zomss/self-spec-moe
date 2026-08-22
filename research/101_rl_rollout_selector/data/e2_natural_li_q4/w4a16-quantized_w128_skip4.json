@@ -1,0 +1,70 @@
+{
+  "batch": 8,
+  "cell": "w4a16-quantized/w128/skip4",
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 4,
+    "window": 128
+  },
+  "content_cell": "LI",
+  "gen_tokens": 2048,
+  "record_type": "w98_long_u",
+  "rows": 1810,
+  "schema_version": 1,
+  "tau_profile": {
+    "buckets": {
+      "0": {
+        "armed_steps": 632,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          426,
+          307,
+          200,
+          143,
+          108,
+          77,
+          53,
+          41
+        ],
+        "tau": 3.143987,
+        "tau_hi": 3.324415,
+        "tau_lo": 2.993985,
+        "unarmed_steps": 8,
+        "undefined_draws": 0
+      },
+      "1": {
+        "armed_steps": 1165,
+        "clipped_excluded": 5,
+        "pos_accepted": [
+          719,
+          466,
+          302,
+          200,
+          131,
+          83,
+          59,
+          43
+        ],
+        "tau": 2.719313,
+        "tau_hi": 2.817757,
+        "tau_lo": 2.5625,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      }
+    },
+    "depth": 8,
+    "kmax": 8,
+    "u_edges": [
+      256,
+      1024,
+      3072,
+      8192
+    ]
+  },
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

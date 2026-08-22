@@ -209,16 +209,29 @@ def prompts(limit: int) -> list[list[int]]:
 
 
 def _load_prompts(limit: int) -> list[list[int]]:
+    """Prompts for this cell, optionally from a disjoint offset.
+
+    `W98_LO_PROMPT_OFFSET` selects a different slice of the frozen bundle.
+    Under natural EOS each arm stops each request at a slightly different
+    place (section 21: batch-composition numerics flip near-tie argmaxes), so
+    the ACTIVE batch over a run -- and therefore tokens per step -- depends on
+    which prompts were drawn. Replicating boots cannot detect that, because a
+    replicate reuses the same prompts; only a disjoint slice can.
+    """
+    offset = int(os.environ.get("W98_LO_PROMPT_OFFSET", "0"))
     out = []
     with gzip.open(PROMPTS, "rt", encoding="utf-8") as handle:
         for line in handle:
             row = json.loads(line)
             if row.get("cell") == CELL:
                 out.append(row["token_ids"])
-            if len(out) >= limit:
+            if len(out) >= limit + offset:
                 break
-    _require(len(out) >= limit, f"not enough {CELL} prompts")
-    return out
+    _require(
+        len(out) >= limit + offset,
+        f"not enough {CELL} prompts for offset {offset} + {limit}",
+    )
+    return out[offset : offset + limit]
 
 
 def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:

@@ -1,0 +1,127 @@
+{
+  "batch": 8,
+  "cell": "w4a16-quantized/w512/skip4",
+  "config": {
+    "quant": "w4a16-quantized",
+    "skip_count": 4,
+    "window": 512
+  },
+  "content_cell": "LO",
+  "gen_tokens": 32768,
+  "record_type": "w98_long_u",
+  "rows": 18830,
+  "schema_version": 1,
+  "tau_profile": {
+    "buckets": {
+      "0": {
+        "armed_steps": 322,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          293,
+          263,
+          241,
+          223,
+          206,
+          187,
+          170,
+          156
+        ],
+        "tau": 6.400621,
+        "tau_hi": 6.738562,
+        "tau_lo": 6.055882,
+        "unarmed_steps": 8,
+        "undefined_draws": 0
+      },
+      "1": {
+        "armed_steps": 909,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          855,
+          793,
+          738,
+          676,
+          618,
+          567,
+          518,
+          474
+        ],
+        "tau": 6.763476,
+        "tau_hi": 7.133411,
+        "tau_lo": 6.440838,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "2": {
+        "armed_steps": 2660,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          2390,
+          2131,
+          1929,
+          1755,
+          1579,
+          1443,
+          1308,
+          1187
+        ],
+        "tau": 6.158647,
+        "tau_hi": 6.365683,
+        "tau_lo": 5.978102,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "3": {
+        "armed_steps": 6011,
+        "clipped_excluded": 0,
+        "pos_accepted": [
+          5364,
+          4749,
+          4250,
+          3820,
+          3463,
+          3144,
+          2844,
+          2575
+        ],
+        "tau": 6.02562,
+        "tau_hi": 6.284945,
+        "tau_lo": 5.80021,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      },
+      "4": {
+        "armed_steps": 8918,
+        "clipped_excluded": 2,
+        "pos_accepted": [
+          7885,
+          6909,
+          6153,
+          5554,
+          5063,
+          4625,
+          4243,
+          3873
+        ],
+        "tau": 5.968042,
+        "tau_hi": 6.932582,
+        "tau_lo": 5.450241,
+        "unarmed_steps": 0,
+        "undefined_draws": 0
+      }
+    },
+    "depth": 8,
+    "kmax": 8,
+    "u_edges": [
+      256,
+      1024,
+      3072,
+      8192
+    ]
+  },
+  "u_edges": [
+    256,
+    1024,
+    3072,
+    8192
+  ]
+}

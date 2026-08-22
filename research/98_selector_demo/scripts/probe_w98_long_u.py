@@ -55,6 +55,16 @@ matrix = r1.matrix
 # buckets of their own instead of all collapsing into the last one.
 U_EDGES = (256, 1024, 3072, 8192)
 GEN_TOKENS = int(os.environ.get("W98_LONGU_TOKENS", "8192"))
+# `ignore_eos` was chosen so every request reaches the deep u-buckets rather
+# than stopping early and leaving them empty. Phase 101 measured what that
+# costs: on filler past the natural stopping point the ordering of arms
+# REVERSES (w1024/skip4 tau 4.407 vs skip8 3.623 on filler; 2.278 vs 2.392 on
+# real content), because a less-damaged draft has more headroom toward the
+# ceiling on easy text. Correctness now outranks bucket population, so the
+# protocol is selectable and natural EOS is the honest default for any curve
+# that will be consumed by a prediction.
+IGNORE_EOS = os.environ.get("W98_LONGU_IGNORE_EOS", "1") == "1"
+TEMPERATURE = float(os.environ.get("W98_LONGU_TEMPERATURE", "0.0"))
 BATCH = int(os.environ.get("W98_LONGU_BATCH", "8"))
 PROMPTS = (
     SCRIPT_DIR.parent.parent / "100_baselines/data/registration/w100_prompts.jsonl.gz"
@@ -151,7 +161,11 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
             engine.add_request(
                 f"{CELL}-{index}",
                 {"prompt_token_ids": tokens},
-                SamplingParams(temperature=0.0, max_tokens=GEN_TOKENS, ignore_eos=True),
+                SamplingParams(
+                    temperature=TEMPERATURE,
+                    max_tokens=GEN_TOKENS,
+                    ignore_eos=IGNORE_EOS,
+                ),
             )
         while engine.has_unfinished_requests():
             engine.step()
