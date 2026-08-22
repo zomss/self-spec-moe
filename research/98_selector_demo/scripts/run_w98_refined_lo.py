@@ -64,6 +64,16 @@ CAP = CAPS[CELL]
 # the resulting unregistered width ("permits only K=0 or K=4, got K=2").
 MAX_MODEL_LEN = 40_960
 BATCH = int(os.environ.get("W98_LO_BATCH", "8"))
+# Requests SUBMITTED, against BATCH concurrent. Phase 100 registers
+# `n = 4 x max batch` ("submitted at once; continuous batching drains the
+# set"); this runner has always submitted exactly BATCH, so every measurement
+# in phases 98-101 ran an unbackfilled batch that drained 8 -> 1 with nothing
+# to replace finished requests. E3 measured what that costs: occupancy swings
+# +-30% with the prompt draw and throughput follows it, putting a 49-point
+# band on a single-draw arm comparison. With n > BATCH the queue backfills and
+# occupancy stays pinned until the queue empties, which is also the shape a
+# real rollout has.
+N_REQUESTS = int(os.environ.get("W98_LO_N", "0")) or BATCH
 # Fixed-length mode: generation budget in tokens, EOS ignored. Zero keeps the
 # scored protocol's natural EOS.
 FIXED_TOKENS = int(os.environ.get("W98_LO_FIXED", "0"))
@@ -244,7 +254,7 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
         args = EngineArgs(
             model=r1._engine_args({"quant": "target-matching"}).model,
             max_model_len=MAX_MODEL_LEN,
-            max_num_seqs=BATCH,
+            max_num_seqs=BATCH,  # concurrency; N_REQUESTS may exceed it
             max_num_batched_tokens=8192,
             enable_chunked_prefill=True,
             gpu_memory_utilization=0.90,
@@ -261,7 +271,10 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     # never had -- the same class of defect as the filename collision
     # `w98_artifacts` exists to prevent, and invisible in the record because
     # every arm would be clamped identically.
-    args.max_num_seqs = max(args.max_num_seqs or 0, BATCH)
+    # Concurrency is BATCH; anything beyond it queues and backfills. The
+    # earlier `max()` guarded against a silent clamp when BATCH exceeded the
+    # registered 32, and still does, but it must not raise concurrency to N.
+    args.max_num_seqs = BATCH
     if os.environ.get("W98_LO_K"):
         # Draft depth as a swept dimension. K was frozen at 4 for every scored
         # run of this phase; the measured acceptance profiles put the optimum
@@ -283,7 +296,7 @@ def measure(cfg: dict[str, Any], trace: Path, out: Path) -> None:
     engine = LLMEngine.from_engine_args(args)
     outputs: dict[str, list[int]] = {}
     try:
-        for index, tokens in enumerate(prompts(BATCH)):
+        for index, tokens in enumerate(prompts(N_REQUESTS)):
             engine.add_request(
                 f"{CELL}-{index}",
                 {"prompt_token_ids": tokens},
