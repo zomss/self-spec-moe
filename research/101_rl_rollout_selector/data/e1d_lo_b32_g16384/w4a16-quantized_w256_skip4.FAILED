@@ -1,0 +1,39 @@
+t_batch_size=35 (attention eager, body cudagraph).
+WARNING 08-22 03:07:35 [jit_monitor.py:106] Triton kernel JIT compilation during inference: eagle_step_slot_mapping_metadata_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+WARNING 08-22 03:07:35 [jit_monitor.py:106] Triton kernel JIT compilation during inference: rejection_greedy_sample_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+WARNING 08-22 03:07:35 [jit_monitor.py:106] Triton kernel JIT compilation during inference: eagle_prepare_inputs_padded_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+INFO 08-22 03:09:25 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=31 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:29 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=30 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:34 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=29 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:38 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=28 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:43 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=27 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:49 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=26 input_batch_size=35 (attention eager, body cudagraph).
+INFO 08-22 03:09:55 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=25 input_batch_size=25 (attention eager, body cudagraph).
+INFO 08-22 03:10:00 [llm_base_proposer.py:1453] Draft chain PIECEWISE: runtime_mode=PIECEWISE batch_size=24 input_batch_size=25 (attention eager, body cudagraph).
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 502, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:                      ^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 466, in main
+[rank0]:     measure(
+[rank0]:   File "/data/smcho/self-spec-moe/research/98_selector_demo/scripts/run_w98_refined_lo.py", line 296, in measure
+[rank0]:     for request_output in engine.step():
+[rank0]:                           ^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/llm_engine.py", line 304, in step
+[rank0]:     outputs = self.engine_core.get_output()
+[rank0]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core_client.py", line 290, in get_output
+[rank0]:     outputs, model_executed = self.engine_core.step_fn()
+[rank0]:                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/engine/core.py", line 490, in step
+[rank0]:     scheduler_output = self.scheduler.schedule(self._should_throttle_prefills())
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/core/sched/scheduler.py", line 1849, in schedule
+[rank0]:     koff_runtime = make_scheduler_metadata(
+[rank0]:                    ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py", line 1402, in make_scheduler_metadata
+[rank0]:     verified = infer_verified_action(
+[rank0]:                ^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/data/smcho/self-spec-moe/vllm/v1/spec_decode/koff_runtime.py", line 1361, in infer_verified_action
+[rank0]:     raise KOffRuntimeError(
+[rank0]: vllm.v1.spec_decode.koff_runtime.KOffRuntimeError: request 'LO-24-b414891c' scheduled target query width 6522, expected 1 for off

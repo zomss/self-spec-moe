@@ -1,0 +1,111 @@
+{
+  "arms": {
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 2176.125,
+      "total_out_tokens": 65536,
+      "wall_s": 30.116
+    },
+    "w4a16-quantized/w1024/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 2061.456,
+      "total_out_tokens": 65536,
+      "wall_s": 31.791
+    },
+    "w4a16-quantized/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 2165.379,
+      "total_out_tokens": 65536,
+      "wall_s": 30.265
+    },
+    "w4a16-quantized/w512/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 1993.904,
+      "total_out_tokens": 65536,
+      "wall_s": 32.868
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 2110.116,
+      "total_out_tokens": 65536,
+      "wall_s": 31.058
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 1890.438,
+      "total_out_tokens": 65536,
+      "wall_s": 34.667
+    }
+  },
+  "batch": 16,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-11",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-13",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-14",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-3",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-6",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-7",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-8",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-10",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-11",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-12",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-13",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-14",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-15",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-2",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-3",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-4",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-5",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-6",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-7",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-8",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-9",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-10",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-11",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-13",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-3",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-7",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-8",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-9",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-10",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-11",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-12",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-13",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-14",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-15",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-2",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-3",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-4",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-5",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-6",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-7",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-8",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-9",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-10",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-11",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-13",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-14",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-3",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-4",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-7",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-8",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-9"
+    ],
+    "ok": false,
+    "reference": "w4a16-quantized/w1024/skip4"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

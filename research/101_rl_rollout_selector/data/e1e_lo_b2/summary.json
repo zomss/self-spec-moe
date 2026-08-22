@@ -1,0 +1,60 @@
+{
+  "arms": {
+    "w4a16-quantized/w1024/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 358.43,
+      "total_out_tokens": 8192,
+      "wall_s": 22.855
+    },
+    "w4a16-quantized/w1024/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 340.855,
+      "total_out_tokens": 8192,
+      "wall_s": 24.034
+    },
+    "w4a16-quantized/w512/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 356.31,
+      "total_out_tokens": 8192,
+      "wall_s": 22.991
+    },
+    "w4a16-quantized/w512/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 327.592,
+      "total_out_tokens": 8192,
+      "wall_s": 25.007
+    },
+    "w4a16-quantized/woff/skip4": {
+      "cap_hits": 0,
+      "tokens_per_s": 362.531,
+      "total_out_tokens": 8192,
+      "wall_s": 22.597
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 0,
+      "tokens_per_s": 337.087,
+      "total_out_tokens": 8192,
+      "wall_s": 24.302
+    }
+  },
+  "batch": 2,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w1024/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w512/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/woff/skip4 diverges from w4a16-quantized/w1024/skip4 on LO-1",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-0",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip4 on LO-1"
+    ],
+    "ok": false,
+    "reference": "w4a16-quantized/w1024/skip4"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}

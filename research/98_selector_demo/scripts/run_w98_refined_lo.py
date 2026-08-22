@@ -372,7 +372,17 @@ def run_all(output_dir: Path, gpu: int) -> None:
             env = matrix._boot_child_environment(
                 {k: v for k, v in base.items() if not k.startswith("VLLM_SELF_SPEC")}
             )
-        elif os.environ.get("W98_LO_K"):
+        if os.environ.get("W98_LO_SKIP_LAYERS"):
+            # Override the layer IDENTITY at a fixed count. The registered
+            # sets are NESTED (skip4 subset skip8 subset skip16) so that
+            # `keep_frac` is a scalar the cost model can carry; D2(b) measured
+            # a knapsack-chosen set beating that nested set at k=8 on its own
+            # protocol, and this is what tests whether the nesting costs
+            # throughput.
+            env_override = os.environ["W98_LO_SKIP_LAYERS"]
+        else:
+            env_override = None
+        if os.environ.get("W98_LO_K"):
             # The K sweep needs its own registry; `boot_environment` pins the
             # scored scope, which admits only K=4 and would refuse the boot.
             base = d3.boot_environment(cfg, trace, "corrected")
@@ -389,6 +399,8 @@ def run_all(output_dir: Path, gpu: int) -> None:
             env = matrix._boot_child_environment(
                 d3.boot_environment(cfg, trace, "corrected")
             )
+        if env_override:
+            env["VLLM_SELF_SPEC_DRAFT_SKIP_LAYERS"] = env_override
         log = output_dir / f"{artifacts.slug(cfg)}.log"
         with log.open("w", encoding="utf-8") as handle:
             completed = subprocess.run(

@@ -1,0 +1,48 @@
+{
+  "arms": {
+    "w4a16-quantized/w1024/skip8": {
+      "cap_hits": 1,
+      "tokens_per_s": 665.351,
+      "total_out_tokens": 122438,
+      "wall_s": 184.02
+    },
+    "w4a16-quantized/w512/skip8": {
+      "cap_hits": 1,
+      "tokens_per_s": 710.459,
+      "total_out_tokens": 117198,
+      "wall_s": 164.961
+    },
+    "w4a16-quantized/woff/skip8": {
+      "cap_hits": 1,
+      "tokens_per_s": 494.446,
+      "total_out_tokens": 111943,
+      "wall_s": 226.401
+    }
+  },
+  "batch": 8,
+  "content_cell": "LO",
+  "divergence_gate": {
+    "mismatches": [
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-0",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-1",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-2",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-3",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-4",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-5",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-6",
+      "w4a16-quantized/w512/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-7",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-0",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-1",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-2",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-3",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-4",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-5",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-6",
+      "w4a16-quantized/woff/skip8 diverges from w4a16-quantized/w1024/skip8 on LO-7"
+    ],
+    "ok": false,
+    "reference": "w4a16-quantized/w1024/skip8"
+  },
+  "record_type": "w98_refined_lo_summary",
+  "schema_version": 1
+}
