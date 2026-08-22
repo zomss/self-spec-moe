@@ -66,32 +66,49 @@ natural-EOS LO b8 grid, and places **third** at equal work. Tested:
 | the cost/acceptance trade | refuted: -17.8% acceptance for -8.1% draft cost, a 2:1 loss |
 | an unreplicated outlier | refuted: replicate reproduces to **0.21%**, identical token counts |
 
-## 4. The sixth hypothesis lands: acceptance was measured on filler
+## 4. The sixth hypothesis: RETRACTED — it was an arithmetic error
 
-Every acceptance number this project owns was measured under `ignore_eos`.
-Measured both ways on the same arms, same cell, same batch:
+**This section first reported that acceptance ordering REVERSES between
+`ignore_eos` and natural EOS.** It does not. The finding was my own error and
+is retracted in full.
 
-| protocol | `w1024/skip4` | `w1024/skip8` | winner |
+The error: I computed acceptance as `E_committed / armed_steps / 8`, dividing
+by the NOMINAL batch. Under natural EOS the batch drains, so the active count
+is `H_target_steps`, and the two arms drain differently — mean active **4.20**
+for `w1024/skip4` against **4.75** for `w1024/skip8`. That difference alone
+manufactured the apparent reversal.
+
+| | skip4 | skip8 | ordering |
 | --- | --- | --- | --- |
-| **`ignore_eos`** (all curves) | tau **4.407** | 3.623 | skip4 by +21.6% |
-| **natural EOS** (real content) | tau 2.278 | **2.392** | **skip8 by +5.0%** |
+| wrong figure (divided by 8) | 2.278 | 2.392 | skip8 ahead — **artifact** |
+| **corrected (divided by active)** | **4.344** | 4.029 | **skip4 ahead by 7.8%** |
+| `ignore_eos` curves | 4.407 | 3.623 | skip4 ahead by 21.6% |
 
-**The ordering reverses.** Section 35 established that filler past the
-natural stopping point is trivially predictable; this shows the inflation is
-**arm-dependent** -- a less-damaged draft has more headroom toward the
-ceiling on easy text, so filler flatters `skip4` and the advantage vanishes
-on real content.
+The E2 re-measurement agrees independently: per-bucket filler inflation in
+bucket 3 (u > 8192, where `ignore_eos` manufactures text) is **+0.1% to
++2.6%**, not a sign flip.
 
-Two consequences:
+**What is true:** `ignore_eos` inflation is real and mildly arm-dependent —
+it exaggerates `skip4`'s advantage over `skip8` from a real 7.8% to a
+measured 21.6%. Section 35's original characterisation stands; the escalation
+to "the ordering reverses" was wrong.
 
-* **It explains the whole chain.** `w1024/skip8` wins real rollouts because
-  it genuinely accepts more there. Our table says the opposite, which is why
-  section 48's model ranked it 5th against a measured 1st, why E1's schedule
-  never selected a skip8 arm, and why the equal-work band tables disagree
-  with section 45.
-* **Absolute acceptance is roughly half what we believed**: tau ~2.3 on real
-  content against 3.6-4.4 on filler. Every predicted speedup built on those
-  curves is optimistic.
+Two signals should have caught this sooner. A tau of 2.3 at K=4 is
+implausibly low on its face. And E2's buckets 0-2 returned **bit-identical**
+to the filler campaign, which is CORRECT — greedy generation is deterministic
+until a request would stop, and LO's shortest is ~4,600 tokens, so nothing
+can differ below u=3072. I read that as a bug rather than as evidence that
+the aggregate was the outlier.
+
+### The clue the correction produced
+
+The arms **drain differently**: mean active 4.20 (skip4) against 4.75
+(skip8), so `skip8` keeps ~13% more requests alive per step over the run.
+Per-step measurements at fixed batch cannot see that, and it is the first
+mechanism consistent with every observation — including that `w1024/skip8`
+wins whole rollouts while losing every fixed-batch comparison. It is a
+hypothesis, not a finding: why the arms drain differently is unexplained,
+and the length totals are close (127,645 vs 124,845).
 
 ## 5. The knapsack set does not transfer either
 
@@ -110,24 +127,34 @@ protocol; it loses by 5-17% here. D2(b) selected on R-grid content at KMAX=8
 
 ## 6. What is and is not damaged
 
-**Damaged (built on filler acceptance):** every u-resolved curve (s35, the
-80-boot lattice campaign), every prediction map, section 48's shortlist
-scoring and confirmation-budget curve, section 49's tau(K) analysis, and
-E1/E1c's schedules and margins.
+With section 4 retracted, the damage assessment is much narrower than first
+written:
 
-**Not damaged (natural EOS throughput):** section 45's 14-point lattice and
-its winners -- replicated here to 0.21% -- section 30's stock baselines,
-section 32-33's instrument corrections, and the cost model, which is fitted
-on draft-chain timings and carries no acceptance term.
+**Mildly affected:** acceptance curves carry a few percent of `ignore_eos`
+inflation, arm-dependent, which exaggerates gaps between arms of different
+skip depth. Predictions built on them are correspondingly optimistic about
+lightly-damaged arms. This is a calibration bias, not an inversion.
+
+**Not affected:** section 45's 14-point lattice and winners (replicated to
+0.21%), section 30's stock baselines, sections 32-33's instrument
+corrections, the cost model, and section 48's ranking machinery — whose
+known weakness on composed deep-skip arms is a separate, still-unexplained
+defect.
 
 ## 7. E1's conclusion, restated
 
 E1 reported +0.4% for intra-rollout switching and fired the registered
-under-3% criterion. That number is **not trustworthy**: it was computed over
-a candidate set the model ranked wrongly because the acceptance input was
-contaminated, and the arm that wins real rollouts was never in any schedule
-the optimizer produced. E1 is **suspended**, not concluded, pending
-re-measured acceptance.
+under-3% criterion. **The retraction in section 4 removes the reason to
+suspend it**, but one concern survives on independent evidence: section 48
+measured the model ranking `w1024/skip8` **5th where measurement puts it
+1st**, and E1's optimizer never selected any skip8 arm in any schedule. So
+E1's candidate set demonstrably excluded the arm that wins real rollouts, for
+reasons that predate this investigation and are not about `ignore_eos`.
+
+E1's +0.4% therefore stands as **a lower bound over a candidate set known to
+be missing the measured winner**, not as a refutation of intra-rollout
+switching. Re-running it once the skip8 anomaly is explained is the honest
+close.
 
 ## 8. Next
 
